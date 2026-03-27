@@ -864,23 +864,26 @@ function handleSearch() {
 // ══════════════════════════════════════════
 
 window.onload = function() {
-  const scriptURL = "https://script.google.com/macros/s/AKfycbzvYkYZ_AVxBEdagPj5_GEeobJOQ-ezXoMKszjf5XduG3ZFIzzRLUJ_2ut0QNanldhv/exec";
+  // 1. Definisikan URL API kamu di sini
+  const scriptURL = "https://script.google.com/macros/s/AKfycbxrJha3ScCfQpRFYsp3aHLj3M06zCW7IcGYVb6_wYJq-wOhAGMop49cpWZySCzcClAs/exec";
   
-  console.log("Memulai loading data dari Google Sheets...");
-  
+  console.log("Menghubungkan ke Google Sheets...");
+
+  // 2. Gunakan fetch untuk mengambil data (Bukan google.script.run)
   fetch(scriptURL)
     .then(response => response.json())
     .then(data => {
-      // Ini fungsi bawaan dari file aslimu untuk nampilin data
-      if (data) {
-        renderTasks(data.tasks || []);
-        renderStats(data.stats || {total:0, pending:0, completed:0});
+      console.log("Data berhasil diterima:", data);
+      if (data && data.tasks) {
+        renderTasks(data.tasks); // Fungsi bawaan tasklist untuk nampilin tabel
+        // Jika ada fungsi renderStats di kodemu, panggil juga:
+        if(typeof renderStats === "function") renderStats(data.stats);
       }
       document.getElementById('loading-state').style.display = 'none';
     })
     .catch(error => {
-      console.error("Error:", error);
-      alert("Gagal ambil data. Pastikan Deploy sudah 'Anyone'!");
+      console.error("Gagal load data:", error);
+      document.getElementById('loading-state').innerHTML = "Gagal memuat data. Cek koneksi API.";
     });
 };
 
