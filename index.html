@@ -3,35 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Hub Tools | Dashboard</title>
+    <title>ReynaHub | Workspace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { text-align: center; background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 80%; max-width: 500px; }
-        h1 { color: #333; }
-        p { color: #666; margin-bottom: 2rem; }
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .tool-btn { padding: 15px; background: #2ea44f; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: 0.3s; }
-        .tool-btn:hover { background: #22863a; transform: translateY(-3px); }
-        .coming-soon { background: #ddd; color: #888; pointer-events: none; }
+        :root { --primary: #2563eb; --bg: #f8fafc; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* Navbar */
+        nav { background: #fff; padding: 12px 25px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 10; }
+        .logo { font-weight: 600; color: var(--primary); cursor: pointer; font-size: 1.2rem; }
+        .nav-links { display: flex; gap: 10px; }
+        .btn { padding: 8px 15px; border-radius: 6px; border: 1px solid #e2e8f0; background: #fff; cursor: pointer; transition: 0.3s; font-size: 0.85rem; }
+        .btn:hover, .btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Area Utama */
+        #main-view { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; display: none; } /* Iframe sembunyi di awal */
+
+        /* Tampilan Dashboard Awal */
+        #welcome-screen { text-align: center; padding: 20px; transition: 0.3s; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; max-width: 800px; margin-top: 30px; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; transition: 0.3s; border: 1px solid #eee; }
+        .card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .card h3 { margin: 10px 0 5px; }
+        .card p { font-size: 0.85rem; color: #64748b; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>My Hub Tools</h1>
-    <p>Kumpulan Tools Pagawean Broman-Super</p>
-    
-    <div class="btn-grid">
-        <a href="task/" class="tool-btn">📅 Tasklist & Schedule</a>
-        <a href="#" class="tool-btn">Tool Inventory (Nanti)</a>
-        <a href="#" class="tool-btn coming-soon">Tool 3</a>
-        <a href="#" class="tool-btn coming-soon">Tool 4</a>
+<nav>
+    <div class="logo" onclick="goHome()">ReynaHub</div>
+    <div class="nav-links">
+        <button class="btn" onclick="openTool('https://script.google.com/macros/s/AKfycbwe-6KNZWNPUtamF6UGwidijBKo2s2wRZNFLjDBXgkjClMsrIfTKqX-UvJyvYllj7X3/exec', this)">📅 Tasklist</button>
+        <button class="btn" onclick="openTool('LINK_TOOL_LAIN_DISINI', this)">📝 Catatan</button>
+    </div>
+</nav>
+
+<div id="main-view">
+    <div id="welcome-screen">
+        <h1>Halo, Bro! 👋</h1>
+        <p>Pilih tool yang mau kamu gunain hari ini:</p>
+        <div class="grid">
+            <div class="card" onclick="document.querySelectorAll('.btn')[0].click()">
+                <div style="font-size: 2rem;">📅</div>
+                <h3>Team Planner</h3>
+                <p>Cek jadwal dan task tim kamu.</p>
+            </div>
+            <div class="card" style="opacity: 0.5;">
+                <div style="font-size: 2rem;">📝</div>
+                <h3>Quick Notes</h3>
+                <p>Segera hadir (Coming Soon).</p>
+            </div>
+        </div>
     </div>
 
-    <footer style="margin-top: 30px; font-size: 0.8rem; color: #aaa;">
-        Dibuat dengan ❤️ & Apps Script
-    </footer>
+    <iframe id="tool-frame"></iframe>
 </div>
+
+<script>
+    const welcome = document.getElementById('welcome-screen');
+    const frame = document.getElementById('tool-frame');
+
+    function openTool(url, btn) {
+        welcome.style.display = 'none'; // Sembunyiin dashboard
+        frame.style.display = 'block';  // Munculin iframe
+        frame.src = url;               // Load linknya
+
+        // Atur tombol aktif
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function goHome() {
+        welcome.style.display = 'block'; // Munculin dashboard lagi
+        frame.style.display = 'none';    // Sembunyiin iframe
+        frame.src = "";
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+    }
+</script>
 
 </body>
 </html>
