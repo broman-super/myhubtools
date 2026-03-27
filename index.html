@@ -2,82 +2,95 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>REYNAHUB | SYSTEM</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>REYNAHUB</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #ffffff; --side: #000000; --red: #ff0000; --border: #eeeeee; --nav-h: 65px; }
+        :root { 
+            --bg: #ffffff; --side: #000000; --red: #ff0000; 
+            --nav-size: 50px; /* Diperkecil jadi 50px */
+        }
         
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Inter', sans-serif; display: flex; overflow: hidden; background: var(--bg); }
+        
+        body, html { 
+            margin: 0; padding: 0; height: 100dvh; width: 100%; 
+            font-family: 'Inter', sans-serif; display: flex; 
+            overflow: hidden; background: var(--bg); 
+        }
 
-        /* SIDEBAR (Desktop) */
+        /* --- SIDEBAR DESKTOP (Ultra Slim) --- */
         aside {
-            width: 70px; min-width: 70px; background: var(--side); 
-            display: flex; flex-direction: column; align-items: center; padding: 25px 0; z-index: 100;
+            width: var(--nav-size); min-width: var(--nav-size); background: var(--side); 
+            display: flex; flex-direction: column; align-items: center; padding: 15px 0; z-index: 100;
         }
-        .logo-box { color: var(--red); font-weight: 900; font-size: 1.4rem; cursor: pointer; margin-bottom: 30px; }
-        .nav-wrapper { flex: 1; display: flex; flex-direction: column; gap: 20px; align-items: center; width: 100%; }
+        .logo-box { color: var(--red); font-weight: 900; font-size: 1.1rem; cursor: pointer; margin-bottom: 20px; }
+        .nav-wrapper { flex: 1; display: flex; flex-direction: column; gap: 15px; align-items: center; width: 100%; }
+        
         .nav-item {
-            width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;
-            border-radius: 8px; cursor: pointer; transition: 0.2s; color: #555; background: none; border: none;
+            width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;
+            border-radius: 6px; cursor: pointer; transition: 0.2s; color: #444;
         }
-        .nav-item svg { width: 22px; height: 22px; fill: currentColor; }
+        .nav-item svg { width: 18px; height: 18px; fill: currentColor; }
         .nav-item:hover, .nav-item.active { color: #fff; background: #1a1a1a; }
         .nav-item.active { color: var(--red); }
 
-        /* MAIN CONTENT */
-        main { flex: 1; height: 100vh; position: relative; display: flex; flex-direction: column; overflow: hidden; background: #fff; }
+        /* --- MAIN AREA --- */
+        main { flex: 1; position: relative; height: 100dvh; overflow: hidden; }
 
         /* DASHBOARD */
-        #dashboard { display: block; width: 100%; height: 100%; overflow-y: auto; }
-        .banner {
-            width: 100%; height: clamp(160px, 25vh, 220px); background: var(--side); color: white;
-            display: flex; flex-direction: column; justify-content: center; padding: 0 40px;
+        #dashboard { 
+            width: 100%; height: 100%; overflow-y: auto; 
+            padding-bottom: 80px; /* Space biar gak ketutup nav mobile */
         }
-        .banner h1 { font-size: clamp(1.8rem, 8vw, 2.5rem); font-weight: 900; margin: 0; letter-spacing: -1px; line-height: 1; }
-        .banner p { font-size: 0.65rem; color: #555; margin-top: 8px; letter-spacing: 2px; text-transform: uppercase; }
+        .banner {
+            width: 100%; height: 180px; background: var(--side); color: white;
+            display: flex; flex-direction: column; justify-content: center; padding: 0 30px;
+        }
+        .banner h1 { font-size: 1.8rem; font-weight: 900; margin: 0; letter-spacing: -1px; }
+        .banner p { font-size: 0.6rem; color: #555; margin-top: 5px; letter-spacing: 2px; text-transform: uppercase; }
 
-        .content-padding { padding: 40px; padding-bottom: 100px; } /* Safety padding for dashboard */
-        .group-header { display: flex; align-items: center; gap: 15px; margin: 30px 0 15px; font-size: 0.65rem; font-weight: 700; color: #bbb; letter-spacing: 1.5px; }
+        .content-padding { padding: 30px; }
+        .group-header { display: flex; align-items: center; gap: 10px; margin: 25px 0 10px; font-size: 0.6rem; font-weight: 700; color: #bbb; letter-spacing: 1.5px; }
         .group-header .line { flex: 1; height: 1px; background: #eee; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+        .card { border: 1px solid #eee; padding: 20px; cursor: pointer; transition: 0.2s; }
+        .card:hover { border-color: #000; }
+        .card h3 { margin: 0; font-size: 0.8rem; font-weight: 900; }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
-        .card { border: 1px solid var(--border); padding: 25px; cursor: pointer; transition: 0.2s; background: #fff; }
-        .card:hover { border-color: #000; transform: translateY(-3px); }
-        .card h3 { margin: 0; font-size: 0.9rem; font-weight: 900; }
-        .card p { margin: 5px 0 0; font-size: 0.75rem; color: #888; line-height: 1.4; }
-
-        /* --- PERBAIKAN FRAME AREA --- */
+        /* --- FRAME CONTAINER (The Fix) --- */
         #frame-container { 
             display: none; 
-            width: 100%; 
-            height: 100%; 
-            position: relative;
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            /* Paksa berhenti sebelum Nav bawah di Mobile */
+            bottom: 0; 
+            background: #fff;
+            z-index: 10;
         }
-        iframe { width: 100%; height: 100%; border: none; background: #fff; }
+        iframe { width: 100%; height: 100%; border: none; display: block; }
 
-        /* MOBILE FIX */
+        /* --- MOBILE OPTIMIZATION --- */
         @media (max-width: 768px) {
             body { flex-direction: column; }
+            
             aside {
-                width: 100%; height: var(--nav-h); min-width: auto; flex-direction: row;
-                padding: 0 15px; position: fixed; bottom: 0; left: 0; gap: 0; border-top: 1px solid #1a1a1a;
+                width: 100%; height: var(--nav-size); min-width: auto; 
+                flex-direction: row; padding: 0 10px; 
+                position: fixed; bottom: 0; left: 0;
+                border-top: 1px solid #1a1a1a;
+                /* Support iPhone Notch */
+                height: calc(var(--nav-size) + env(safe-area-inset-bottom));
+                padding-bottom: env(safe-area-inset-bottom);
             }
             .logo-box { display: none; }
-            .nav-wrapper { flex-direction: row; justify-content: space-around; }
+            .nav-wrapper { flex-direction: row; justify-content: space-around; height: var(--nav-size); }
             
-            /* Agar Frame Tidak Terpotong Navigasi Bawah */
-            main { height: 100vh; }
-            #frame-container { 
-                height: calc(100vh - var(--nav-h)); /* Tinggi layar dikurangi tinggi Navbar */
+            /* Frame dipangkas tingginya agar navigasi tidak menimpa */
+            #frame-container, #dashboard { 
+                bottom: calc(var(--nav-size) + env(safe-area-inset-bottom));
+                height: auto; 
             }
-            #dashboard {
-                height: calc(100vh - var(--nav-h));
-            }
-            .banner { padding: 0 25px; }
-            .content-padding { padding: 25px; }
-            .grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -104,22 +117,20 @@
     <main>
         <div id="dashboard">
             <section class="banner">
-                <p>Operational Intelligence</p>
-                <h1>REYNAHUB<br>_SYSTEM</h1>
+                <p>System Operating Hub</p>
+                <h1>REYNAHUB_SYS</h1>
             </section>
             <div class="content-padding">
-                <div class="group-header"><span>01 / PRODUCTION</span><div class="line"></div></div>
+                <div class="group-header"><span>01 / PROD</span><div class="line"></div></div>
                 <div class="grid">
                     <div class="card" onclick="openTool('https://script.google.com/macros/s/AKfycbwe-6KNZWNPUtamF6UGwidijBKo2s2wRZNFLjDBXgkjClMsrIfTKqX-UvJyvYllj7X3/exec', null)">
                         <h3>TEAM PLANNER</h3>
-                        <p>Task management system.</p>
                     </div>
                 </div>
-                <div class="group-header"><span>02 / UTILITY</span><div class="line"></div></div>
+                <div class="group-header"><span>02 / UTIL</span><div class="line"></div></div>
                 <div class="grid">
                     <div class="card" onclick="openTool('https://script.google.com/macros/s/AKfycbwuQq-fW0SgJUuRwrKUZRPurcZ3oAvd7ZEgv-R3_hcyMoPubFjVueh1sVpOVvfiTrDMQw/exec', null)">
                         <h3>RESI GENERATOR</h3>
-                        <p>Automated operational receipts.</p>
                     </div>
                 </div>
             </div>
