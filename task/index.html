@@ -862,26 +862,26 @@ function handleSearch() {
 // ══════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════
-// 1. Taruh URL Web App kamu di sini
-const scriptURL = "https://script.google.com/macros/s/AKfycbzFTjBej4EX5P1GJE-2bqHP0UbOHq2hJjjDPntVDJMAIjahCaMJkKvh1OHiug4iGWp_/exec";
 
-// 2. Fungsi Load Data yang sudah dimodifikasi untuk GitHub
 window.onload = function() {
-    console.log("Memulai loading data dari GitHub...");
-    fetch(scriptURL)
-        .then(response => response.json())
-        .then(data => {
-            // Memanggil fungsi bawaan tasklist untuk nampilin data
-            if (data && data.tasks) {
-                renderTasks(data.tasks); 
-                renderStats(data.stats);
-            }
-            document.getElementById('loading-state').style.display = 'none';
-        })
-        .catch(error => {
-            console.error("Gagal ambil data:", error);
-            alert("Waduh, gagal ambil data dari Google Sheets!");
-        });
+  const scriptURL = "https://script.google.com/macros/s/AKfycbzvYkYZ_AVxBEdagPj5_GEeobJOQ-ezXoMKszjf5XduG3ZFIzzRLUJ_2ut0QNanldhv/exec";
+  
+  console.log("Memulai loading data dari Google Sheets...");
+  
+  fetch(scriptURL)
+    .then(response => response.json())
+    .then(data => {
+      // Ini fungsi bawaan dari file aslimu untuk nampilin data
+      if (data) {
+        renderTasks(data.tasks || []);
+        renderStats(data.stats || {total:0, pending:0, completed:0});
+      }
+      document.getElementById('loading-state').style.display = 'none';
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      alert("Gagal ambil data. Pastikan Deploy sudah 'Anyone'!");
+    });
 };
 
 function hide(id){ var el=document.getElementById(id); el.style.opacity='0'; setTimeout(function(){el.style.display='none'},350); }
