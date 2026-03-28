@@ -299,7 +299,8 @@
 
     async function initDashboard() {
         try {
-            const res = await fetch(API_URL);
+            // TAMBAHIN "?action=getSalesData" DI SINI BRO!
+            const res = await fetch(API_URL + "?action=getSalesData"); 
             const dataMentah = await res.json();
 
             // OPTIMASI: Kita parse angka & tanggal sekali aja di sini!
