@@ -303,32 +303,32 @@
             const res = await fetch(API_URL + "?action=getSalesData"); 
             const dataMentah = await res.json();
 
-            // OPTIMASI: Kita parse angka & tanggal sekali aja di sini!
             rawData = dataMentah.map(b => {
-            // LOGIKA ANTI-BENGKAK: Cek apakah data dari Sheets itu Angka Murni atau Teks
-            let mentahNilai = b['Penjualan'];
-            let angkaAman = 0;
-            
-            if (typeof mentahNilai === 'number') {
-                angkaAman = mentahNilai; // Kalau dari Sheet udah angka, JANGAN diotak-atik!
-            } else if (mentahNilai) {
-                // Kalau dari Sheet bentuknya teks (misal "Rp 50.000"), baru bersihin
-                angkaAman = parseFloat(mentahNilai.toString().replace(/[^0-9,-]/g, '').replace(/,/g, '.')) || 0;
-            }
+                let mentahNilai = b['Penjualan'];
+                let angkaAman = 0;
+                
+                if (typeof mentahNilai === 'number') {
+                    angkaAman = mentahNilai; 
+                } else if (mentahNilai) {
+                    angkaAman = parseFloat(mentahNilai.toString().replace(/[^0-9,-]/g, '').replace(/,/g, '.')) || 0;
+                }
 
-            let mentahQty = b['Kuantitas'];
-            let qtyAman = (typeof mentahQty === 'number') ? mentahQty : parseInt((mentahQty||'0').toString().replace(/[^0-9]/g, '')) || 0;
+                let mentahQty = b['Kuantitas'];
+                let qtyAman = (typeof mentahQty === 'number') ? mentahQty : parseInt((mentahQty||'0').toString().replace(/[^0-9]/g, '')) || 0;
 
-            return {
-                ...b,
-                parsedDate: new Date(b['Tanggal']),
-                parsedNilai: angkaAman,
-                parsedQty: qtyAman,
-                tipeLow: (b['Tipe Transaksi'] || '').toLowerCase(),
-                katUp: (b['Nama Kategori Pelanggan'] || b['Nama Kategori P'] || 'UMUM').toUpperCase(),
-                prodUp: (b['Nama Barang'] || '').toUpperCase()
-            };
-        });
+                return {
+                    ...b,
+                    parsedDate: new Date(b['Tanggal']),
+                    parsedNilai: angkaAman,
+                    parsedQty: qtyAman,
+                    tipeLow: (b['Tipe Transaksi'] || '').toLowerCase(),
+                    katUp: (b['Nama Kategori Pelanggan'] || 'UMUM').toUpperCase(),
+                    prodUp: (b['Nama Barang'] || '').toUpperCase(),
+                    // PERBAIKAN: Menyesuaikan dengan header "Nama Pelanggan" di database baru
+                    namaPelanggan: b['Nama Pelanggan'] || 'Tanpa Nama', 
+                    statusLow: (b['Status'] || b['Status Transaksi'] || '').toLowerCase()
+                };
+            });
 
             const katUnik = [...new Set(rawData.map(i => i.katUp))];
             const selectProduk = document.getElementById('filterProdukKategori');
@@ -387,27 +387,25 @@
         let rekapSeri = {}, rekapWarna = {};
         const listHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
-// === GANTI TOTAL BLOK rawData.forEach DI DALAM prosesData() DENGAN INI ===
-        let barisDihitung = 0; // Pelacak jumlah baris (Detektif)
-
+        
         rawData.forEach(b => {
-            let d = b.parsedDate || new Date(b['Tanggal']);
+            let d = b.parsedDate;
             if (isNaN(d.getTime())) return;
             
-            let tipe = (b.tipeLow || b['Tipe Transaksi'] || '').toLowerCase();
+            let tipe = b.tipeLow;
             let isRetur = tipe.includes('retur');
-            let isPenjualan = tipe.includes('faktur penjualan'); 
+            // PERBAIKAN: Cukup deteksi kata "faktur" biar lebih kebal kalau format teksnya beda-beda tipis
+            let isPenjualan = tipe.includes('faktur'); 
 
-            let status = (b['Status'] || b['Status Transaksi'] || b['Status Pembayaran'] || '').toLowerCase();
+            let status = b.statusLow;
             let isBatal = status.includes('batal') || status.includes('void') || status.includes('draft') || status.includes('cancel');
 
-            // FIX AMAN: Pake angka murni yang udah diproses di awal
             let nilai = b.parsedNilai || 0;
             let qty = b.parsedQty || 0;
             
-            let kat = (b.katUp || b['Nama Kategori Pelanggan'] || 'UMUM').toUpperCase();
-            let pel = b['Pelanggan'];
-            let prod = (b.prodUp || b['Nama Barang'] || '').toUpperCase();
+            let kat = b.katUp;
+            let pel = b.namaPelanggan; // PERBAIKAN: Memanggil dari data yang sudah diparse di atas
+            let prod = b.prodUp;
 
             if(isPenjualan && !isBatal) {
                 if(prod && d >= gStart && d <= gEnd) {
@@ -434,7 +432,7 @@
                 } else if (isPenjualan && !isBatal) { 
                     dSkrg.sales += nilai; 
                     dSkrg.salesQty += qty;
-                    barisDihitung++; // <--- HITUNG BARIS YANG MASUK
+                    barisDihitung++; 
                     
                     if(pel) rekapCont[pel] = (rekapCont[pel] || 0) + nilai;
                     if(pel && kat.includes('RESELLER')) rekapReseller[pel] = (rekapReseller[pel] || 0) + nilai;
@@ -462,7 +460,6 @@
                 }
             }
         });
-        // ====================================================================
 
 
 // === GANTI UPDATE KPI OMZET DI prosesData() DENGAN INI ===
