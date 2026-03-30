@@ -298,50 +298,53 @@
     const svgJam = `<svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`;
 
     async function initDashboard() {
-        try {
-            // TAMBAHIN "?action=getSalesData" DI SINI BRO!
-            const res = await fetch(API_URL + "?action=getSalesData"); 
-            const dataMentah = await res.json();
-
-            rawData = dataMentah.map(b => {
-                let mentahNilai = b['Penjualan'];
-                let angkaAman = 0;
-                
-                if (typeof mentahNilai === 'number') {
-                    angkaAman = mentahNilai; 
-                } else if (mentahNilai) {
-                    angkaAman = parseFloat(mentahNilai.toString().replace(/[^0-9,-]/g, '').replace(/,/g, '.')) || 0;
-                }
-
-                let mentahQty = b['Kuantitas'];
-                let qtyAman = (typeof mentahQty === 'number') ? mentahQty : parseInt((mentahQty||'0').toString().replace(/[^0-9]/g, '')) || 0;
-
-                return {
-                    ...b,
-                    parsedDate: new Date(b['Tanggal']),
-                    parsedNilai: angkaAman,
-                    parsedQty: qtyAman,
-                    tipeLow: (b['Tipe Transaksi'] || '').toLowerCase(),
-                    katUp: (b['Nama Kategori Pelanggan'] || 'UMUM').toUpperCase(),
-                    prodUp: (b['Nama Barang'] || '').toUpperCase(),
-                    // PERBAIKAN: Menyesuaikan dengan header "Nama Pelanggan" di database baru
-                    namaPelanggan: b['Nama Pelanggan'] || 'Tanpa Nama', 
-                    statusLow: (b['Status'] || b['Status Transaksi'] || '').toLowerCase()
-                };
-            });
-
-            const katUnik = [...new Set(rawData.map(i => i.katUp))];
-            const selectProduk = document.getElementById('filterProdukKategori');
-            katUnik.forEach(k => { if(k) selectProduk.add(new Option(k, k)); });
-
-            // Kasih jeda 0.1 detik biar browser ga freeze pas nutup loading
-            setTimeout(() => {
-                document.getElementById('loadingScreen').style.display = 'none';
-                applyQuickFilter();
-            }, 100);
-
-        } catch (e) { alert("Gagal konek ke Server!"); }
-    }
+            try {
+                // Panggil API (Pastikan ?action=getSalesData tetep ada)
+                const res = await fetch(API_URL + "?action=getSalesData"); 
+                const dataMentah = await res.json();
+    
+                rawData = dataMentah.map(b => {
+                    // 1. BACA ANGKA LEBIH PINTAR (Sapu Jagat)
+                    let mentahNilai = b['Penjualan'] || b['Total Harga'] || 0;
+                    let angkaAman = 0;
+                    if (typeof mentahNilai === 'number') {
+                        angkaAman = mentahNilai; 
+                    } else if (mentahNilai) {
+                        angkaAman = parseFloat(mentahNilai.toString().replace(/[^0-9,-]/g, '').replace(/,/g, '.')) || 0;
+                    }
+    
+                    let mentahQty = b['Kuantitas'] || 0;
+                    let qtyAman = (typeof mentahQty === 'number') ? mentahQty : parseInt(mentahQty.toString().replace(/[^0-9]/g, '')) || 0;
+    
+                    return {
+                        ...b,
+                        parsedDate: new Date(b['Tanggal']),
+                        parsedNilai: angkaAman,
+                        parsedQty: qtyAman,
+                        tipeLow: (b['Tipe Transaksi'] || '').toString().toLowerCase(),
+                        katUp: (b['Nama Kategori Pelanggan'] || 'UMUM').toString().toUpperCase(),
+                        prodUp: (b['Nama Barang'] || '').toString().toUpperCase(),
+                        namaPelanggan: b['Nama Pelanggan'] || 'Tanpa Nama',
+                        statusLow: (b['Status'] || '').toString().toLowerCase()
+                    };
+                });
+    
+                // Set Dropdown Kategori
+                const katUnik = [...new Set(rawData.map(i => i.katUp))];
+                const selectProduk = document.getElementById('filterProdukKategori');
+                selectProduk.innerHTML = '<option value="ALL">SEMUA</option>'; // Reset dulu
+                katUnik.forEach(k => { if(k && k !== 'UMUM') selectProduk.add(new Option(k, k)); });
+    
+                setTimeout(() => {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    applyQuickFilter(); // Jalankan filter pertama kali
+                }, 100);
+    
+            } catch (e) { 
+                console.error(e);
+                alert("Gagal memproses data dari Server!"); 
+            }
+        }
 
     function applyQuickFilter() {
         const val = document.getElementById('quickFilter').value;
@@ -383,53 +386,50 @@
         let dSkrg = { sales: 0, salesQty: 0, retur: 0, returQty: 0, trx: 0 };
         let rekapTren = {}, rekapReseller = {}, rekapKat = {}, rekapProd = {}, rekapCont = {};
         let lastOrder = {}, rekapHari = { 'Senin': 0, 'Selasa': 0, 'Rabu': 0, 'Kamis': 0, 'Jumat': 0, 'Sabtu': 0, 'Minggu': 0 };
-        
         let rekapSeri = {}, rekapWarna = {};
         const listHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
-        
+        let barisDihitung = 0; 
+
         rawData.forEach(b => {
             let d = b.parsedDate;
-            if (isNaN(d.getTime())) return;
+            if (isNaN(d.getTime())) return; // Skip kalau tanggalnya gak kebaca
             
             let tipe = b.tipeLow;
             let isRetur = tipe.includes('retur');
-            // PERBAIKAN: Cukup deteksi kata "faktur" biar lebih kebal kalau format teksnya beda-beda tipis
-            let isPenjualan = tipe.includes('faktur'); 
-
-            let status = b.statusLow;
-            let isBatal = status.includes('batal') || status.includes('void') || status.includes('draft') || status.includes('cancel');
+            // FIX TERPENTING: Selama bukan "retur" dan "batal", anggap sebagai Penjualan!
+            let isBatal = b.statusLow.includes('batal') || b.statusLow.includes('void');
+            let isPenjualan = !isRetur; 
 
             let nilai = b.parsedNilai || 0;
             let qty = b.parsedQty || 0;
             
             let kat = b.katUp;
-            let pel = b.namaPelanggan; // PERBAIKAN: Memanggil dari data yang sudah diparse di atas
+            let pel = b.namaPelanggan;
             let prod = b.prodUp;
 
-            if(isPenjualan && !isBatal) {
-                if(prod && d >= gStart && d <= gEnd) {
-                    let sDet = null;
-                    for (let m of KODE_SERI_MASTER) { if (prod.startsWith(m)) { sDet = m; break; } }
-                    if(sDet) rekapSeri[sDet] = (rekapSeri[sDet] || 0) + qty;
+            if(isPenjualan && !isBatal && d >= gStart && d <= gEnd) {
+                // Deteksi Seri & Warna
+                let sDet = null;
+                for (let m of KODE_SERI_MASTER) { if (prod.startsWith(m)) { sDet = m; break; } }
+                if(sDet) rekapSeri[sDet] = (rekapSeri[sDet] || 0) + qty;
 
-                    let words = prod.split(/[\s-]+/);
-                    let foundColor = null;
-                    for(let w of words) { if(WARNA_MASTER.includes(w)) { foundColor = w; break; } }
-                    if(foundColor) rekapWarna[foundColor] = (rekapWarna[foundColor] || 0) + qty;
-                }
+                let words = prod.split(/[\s-]+/);
+                let foundColor = null;
+                for(let w of words) { if(WARNA_MASTER.includes(w)) { foundColor = w; break; } }
+                if(foundColor) rekapWarna[foundColor] = (rekapWarna[foundColor] || 0) + qty;
                 
                 if(pel && kat.includes('RESELLER')) { 
                     if(!lastOrder[pel] || d > lastOrder[pel]) lastOrder[pel] = d; 
                 }
             }
 
-            // Hitung KPI Berdasarkan Filter Waktu
-            if (d >= gStart && d <= gEnd) {
-                if(isRetur && !isBatal) { 
+            // Eksekusi Hitungan Utama
+            if (d >= gStart && d <= gEnd && !isBatal) {
+                if(isRetur) { 
                     dSkrg.retur += Math.abs(nilai); 
                     dSkrg.returQty += qty; 
-                } else if (isPenjualan && !isBatal) { 
+                } else if (isPenjualan) { 
                     dSkrg.sales += nilai; 
                     dSkrg.salesQty += qty;
                     barisDihitung++; 
@@ -444,22 +444,24 @@
                     }
                     
                     rekapHari[listHari[d.getDay()]] += nilai;
-                    
-                    let pLow = (pel||'').toLowerCase();
-                    let isMP = pLow.includes('tiktok') || pLow.includes('shopee') || kat.includes('TIKTOK') || kat.includes('SHOPEE');
-                    dSkrg.trx += isMP ? (qty || 1) : 1;
+                    dSkrg.trx += 1;
                 }
                 
                 let tKey = d.setHours(0,0,0,0);
                 if(!rekapTren[tKey]) rekapTren[tKey] = { label: d.toLocaleDateString('id-ID', {day: '2-digit', month: 'short'}), sales: 0, retur: 0, ts: tKey };
                 
-                if(isRetur && !isBatal) {
+                if(isRetur) {
                     rekapTren[tKey].retur += Math.abs(nilai); 
-                } else if (isPenjualan && !isBatal) {
+                } else if (isPenjualan) {
                     rekapTren[tKey].sales += nilai;
                 }
             }
         });
+
+        // Tampilkan indikator error kalau data kosong
+        if (barisDihitung === 0) {
+            console.log("INFO: Data JSON ketarik, tapi 0 baris lolos filter. Cek format Tanggal di Spreadsheet.");
+        }
 
 
 // === GANTI UPDATE KPI OMZET DI prosesData() DENGAN INI ===
