@@ -464,18 +464,23 @@
         }
 
 
-// === GANTI UPDATE KPI OMZET DI prosesData() DENGAN INI ===
+        // === GANTI UPDATE KPI OMZET DI prosesData() DENGAN INI ===
         try {
             const TARGET = 820000000; 
-            let salesVal = dSkrg.sales || 0; 
-            let persen = (salesVal / TARGET) * 100;
+            
+            // 🔥 PERUBAHANNYA DI SINI: OMZET BERSIH (SALES - RETUR)
+            let netSales = (dSkrg.sales || 0) - (dSkrg.retur || 0); 
+            let persen = (netSales / TARGET) * 100;
             
             let elSales = document.getElementById('kpiSales');
-            if (elSales) elSales.innerText = formatRp(salesVal);
+            // Tampilkan Omzet Bersih ke layar
+            if (elSales) elSales.innerText = formatRp(netSales); 
             
             let barFill = document.getElementById('kpiSalesProgress');
             if (barFill) {
-                barFill.style.width = (persen > 100 ? 100 : persen) + '%';
+                // Cegah bar minus kalau amit-amit retur lagi lebih gede dari sales
+                let displayPersen = persen < 0 ? 0 : (persen > 100 ? 100 : persen); 
+                barFill.style.width = displayPersen + '%';
                 barFill.style.background = persen >= 100 ? 'var(--success)' : (persen >= 80 ? 'var(--warning)' : 'var(--primary)');
             }
             
@@ -489,7 +494,7 @@
                     elGap.innerText = '🔥 TARGET TEMBUS!';
                     elGap.style.color = 'var(--success)';
                 } else {
-                    let gapVal = TARGET - salesVal;
+                    let gapVal = TARGET - netSales;
                     elGap.innerText = '- ' + formatRp(gapVal); 
                     elGap.style.color = 'var(--danger)';
                 }
