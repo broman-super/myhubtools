@@ -288,34 +288,51 @@
 </div>
 <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbysL2_UKpuAUDD6G-YtjB5kz4UaeHR1t4X6xyfa2qLXKgR3PYZNvvemNFVgJG3cXiAZUQ/exec';
-    let rawData = [];
+    // VARIABEL GLOBAL BARU
+    let rawDataTransaksi = [];
+    let rawDataBiaya = [];
+    let katalogProduk = {}; // Ini bakal jadi kamus VLOOKUP kita
     let charts = {};
     
-    const KODE_SERI_MASTER = ['S WP', 'SAG', 'STT', 'STX', 'STC', 'SX', 'S'].sort((a,b) => b.length - a.length);
-    const WARNA_MASTER = ['HITAM', 'PUTIH', 'MERAH', 'BIRU', 'HIJAU', 'UNGU', 'ABU', 'KUNING', 'ORANGE', 'COKLAT', 'PINK', 'SILVER', 'GOLD', 'NAVY', 'MAROON', 'CREAM'];
-
     const formatRp = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
     const svgJam = `<svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`;
 
     async function initDashboard() {
-            try {
-                // Panggil API (Pastikan ?action=getSalesData tetep ada)
-                const res = await fetch(API_URL + "?action=getSalesData"); 
-                const dataMentah = await res.json();
-    
-                rawData = dataMentah.map(b => {
-                    // 1. BACA ANGKA LEBIH PINTAR (Sapu Jagat)
-                    let mentahNilai = b['Penjualan'] || b['Total Harga'] || 0;
-                    let angkaAman = 0;
-                    if (typeof mentahNilai === 'number') {
-                        angkaAman = mentahNilai; 
-                    } else if (mentahNilai) {
-                        angkaAman = parseFloat(mentahNilai.toString().replace(/[^0-9,-]/g, '').replace(/,/g, '.')) || 0;
+        try {
+            // 1. Tarik Data 3 Kamar
+            const res = await fetch(API_URL + "?action=getSalesData");
+            const dataMentah = await res.json();
+
+            // 2. BIKIN KAMUS PRODUK (VLOOKUP LOKAL)
+            // Biar JS gampang nyari HPP & Series cuma modal 'Nama Barang'
+            if (dataMentah.produk) {
+                dataMentah.produk.forEach(p => {
+                    let nama = (p['Nama Barang'] || '').toString().toUpperCase().trim();
+                    if (nama) {
+                        katalogProduk[nama] = {
+                            seriesKode: p['Kode Series'] || 'LAINNYA',
+                            seriesNama: p['Nama Series'] || 'Lainnya',
+                            kategori: p['Kategori Produk'] || 'UMUM',
+                            hpp: parseFloat((p['HPP'] || p['Modal'] || 0).toString().replace(/[^0-9,-]/g, '')) || 0
+                        };
                     }
-    
+                });
+            }
+
+            // 3. PARSING DATA TRANSAKSI & GABUNGIN SAMA KAMUS PRODUK
+            if (dataMentah.transaksi) {
+                rawDataTransaksi = dataMentah.transaksi.map(b => {
+                    let mentahNilai = b['Total Harga'] || b['Penjualan'] || 0;
+                    let angkaAman = typeof mentahNilai === 'number' ? mentahNilai : parseFloat(mentahNilai.toString().replace(/[^0-9,-]/g, '').replace(/,/g, '.')) || 0;
+                    
                     let mentahQty = b['Kuantitas'] || 0;
-                    let qtyAman = (typeof mentahQty === 'number') ? mentahQty : parseInt(mentahQty.toString().replace(/[^0-9]/g, '')) || 0;
-    
+                    let qtyAman = typeof mentahQty === 'number' ? mentahQty : parseInt(mentahQty.toString().replace(/[^0-9]/g, '')) || 0;
+
+                    let prodUp = (b['Nama Barang'] || '').toString().toUpperCase().trim();
+                    
+                    // VLOOKUP BERAKSI DI SINI: Nyari modal & seri di katalog
+                    let infoProduk = katalogProduk[prodUp] || { seriesKode: 'LAINNYA', seriesNama: 'Lainnya', kategori: 'UMUM', hpp: 0 };
+
                     return {
                         ...b,
                         parsedDate: new Date(b['Tanggal']),
@@ -323,28 +340,49 @@
                         parsedQty: qtyAman,
                         tipeLow: (b['Tipe Transaksi'] || '').toString().toLowerCase(),
                         katUp: (b['Nama Kategori Pelanggan'] || 'UMUM').toString().toUpperCase(),
-                        prodUp: (b['Nama Barang'] || '').toString().toUpperCase(),
+                        prodUp: prodUp,
                         namaPelanggan: b['Nama Pelanggan'] || 'Tanpa Nama',
-                        statusLow: (b['Status'] || '').toString().toLowerCase()
+                        statusLow: (b['Status'] || '').toString().toLowerCase(),
+                        // Data tambahan hasil VLOOKUP:
+                        seriesKode: infoProduk.seriesKode,
+                        seriesNama: infoProduk.seriesNama,
+                        hppSatuan: infoProduk.hpp,
+                        totalHpp: infoProduk.hpp * qtyAman
                     };
                 });
-    
-                // Set Dropdown Kategori
-                const katUnik = [...new Set(rawData.map(i => i.katUp))];
-                const selectProduk = document.getElementById('filterProdukKategori');
-                selectProduk.innerHTML = '<option value="ALL">SEMUA</option>'; // Reset dulu
-                katUnik.forEach(k => { if(k && k !== 'UMUM') selectProduk.add(new Option(k, k)); });
-    
-                setTimeout(() => {
-                    document.getElementById('loadingScreen').style.display = 'none';
-                    applyQuickFilter(); // Jalankan filter pertama kali
-                }, 100);
-    
-            } catch (e) { 
-                console.error(e);
-                alert("Gagal memproses data dari Server!"); 
             }
+
+            // 4. PARSING DATA BIAYA
+            if (dataMentah.biaya) {
+                rawDataBiaya = dataMentah.biaya.map(c => {
+                    let mentahNominal = c['Nominal'] || 0;
+                    let nominalAman = typeof mentahNominal === 'number' ? mentahNominal : parseFloat(mentahNominal.toString().replace(/[^0-9,-]/g, '').replace(/,/g, '.')) || 0;
+                    return {
+                        parsedDate: new Date(c['Tanggal']),
+                        kategoriBiaya: (c['Kategori Biaya'] || 'Lain-lain').toString().toUpperCase(),
+                        nominal: nominalAman
+                    };
+                });
+            }
+
+            // 5. Update Dropdown Filter
+            const katUnik = [...new Set(rawDataTransaksi.map(i => i.katUp))];
+            const selectProduk = document.getElementById('filterProdukKategori');
+            if (selectProduk) {
+                selectProduk.innerHTML = '<option value="ALL">SEMUA</option>';
+                katUnik.forEach(k => { if(k && k !== 'UMUM') selectProduk.add(new Option(k, k)); });
+            }
+
+            setTimeout(() => {
+                document.getElementById('loadingScreen').style.display = 'none';
+                applyQuickFilter(); 
+            }, 100);
+
+        } catch (e) { 
+            console.error("Error Parsing:", e);
+            alert("Gagal memproses data 3 Kamar dari Server!"); 
         }
+    }
 
     function applyQuickFilter() {
         const val = document.getElementById('quickFilter').value;
