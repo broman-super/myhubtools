@@ -197,10 +197,10 @@
                 <div class="kpi-val" id="kpiRetur" style="color:var(--danger)">Rp 0</div>
                 <div class="kpi-sub" id="kpiReturDetail" style="color:var(--danger)">0 Unit | 0% Loss</div>
             </div>
-            <div class="kpi-card">
-                <div class="kpi-label"><svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> RATA-RATA ORDER</div>
-                <div class="kpi-val" id="kpiAov">Rp 0</div>
-                <div class="kpi-sub">Per Transaksi</div>
+            <div class="kpi-card" style="border-left-color:var(--success)">
+                <div class="kpi-label" style="color:var(--success)"><svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> LABA BERSIH (NET)</div>
+                <div class="kpi-val" id="kpiNetProfit" style="color:var(--success)">Rp 0</div>
+                <div class="kpi-sub" id="kpiOpexDetail" style="color:#64748b; font-size:9px;">Biaya: Rp 0 | Margin: 0%</div>
             </div>
         <div class="kpi-card info-box">
                 <div class="grid-line">
@@ -502,44 +502,53 @@
         }
 
 
-        // === GANTI UPDATE KPI OMZET DI prosesData() DENGAN INI ===
+        // 3. MATEMATIKA KEUANGAN (AKUNTANSI)
+        let netSales = (dSkrg.sales || 0) - (dSkrg.retur || 0);
+        let grossProfit = netSales - dSkrg.cogs;
+        let netProfit = grossProfit - totalBiaya;
+        
+        let netMargin = netSales > 0 ? (netProfit / netSales) * 100 : 0;
+        let opexRatio = netSales > 0 ? (totalBiaya / netSales) * 100 : 0;
+
+        // 4. UPDATE UI KOTAK KPI
         try {
+            // Update Omzet Vs Target
             const TARGET = 820000000; 
-            
-            // 🔥 PERUBAHANNYA DI SINI: OMZET BERSIH (SALES - RETUR)
-            let netSales = (dSkrg.sales || 0) - (dSkrg.retur || 0); 
             let persen = (netSales / TARGET) * 100;
             
-            let elSales = document.getElementById('kpiSales');
-            // Tampilkan Omzet Bersih ke layar
-            if (elSales) elSales.innerText = formatRp(netSales); 
-            
+            if (document.getElementById('kpiSales')) document.getElementById('kpiSales').innerText = formatRp(netSales); 
             let barFill = document.getElementById('kpiSalesProgress');
             if (barFill) {
-                // Cegah bar minus kalau amit-amit retur lagi lebih gede dari sales
                 let displayPersen = persen < 0 ? 0 : (persen > 100 ? 100 : persen); 
                 barFill.style.width = displayPersen + '%';
                 barFill.style.background = persen >= 100 ? 'var(--success)' : (persen >= 80 ? 'var(--warning)' : 'var(--primary)');
             }
-            
-            // TAMPILKAN JUMLAH BARIS SEBAGAI DETEKTIF LOKAL
-            let elPct = document.getElementById('kpiSalesPct');
-            if (elPct) elPct.innerText = `${persen.toFixed(1)}% | ${barisDihitung} Baris Terbaca`;
+            if (document.getElementById('kpiSalesPct')) document.getElementById('kpiSalesPct').innerText = `${persen.toFixed(1)}% | ${barisDihitung} Trx`;
             
             let elGap = document.getElementById('kpiSalesGap');
             if (elGap) {
                 if (persen >= 100) {
-                    elGap.innerText = '🔥 TARGET TEMBUS!';
-                    elGap.style.color = 'var(--success)';
+                    elGap.innerText = '🔥 TARGET TEMBUS!'; elGap.style.color = 'var(--success)';
                 } else {
-                    let gapVal = TARGET - netSales;
-                    elGap.innerText = '- ' + formatRp(gapVal); 
-                    elGap.style.color = 'var(--danger)';
+                    elGap.innerText = '- ' + formatRp(TARGET - netSales); elGap.style.color = 'var(--danger)';
                 }
             }
-        } catch(err) {
-            console.error(err);
-        }
+
+            // Update Retur
+            if (document.getElementById('kpiRetur')) document.getElementById('kpiRetur').innerText = formatRp(dSkrg.retur);
+            let pctRetur = netSales > 0 ? (dSkrg.retur / netSales * 100).toFixed(1) : 0;
+            if (document.getElementById('kpiReturDetail')) document.getElementById('kpiReturDetail').innerText = dSkrg.returQty + " Unit | " + pctRetur + "% Loss Rate";
+
+            // Update Laba Bersih & Biaya (Pengganti Rata-rata Order)
+            if (document.getElementById('kpiNetProfit')) document.getElementById('kpiNetProfit').innerText = formatRp(netProfit);
+            if (document.getElementById('kpiOpexDetail')) document.getElementById('kpiOpexDetail').innerText = `Biaya: ${formatRp(totalBiaya)} | Margin: ${netMargin.toFixed(1)}%`;
+
+            // Update Hari Gacor & Top Kontributor
+            if (document.getElementById('kpiGoldenDay')) document.getElementById('kpiGoldenDay').innerText = Object.keys(rekapHari).reduce((a, b) => rekapHari[a] > rekapHari[b] ? a : b);
+            const tC = Object.entries(rekapCont).sort((a,b) => b[1] - a[1]);
+            if (document.getElementById('kpiTopCont')) document.getElementById('kpiTopCont').innerText = tC.length > 0 ? tC[0][0] : '-';
+
+        } catch(err) { console.error("Error update KPI:", err); }
         // ==========================================  
         document.getElementById('kpiRetur').innerText = formatRp(dSkrg.retur);
         let pctRetur = dSkrg.sales > 0 ? (dSkrg.retur / dSkrg.sales * 100).toFixed(1) : 0;
