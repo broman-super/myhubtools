@@ -645,20 +645,18 @@
 
 let contextForAI = ""; 
 
-// === GANTI BAGIAN ATAS FUNGSI jalankanDiagnosaLokal LU DENGAN INI ===
     function jalankanDiagnosaLokal(dSkrg, urRes, churnData) {
         let warnings = [];
         let lossRate = dSkrg.sales > 0 ? (dSkrg.retur / dSkrg.sales * 100) : 0;
         
-        // --- TARGET SALES 820 JUTA ---
         const TARGET_SALES = 820000000;
         
-        // FIX: AI SEKARANG BACA OMZET BERSIH JUGA
-        let netSales = (dSkrg.sales || 0);
+        // 🔥 PERBAIKAN: Hitung pakai Omzet Bersih (Sales - Retur)
+        let netSales = (dSkrg.sales || 0) - (dSkrg.retur || 0);
         let achPct = (netSales / TARGET_SALES) * 100;
         let gap = TARGET_SALES - netSales;
 
-        // 1. Deteksi Target (Tetap sama seperti kode lu sebelumnya)
+        // 1. Deteksi Target
         if (achPct >= 100) {
             warnings.push(`<span style="color:var(--success)">🌟 <b>TARGET TERCAPAI:</b> Tembus ${achPct.toFixed(1)}% dari target Rp 820 Juta. Pertahankan!</span>`);
         } else if (achPct >= 80) {
@@ -674,9 +672,9 @@ let contextForAI = "";
             warnings.push(`<span style="color:var(--warning)">🟠 <b>WARNING:</b> Ada tren retur (${lossRate.toFixed(1)}%). Pantau komplain.</span>`);
         }
 
-        // 3. Deteksi Ketergantungan Reseller
-        if (urRes.length > 0 && dSkrg.sales > 0) {
-            let topResellerShare = (urRes[0][1] / dSkrg.sales) * 100;
+        // 3. Deteksi Ketergantungan Reseller (Pakai netSales)
+        if (urRes.length > 0 && netSales > 0) {
+            let topResellerShare = (urRes[0][1] / netSales) * 100;
             if (topResellerShare > 40) {
                 warnings.push(`<span style="color:var(--warning)">🟠 <b>RESIKO BISNIS:</b> ${topResellerShare.toFixed(1)}% omzet bergantung ke 1 Partner (${urRes[0][0]}).</span>`);
             }
@@ -690,8 +688,8 @@ let contextForAI = "";
         // Tampilkan ke layar
         document.getElementById('localWarningBox').innerHTML = `<ul style="margin-left: 15px; padding-left: 0;"><li>` + warnings.join('</li><li style="margin-top:6px;">') + `</li></ul>`;
 
-        // Siapin Konteks Cerdas buat Gemini AI (Termasuk Target & Defisit)
-        contextForAI = `Sebagai analis bisnis, evaluasi data ini: Target Omzet Rp 820.000.000. Saat ini tercapai Rp ${dSkrg.sales} (${achPct.toFixed(1)}%), defisit Rp ${gap}. Total Retur Rp ${dSkrg.retur} (${lossRate.toFixed(1)}%). Mitra churn (pasif >14 hari): ${churnData.length} orang. Berikan 3 langkah strategi taktis dan mendesak untuk menutup defisit target tersebut.`;
+        // Siapin Konteks Cerdas buat Gemini AI (Konteks juga diupdate pakai Omzet Bersih)
+        contextForAI = `Sebagai analis bisnis, evaluasi data ini: Target Omzet Rp 820.000.000. Saat ini tercapai Rp ${netSales} (${achPct.toFixed(1)}%), defisit Rp ${gap}. Total Retur Rp ${dSkrg.retur} (${lossRate.toFixed(1)}%). Mitra churn (pasif >14 hari): ${churnData.length} orang. Berikan 3 langkah strategi taktis dan mendesak untuk menutup defisit target tersebut.`;
     }
     async function mintaSaranAI() {
         const box = document.getElementById('aiResultBox');
@@ -701,16 +699,29 @@ let contextForAI = "";
         content.innerHTML = '<span style="color:#f59e0b;">Gemini memproses strategi... ⚡</span>';
 
         try {
-            // Kita kirim rangkuman konteks ke Apps Script lewat URL parameter (Biar AI lu cepet nangkap)
             const urlDenganKonteks = API_URL + "?action=getAnalysis&context=" + encodeURIComponent(contextForAI);
             const res = await fetch(urlDenganKonteks);
             const json = await res.json();
-            content.innerHTML = json.analysis;
+            
+            // 🔥 PERBAIKAN: Bongkar bungkusan object dari Gemini
+            let hasilAkhir = json.analysis;
+            if (typeof hasilAkhir === 'object') {
+                try {
+                    // Coba ambil teks terdalam dari format standar Gemini
+                    hasilAkhir = hasilAkhir.candidates[0].content.parts[0].text;
+                } catch (e) {
+                    // Kalau mentok, jadikan string biar kelihatan isinya apa (bukan [object Object])
+                    hasilAkhir = JSON.stringify(hasilAkhir); 
+                }
+            }
+            
+            // Tampilkan ke layar (Ubah baris baru \n jadi <br> biar rapi)
+            content.innerHTML = hasilAkhir.replace(/\n/g, '<br>');
+
         } catch (e) { 
-            content.innerHTML = '<span style="color:#ef4444;">Gagal menghubungi Gemini. Pastikan Apps Script lu siap menerima parameter "context".</span>'; 
+            content.innerHTML = '<span style="color:#ef4444;">Gagal menghubungi Gemini. Cek koneksi API lo.</span>'; 
         }
     }
-    //Mulai Diagnosa
 
     initDashboard();
 </script>
