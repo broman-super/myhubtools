@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Intel Pro v7.5 - Advanced Edition</title>
+    <title>Sales Intel Pro v7.6 - Bulletproof Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
@@ -72,7 +72,7 @@
 
 <div id="loadingScreen" style="position:fixed; inset:0; background:#fff; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center;">
     <div style="border:4px solid var(--accent); border-top:4px solid var(--primary); border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite;"></div>
-    <p style="margin-top:10px; font-weight:800; font-size:12px;">MEMUAT DATA...</p>
+    <p style="margin-top:10px; font-weight:800; font-size:12px;">MEMUAT DATA KEUANGAN...</p>
 </div>
 
 <div class="nav-bar">
@@ -183,7 +183,9 @@
 </div>
 
 <script>
+    // ✅ URL SUDAH DIPERBARUI SESUAI REQUEST LU
     const API_URL = 'https://script.google.com/macros/s/AKfycbzKIYkTje5zb41JZ3H_PowtxrVRkbNDNmro4kEnMg-E9FY-fhDKDlrEvir14zvPRzigEw/exec';
+    
     let rawDataTransaksi = [];
     let rawDataBiaya = [];
     let katalogProduk = {}; 
@@ -198,58 +200,70 @@
     async function initDashboard() {
         try {
             const res = await fetch(API_URL + "?action=getSalesData");
-            const dataMentah = await res.json();
+            let dataMentah = await res.json();
 
-            if (dataMentah.produk) {
+            // 🔥 FIX FATAL: Sistem Auto-Fallback. Kalau API lu error dan nge-lempar Array, web nggak akan mati!
+            if (Array.isArray(dataMentah)) {
+                console.warn("Mendeteksi format API versi lama (Array). Mengaktifkan Mode Fallback...");
+                dataMentah = { transaksi: dataMentah, produk: [], biaya: [] };
+            }
+            if (!dataMentah.transaksi) dataMentah.transaksi = [];
+
+            // 1. Parsing Kamus Produk (Tahan Banting)
+            if (dataMentah.produk && Array.isArray(dataMentah.produk)) {
                 dataMentah.produk.forEach(p => {
-                    let nama = (p['Nama Barang'] || '').toString().toUpperCase().trim();
+                    let nama = (p['Nama Barang'] || p['Barang'] || '').toString().toUpperCase().trim();
                     if (nama) {
                         katalogProduk[nama] = {
-                            seriesKode: p['Kode Series'] || 'LAINNYA',
+                            seriesKode: p['Kode Series'] || p['Series'] || 'LAINNYA',
                             seriesNama: p['Nama Series'] || 'Lainnya',
-                            kategori: p['Kategori Produk'] || 'UMUM',
+                            kategori: p['Kategori Produk'] || p['Kategori'] || 'UMUM',
                             hpp: parseFloat((p['HPP'] || p['Modal'] || 0).toString().replace(/[^0-9,-]/g, '')) || 0
                         };
                     }
                 });
             }
 
-            if (dataMentah.transaksi) {
-                rawDataTransaksi = dataMentah.transaksi.map(b => {
-                    let mentahNilai = b['Total Harga'] || b['Penjualan'] || 0;
-                    let angkaAman = typeof mentahNilai === 'number' ? mentahNilai : parseFloat(mentahNilai.toString().replace(/[^0-9,-]/g, '').replace(/,/g, '.')) || 0;
-                    
-                    let mentahQty = b['Kuantitas'] || 0;
-                    let qtyAman = typeof mentahQty === 'number' ? mentahQty : parseInt(mentahQty.toString().replace(/[^0-9]/g, '')) || 0;
+            // 2. Parsing Transaksi (Fleksibel sama Header Excel lu yang beda-beda)
+            rawDataTransaksi = dataMentah.transaksi.map(b => {
+                let mentahNilai = b['Total Harga'] || b['Penjualan'] || b['Harga'] || b['Nilai'] || 0;
+                let angkaAman = typeof mentahNilai === 'number' ? mentahNilai : parseFloat(mentahNilai.toString().replace(/[^0-9,-]/g, '').replace(/,/g, '.')) || 0;
+                
+                let mentahQty = b['Kuantitas'] || b['Qty'] || b['Jumlah'] || 0;
+                let qtyAman = typeof mentahQty === 'number' ? mentahQty : parseInt(mentahQty.toString().replace(/[^0-9]/g, '')) || 0;
 
-                    let prodUp = (b['Nama Barang'] || '').toString().toUpperCase().trim();
-                    let infoProduk = katalogProduk[prodUp] || { seriesKode: 'LAINNYA', seriesNama: 'Lainnya', kategori: 'UMUM', hpp: 0 };
+                let prodUp = (b['Nama Barang'] || b['Barang'] || b['Produk'] || '').toString().toUpperCase().trim();
+                let infoProduk = katalogProduk[prodUp] || { seriesKode: 'LAINNYA', seriesNama: 'Lainnya', kategori: 'UMUM', hpp: 0 };
 
-                    return {
-                        ...b,
-                        parsedDate: new Date(b['Tanggal']),
-                        parsedNilai: angkaAman,
-                        parsedQty: qtyAman,
-                        tipeLow: (b['Tipe Transaksi'] || '').toString().toLowerCase(),
-                        katUp: (b['Nama Kategori Pelanggan'] || 'UMUM').toString().toUpperCase(),
-                        prodUp: prodUp,
-                        namaPelanggan: b['Nama Pelanggan'] || 'Tanpa Nama',
-                        statusLow: (b['Status'] || '').toString().toLowerCase(),
-                        seriesKode: infoProduk.seriesKode,
-                        seriesNama: infoProduk.seriesNama,
-                        hppSatuan: infoProduk.hpp,
-                        totalHpp: infoProduk.hpp * qtyAman
-                    };
-                });
-            }
+                let tglVal = b['Tanggal'] || b['Date'];
+                let pDate = new Date(tglVal);
+                if(isNaN(pDate.getTime())) pDate = new Date(); // Biar baris lu gak di-skip cuma gara-gara tanggal jelek
 
-            if (dataMentah.biaya) {
+                return {
+                    ...b,
+                    parsedDate: pDate,
+                    parsedNilai: angkaAman,
+                    parsedQty: qtyAman,
+                    tipeLow: (b['Tipe Transaksi'] || b['Tipe'] || '').toString().toLowerCase(),
+                    katUp: (b['Nama Kategori Pelanggan'] || b['Kategori Pelanggan'] || b['Nama Kategori P'] || 'UMUM').toString().toUpperCase(),
+                    prodUp: prodUp,
+                    namaPelanggan: b['Nama Pelanggan'] || b['Pelanggan'] || 'Tanpa Nama',
+                    statusLow: (b['Status'] || b['Status Transaksi'] || b['Status Pembayaran'] || '').toString().toLowerCase(),
+                    seriesKode: infoProduk.seriesKode,
+                    seriesNama: infoProduk.seriesNama,
+                    hppSatuan: infoProduk.hpp,
+                    totalHpp: infoProduk.hpp * qtyAman
+                };
+            });
+
+            // 3. Parsing Biaya
+            if (dataMentah.biaya && Array.isArray(dataMentah.biaya)) {
                 rawDataBiaya = dataMentah.biaya.map(c => {
-                    let mentahNominal = c['Nominal'] || 0;
+                    let mentahNominal = c['Nominal'] || c['Biaya'] || 0;
                     let nominalAman = typeof mentahNominal === 'number' ? mentahNominal : parseFloat(mentahNominal.toString().replace(/[^0-9,-]/g, '').replace(/,/g, '.')) || 0;
                     return {
-                        parsedDate: new Date(c['Tanggal']),
-                        kategoriBiaya: (c['Kategori Biaya'] || 'Lain-lain').toString().toUpperCase(),
+                        parsedDate: new Date(c['Tanggal'] || c['Date'] || new Date()),
+                        kategoriBiaya: (c['Kategori Biaya'] || c['Kategori'] || 'Lain-lain').toString().toUpperCase(),
                         nominal: nominalAman
                     };
                 });
@@ -263,13 +277,16 @@
             }
 
             setTimeout(() => {
-                document.getElementById('loadingScreen').style.display = 'none';
+                let ls = document.getElementById('loadingScreen');
+                if(ls) ls.style.display = 'none';
                 applyQuickFilter(); 
             }, 100);
 
         } catch (e) { 
-            console.error("Error Parsing:", e);
-            alert("Gagal memproses data 3 Kamar dari Server!"); 
+            console.error("Error Sistem V7.6:", e);
+            alert("Koneksi gagal! Pastikan Apps Script lu di-deploy akses 'Anyone'."); 
+            let ls = document.getElementById('loadingScreen');
+            if(ls) ls.style.display = 'none';
         }
     }
 
@@ -279,26 +296,21 @@
         let end = new Date(), start = new Date();
         
         if (val === 'today') {
-            start = new Date(); 
-            sd.style.display = 'none'; ed.style.display = 'none';
+            start = new Date(); sd.style.display = 'none'; ed.style.display = 'none';
         } else if (val === '7') {
-            start.setDate(end.getDate() - 7); 
-            sd.style.display = 'none'; ed.style.display = 'none';
+            start.setDate(end.getDate() - 7); sd.style.display = 'none'; ed.style.display = 'none';
         } else if (val === '30') {
-            start.setDate(end.getDate() - 30); 
-            sd.style.display = 'none'; ed.style.display = 'none';
+            start.setDate(end.getDate() - 30); sd.style.display = 'none'; ed.style.display = 'none';
         } else if (val === 'custom') {
             sd.style.display = 'inline-block'; ed.style.display = 'inline-block';
         } else if (val === 'all') {
-            start = new Date('2000-01-01');
-            sd.style.display = 'none'; ed.style.display = 'none';
+            start = new Date('2000-01-01'); sd.style.display = 'none'; ed.style.display = 'none';
         }
 
         if(val !== 'custom') {
             sd.value = start.toISOString().split('T')[0];
             ed.value = end.toISOString().split('T')[0];
         }
-        
         document.getElementById('aiResultBox').style.display = 'none';
         prosesData();
     }
@@ -313,20 +325,25 @@
         
         let rekapTren = {}, rekapReseller = {}, rekapKat = {}, rekapProd = {}, rekapCont = {};
         let lastOrder = {}, rekapHari = { 'Senin': 0, 'Selasa': 0, 'Rabu': 0, 'Kamis': 0, 'Jumat': 0, 'Sabtu': 0, 'Minggu': 0 };
-        let rekapSeri = {}, rekapWarna = {}, rekapBiaya = {}; // Tambahan Variabel Rekap Biaya
+        let rekapSeri = {}, rekapWarna = {}, rekapBiaya = {}; 
         const listHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
         let barisDihitung = 0; 
 
-        if(typeof rawDataTransaksi !== 'undefined' && rawDataTransaksi.length > 0) {
+        if(rawDataTransaksi && rawDataTransaksi.length > 0) {
             rawDataTransaksi.forEach(b => {
                 let d = b.parsedDate;
                 if (isNaN(d.getTime())) return;
                 
                 let tipe = b.tipeLow;
-                let isRetur = tipe.includes('retur');
-                let isBatal = b.statusLow.includes('batal') || b.statusLow.includes('void');
-                let isPenjualan = !isRetur; 
+                let status = b.statusLow;
+                
+                let isRetur = tipe.includes('retur') || tipe.includes('kembali');
+                let isBatal = status.includes('batal') || status.includes('void') || status.includes('cancel');
+                
+                // 🔥 Logika Tahan Banting: Cari kata kunci, kalau ga ada tetep anggap penjualan selama bukan batal/retur
+                let isPenjualan = tipe.includes('faktur') || tipe.includes('penjualan') || tipe.includes('sales');
+                if(!isPenjualan && !isRetur && tipe !== '') isPenjualan = true;
 
                 let nilai = b.parsedNilai || 0;
                 let qty = b.parsedQty || 0;
@@ -386,8 +403,7 @@
             });
         }
 
-        // PERUBAHAN 3: Hitung Rincian Opex
-        if(typeof rawDataBiaya !== 'undefined' && rawDataBiaya.length > 0) {
+        if(rawDataBiaya && rawDataBiaya.length > 0) {
             rawDataBiaya.forEach(c => {
                 let d = c.parsedDate;
                 if (isNaN(d.getTime())) return;
@@ -406,7 +422,6 @@
         let netMargin = netSales > 0 ? (netProfit / netSales) * 100 : 0;
         let opexRatio = netSales > 0 ? (totalBiaya / netSales) * 100 : 0;
 
-        // PERUBAHAN 4: Rumus Proyeksi (Run Rate)
         let today = new Date();
         let hariBerjalan = Math.max(1, Math.ceil((Math.min(today, gEnd) - gStart) / (1000 * 3600 * 24)));
         let totalHari = Math.max(1, Math.ceil((gEnd - gStart) / (1000 * 3600 * 24)));
@@ -424,8 +439,6 @@
                 barFill.style.background = persen >= 100 ? 'var(--success)' : (persen >= 80 ? 'var(--warning)' : 'var(--primary)');
             }
             if (document.getElementById('kpiSalesPct')) document.getElementById('kpiSalesPct').innerText = `${persen.toFixed(1)}% | ${barisDihitung} Trx`;
-            
-            // Tampilkan Proyeksi Run Rate
             if (document.getElementById('kpiSalesRunRate')) document.getElementById('kpiSalesRunRate').innerText = `Proyeksi: ${formatRp(runRate)}`;
 
             let elGap = document.getElementById('kpiSalesGap');
@@ -441,7 +454,7 @@
             if (document.getElementById('kpiNetProfit')) document.getElementById('kpiNetProfit').innerText = formatRp(netProfit);
             if (document.getElementById('kpiOpexDetail')) document.getElementById('kpiOpexDetail').innerText = `Biaya: ${formatRp(totalBiaya)} | Margin: ${netMargin.toFixed(1)}%`;
 
-            let maxHari = Object.keys(rekapHari).reduce((a, b) => rekapHari[a] > rekapHari[b] ? a : b);
+            let maxHari = Object.keys(rekapHari).reduce((a, b) => rekapHari[a] > rekapHari[b] ? a : b, '-');
             if (document.getElementById('kpiGoldenDay')) document.getElementById('kpiGoldenDay').innerText = rekapHari[maxHari] > 0 ? maxHari : '-';
             
             const tC = Object.entries(rekapCont).sort((a,b) => b[1] - a[1]);
@@ -487,7 +500,6 @@
             }).join('');
         }
 
-        // PERUBAHAN 5: Tampilkan Radar Kebocoran Opex
         const opexArr = Object.entries(rekapBiaya).sort((a, b) => b[1] - a[1]);
         if(document.getElementById('opexList')) {
             document.getElementById('opexList').innerHTML = opexArr.map((i, r) => `<div class="item-row"><span><b>${r+1}.</b> ${i[0]}</span><span style="font-weight:800; color:var(--danger)">${formatRp(i[1])}</span></div>`).join('') || '<div class="item-row">Belum ada pengeluaran dicatat</div>';
@@ -548,18 +560,12 @@
         
         let achPct = (netSales / TARGET_SALES) * 100;
         let gap = TARGET_SALES - netSales;
-
-        // PERUBAHAN 6: Diagnosa AI Makin Pinter (Baca Proyeksi & Biaya)
         let proyPct = (runRate / TARGET_SALES) * 100;
-        if (proyPct < 100 && achPct < 100) {
-            warnings.push(`<span style="color:var(--danger)">🔴 <b>PROYEKSI MELESET:</b> Kecepatan sales saat ini cuma bawa omzet ke ${formatRp(runRate)} (${proyPct.toFixed(1)}%). Segera evaluasi!</span>`);
-        } else if (proyPct >= 100 && achPct < 100) {
-            warnings.push(`<span style="color:var(--success)">🌟 <b>PROYEKSI AMAN:</b> Kecepatan saat ini bagus. Diproyeksikan tembus ${formatRp(runRate)}. Pertahankan!</span>`);
-        }
 
-        if (netProfit < 0 && netSales > 0) {
-            warnings.push(`<span style="color:var(--danger)">🔴 <b>RUGI BANDAR:</b> Biaya operasional menggerus laba. Net Margin: ${(netProfit/netSales*100).toFixed(1)}%.</span>`);
-        }
+        if (proyPct < 100 && achPct < 100) warnings.push(`<span style="color:var(--danger)">🔴 <b>PROYEKSI MELESET:</b> Kecepatan sales saat ini cuma bawa omzet ke ${formatRp(runRate)} (${proyPct.toFixed(1)}%). Segera evaluasi!</span>`);
+        else if (proyPct >= 100 && achPct < 100) warnings.push(`<span style="color:var(--success)">🌟 <b>PROYEKSI AMAN:</b> Kecepatan saat ini bagus. Diproyeksikan tembus ${formatRp(runRate)}.</span>`);
+
+        if (netProfit < 0 && netSales > 0) warnings.push(`<span style="color:var(--danger)">🔴 <b>RUGI BANDAR:</b> Biaya operasional menggerus laba. Net Margin: ${(netProfit/netSales*100).toFixed(1)}%.</span>`);
 
         if (lossRate > 5) warnings.push(`<span style="color:var(--danger)">🔴 <b>CRITICAL:</b> Loss rate tinggi (${lossRate.toFixed(1)}%).</span>`);
         if (urRes.length > 0 && netSales > 0) {
@@ -570,9 +576,7 @@
 
         document.getElementById('localWarningBox').innerHTML = `<ul style="margin-left: 15px; padding-left: 0;"><li>` + warnings.join('</li><li style="margin-top:6px;">') + `</li></ul>`;
 
-        // Susun daftar Opex Terbesar buat dibaca AI
-        let topOpex = opexArr.length > 0 ? `${opexArr[0][0]} (${formatRp(opexArr[0][1])})` : "Belum ada";
-
+        let topOpex = opexArr && opexArr.length > 0 ? `${opexArr[0][0]} (${formatRp(opexArr[0][1])})` : "Belum ada";
         contextForAI = `[SYSTEM: SUPERVISOR SALES ADVISOR]\nAnalisis data ini dan berikan 3 strategi taktis. Jawab to the point.\n\n[DATA]\n- Target: ${achPct.toFixed(1)}% (Sisa Rp ${gap})\n- Proyeksi Akhir: Rp ${runRate}\n- Net Sales: Rp ${netSales}\n- Net Profit: Rp ${netProfit}\n- Opex Terbesar: ${topOpex}\n- Retur: ${lossRate.toFixed(1)}%\n- Partner Pasif: ${churnData.length} toko.`;
     }
 
