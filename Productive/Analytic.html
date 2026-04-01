@@ -1,161 +1,118 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Intel Pro v7.9 - Rollback Stable</title>
+    <title>Sales v2.1 - Stable</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #f8fafc; --primary: #2563eb; --success: #10b981; --danger: #ef4444; --border: #e2e8f0; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: var(--bg); padding: 15px; display: flex; flex-direction: column; gap: 15px; }
-        .nav-bar { background: #fff; padding: 15px; border-radius: 12px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .btn-refresh { background: var(--primary); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 800; cursor: pointer; }
-        .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-        .kpi-card { background: #fff; padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
-        .kpi-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-        .kpi-val { font-size: 18px; font-weight: 800; margin: 5px 0; }
-        .progress-bg { width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: 0.5s; }
-        .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 15px; }
-        .card { background: #fff; border-radius: 12px; border: 1px solid var(--border); padding: 15px; }
-        .item-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
-        #loadingScreen { position:fixed; inset:0; background:#fff; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+        body { font-family: 'Plus Jakarta Sans'; background: #f8fafc; padding: 20px; }
+        .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .card { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .label { font-size: 10px; color: #64748b; font-weight: 800; text-transform: uppercase; }
+        .val { font-size: 20px; font-weight: 800; margin: 10px 0; }
+        .bar-bg { width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; background: #2563eb; width: 0%; transition: 0.5s; }
+        .btn-update { background: #2563eb; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div id="loadingScreen">
-    <p style="font-weight:800;">CONNECTING TO DATABASE...</p>
-</div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="color:#2563eb;">SUPERSUB DASHBOARD</h2>
+        <button class="btn-update" onclick="loadData()">REFRESH DATABASE</button>
+    </div>
 
-<div class="nav-bar">
-    <h1 style="font-size:18px; color:var(--primary);">SUPERSUB ANALYTICS</h1>
-    <button class="btn-refresh" onclick="initDashboard()">REFRESH DATA</button>
-</div>
+    <div class="kpi-row">
+        <div class="card">
+            <div class="label">Real Sales vs Target</div>
+            <div id="kpiSales" class="val">Rp 0</div>
+            <div class="bar-bg"><div id="kpiBar" class="bar-fill"></div></div>
+            <div id="kpiPct" style="font-size:11px; margin-top:8px; font-weight:800;">0% dari 820JT</div>
+        </div>
+        <div class="card">
+            <div class="label">Total Retur</div>
+            <div id="kpiRetur" class="val" style="color:#ef4444;">Rp 0</div>
+        </div>
+        <div class="card">
+            <div class="label">Laba Bersih (Estimasi)</div>
+            <div id="kpiNet" class="val" style="color:#10b981;">Rp 0</div>
+        </div>
+        <div class="card">
+            <div class="label">Total Biaya</div>
+            <div id="kpiOpex" class="val">Rp 0</div>
+        </div>
+    </div>
 
-<div class="kpi-row">
-    <div class="kpi-card">
-        <div class="kpi-label">Real Sales vs Target</div>
-        <div id="kpiSales" class="kpi-val">Rp 0</div>
-        <div class="progress-bg"><div id="kpiSalesProgress" class="progress-fill"></div></div>
-        <p id="kpiSalesPct" style="font-size:10px; font-weight:800; margin-top:5px;">0% dari 820JT</p>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Total Retur</div>
-        <div id="kpiRetur" class="kpi-val" style="color:var(--danger);">Rp 0</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Laba Bersih (Estimasi)</div>
-        <div id="kpiNet" class="kpi-val" style="color:var(--success);">Rp 0</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Total Pengeluaran</div>
-        <div id="kpiOpex" class="kpi-val">Rp 0</div>
-    </div>
-</div>
-
-<div class="main-grid">
     <div class="card">
-        <h3 style="font-size:12px; margin-bottom:10px;">TOP 10 PARTNER</h3>
-        <div id="partnerList"></div>
+        <div class="label">Diagnosa AI</div>
+        <div id="aiRes" style="font-size:13px; margin:15px 0; line-height:1.6;">Klik tombol untuk analisis...</div>
+        <button onclick="tanyaAI()" style="width:100%; padding:10px; border-radius:6px; cursor:pointer; font-weight:800;">TANYA GEMINI</button>
     </div>
-    <div class="card">
-        <h3 style="font-size:12px; margin-bottom:10px;">RINGKASAN BIAYA</h3>
-        <div id="opexList"></div>
-    </div>
-</div>
 
-<script>
-    // URL API LU YANG TERBARU
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzKIYkTje5zb41JZ3H_PowtxrVRkbNDNmro4kEnMg-E9FY-fhDKDlrEvir14zvPRzigEw/exec';
-    
-    let rawDataTransaksi = [], rawDataBiaya = [], katalogProduk = {};
-    const formatRp = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+    <script>
+        // PASTIIN URL INI ADALAH URL /exec YANG BARU DARI LANGKAH 1
+        const API = 'https://script.google.com/macros/s/AKfycbxdVYtSmi7atvB-UMyl7bm-VW8kAjDjw6FxTOevSEjX2phfG2fAmk-XZ3z8BEsLQTDJIg/exec';
+        let db = { transaksi: [], biaya: [], produk: [] };
+        const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
 
-    async function initDashboard() {
-        document.getElementById('loadingScreen').style.display = 'flex';
-        try {
-            const res = await fetch(API_URL + "?action=getSalesData");
-            const data = await res.json();
-            
-            // Simpan data ke variabel global
-            rawDataTransaksi = data.transaksi || [];
-            rawDataBiaya = data.biaya || [];
-            
-            // Bangun Kamus Produk (HPP)
-            if (data.produk) {
-                data.produk.forEach(p => {
-                    katalogProduk[(p['Nama Barang'] || '').toUpperCase().trim()] = { hpp: parseFloat(p['HPP'] || 0) };
-                });
-            }
-
-            document.getElementById('loadingScreen').style.display = 'none';
-            prosesData();
-        } catch (e) {
-            alert("Error: Gagal narik data. Pastikan API URL benar.");
-            console.error(e);
+        async function loadData() {
+            document.body.style.opacity = '0.5';
+            try {
+                const res = await fetch(API + "?action=getSalesData");
+                db = await res.json();
+                render();
+            } catch (e) { alert("Gagal narik data!"); }
+            document.body.style.opacity = '1';
         }
-    }
 
-    function prosesData() {
-        let totalSales = 0, totalRetur = 0, totalHpp = 0, totalOpex = 0;
-        let partnerMap = {}, opexMap = {};
-        const TARGET = 820000000;
+        function render() {
+            let sales = 0, retur = 0, opex = 0, hpp = 0;
+            const TARGET = 820000000;
 
-        // 1. Olah Transaksi
-        rawDataTransaksi.forEach(trx => {
-            let nilai = parseFloat(trx['Total Harga'] || 0);
-            let qty = parseInt(trx['Kuantitas'] || 0);
-            let item = (trx['Nama Barang'] || '').toUpperCase().trim();
-            let isRetur = (trx['Tipe Transaksi'] || '').toLowerCase().includes('retur');
-            let hppSatuan = katalogProduk[item]?.hpp || 0;
+            // Buat kamus modal
+            let modal = {};
+            db.produk.forEach(p => modal[(p['Nama Barang']||'').toUpperCase().trim()] = parseFloat(p['HPP']||0));
 
-            if (isRetur) {
-                totalRetur += Math.abs(nilai);
-                totalHpp -= (hppSatuan * qty);
-            } else {
-                totalSales += nilai;
-                totalHpp += (hppSatuan * qty);
-                let pName = trx['Nama Pelanggan'] || 'Umum';
-                partnerMap[pName] = (partnerMap[pName] || 0) + nilai;
-            }
-        });
+            db.transaksi.forEach(t => {
+                let n = parseFloat(t['Total Harga'] || 0);
+                let q = parseInt(t['Kuantitas'] || 0);
+                let item = (t['Nama Barang']||'').toUpperCase().trim();
+                let tipe = (t['Tipe Transaksi']||'').toLowerCase();
 
-        // 2. Olah Biaya
-        rawDataBiaya.forEach(b => {
-            let nom = parseFloat(b['Nominal'] || 0);
-            totalOpex += nom;
-            let kat = b['Kategori Biaya'] || 'Lainnya';
-            opexMap[kat] = (opexMap[kat] || 0) + nom;
-        });
+                if (tipe.includes('retur')) {
+                    retur += Math.abs(n);
+                    hpp -= (modal[item] || 0) * q;
+                } else {
+                    sales += n;
+                    hpp += (modal[item] || 0) * q;
+                }
+            });
 
-        // 3. Hitung Akhir
-        let netProfit = (totalSales - totalRetur) - totalHpp - totalOpex;
-        let achPct = (totalSales / TARGET) * 100;
+            db.biaya.forEach(b => opex += parseFloat(b['Nominal'] || 0));
 
-        // 4. Update Tampilan
-        document.getElementById('kpiSales').innerText = formatRp(totalSales);
-        document.getElementById('kpiSalesPct').innerText = achPct.toFixed(1) + "% dari 820JT";
-        document.getElementById('kpiSalesProgress').style.width = Math.min(achPct, 100) + "%";
-        document.getElementById('kpiRetur').innerText = formatRp(totalRetur);
-        document.getElementById('kpiOpex').innerText = formatRp(totalOpex);
-        document.getElementById('kpiNet').innerText = formatRp(netProfit);
+            let net = (sales - retur) - hpp - opex;
+            let pct = (sales / TARGET) * 100;
 
-        // Render List Partner
-        const topP = Object.entries(partnerMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
-        document.getElementById('partnerList').innerHTML = topP.map(p => `
-            <div class="item-row"><span>${p[0]}</span><b>${formatRp(p[1])}</b></div>
-        `).join('');
+            document.getElementById('kpiSales').innerText = fmt(sales);
+            document.getElementById('kpiPct').innerText = pct.toFixed(1) + "% dari 820JT";
+            document.getElementById('kpiBar').style.width = Math.min(pct, 100) + "%";
+            document.getElementById('kpiRetur').innerText = fmt(retur);
+            document.getElementById('kpiOpex').innerText = fmt(opex);
+            document.getElementById('kpiNet').innerText = fmt(net);
+        }
 
-        // Render List Opex
-        document.getElementById('opexList').innerHTML = Object.entries(opexMap).map(o => `
-            <div class="item-row"><span>${o[0]}</span><b style="color:var(--danger)">${formatRp(o[1])}</b></div>
-        `).join('');
-    }
+        async function tanyaAI() {
+            const resBox = document.getElementById('aiRes');
+            resBox.innerText = "Berpikir...";
+            const ctx = `Data: Sales ${fmt(sales)}, Profit ${fmt(net)}. Berikan 2 saran singkat.`;
+            try {
+                const r = await fetch(API + "?action=getAnalysis&context=" + encodeURIComponent(ctx));
+                const j = await r.json();
+                resBox.innerText = j.analysis;
+            } catch (e) { resBox.innerText = "Gagal panggil AI."; }
+        }
 
-    initDashboard();
-</script>
+        loadData();
+    </script>
 </body>
 </html>
