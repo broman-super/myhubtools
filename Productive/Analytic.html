@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Intel Pro v7.7 - Auto Sync Edition</title>
+    <title>Sales Intel Pro v7.6 - Bulletproof Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
@@ -13,17 +13,19 @@
             --danger: #ef4444; --warning: #f59e0b; --border: #e2e8f0; --text: #0f172a; --accent: #f1f5f9;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-        
         body { background: var(--bg); color: var(--text); padding: 15px; display: flex; flex-direction: column; gap: 15px; overflow-x: hidden; }
 
         .nav-bar { background: #fff; padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .nav-bar h1 { font-size: 16px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; }
         select { appearance: none; background: var(--accent); border: none; padding: 8px 15px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; outline: none; }
-        .btn-update { background: var(--primary); color: #fff; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 12px; transition: 0.2s; }
-        .btn-update:hover { opacity: 0.8; transform: scale(1.05); }
+        .btn-update { background: var(--primary); color: #fff; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 12px; }
 
         .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-        .info-box { background: #f1f5f9; border-radius: 12px; border: 1px solid #e2e8f0; padding: 12px 18px; display: grid; grid-template-rows: auto 1px auto; gap: 8px; justify-items: start; align-items: center; min-height: 90px; }
+        .info-box { 
+            background: #f1f5f9; border-radius: 12px; border: 1px solid #e2e8f0;
+            padding: 12px 18px; display: grid; grid-template-rows: auto 1px auto; 
+            gap: 8px; justify-items: start; align-items: center; min-height: 90px; 
+        }
         .grid-line { display: grid; grid-template-columns: auto 1fr; gap: 12px; width: 100%; align-items: start; }
         .mini-label { font-size: 8px; font-weight: 800; color: #64748b; display: flex; align-items: center; gap: 6px; white-space: nowrap; margin-top: 2px; }
         .mini-val { font-size: 11px; font-weight: 800; color: #1e293b; text-align: left; line-height: 1.4; word-break: break-word; }
@@ -50,6 +52,10 @@
         th { text-align: left; padding: 10px; font-size: 11px; color: #64748b; border-bottom: 2px solid var(--border); }
         td { padding: 10px; font-size: 12px; border-bottom: 1px solid #f1f5f9; }
 
+        .fab-ai { position: fixed; bottom: 30px; right: 30px; background: #0f172a; color: #fff; width: 55px; height: 55px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 1000; border: none; transition: 0.2s; }
+        .fab-ai:hover { transform: scale(1.05); background: var(--primary); }
+        .ai-result-box { background: #0f172a; color: #fff; border-radius: 12px; padding: 20px; margin-top: 10px; display: none; line-height: 1.6; font-size: 13px; }
+
         #tableKategori .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--accent); }
         #tableKategori .item-row b { color: #1e293b; font-size: 11px; font-weight: 800; }
         #tableKategori .item-row span:last-child { color: #000000 !important; font-size: 11px; font-weight: 800; }
@@ -66,7 +72,7 @@
 
 <div id="loadingScreen" style="position:fixed; inset:0; background:#fff; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center;">
     <div style="border:4px solid var(--accent); border-top:4px solid var(--primary); border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite;"></div>
-    <p style="margin-top:10px; font-weight:800; font-size:12px;">MENARIK DATA DARI SPREADSHEET...</p>
+    <p style="margin-top:10px; font-weight:800; font-size:12px;">MEMUAT DATA KEUANGAN...</p>
 </div>
 
 <div class="nav-bar">
@@ -80,10 +86,7 @@
         </select>
         <input type="date" id="startDate" style="display:none; padding:6px; border-radius:6px; border:1px solid #ccc;">
         <input type="date" id="endDate" style="display:none; padding:6px; border-radius:6px; border:1px solid #ccc;">
-        
-        <button class="btn-update" onclick="tarikDataBaru()" style="background: var(--warning); color: #000;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align: middle; margin-right: 4px;"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 1 0 2.63-6.37L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 1 0-2.63 6.37L3 16"/></svg> REFRESH DATA
-        </button>
+        <button class="btn-update" onclick="applyQuickFilter()">UPDATE</button>
     </div>
 </div>
 
@@ -92,10 +95,7 @@
         <div class="kpi-label"><svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/></svg> OMZET VS TARGET</div>
         <div class="kpi-val" id="kpiSales">Rp 0</div>
         <div class="progress-bg"><div class="progress-fill" id="kpiSalesProgress" style="width: 0%;"></div></div>
-        <div class="progress-text">
-            <span id="kpiSalesPct">0%</span>
-            <span id="kpiSalesRunRate" style="color:var(--primary)">Proyeksi: Rp 0</span>
-        </div>
+        <div class="progress-text"><span id="kpiSalesPct">0%</span><span id="kpiSalesRunRate" style="color:var(--primary)">Proyeksi: Rp 0</span></div>
         <div style="font-size: 9px; font-weight: 800; margin-top: 4px; text-align: right;" id="kpiSalesGap">Target: 820JT</div>
     </div>
     <div class="kpi-card" style="border-left-color:var(--danger)">
@@ -145,6 +145,10 @@
                 <div id="tableKategori"></div>
             </div>
         </div>
+        <div class="card">
+            <div class="card-header" style="color:var(--danger)"><h3><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> RADAR KEBOCORAN BIAYA</h3></div>
+            <div class="card-body" id="opexList"></div>
+        </div>
     </div>
 
     <div class="col">
@@ -161,7 +165,6 @@
         </div>
     </div>
 </div>
-
 <div class="card" style="margin-top: 15px; border-color: var(--primary);">
     <div class="card-header" style="background: #eff6ff; color: var(--primary);">
         <h3><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> INSTANT DIAGNOSTICS (LOCAL ENGINE)</h3>
@@ -169,7 +172,9 @@
     <div class="card-body" style="display: flex; flex-direction: column; gap: 15px;">
         <div id="localWarningBox" style="font-size: 12px; line-height: 1.6; color: #334155;">Menganalisis anomali data...</div>
         <div style="height: 1px; background: var(--border); width: 100%;"></div>
-        <div id="aiResultBox" style="display: none; background: #0f172a; color: #fff; border-radius: 8px; padding: 15px; font-size: 12px; line-height: 1.6;"><div id="aiContent"></div></div>
+        <div id="aiResultBox" style="display: none; background: #0f172a; color: #fff; border-radius: 8px; padding: 15px; font-size: 12px; line-height: 1.6;">
+            <div id="aiContent"></div>
+        </div>
         <button onclick="mintaSaranAI()" style="background: var(--primary); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; transition: 0.2s;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
             TANYA GEMINI UNTUK SOLUSI
@@ -178,7 +183,8 @@
 </div>
 
 <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwZT9J1ID3LtE3GdCTIh5TojXHWC3azMhbzOWRkfVYtrPv5x9U2bmEqXZpKOoGDqbewHQ/exec';
+    // ✅ URL SUDAH DIPERBARUI SESUAI REQUEST LU
+    const API_URL = 'https://script.google.com/macros/s/AKfycbzKIYkTje5zb41JZ3H_PowtxrVRkbNDNmro4kEnMg-E9FY-fhDKDlrEvir14zvPRzigEw/exec';
     
     let rawDataTransaksi = [];
     let rawDataBiaya = [];
@@ -191,25 +197,19 @@
     const formatRp = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
     const svgJam = `<svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`;
 
-    // FUNGSI REFRESH DATA MURNI DARI SPREADSHEET
-    function tarikDataBaru() {
-        document.getElementById('loadingScreen').style.display = 'flex';
-        rawDataTransaksi = [];
-        rawDataBiaya = [];
-        katalogProduk = {};
-        initDashboard();
-    }
-
     async function initDashboard() {
         try {
             const res = await fetch(API_URL + "?action=getSalesData");
             let dataMentah = await res.json();
 
+            // 🔥 FIX FATAL: Sistem Auto-Fallback. Kalau API lu error dan nge-lempar Array, web nggak akan mati!
             if (Array.isArray(dataMentah)) {
+                console.warn("Mendeteksi format API versi lama (Array). Mengaktifkan Mode Fallback...");
                 dataMentah = { transaksi: dataMentah, produk: [], biaya: [] };
             }
             if (!dataMentah.transaksi) dataMentah.transaksi = [];
 
+            // 1. Parsing Kamus Produk (Tahan Banting)
             if (dataMentah.produk && Array.isArray(dataMentah.produk)) {
                 dataMentah.produk.forEach(p => {
                     let nama = (p['Nama Barang'] || p['Barang'] || '').toString().toUpperCase().trim();
@@ -224,6 +224,7 @@
                 });
             }
 
+            // 2. Parsing Transaksi (Fleksibel sama Header Excel lu yang beda-beda)
             rawDataTransaksi = dataMentah.transaksi.map(b => {
                 let mentahNilai = b['Total Harga'] || b['Penjualan'] || b['Harga'] || b['Nilai'] || 0;
                 let angkaAman = typeof mentahNilai === 'number' ? mentahNilai : parseFloat(mentahNilai.toString().replace(/[^0-9,-]/g, '').replace(/,/g, '.')) || 0;
@@ -236,7 +237,7 @@
 
                 let tglVal = b['Tanggal'] || b['Date'];
                 let pDate = new Date(tglVal);
-                if(isNaN(pDate.getTime())) pDate = new Date(); 
+                if(isNaN(pDate.getTime())) pDate = new Date(); // Biar baris lu gak di-skip cuma gara-gara tanggal jelek
 
                 return {
                     ...b,
@@ -255,6 +256,7 @@
                 };
             });
 
+            // 3. Parsing Biaya
             if (dataMentah.biaya && Array.isArray(dataMentah.biaya)) {
                 rawDataBiaya = dataMentah.biaya.map(c => {
                     let mentahNominal = c['Nominal'] || c['Biaya'] || 0;
@@ -281,8 +283,8 @@
             }, 100);
 
         } catch (e) { 
-            console.error("Error Koneksi API:", e);
-            alert("Koneksi gagal! Cek URL API atau Spreadsheet lo."); 
+            console.error("Error Sistem V7.6:", e);
+            alert("Koneksi gagal! Pastikan Apps Script lu di-deploy akses 'Anyone'."); 
             let ls = document.getElementById('loadingScreen');
             if(ls) ls.style.display = 'none';
         }
@@ -338,6 +340,8 @@
                 
                 let isRetur = tipe.includes('retur') || tipe.includes('kembali');
                 let isBatal = status.includes('batal') || status.includes('void') || status.includes('cancel');
+                
+                // 🔥 Logika Tahan Banting: Cari kata kunci, kalau ga ada tetep anggap penjualan selama bukan batal/retur
                 let isPenjualan = tipe.includes('faktur') || tipe.includes('penjualan') || tipe.includes('sales');
                 if(!isPenjualan && !isRetur && tipe !== '') isPenjualan = true;
 
@@ -411,50 +415,53 @@
             });
         }
 
-        // AKUNTANSI & PROYEKSI
         let netSales = (dSkrg.sales || 0) - (dSkrg.retur || 0);
         let grossProfit = netSales - dSkrg.cogs;
         let netProfit = grossProfit - totalBiaya;
-        let netMargin = netSales > 0 ? (netProfit / netSales) * 100 : 0;
         
+        let netMargin = netSales > 0 ? (netProfit / netSales) * 100 : 0;
+        let opexRatio = netSales > 0 ? (totalBiaya / netSales) * 100 : 0;
+
         let today = new Date();
         let hariBerjalan = Math.max(1, Math.ceil((Math.min(today, gEnd) - gStart) / (1000 * 3600 * 24)));
         let totalHari = Math.max(1, Math.ceil((gEnd - gStart) / (1000 * 3600 * 24)));
         let runRate = (netSales / hariBerjalan) * totalHari;
 
-        // BONGKAR PASANG UI KOTAK KPI AMAN DARI CRASH
-        const TARGET = 820000000; 
-        let persen = (netSales / TARGET) * 100;
+        try {
+            const TARGET = 820000000; 
+            let persen = (netSales / TARGET) * 100;
+            
+            if (document.getElementById('kpiSales')) document.getElementById('kpiSales').innerText = formatRp(netSales); 
+            let barFill = document.getElementById('kpiSalesProgress');
+            if (barFill) {
+                let displayPersen = persen < 0 ? 0 : (persen > 100 ? 100 : persen); 
+                barFill.style.width = displayPersen + '%';
+                barFill.style.background = persen >= 100 ? 'var(--success)' : (persen >= 80 ? 'var(--warning)' : 'var(--primary)');
+            }
+            if (document.getElementById('kpiSalesPct')) document.getElementById('kpiSalesPct').innerText = `${persen.toFixed(1)}% | ${barisDihitung} Trx`;
+            if (document.getElementById('kpiSalesRunRate')) document.getElementById('kpiSalesRunRate').innerText = `Proyeksi: ${formatRp(runRate)}`;
 
-        if(document.getElementById('kpiSales')) document.getElementById('kpiSales').innerText = formatRp(netSales);
-        let barFill = document.getElementById('kpiSalesProgress');
-        if (barFill) {
-            let displayPersen = persen < 0 ? 0 : (persen > 100 ? 100 : persen); 
-            barFill.style.width = displayPersen + '%';
-            barFill.style.background = persen >= 100 ? 'var(--success)' : (persen >= 80 ? 'var(--warning)' : 'var(--primary)');
-        }
-        if(document.getElementById('kpiSalesPct')) document.getElementById('kpiSalesPct').innerText = `${persen.toFixed(1)}% | ${barisDihitung} Trx`;
-        if(document.getElementById('kpiSalesRunRate')) document.getElementById('kpiSalesRunRate').innerText = `Proyeksi: ${formatRp(runRate)}`;
-        let elGap = document.getElementById('kpiSalesGap');
-        if (elGap) {
-            if (persen >= 100) { elGap.innerText = '🔥 TARGET TEMBUS!'; elGap.style.color = 'var(--success)'; } 
-            else { elGap.innerText = 'Target: 820JT (Sisa ' + formatRp(TARGET - netSales) + ')'; elGap.style.color = '#64748b'; }
-        }
+            let elGap = document.getElementById('kpiSalesGap');
+            if (elGap) {
+                if (persen >= 100) { elGap.innerText = '🔥 TARGET TEMBUS!'; elGap.style.color = 'var(--success)'; } 
+                else { elGap.innerText = 'Defisit: - ' + formatRp(TARGET - netSales); elGap.style.color = 'var(--danger)'; }
+            }
 
-        if(document.getElementById('kpiRetur')) document.getElementById('kpiRetur').innerText = formatRp(dSkrg.retur);
-        let pctRetur = netSales > 0 ? (dSkrg.retur / netSales * 100).toFixed(1) : 0;
-        if(document.getElementById('kpiReturDetail')) document.getElementById('kpiReturDetail').innerText = dSkrg.returQty + " Unit | " + pctRetur + "% Loss Rate";
+            if (document.getElementById('kpiRetur')) document.getElementById('kpiRetur').innerText = formatRp(dSkrg.retur);
+            let pctRetur = netSales > 0 ? (dSkrg.retur / netSales * 100).toFixed(1) : 0;
+            if (document.getElementById('kpiReturDetail')) document.getElementById('kpiReturDetail').innerText = dSkrg.returQty + " Unit | " + pctRetur + "% Loss Rate";
 
-        if(document.getElementById('kpiNetProfit')) document.getElementById('kpiNetProfit').innerText = formatRp(netProfit);
-        if(document.getElementById('kpiOpexDetail')) document.getElementById('kpiOpexDetail').innerText = `Biaya: ${formatRp(totalBiaya)} | Margin: ${netMargin.toFixed(1)}%`;
+            if (document.getElementById('kpiNetProfit')) document.getElementById('kpiNetProfit').innerText = formatRp(netProfit);
+            if (document.getElementById('kpiOpexDetail')) document.getElementById('kpiOpexDetail').innerText = `Biaya: ${formatRp(totalBiaya)} | Margin: ${netMargin.toFixed(1)}%`;
 
-        let maxHari = Object.keys(rekapHari).reduce((a, b) => rekapHari[a] > rekapHari[b] ? a : b, '-');
-        if(document.getElementById('kpiGoldenDay')) document.getElementById('kpiGoldenDay').innerText = rekapHari[maxHari] > 0 ? maxHari : '-';
-        
-        const tC = Object.entries(rekapCont).sort((a,b) => b[1] - a[1]);
-        if(document.getElementById('kpiTopCont')) document.getElementById('kpiTopCont').innerText = tC.length > 0 ? tC[0][0] : '-';
+            let maxHari = Object.keys(rekapHari).reduce((a, b) => rekapHari[a] > rekapHari[b] ? a : b, '-');
+            if (document.getElementById('kpiGoldenDay')) document.getElementById('kpiGoldenDay').innerText = rekapHari[maxHari] > 0 ? maxHari : '-';
+            
+            const tC = Object.entries(rekapCont).sort((a,b) => b[1] - a[1]);
+            if (document.getElementById('kpiTopCont')) document.getElementById('kpiTopCont').innerText = tC.length > 0 ? tC[0][0] : '-';
 
-        // UPDATE LIST & GRAFIK
+        } catch(err) { console.error("Error update KPI:", err); }
+
         const urRes = Object.entries(rekapReseller).sort((a, b) => b[1] - a[1]).slice(0, 10);
         if(document.getElementById('topResellerList')) {
             document.getElementById('topResellerList').innerHTML = urRes.map((i, r) => `<div class="item-row"><span><b>${r+1}.</b> ${i[0]}</span><span style="font-weight:800; color:var(--success)">${formatRp(i[1])}</span></div>`).join('');
@@ -463,7 +470,7 @@
         let hI = new Date();
         const churn = Object.entries(lastOrder).filter(([n, dt]) => (hI - dt)/(1000*3600*24) > 14).sort((a,b) => a[1]-b[1]).slice(0, 10);
         if(document.getElementById('churnList')) {
-            document.getElementById('churnList').innerHTML = churn.map(([n, dt]) => `<div class="item-row"><span>${n}</span><span class="tag-warn">${svgJam}${Math.floor((hI-dt)/(1000*3600*24))} HARI</span></div>`).join('') || '<div class="tag-success">AKTIF SEMUA</div>';
+            document.getElementById('churnList').innerHTML = churn.map(([n, dt]) => `<div class="item-row"><span>${n}</span><span class="tag-warn">${Math.floor((hI-dt)/(1000*3600*24))} HARI</span></div>`).join('') || '<div class="tag-success">AKTIF SEMUA</div>';
         }
 
         const tS = Object.entries(rekapSeri).sort((a,b) => b[1] - a[1]);
@@ -493,9 +500,14 @@
             }).join('');
         }
 
+        const opexArr = Object.entries(rekapBiaya).sort((a, b) => b[1] - a[1]);
+        if(document.getElementById('opexList')) {
+            document.getElementById('opexList').innerHTML = opexArr.map((i, r) => `<div class="item-row"><span><b>${r+1}.</b> ${i[0]}</span><span style="font-weight:800; color:var(--danger)">${formatRp(i[1])}</span></div>`).join('') || '<div class="item-row">Belum ada pengeluaran dicatat</div>';
+        }
+        
         setTimeout(() => {
             if (typeof jalankanDiagnosaLokal === "function") {
-                jalankanDiagnosaLokal(dSkrg, urRes, churn, netSales, netProfit, totalBiaya, runRate);
+                jalankanDiagnosaLokal(dSkrg, urRes, churn, netSales, grossProfit, netProfit, opexRatio, runRate, opexArr);
             }
         }, 300); 
         
@@ -532,7 +544,8 @@
                 datasets: [{ label: 'Unit', data: tP.map(x=>x[1]), backgroundColor: '#6366f1', borderRadius: 6 }]
             },
             options: { 
-                responsive: true, maintainAspectRatio: false, indexAxis: 'y', layout: { padding: { right: 50 } },
+                responsive: true, maintainAspectRatio: false, indexAxis: 'y', 
+                layout: { padding: { right: 50 } },
                 plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', color: '#1e293b', font: { weight: '800', size: 10 }, offset: 5 } }, 
                 scales: { x: { display: false }, y: { ticks: { font: { weight: '600', size: 10 } } } } 
             }
@@ -540,7 +553,7 @@
     }
 
     let contextForAI = ""; 
-    function jalankanDiagnosaLokal(dSkrg, urRes, churnData, netSales, netProfit, totalBiaya, runRate) {
+    function jalankanDiagnosaLokal(dSkrg, urRes, churnData, netSales, grossProfit, netProfit, opexRatio, runRate, opexArr) {
         let warnings = [];
         let lossRate = dSkrg.sales > 0 ? (dSkrg.retur / dSkrg.sales * 100) : 0;
         const TARGET_SALES = 820000000;
@@ -563,7 +576,8 @@
 
         document.getElementById('localWarningBox').innerHTML = `<ul style="margin-left: 15px; padding-left: 0;"><li>` + warnings.join('</li><li style="margin-top:6px;">') + `</li></ul>`;
 
-        contextForAI = `[SYSTEM: SUPERVISOR SALES ADVISOR]\nAnalisis data ini dan berikan 3 strategi taktis. Jawab to the point.\n\n[DATA]\n- Target: ${achPct.toFixed(1)}% (Sisa Rp ${gap})\n- Proyeksi Akhir: Rp ${runRate}\n- Net Sales: Rp ${netSales}\n- Net Profit: Rp ${netProfit}\n- Total Biaya: Rp ${totalBiaya}\n- Retur: ${lossRate.toFixed(1)}%\n- Partner Pasif: ${churnData.length} toko.`;
+        let topOpex = opexArr && opexArr.length > 0 ? `${opexArr[0][0]} (${formatRp(opexArr[0][1])})` : "Belum ada";
+        contextForAI = `[SYSTEM: SUPERVISOR SALES ADVISOR]\nAnalisis data ini dan berikan 3 strategi taktis. Jawab to the point.\n\n[DATA]\n- Target: ${achPct.toFixed(1)}% (Sisa Rp ${gap})\n- Proyeksi Akhir: Rp ${runRate}\n- Net Sales: Rp ${netSales}\n- Net Profit: Rp ${netProfit}\n- Opex Terbesar: ${topOpex}\n- Retur: ${lossRate.toFixed(1)}%\n- Partner Pasif: ${churnData.length} toko.`;
     }
 
     async function mintaSaranAI() {
