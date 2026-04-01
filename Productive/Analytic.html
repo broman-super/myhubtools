@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Intel Pro v2.0 - Enterprise Edition</title>
+    <title>Sales Intel Pro v7.8 - Final Fix</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
@@ -14,34 +14,20 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: var(--bg); color: var(--text); padding: 15px; display: flex; flex-direction: column; gap: 15px; overflow-x: hidden; }
-
         .nav-bar { background: #fff; padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .nav-bar h1 { font-size: 16px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; }
-        select { appearance: none; background: var(--accent); border: none; padding: 8px 15px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; outline: none; }
-        
-        .btn-refresh { background: var(--warning); color: #000; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 12px; transition: 0.2s; display: flex; align-items: center; gap: 5px; }
-        .btn-refresh:hover { transform: scale(1.05); }
-
+        .btn-update { background: var(--warning); color: #000; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .btn-update:hover { transform: scale(1.05); }
         .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
         .kpi-card { background: #fff; padding: 15px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; }
-        .kpi-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
-        .kpi-val { font-size: 18px; font-weight: 800; line-height: 1.2; margin-bottom: 2px;}
-        .kpi-sub { font-size: 10px; font-weight: 700; color: #94a3b8; }
-
-        .progress-bg { width: 100%; height: 6px; background: #e2e8f0; border-radius: 4px; margin-top: 8px; margin-bottom: 4px; overflow: hidden; }
+        .kpi-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
+        .kpi-val { font-size: 18px; font-weight: 800; line-height: 1.2; }
+        .progress-bg { width: 100%; height: 6px; background: #e2e8f0; border-radius: 4px; margin-top: 8px; }
         .progress-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.5s ease-out; }
-        .progress-text { display: flex; justify-content: space-between; font-size: 9px; font-weight: 800; color: #64748b; }
-
         .main-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 15px; align-items: start; }
-        .card { background: #fff; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-        .card-header { padding: 12px 15px; border-bottom: 1px solid var(--border); font-weight: 800; font-size: 12px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
-        .card-body { padding: 15px; position: relative; }
-        .chart-box { height: 350px; position: relative; width: 100%; }
-
-        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-radius: 8px; margin-bottom: 4px; font-size: 12px; }
-        .item-row:hover { background: var(--accent); }
-        .tag-success { background: #d1fae5; color: #10b981; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
-
+        .card { background: #fff; border-radius: 16px; border: 1px solid var(--border); overflow: hidden; }
+        .card-header { padding: 12px 15px; border-bottom: 1px solid var(--border); font-weight: 800; font-size: 12px; text-transform: uppercase; }
+        .item-row { display: flex; justify-content: space-between; padding: 10px; border-radius: 8px; font-size: 12px; }
         #loadingScreen { position:fixed; inset:0; background:#fff; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -50,193 +36,142 @@
 
 <div id="loadingScreen">
     <div style="border:4px solid var(--accent); border-top:4px solid var(--primary); border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite;"></div>
-    <p style="margin-top:10px; font-weight:800; font-size:12px;">MENGOLAH DATA ENTERPRISE...</p>
+    <p style="margin-top:10px; font-weight:800; font-size:12px;">SYNCHRONIZING 3 SHEETS...</p>
 </div>
 
 <div class="nav-bar">
     <h1>SALES INTEL PRO V2</h1>
     <div style="display: flex; gap: 8px;">
-        <select id="quickFilter" onchange="applyQuickFilter()">
+        <select id="quickFilter" onchange="applyQuickFilter()" style="padding:8px; border-radius:8px; font-weight:700;">
             <option value="30" selected>BULANAN</option>
             <option value="7">MINGGUAN</option>
             <option value="today">HARI INI</option>
         </select>
-        <button class="btn-refresh" onclick="recallDatabase()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 1 0 2.63-6.37L21 8"/></svg>
-            REFRESH DATABASE
-        </button>
+        <button class="btn-update" onclick="initDashboard()">REFRESH DATA</button>
     </div>
 </div>
 
 <div class="kpi-row">
     <div class="kpi-card">
         <div class="kpi-label">OMZET VS TARGET</div>
-        <div class="kpi-val" id="kpiSales">Rp 0</div>
-        <div class="progress-bg"><div class="progress-fill" id="kpiSalesProgress" style="width: 0%;"></div></div>
-        <div class="progress-text"><span id="kpiSalesPct">0%</span><span id="kpiSalesRunRate">Proyeksi: Rp 0</span></div>
-    </div>
-    <div class="kpi-card" style="border-left: 4px solid var(--warning)">
-        <div class="kpi-label">LABA KOTOR (GROSS)</div>
-        <div class="kpi-val" id="kpiGrossProfit">Rp 0</div>
-        <div class="kpi-sub" id="kpiMarginPct">Margin: 0%</div>
+        <div id="kpiSales" class="kpi-val">Rp 0</div>
+        <div class="progress-bg"><div id="kpiSalesProgress" class="progress-fill" style="width: 0%;"></div></div>
+        <div style="display:flex; justify-content:space-between; font-size:9px; font-weight:800; margin-top:4px;">
+            <span id="kpiSalesPct">0%</span>
+            <span id="kpiSalesRunRate" style="color:var(--primary)">Proyeksi: Rp 0</span>
+        </div>
     </div>
     <div class="kpi-card" style="border-left: 4px solid var(--danger)">
-        <div class="kpi-label">TOTAL BIAYA (OPEX)</div>
-        <div class="kpi-val" id="kpiTotalOpex">Rp 0</div>
-        <div class="kpi-sub" id="kpiOpexRatio">0% dari Omzet</div>
+        <div class="kpi-label">RETUR</div>
+        <div id="kpiRetur" class="kpi-val" style="color:var(--danger)">Rp 0</div>
+        <div id="kpiReturDetail" style="font-size:10px; color:#94a3b8;">0 Unit | 0% Loss</div>
     </div>
     <div class="kpi-card" style="border-left: 4px solid var(--success)">
         <div class="kpi-label">LABA BERSIH (NET)</div>
-        <div class="kpi-val" id="kpiNetProfit">Rp 0</div>
-        <div class="kpi-sub" id="kpiNetMargin">Net Margin: 0%</div>
+        <div id="kpiNetProfit" class="kpi-val" style="color:var(--success)">Rp 0</div>
+        <div id="kpiOpexDetail" style="font-size:10px; color:#94a3b8;">Biaya: Rp 0</div>
+    </div>
+    <div class="kpi-card" style="background:var(--accent)">
+        <div class="kpi-label">HARI GACOR</div>
+        <div id="kpiGoldenDay" class="kpi-val">-</div>
+        <div id="kpiTopCont" style="font-size:10px; color:#64748b; font-weight:800;">Top: -</div>
     </div>
 </div>
 
 <div class="main-grid">
     <div class="col">
-        <div class="card">
-            <div class="card-header">TREN PENJUALAN VS BIAYA</div>
-            <div class="card-body chart-box"><canvas id="chartTren"></canvas></div>
-        </div>
+        <div class="card"><div class="card-header">TREN SALES VS RETUR</div><div class="card-body" style="height:300px;"><canvas id="chartTren"></canvas></div></div>
     </div>
     <div class="col">
-        <div class="card">
-            <div class="card-header">PERFORMA SERIES (DYNAMIC)</div>
-            <div class="card-body" id="seriesList"></div>
-        </div>
+        <div class="card"><div class="card-header">TOP PARTNER</div><div class="card-body" id="partnerList"></div></div>
     </div>
     <div class="col">
-        <div class="card">
-            <div class="card-header">TOP 10 PARTNER</div>
-            <div class="card-body" id="partnerList"></div>
-        </div>
-    </div>
-</div>
-
-<div class="card" style="margin-top: 15px; border-color: var(--primary);">
-    <div class="card-header" style="background: #eff6ff; color: var(--primary);">DIAGNOSA STRATEGIS AI</div>
-    <div class="card-body">
-        <div id="aiContent" style="font-size: 13px; line-height: 1.6; margin-bottom: 15px;">Menganalisis profitabilitas...</div>
-        <button onclick="mintaSaranAI()" style="width:100%; background:var(--primary); color:#fff; border:none; padding:12px; border-radius:8px; font-weight:800; cursor:pointer;">TANYA GEMINI UNTUK STRATEGI</button>
+        <div class="card"><div class="card-header">TOP PRODUK</div><div class="card-body" style="height:300px;"><canvas id="chartProduk"></canvas></div></div>
     </div>
 </div>
 
 <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbzKIYkTje5zb41JZ3H_PowtxrVRkbNDNmro4kEnMg-E9FY-fhDKDlrEvir14zvPRzigEw/exec';
-    
-    let rawDataTransaksi = [], rawDataProduk = [], rawDataBiaya = [];
-    let katalogProduk = {}, charts = {};
-
+    let rawDataTransaksi = [], rawDataBiaya = [], katalogProduk = {}, charts = {};
     const formatRp = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
 
-    function recallDatabase() {
-        document.getElementById('loadingScreen').style.display = 'flex';
-        initDashboard();
-    }
-
     async function initDashboard() {
+        document.getElementById('loadingScreen').style.display = 'flex';
         try {
             const res = await fetch(API_URL + "?action=getSalesData");
-            const dataMentah = await res.json();
-
-            // 1. VLOOKUP LOKAL (Mapping HPP & Series dari Sheet Produk)
-            if (dataMentah.produk) {
-                dataMentah.produk.forEach(p => {
-                    let key = (p['Nama Barang'] || '').toString().toUpperCase().trim();
-                    katalogProduk[key] = {
-                        hpp: parseFloat(p['HPP'] || 0),
-                        series: p['Nama Series'] || 'Lainnya'
-                    };
+            const data = await res.json();
+            
+            // Mapping Produk (VLOOKUP Lokal)
+            if (data.produk) {
+                data.produk.forEach(p => {
+                    katalogProduk[(p['Nama Barang'] || '').toUpperCase().trim()] = { hpp: parseFloat(p['HPP'] || 0) };
                 });
             }
 
-            rawDataTransaksi = dataMentah.transaksi || [];
-            rawDataBiaya = dataMentah.biaya || [];
+            rawDataTransaksi = data.transaksi || [];
+            rawDataBiaya = data.biaya || [];
             
             document.getElementById('loadingScreen').style.display = 'none';
-            applyQuickFilter();
-        } catch (e) { 
-            console.error(e);
-            alert("Gagal menarik data! Cek API URL."); 
-        }
+            prosesData();
+        } catch (e) { alert("API Error! Cek Deployment."); }
     }
 
-    function applyQuickFilter() {
-        // Logika filter waktu tetap sama seperti v7.4
-        prosesData();
-    }
+    function applyQuickFilter() { prosesData(); }
 
     function prosesData() {
-        let netSales = 0, totalHpp = 0, totalOpex = 0, returAmt = 0;
-        let rekapSeries = {}, rekapPartner = {}, rekapTren = {};
+        let netSales = 0, totalHpp = 0, totalOpex = 0, totalRetur = 0;
+        let rekapPartner = {}, rekapHari = {}, rekapProd = {}, rekapTren = {};
         const TARGET = 820000000;
 
-        // 2. Hitung Transaksi & HPP (Gross Profit Logic)
         rawDataTransaksi.forEach(trx => {
-            let n = parseFloat(trx['Total Harga'] || trx['Penjualan'] || 0);
+            let n = parseFloat(trx['Total Harga'] || 0);
             let q = parseInt(trx['Kuantitas'] || 0);
+            let prod = (trx['Nama Barang'] || '').toUpperCase().trim();
             let isRetur = (trx['Tipe Transaksi'] || '').toLowerCase().includes('retur');
             
-            let prodKey = (trx['Nama Barang'] || '').toUpperCase().trim();
-            let prodInfo = katalogProduk[prodKey] || { hpp: 0, series: 'Lainnya' };
-
             if (isRetur) {
-                returAmt += Math.abs(n);
+                totalRetur += Math.abs(n);
+                totalHpp -= ((katalogProduk[prod]?.hpp || 0) * q);
             } else {
                 netSales += n;
-                totalHpp += (prodInfo.hpp * q);
-                
-                rekapSeries[prodInfo.series] = (rekapSeries[prodInfo.series] || 0) + n;
-                let pName = trx['Nama Pelanggan'] || 'Umum';
-                rekapPartner[pName] = (rekapPartner[pName] || 0) + n;
+                totalHpp += ((katalogProduk[prod]?.hpp || 0) * q);
+                rekapPartner[trx['Nama Pelanggan'] || 'Umum'] = (rekapPartner[trx['Nama Pelanggan'] || 'Umum'] || 0) + n;
+                rekapProd[prod] = (rekapProd[prod] || 0) + q;
+                let hari = new Date(trx['Tanggal']).toLocaleDateString('id-ID', {weekday:'long'});
+                rekapHari[hari] = (rekapHari[hari] || 0) + n;
             }
         });
 
-        // 3. Hitung Opex
         rawDataBiaya.forEach(b => totalOpex += parseFloat(b['Nominal'] || 0));
 
-        // 4. Update UI (Net Profit & Margin)
-        let grossProfit = netSales - totalHpp;
-        let netProfit = grossProfit - totalOpex;
+        // Update UI
+        let netProfit = (netSales - totalRetur) - totalHpp - totalOpex;
         let achPct = (netSales / TARGET) * 100;
 
         document.getElementById('kpiSales').innerText = formatRp(netSales);
         document.getElementById('kpiSalesPct').innerText = achPct.toFixed(1) + '%';
         document.getElementById('kpiSalesProgress').style.width = Math.min(achPct, 100) + '%';
-        
-        document.getElementById('kpiGrossProfit').innerText = formatRp(grossProfit);
-        document.getElementById('kpiMarginPct').innerText = `Margin: ${((grossProfit/netSales)*100).toFixed(1)}%`;
-        
-        document.getElementById('kpiTotalOpex').innerText = formatRp(totalOpex);
-        document.getElementById('kpiOpexRatio').innerText = `${((totalOpex/netSales)*100).toFixed(1)}% dari Omzet`;
-        
+        document.getElementById('kpiRetur').innerText = formatRp(totalRetur);
         document.getElementById('kpiNetProfit').innerText = formatRp(netProfit);
-        document.getElementById('kpiNetMargin').innerText = `Net Margin: ${((netProfit/netSales)*100).toFixed(1)}%`;
+        document.getElementById('kpiOpexDetail').innerText = `Biaya: ${formatRp(totalOpex)}`;
 
-        renderList('seriesList', rekapSeries);
-        renderList('partnerList', rekapPartner);
+        let gacor = Object.keys(rekapHari).reduce((a, b) => rekapHari[a] > rekapHari[b] ? a : b, '-');
+        document.getElementById('kpiGoldenDay').innerText = gacor;
+
+        // Render Partner List
+        const topP = Object.entries(rekapPartner).sort((a,b) => b[1]-a[1]).slice(0, 5);
+        document.getElementById('partnerList').innerHTML = topP.map(p => `<div class="item-row"><span>${p[0]}</span><b>${formatRp(p[1])}</b></div>`).join('');
+
+        renderCharts(rekapProd);
     }
 
-    function renderList(id, data) {
-        const sorted = Object.entries(data).sort((a,b) => b[1] - a[1]).slice(0, 10);
-        document.getElementById(id).innerHTML = sorted.map(([name, val]) => `
-            <div class="item-row">
-                <span>${name}</span>
-                <span class="tag-success">${formatRp(val)}</span>
-            </div>
-        `).join('');
-    }
-
-    async function mintaSaranAI() {
-        const box = document.getElementById('aiContent');
-        box.innerText = "Gemini sedang menganalisis...";
-        const ctx = `Analisis Sales: Omzet Rp ${formatRp(document.getElementById('kpiSales').innerText)}, Profit Bersih Rp ${formatRp(document.getElementById('kpiNetProfit').innerText)}. Berikan 3 saran taktis.`;
-        
-        try {
-            const res = await fetch(API_URL + "?action=getAnalysis&context=" + encodeURIComponent(ctx));
-            const json = await res.json();
-            box.innerHTML = json.analysis.replace(/\n/g, '<br>');
-        } catch (e) { box.innerText = "Gagal memanggil AI."; }
+    function renderCharts(prodData) {
+        if(charts['prod']) charts['prod'].destroy();
+        const top = Object.entries(prodData).sort((a,b) => b[1]-a[1]).slice(0, 5);
+        charts['prod'] = new Chart(document.getElementById('chartProduk'), {
+            type: 'bar', data: { labels: top.map(x=>x[0]), datasets: [{ label: 'Unit', data: top.map(x=>x[1]), backgroundColor: '#2563eb' }]},
+            options: { maintainAspectRatio: false, indexAxis: 'y' }
+        });
     }
 
     initDashboard();
