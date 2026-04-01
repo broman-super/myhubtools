@@ -13,8 +13,6 @@
             --danger: #ef4444; --warning: #f59e0b; --border: #e2e8f0; --text: #0f172a; --accent: #f1f5f9;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-        
-        /* FIX 3: Bebas Scroll ke Bawah (Tidak ada kunci tinggi) */
         body { background: var(--bg); color: var(--text); padding: 15px; display: flex; flex-direction: column; gap: 15px; overflow-x: hidden; }
 
         .nav-bar { background: #fff; padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
@@ -22,80 +20,28 @@
         select { appearance: none; background: var(--accent); border: none; padding: 8px 15px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; outline: none; }
         .btn-update { background: var(--primary); color: #fff; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 12px; }
 
-        /* === GANTI BAGIAN INI DI CSS LU === */
-        .kpi-row { 
-            display: grid; 
-            grid-template-columns: repeat(4, 1fr); /* Balik jadi 4 kolom sejajar */
-            gap: 12px; 
-        }
-        /* Kotak khusus untuk info gabungan */
-/* === GANTI TOTAL BLOK .info-box DI CSS LU === */
+        .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
         .info-box { 
-            background: #f1f5f9; 
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            padding: 12px 18px; /* Padding sedikit dilegain */
-            display: grid;
-            grid-template-rows: auto 1px auto; /* Baris: Atas, Garis, Bawah */
-            gap: 8px; /* Jarak antar baris */
-            justify-items: start; /* Konten di dalem baris rapat kiri */
-            align-items: center; /* Konten di dalem baris rata tengah vertikal */
-            min-height: 90px; /* Kasih tinggi minimal agar tidak sesak */
+            background: #f1f5f9; border-radius: 12px; border: 1px solid #e2e8f0;
+            padding: 12px 18px; display: grid; grid-template-rows: auto 1px auto; 
+            gap: 8px; justify-items: start; align-items: center; min-height: 90px; 
         }
+        .grid-line { display: grid; grid-template-columns: auto 1fr; gap: 12px; width: 100%; align-items: start; }
+        .mini-label { font-size: 8px; font-weight: 800; color: #64748b; display: flex; align-items: center; gap: 6px; white-space: nowrap; margin-top: 2px; }
+        .mini-val { font-size: 11px; font-weight: 800; color: #1e293b; text-align: left; line-height: 1.4; word-break: break-word; }
+        .divider-tiny { height: 1px; background: #e2e8f0; width: 100%; grid-column: 1 / -1; }
 
-        /* Ini Grid untuk Atas dan Bawah agar label kiri ga rebutan */
-        .grid-line {
-            display: grid;
-            grid-template-columns: auto 1fr; /* Kolom: Label pas, Nilai sisa ruang */
-            gap: 12px; /* Jarak antara label dan nilai */
-            width: 100%;
-            align-items: start; /* Nilai kanan bisa turun baris rapi kalau panjang */
-        }
-
-        .mini-label { 
-            font-size: 8px; 
-            font-weight: 800; 
-            color: #64748b; 
-            display: flex; 
-            align-items: center; 
-            gap: 6px; 
-            white-space: nowrap; /* Mastiin label HARI GACOR ga turun baris */
-            margin-top: 2px; /* Penyesuaian vertikal */
-        }
-
-        .mini-val { 
-            font-size: 11px; 
-            font-weight: 800; 
-            color: #1e293b; 
-            text-align: left; /* Teks nilai rapat kiri biar rapi kalau turun baris */
-            line-height: 1.4; /* Jarak antar baris teks kalau panjang */
-            word-break: break-word; /* Mastiin kata panjang ga tembus kanan */
-            
-            /* === HAPUS SEMUA max-width & ELLIPSIS !!! === */
-        }
-
-        .divider-tiny { 
-            height: 1px; 
-            background: #e2e8f0; 
-            width: 100%; 
-            grid-column: 1 / -1; /* Garis tipis memanjang penuh */
-        }
-        /* ================================ */
-        /* ================================ */
         .kpi-card { background: #fff; padding: 15px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; }
         .kpi-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
         .kpi-val { font-size: 18px; font-weight: 800; line-height: 1.2; margin-bottom: 2px;}
         .kpi-sub { font-size: 10px; font-weight: 700; color: #94a3b8; }
 
-        /* FIX 3: Grid Column menyesuaikan isi (align-items: start) */
         .main-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 15px; align-items: start; }
         .col { display: flex; flex-direction: column; gap: 15px; }
         .card { background: #fff; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
         .card-header { padding: 12px 15px; border-bottom: 1px solid var(--border); font-weight: 800; font-size: 12px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
-        
-        /* Inner scroll dihilangkan, padding dipertahankan */
         .card-body { padding: 15px; position: relative; }
-        .chart-box { height: 350px; position: relative; width: 100%; } /* Tinggi grafik dilock agar stabil */
+        .chart-box { height: 350px; position: relative; width: 100%; }
 
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-radius: 8px; margin-bottom: 4px; font-size: 12px; }
         .item-row:hover { background: var(--accent); }
@@ -106,53 +52,17 @@
         th { text-align: left; padding: 10px; font-size: 11px; color: #64748b; border-bottom: 2px solid var(--border); }
         td { padding: 10px; font-size: 12px; border-bottom: 1px solid #f1f5f9; }
 
-        /* FIX 4: Floating Action Button AI & Result Bottom */
-        .fab-ai { 
-            position: fixed; bottom: 30px; right: 30px; background: #0f172a; color: #fff; 
-            width: 55px; height: 55px; border-radius: 50%; display: flex; justify-content: center; align-items: center; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 1000; border: none; transition: 0.2s;
-        }
+        .fab-ai { position: fixed; bottom: 30px; right: 30px; background: #0f172a; color: #fff; width: 55px; height: 55px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 1000; border: none; transition: 0.2s; }
         .fab-ai:hover { transform: scale(1.05); background: var(--primary); }
-        
-        .ai-result-box { 
-            background: #0f172a; color: #fff; border-radius: 12px; padding: 20px; 
-            margin-top: 10px; display: none; line-height: 1.6; font-size: 13px;
-        }
+        .ai-result-box { background: #0f172a; color: #fff; border-radius: 12px; padding: 20px; margin-top: 10px; display: none; line-height: 1.6; font-size: 13px; }
 
-        /* === GANTI BAGIAN INI DI CSS LU === */
-        #tableKategori .item-row { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 10px 12px; 
-            border-bottom: 1px solid var(--accent); 
-        }
-        #tableKategori .item-row b { 
-            color: #1e293b; 
-            font-size: 11px;
-            font-weight: 800; 
-        }
-        #tableKategori .item-row span:last-child { 
-            color: #000000 !important; /* PAKSA HITAM PEKAT */
-            font-size: 11px;
-            font-weight: 800; 
-        }
-        /* ================================ */
-        .progress-bg {
-            width: 100%; height: 6px; background: #e2e8f0; 
-            border-radius: 4px; margin-top: 8px; margin-bottom: 4px; 
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%; background: var(--primary); 
-            border-radius: 4px; transition: width 0.5s ease-out, background 0.3s;
-        }
-        .progress-text {
-            display: flex; justify-content: space-between; 
-            font-size: 9px; font-weight: 800; color: #64748b;
-        }
-        /* ====================================== */
+        #tableKategori .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--accent); }
+        #tableKategori .item-row b { color: #1e293b; font-size: 11px; font-weight: 800; }
+        #tableKategori .item-row span:last-child { color: #000000 !important; font-size: 11px; font-weight: 800; }
 
+        .progress-bg { width: 100%; height: 6px; background: #e2e8f0; border-radius: 4px; margin-top: 8px; margin-bottom: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.5s ease-out, background 0.3s; }
+        .progress-text { display: flex; justify-content: space-between; font-size: 9px; font-weight: 800; color: #64748b; }
         .icon { stroke-width: 2.5; flex-shrink: 0; }
         @media (max-width: 1200px) { .main-grid { grid-template-columns: 1fr; } }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -180,47 +90,32 @@
     </div>
 </div>
 
-        <div class="kpi-row">
-            <div class="kpi-card">
-                <div class="kpi-label"><svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/></svg> OMZET VS TARGET</div>
-                <div class="kpi-val" id="kpiSales">Rp 0</div>
-                <div class="progress-bg">
-                    <div class="progress-fill" id="kpiSalesProgress" style="width: 0%;"></div>
-                </div>
-                <div class="progress-text">
-                    <span id="kpiSalesPct">0%</span>
-                    <span id="kpiSalesGap">Target: 820JT</span>
-                </div>
-            </div>
-            <div class="kpi-card" style="border-left-color:var(--danger)">
-                <div class="kpi-label" style="color:var(--danger)"><svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg> RETUR</div>
-                <div class="kpi-val" id="kpiRetur" style="color:var(--danger)">Rp 0</div>
-                <div class="kpi-sub" id="kpiReturDetail" style="color:var(--danger)">0 Unit | 0% Loss</div>
-            </div>
-            <div class="kpi-card" style="border-left-color:var(--success)">
-                <div class="kpi-label" style="color:var(--success)"><svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> LABA BERSIH (NET)</div>
-                <div class="kpi-val" id="kpiNetProfit" style="color:var(--success)">Rp 0</div>
-                <div class="kpi-sub" id="kpiOpexDetail" style="color:#64748b; font-size:9px;">Biaya: Rp 0 | Margin: 0%</div>
-            </div>
-        <div class="kpi-card info-box">
-                <div class="grid-line">
-                    <div class="mini-label">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                        HARI GACOR
-                    </div>
-                    <div class="mini-val" id="kpiGoldenDay">-</div>
-                </div>
-                
-                <div class="divider-tiny"></div>
-
-                <div class="grid-line">
-                    <div class="mini-label">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="3"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-                        TOP KONTRIBUTOR
-                    </div>
-                    <div class="mini-val" id="kpiTopCont">-</div>
-                </div>
-            </div>
+<div class="kpi-row">
+    <div class="kpi-card">
+        <div class="kpi-label"><svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/></svg> OMZET VS TARGET</div>
+        <div class="kpi-val" id="kpiSales">Rp 0</div>
+        <div class="progress-bg"><div class="progress-fill" id="kpiSalesProgress" style="width: 0%;"></div></div>
+        <div class="progress-text"><span id="kpiSalesPct">0%</span><span id="kpiSalesGap">Target: 820JT</span></div>
+    </div>
+    <div class="kpi-card" style="border-left-color:var(--danger)">
+        <div class="kpi-label" style="color:var(--danger)"><svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg> RETUR</div>
+        <div class="kpi-val" id="kpiRetur" style="color:var(--danger)">Rp 0</div>
+        <div class="kpi-sub" id="kpiReturDetail" style="color:var(--danger)">0 Unit | 0% Loss</div>
+    </div>
+    <div class="kpi-card" style="border-left-color:var(--success)">
+        <div class="kpi-label" style="color:var(--success)"><svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> LABA BERSIH (NET)</div>
+        <div class="kpi-val" id="kpiNetProfit" style="color:var(--success)">Rp 0</div>
+        <div class="kpi-sub" id="kpiOpexDetail" style="color:#64748b; font-size:9px;">Biaya: Rp 0 | Margin: 0%</div>
+    </div>
+    <div class="kpi-card info-box">
+        <div class="grid-line">
+            <div class="mini-label"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> HARI GACOR</div>
+            <div class="mini-val" id="kpiGoldenDay">-</div>
+        </div>
+        <div class="divider-tiny"></div>
+        <div class="grid-line">
+            <div class="mini-label"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="3"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> TOP KONTRIBUTOR</div>
+            <div class="mini-val" id="kpiTopCont">-</div>
         </div>
     </div>
 </div>
@@ -270,41 +165,36 @@
         <h3><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> INSTANT DIAGNOSTICS (LOCAL ENGINE)</h3>
     </div>
     <div class="card-body" style="display: flex; flex-direction: column; gap: 15px;">
-        <div id="localWarningBox" style="font-size: 12px; line-height: 1.6; color: #334155;">
-            Menganalisis anomali data...
-        </div>
-        
+        <div id="localWarningBox" style="font-size: 12px; line-height: 1.6; color: #334155;">Menganalisis anomali data...</div>
         <div style="height: 1px; background: var(--border); width: 100%;"></div>
-
         <div id="aiResultBox" style="display: none; background: #0f172a; color: #fff; border-radius: 8px; padding: 15px; font-size: 12px; line-height: 1.6;">
             <div id="aiContent"></div>
         </div>
-
         <button onclick="mintaSaranAI()" style="background: var(--primary); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; transition: 0.2s;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
             TANYA GEMINI UNTUK SOLUSI
         </button>
     </div>
 </div>
+
 <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbysL2_UKpuAUDD6G-YtjB5kz4UaeHR1t4X6xyfa2qLXKgR3PYZNvvemNFVgJG3cXiAZUQ/exec';
-    // VARIABEL GLOBAL BARU
     let rawDataTransaksi = [];
     let rawDataBiaya = [];
-    let katalogProduk = {}; // Ini bakal jadi kamus VLOOKUP kita
+    let katalogProduk = {}; 
     let charts = {};
     
+    const KODE_SERI_MASTER = ['S WP', 'SAG', 'STT', 'STX', 'STC', 'SX', 'S'].sort((a,b) => b.length - a.length);
+    const WARNA_MASTER = ['HITAM', 'PUTIH', 'MERAH', 'BIRU', 'HIJAU', 'UNGU', 'ABU', 'KUNING', 'ORANGE', 'COKLAT', 'PINK', 'SILVER', 'GOLD', 'NAVY', 'MAROON', 'CREAM'];
+
     const formatRp = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
     const svgJam = `<svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`;
 
     async function initDashboard() {
         try {
-            // 1. Tarik Data 3 Kamar
             const res = await fetch(API_URL + "?action=getSalesData");
             const dataMentah = await res.json();
 
-            // 2. BIKIN KAMUS PRODUK (VLOOKUP LOKAL)
-            // Biar JS gampang nyari HPP & Series cuma modal 'Nama Barang'
             if (dataMentah.produk) {
                 dataMentah.produk.forEach(p => {
                     let nama = (p['Nama Barang'] || '').toString().toUpperCase().trim();
@@ -319,7 +209,6 @@
                 });
             }
 
-            // 3. PARSING DATA TRANSAKSI & GABUNGIN SAMA KAMUS PRODUK
             if (dataMentah.transaksi) {
                 rawDataTransaksi = dataMentah.transaksi.map(b => {
                     let mentahNilai = b['Total Harga'] || b['Penjualan'] || 0;
@@ -329,8 +218,6 @@
                     let qtyAman = typeof mentahQty === 'number' ? mentahQty : parseInt(mentahQty.toString().replace(/[^0-9]/g, '')) || 0;
 
                     let prodUp = (b['Nama Barang'] || '').toString().toUpperCase().trim();
-                    
-                    // VLOOKUP BERAKSI DI SINI: Nyari modal & seri di katalog
                     let infoProduk = katalogProduk[prodUp] || { seriesKode: 'LAINNYA', seriesNama: 'Lainnya', kategori: 'UMUM', hpp: 0 };
 
                     return {
@@ -343,7 +230,6 @@
                         prodUp: prodUp,
                         namaPelanggan: b['Nama Pelanggan'] || 'Tanpa Nama',
                         statusLow: (b['Status'] || '').toString().toLowerCase(),
-                        // Data tambahan hasil VLOOKUP:
                         seriesKode: infoProduk.seriesKode,
                         seriesNama: infoProduk.seriesNama,
                         hppSatuan: infoProduk.hpp,
@@ -352,7 +238,6 @@
                 });
             }
 
-            // 4. PARSING DATA BIAYA
             if (dataMentah.biaya) {
                 rawDataBiaya = dataMentah.biaya.map(c => {
                     let mentahNominal = c['Nominal'] || 0;
@@ -365,7 +250,6 @@
                 });
             }
 
-            // 5. Update Dropdown Filter
             const katUnik = [...new Set(rawDataTransaksi.map(i => i.katUp))];
             const selectProduk = document.getElementById('filterProdukKategori');
             if (selectProduk) {
@@ -389,15 +273,14 @@
         const sd = document.getElementById('startDate'), ed = document.getElementById('endDate');
         let end = new Date(), start = new Date();
         
-        // FIX 1: Filter Waktu
         if (val === 'today') {
-            start = new Date(); // Hari ini
+            start = new Date(); 
             sd.style.display = 'none'; ed.style.display = 'none';
         } else if (val === '7') {
-            start.setDate(end.getDate() - 7); // Mingguan
+            start.setDate(end.getDate() - 7); 
             sd.style.display = 'none'; ed.style.display = 'none';
         } else if (val === '30') {
-            start.setDate(end.getDate() - 30); // Bulanan
+            start.setDate(end.getDate() - 30); 
             sd.style.display = 'none'; ed.style.display = 'none';
         } else if (val === 'custom') {
             sd.style.display = 'inline-block'; ed.style.display = 'inline-block';
@@ -411,11 +294,11 @@
             ed.value = end.toISOString().split('T')[0];
         }
         
-        document.getElementById('aiResultBox').style.display = 'none'; // Sembunyikan AI kalau update
+        document.getElementById('aiResultBox').style.display = 'none';
         prosesData();
     }
 
-        function prosesData() {
+    function prosesData() {
         let gStart = new Date(document.getElementById('startDate').value);
         let gEnd = new Date(document.getElementById('endDate').value);
         gStart.setHours(0,0,0,0); gEnd.setHours(23,59,59);
@@ -427,11 +310,9 @@
         let lastOrder = {}, rekapHari = { 'Senin': 0, 'Selasa': 0, 'Rabu': 0, 'Kamis': 0, 'Jumat': 0, 'Sabtu': 0, 'Minggu': 0 };
         let rekapSeri = {}, rekapWarna = {};
         const listHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-        const WARNA_MASTER = ['HITAM', 'PUTIH', 'MERAH', 'BIRU', 'HIJAU', 'UNGU', 'ABU', 'KUNING', 'ORANGE', 'COKLAT', 'PINK', 'SILVER', 'GOLD', 'NAVY', 'MAROON', 'CREAM'];
 
         let barisDihitung = 0; 
 
-        // 1. MUTERIN DATA TRANSAKSI (Pake wadah baru: rawDataTransaksi)
         if(typeof rawDataTransaksi !== 'undefined' && rawDataTransaksi.length > 0) {
             rawDataTransaksi.forEach(b => {
                 let d = b.parsedDate;
@@ -451,6 +332,11 @@
 
                 if(isPenjualan && !isBatal && d >= gStart && d <= gEnd) {
                     if(seri && seri !== 'LAINNYA') rekapSeri[seri] = (rekapSeri[seri] || 0) + qty;
+                    else {
+                        let sDet = null;
+                        for (let m of KODE_SERI_MASTER) { if (prod.startsWith(m)) { sDet = m; break; } }
+                        if(sDet) rekapSeri[sDet] = (rekapSeri[sDet] || 0) + qty;
+                    }
 
                     let words = prod.split(/[\s-]+/);
                     let foundColor = null;
@@ -495,7 +381,6 @@
             });
         }
 
-        // 2. MUTERIN DATA BIAYA
         if(typeof rawDataBiaya !== 'undefined' && rawDataBiaya.length > 0) {
             rawDataBiaya.forEach(c => {
                 let d = c.parsedDate;
@@ -504,7 +389,6 @@
             });
         }
 
-        // 3. MATEMATIKA KEUANGAN
         let netSales = (dSkrg.sales || 0) - (dSkrg.retur || 0);
         let grossProfit = netSales - dSkrg.cogs;
         let netProfit = grossProfit - totalBiaya;
@@ -512,12 +396,10 @@
         let netMargin = netSales > 0 ? (netProfit / netSales) * 100 : 0;
         let opexRatio = netSales > 0 ? (totalBiaya / netSales) * 100 : 0;
 
-        // 4. UPDATE UI KOTAK KPI
         try {
             const TARGET = 820000000; 
             let persen = (netSales / TARGET) * 100;
             
-            // Kotak 1: Omzet
             if (document.getElementById('kpiSales')) document.getElementById('kpiSales').innerText = formatRp(netSales); 
             let barFill = document.getElementById('kpiSalesProgress');
             if (barFill) {
@@ -532,23 +414,21 @@
                 else { elGap.innerText = '- ' + formatRp(TARGET - netSales); elGap.style.color = 'var(--danger)'; }
             }
 
-            // Kotak 2: Retur
             if (document.getElementById('kpiRetur')) document.getElementById('kpiRetur').innerText = formatRp(dSkrg.retur);
             let pctRetur = netSales > 0 ? (dSkrg.retur / netSales * 100).toFixed(1) : 0;
             if (document.getElementById('kpiReturDetail')) document.getElementById('kpiReturDetail').innerText = dSkrg.returQty + " Unit | " + pctRetur + "% Loss Rate";
 
-            // Kotak 3: Laba Bersih
             if (document.getElementById('kpiNetProfit')) document.getElementById('kpiNetProfit').innerText = formatRp(netProfit);
             if (document.getElementById('kpiOpexDetail')) document.getElementById('kpiOpexDetail').innerText = `Biaya: ${formatRp(totalBiaya)} | Margin: ${netMargin.toFixed(1)}%`;
 
-            // Kotak 4: Hari Gacor & Top Kontributor
-            if (document.getElementById('kpiGoldenDay')) document.getElementById('kpiGoldenDay').innerText = Object.keys(rekapHari).reduce((a, b) => rekapHari[a] > rekapHari[b] ? a : b);
+            let maxHari = Object.keys(rekapHari).reduce((a, b) => rekapHari[a] > rekapHari[b] ? a : b);
+            if (document.getElementById('kpiGoldenDay')) document.getElementById('kpiGoldenDay').innerText = rekapHari[maxHari] > 0 ? maxHari : '-';
+            
             const tC = Object.entries(rekapCont).sort((a,b) => b[1] - a[1]);
             if (document.getElementById('kpiTopCont')) document.getElementById('kpiTopCont').innerText = tC.length > 0 ? tC[0][0] : '-';
 
         } catch(err) { console.error("Error update KPI:", err); }
 
-        // 5. UPDATE LIST BAWAH
         const urRes = Object.entries(rekapReseller).sort((a, b) => b[1] - a[1]).slice(0, 10);
         if(document.getElementById('topResellerList')) {
             document.getElementById('topResellerList').innerHTML = urRes.map((i, r) => `<div class="item-row"><span><b>${r+1}.</b> ${i[0]}</span><span style="font-weight:800; color:var(--success)">${formatRp(i[1])}</span></div>`).join('');
@@ -595,7 +475,7 @@
         
         renderCharts(Object.values(rekapTren).sort((a,b) => a.ts - b.ts), rekapKat, rekapProd);
     }
-    
+
     function renderCharts(tA, kat, prod) {
         if(charts['tren']) charts['tren'].destroy();
         charts['tren'] = new Chart(document.getElementById('chartTren').getContext('2d'), {
@@ -611,141 +491,74 @@
                 datasets: [{ 
                     data: Object.values(kat), 
                     backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'], 
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
+                    borderWidth: 2, borderColor: '#ffffff'
                 }]
             },
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                cutout: '75%', 
-                plugins: { legend: { display: false } } 
-            }
+            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
         });
 
         const tP = Object.entries(prod).sort((a,b) => b[1] - a[1]).slice(0, 15);
-// === GANTI BAGIAN INI DI KODE LU ===
         if(charts['produk']) charts['produk'].destroy();
         charts['produk'] = new Chart(document.getElementById('chartProduk').getContext('2d'), {
-            type: 'bar', 
-            plugins: [ChartDataLabels], 
+            type: 'bar', plugins: [ChartDataLabels], 
             data: { 
                 labels: tP.map(x=>x[0]), 
                 datasets: [{ label: 'Unit', data: tP.map(x=>x[1]), backgroundColor: '#6366f1', borderRadius: 6 }]
             },
             options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                indexAxis: 'y', 
-                
-                // === INI PERBAIKANNYA: Kasih ruang napas di canvas ===
-                layout: {
-                    padding: {
-                        right: 50 // Kasih padding kanan 50px biar angka tertinggi ga kepotong
-                    }
-                },
-                
-                plugins: { 
-                    legend: { display: false }, 
-                    datalabels: { 
-                        anchor: 'end', 
-                        align: 'right', 
-                        color: '#1e293b', 
-                        font: { weight: '800', size: 10 }, 
-                        offset: 5 
-                    } 
-                }, 
-                scales: { 
-                    x: { display: false }, 
-                    y: { 
-                        ticks: { font: { weight: '600', size: 10 } } 
-                    } 
-                } 
+                responsive: true, maintainAspectRatio: false, indexAxis: 'y', 
+                layout: { padding: { right: 50 } },
+                plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', color: '#1e293b', font: { weight: '800', size: 10 }, offset: 5 } }, 
+                scales: { x: { display: false }, y: { ticks: { font: { weight: '600', size: 10 } } } } 
             }
         });
-        // === SAMPAI SINI ===
     }
 
-    // FIX 4: Fungsi Tampil AI
-
-let contextForAI = ""; 
-
-    function jalankanDiagnosaLokal(dSkrg, urRes, churnData) {
+    let contextForAI = ""; 
+    function jalankanDiagnosaLokal(dSkrg, urRes, churnData, netSales, grossProfit, netProfit, opexRatio) {
         let warnings = [];
         let lossRate = dSkrg.sales > 0 ? (dSkrg.retur / dSkrg.sales * 100) : 0;
-        
         const TARGET_SALES = 820000000;
         
-        // 🔥 PERBAIKAN: Hitung pakai Omzet Bersih (Sales - Retur)
-        let netSales = (dSkrg.sales || 0) - (dSkrg.retur || 0);
         let achPct = (netSales / TARGET_SALES) * 100;
         let gap = TARGET_SALES - netSales;
 
-        // 1. Deteksi Target
-        if (achPct >= 100) {
-            warnings.push(`<span style="color:var(--success)">🌟 <b>TARGET TERCAPAI:</b> Tembus ${achPct.toFixed(1)}% dari target Rp 820 Juta. Pertahankan!</span>`);
-        } else if (achPct >= 80) {
-            warnings.push(`<span style="color:var(--warning)">🔥 <b>ON TRACK:</b> Capai ${achPct.toFixed(1)}%. Kurang ${formatRp(gap)} lagi buat tembus target!</span>`);
-        } else {
-            warnings.push(`<span style="color:var(--danger)">⚠️ <b>DEFISIT TARGET:</b> Baru ${achPct.toFixed(1)}% dari Rp 820 Juta (Minus ${formatRp(gap)}). Butuh *push* sales!</span>`);
+        if (netProfit < 0 && netSales > 0) {
+            warnings.push(`<span style="color:var(--danger)">🔴 <b>RUGI BANDAR:</b> Biaya operasional menggerus laba. Net Margin: ${(netProfit/netSales*100).toFixed(1)}%.</span>`);
+        } else if (opexRatio > 30) {
+            warnings.push(`<span style="color:var(--warning)">🟠 <b>BIAYA BENGKAK:</b> Opex nyedot ${opexRatio.toFixed(1)}% dari Omzet. Evaluasi pengeluaran.</span>`);
         }
 
-        // 2. Deteksi Bahaya Retur
-        if (lossRate > 5) {
-            warnings.push(`<span style="color:var(--danger)">🔴 <b>CRITICAL:</b> Loss rate tinggi (${lossRate.toFixed(1)}%). Cek QC produksi!</span>`);
-        } else if (lossRate > 2) {
-            warnings.push(`<span style="color:var(--warning)">🟠 <b>WARNING:</b> Ada tren retur (${lossRate.toFixed(1)}%). Pantau komplain.</span>`);
-        }
+        if (achPct >= 100) warnings.push(`<span style="color:var(--success)">🌟 <b>TARGET TERCAPAI:</b> Tembus ${achPct.toFixed(1)}% dari Rp 820 Juta!</span>`);
+        else if (achPct >= 80) warnings.push(`<span style="color:var(--warning)">🔥 <b>ON TRACK:</b> Capai ${achPct.toFixed(1)}%. Kurang ${formatRp(gap)} lagi!</span>`);
+        else warnings.push(`<span style="color:var(--danger)">⚠️ <b>DEFISIT TARGET:</b> Baru ${achPct.toFixed(1)}% (Minus ${formatRp(gap)}).</span>`);
 
-        // 3. Deteksi Ketergantungan Reseller (Pakai netSales)
+        if (lossRate > 5) warnings.push(`<span style="color:var(--danger)">🔴 <b>CRITICAL:</b> Loss rate tinggi (${lossRate.toFixed(1)}%).</span>`);
         if (urRes.length > 0 && netSales > 0) {
             let topResellerShare = (urRes[0][1] / netSales) * 100;
-            if (topResellerShare > 40) {
-                warnings.push(`<span style="color:var(--warning)">🟠 <b>RESIKO BISNIS:</b> ${topResellerShare.toFixed(1)}% omzet bergantung ke 1 Partner (${urRes[0][0]}).</span>`);
-            }
+            if (topResellerShare > 40) warnings.push(`<span style="color:var(--warning)">🟠 <b>RESIKO:</b> ${topResellerShare.toFixed(1)}% omzet dari 1 toko.</span>`);
         }
+        if (churnData.length > 3) warnings.push(`<span style="color:var(--danger)">🔴 <b>URGENT:</b> ${churnData.length} Partner absen > 14 hari.</span>`);
 
-        // 4. Deteksi Churn
-        if (churnData.length > 3) {
-            warnings.push(`<span style="color:var(--danger)">🔴 <b>URGENT:</b> ${churnData.length} Partner absen > 14 hari. Segera follow-up!</span>`);
-        }
-
-        // Tampilkan ke layar
         document.getElementById('localWarningBox').innerHTML = `<ul style="margin-left: 15px; padding-left: 0;"><li>` + warnings.join('</li><li style="margin-top:6px;">') + `</li></ul>`;
 
-        // Siapin Konteks Cerdas buat Gemini AI (Konteks juga diupdate pakai Omzet Bersih)
-        contextForAI = `Sebagai analis bisnis, evaluasi data ini: Target Omzet Rp 820.000.000. Saat ini tercapai Rp ${netSales} (${achPct.toFixed(1)}%), defisit Rp ${gap}. Total Retur Rp ${dSkrg.retur} (${lossRate.toFixed(1)}%). Mitra churn (pasif >14 hari): ${churnData.length} orang. Berikan 3 langkah strategi taktis dan mendesak untuk menutup defisit target tersebut.`;
+        contextForAI = `[SYSTEM: SUPERVISOR SALES ADVISOR]\nAnalisis data ini. Berikan 3 strategi taktis. Jangan bahasa kaku.\n\n[DATA]\n- Target: ${achPct.toFixed(1)}% (Defisit Rp ${gap})\n- Net Sales: Rp ${netSales}\n- Net Profit: Rp ${netProfit}\n- Opex Ratio: ${opexRatio.toFixed(1)}%\n- Retur: ${lossRate.toFixed(1)}%\n- Partner Pasif: ${churnData.length} toko.`;
     }
+
     async function mintaSaranAI() {
         const box = document.getElementById('aiResultBox');
         const content = document.getElementById('aiContent');
-
-        box.style.display = 'block';
-        content.innerHTML = '<span style="color:#f59e0b;">Gemini memproses strategi... ⚡</span>';
-
+        box.style.display = 'block'; content.innerHTML = '<span style="color:#f59e0b;">Gemini memproses strategi... ⚡</span>';
         try {
-            const urlDenganKonteks = API_URL + "?action=getAnalysis&context=" + encodeURIComponent(contextForAI);
-            const res = await fetch(urlDenganKonteks);
+            const res = await fetch(API_URL + "?action=getAnalysis&context=" + encodeURIComponent(contextForAI));
             const json = await res.json();
-            
-            // 🔥 PERBAIKAN: Bongkar bungkusan object dari Gemini
             let hasilAkhir = json.analysis;
             if (typeof hasilAkhir === 'object') {
-                try {
-                    // Coba ambil teks terdalam dari format standar Gemini
-                    hasilAkhir = hasilAkhir.candidates[0].content.parts[0].text;
-                } catch (e) {
-                    // Kalau mentok, jadikan string biar kelihatan isinya apa (bukan [object Object])
-                    hasilAkhir = JSON.stringify(hasilAkhir); 
-                }
+                try { hasilAkhir = hasilAkhir.candidates[0].content.parts[0].text; } 
+                catch (e) { hasilAkhir = JSON.stringify(hasilAkhir); }
             }
-            
-            // Tampilkan ke layar (Ubah baris baru \n jadi <br> biar rapi)
             content.innerHTML = hasilAkhir.replace(/\n/g, '<br>');
-
-        } catch (e) { 
-            content.innerHTML = '<span style="color:#ef4444;">Gagal menghubungi Gemini. Cek koneksi API lo.</span>'; 
-        }
+        } catch (e) { content.innerHTML = '<span style="color:#ef4444;">Gagal menghubungi Gemini.</span>'; }
     }
 
     initDashboard();
