@@ -1,118 +1,588 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>Sales v2.1 - Stable</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Intel Pro v7.7 - Auto Sync Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans'; background: #f8fafc; padding: 20px; }
-        .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
-        .card { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
-        .label { font-size: 10px; color: #64748b; font-weight: 800; text-transform: uppercase; }
-        .val { font-size: 20px; font-weight: 800; margin: 10px 0; }
-        .bar-bg { width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
-        .bar-fill { height: 100%; background: #2563eb; width: 0%; transition: 0.5s; }
-        .btn-update { background: #2563eb; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; }
+        :root { 
+            --bg: #f8fafc; --card: #ffffff; --primary: #2563eb; --success: #10b981; 
+            --danger: #ef4444; --warning: #f59e0b; --border: #e2e8f0; --text: #0f172a; --accent: #f1f5f9;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        body { background: var(--bg); color: var(--text); padding: 15px; display: flex; flex-direction: column; gap: 15px; overflow-x: hidden; }
+
+        .nav-bar { background: #fff; padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .nav-bar h1 { font-size: 16px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        select { appearance: none; background: var(--accent); border: none; padding: 8px 15px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; outline: none; }
+        .btn-update { background: var(--primary); color: #fff; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .btn-update:hover { opacity: 0.8; transform: scale(1.05); }
+
+        .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .info-box { background: #f1f5f9; border-radius: 12px; border: 1px solid #e2e8f0; padding: 12px 18px; display: grid; grid-template-rows: auto 1px auto; gap: 8px; justify-items: start; align-items: center; min-height: 90px; }
+        .grid-line { display: grid; grid-template-columns: auto 1fr; gap: 12px; width: 100%; align-items: start; }
+        .mini-label { font-size: 8px; font-weight: 800; color: #64748b; display: flex; align-items: center; gap: 6px; white-space: nowrap; margin-top: 2px; }
+        .mini-val { font-size: 11px; font-weight: 800; color: #1e293b; text-align: left; line-height: 1.4; word-break: break-word; }
+        .divider-tiny { height: 1px; background: #e2e8f0; width: 100%; grid-column: 1 / -1; }
+
+        .kpi-card { background: #fff; padding: 15px; border-radius: 12px; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; }
+        .kpi-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+        .kpi-val { font-size: 18px; font-weight: 800; line-height: 1.2; margin-bottom: 2px;}
+        .kpi-sub { font-size: 10px; font-weight: 700; color: #94a3b8; }
+
+        .main-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 15px; align-items: start; }
+        .col { display: flex; flex-direction: column; gap: 15px; }
+        .card { background: #fff; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+        .card-header { padding: 12px 15px; border-bottom: 1px solid var(--border); font-weight: 800; font-size: 12px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+        .card-body { padding: 15px; position: relative; }
+        .chart-box { height: 350px; position: relative; width: 100%; }
+
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-radius: 8px; margin-bottom: 4px; font-size: 12px; }
+        .item-row:hover { background: var(--accent); }
+        .tag-warn { display: flex; align-items: center; gap: 4px; background: #fee2e2; color: #ef4444; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
+        .tag-success { background: #d1fae5; color: #10b981; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
+
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th { text-align: left; padding: 10px; font-size: 11px; color: #64748b; border-bottom: 2px solid var(--border); }
+        td { padding: 10px; font-size: 12px; border-bottom: 1px solid #f1f5f9; }
+
+        #tableKategori .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--accent); }
+        #tableKategori .item-row b { color: #1e293b; font-size: 11px; font-weight: 800; }
+        #tableKategori .item-row span:last-child { color: #000000 !important; font-size: 11px; font-weight: 800; }
+
+        .progress-bg { width: 100%; height: 6px; background: #e2e8f0; border-radius: 4px; margin-top: 8px; margin-bottom: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.5s ease-out, background 0.3s; }
+        .progress-text { display: flex; justify-content: space-between; font-size: 9px; font-weight: 800; color: #64748b; }
+        .icon { stroke-width: 2.5; flex-shrink: 0; }
+        @media (max-width: 1200px) { .main-grid { grid-template-columns: 1fr; } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2 style="color:#2563eb;">SUPERSUB DASHBOARD</h2>
-        <button class="btn-update" onclick="loadData()">REFRESH DATABASE</button>
+<div id="loadingScreen" style="position:fixed; inset:0; background:#fff; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+    <div style="border:4px solid var(--accent); border-top:4px solid var(--primary); border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite;"></div>
+    <p style="margin-top:10px; font-weight:800; font-size:12px;">MENARIK DATA DARI SPREADSHEET...</p>
+</div>
+
+<div class="nav-bar">
+    <h1><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg> SALES INTEL PRO</h1>
+    <div style="display: flex; gap: 8px; align-items: center;">
+        <select id="quickFilter" onchange="applyQuickFilter()">
+            <option value="today">HARI INI</option>
+            <option value="7">MINGGUAN</option>
+            <option value="30" selected>BULANAN</option>
+            <option value="custom">CUSTOM</option>
+        </select>
+        <input type="date" id="startDate" style="display:none; padding:6px; border-radius:6px; border:1px solid #ccc;">
+        <input type="date" id="endDate" style="display:none; padding:6px; border-radius:6px; border:1px solid #ccc;">
+        
+        <button class="btn-update" onclick="tarikDataBaru()" style="background: var(--warning); color: #000;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align: middle; margin-right: 4px;"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 1 0 2.63-6.37L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 1 0-2.63 6.37L3 16"/></svg> REFRESH DATA
+        </button>
+    </div>
+</div>
+
+<div class="kpi-row">
+    <div class="kpi-card">
+        <div class="kpi-label"><svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/></svg> OMZET VS TARGET</div>
+        <div class="kpi-val" id="kpiSales">Rp 0</div>
+        <div class="progress-bg"><div class="progress-fill" id="kpiSalesProgress" style="width: 0%;"></div></div>
+        <div class="progress-text">
+            <span id="kpiSalesPct">0%</span>
+            <span id="kpiSalesRunRate" style="color:var(--primary)">Proyeksi: Rp 0</span>
+        </div>
+        <div style="font-size: 9px; font-weight: 800; margin-top: 4px; text-align: right;" id="kpiSalesGap">Target: 820JT</div>
+    </div>
+    <div class="kpi-card" style="border-left-color:var(--danger)">
+        <div class="kpi-label" style="color:var(--danger)"><svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg> RETUR</div>
+        <div class="kpi-val" id="kpiRetur" style="color:var(--danger)">Rp 0</div>
+        <div class="kpi-sub" id="kpiReturDetail" style="color:var(--danger)">0 Unit | 0% Loss</div>
+    </div>
+    <div class="kpi-card" style="border-left-color:var(--success)">
+        <div class="kpi-label" style="color:var(--success)"><svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> LABA BERSIH (NET)</div>
+        <div class="kpi-val" id="kpiNetProfit" style="color:var(--success)">Rp 0</div>
+        <div class="kpi-sub" id="kpiOpexDetail" style="color:#64748b; font-size:9px;">Biaya: Rp 0 | Margin: 0%</div>
+    </div>
+    <div class="kpi-card info-box">
+        <div class="grid-line">
+            <div class="mini-label"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> HARI GACOR</div>
+            <div class="mini-val" id="kpiGoldenDay">-</div>
+        </div>
+        <div class="divider-tiny"></div>
+        <div class="grid-line">
+            <div class="mini-label"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="3"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg> TOP KONTRIBUTOR</div>
+            <div class="mini-val" id="kpiTopCont">-</div>
+        </div>
+    </div>
+</div>
+
+<div class="main-grid" id="mainContainer">
+    <div class="col">
+        <div class="card">
+            <div class="card-header"><h3><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg> TREN SALES VS RETUR</h3></div>
+            <div class="card-body chart-box"><canvas id="chartTren"></canvas></div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>ANALISA SERI & WARNA TERBAIK</h3></div>
+            <div class="card-body" id="variantAnalysis"></div>
+        </div>
     </div>
 
-    <div class="kpi-row">
+    <div class="col">
         <div class="card">
-            <div class="label">Real Sales vs Target</div>
-            <div id="kpiSales" class="val">Rp 0</div>
-            <div class="bar-bg"><div id="kpiBar" class="bar-fill"></div></div>
-            <div id="kpiPct" style="font-size:11px; margin-top:8px; font-weight:800;">0% dari 820JT</div>
+            <div class="card-header"><h3><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> TOP 10 PARTNER</h3></div>
+            <div class="card-body" id="topResellerList"></div>
         </div>
         <div class="card">
-            <div class="label">Total Retur</div>
-            <div id="kpiRetur" class="val" style="color:#ef4444;">Rp 0</div>
-        </div>
-        <div class="card">
-            <div class="label">Laba Bersih (Estimasi)</div>
-            <div id="kpiNet" class="val" style="color:#10b981;">Rp 0</div>
-        </div>
-        <div class="card">
-            <div class="label">Total Biaya</div>
-            <div id="kpiOpex" class="val">Rp 0</div>
+            <div class="card-header"><h3><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg> MARKET SHARE</h3></div>
+            <div class="card-body">
+                <div style="height: 120px; margin-bottom: 15px;"><canvas id="chartKategori"></canvas></div>
+                <div id="tableKategori"></div>
+            </div>
         </div>
     </div>
 
-    <div class="card">
-        <div class="label">Diagnosa AI</div>
-        <div id="aiRes" style="font-size:13px; margin:15px 0; line-height:1.6;">Klik tombol untuk analisis...</div>
-        <button onclick="tanyaAI()" style="width:100%; padding:10px; border-radius:6px; cursor:pointer; font-weight:800;">TANYA GEMINI</button>
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h3><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg> TOP 15 PRODUK</h3>
+                <select id="filterProdukKategori" onchange="prosesData()" style="padding:4px 8px; font-size:10px;"><option value="ALL">SEMUA</option></select>
+            </div>
+            <div class="card-body chart-box"><canvas id="chartProduk"></canvas></div>
+        </div>
+        <div class="card">
+            <div class="card-header" style="color:var(--danger)"><h3><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> WARNING KABUR</h3></div>
+            <div class="card-body" id="churnList"></div>
+        </div>
     </div>
+</div>
 
-    <script>
-        // PASTIIN URL INI ADALAH URL /exec YANG BARU DARI LANGKAH 1
-        const API = 'https://script.google.com/macros/s/AKfycbxdVYtSmi7atvB-UMyl7bm-VW8kAjDjw6FxTOevSEjX2phfG2fAmk-XZ3z8BEsLQTDJIg/exec';
-        let db = { transaksi: [], biaya: [], produk: [] };
-        const fmt = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+<div class="card" style="margin-top: 15px; border-color: var(--primary);">
+    <div class="card-header" style="background: #eff6ff; color: var(--primary);">
+        <h3><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> INSTANT DIAGNOSTICS (LOCAL ENGINE)</h3>
+    </div>
+    <div class="card-body" style="display: flex; flex-direction: column; gap: 15px;">
+        <div id="localWarningBox" style="font-size: 12px; line-height: 1.6; color: #334155;">Menganalisis anomali data...</div>
+        <div style="height: 1px; background: var(--border); width: 100%;"></div>
+        <div id="aiResultBox" style="display: none; background: #0f172a; color: #fff; border-radius: 8px; padding: 15px; font-size: 12px; line-height: 1.6;"><div id="aiContent"></div></div>
+        <button onclick="mintaSaranAI()" style="background: var(--primary); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; transition: 0.2s;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            TANYA GEMINI UNTUK SOLUSI
+        </button>
+    </div>
+</div>
 
-        async function loadData() {
-            document.body.style.opacity = '0.5';
-            try {
-                const res = await fetch(API + "?action=getSalesData");
-                db = await res.json();
-                render();
-            } catch (e) { alert("Gagal narik data!"); }
-            document.body.style.opacity = '1';
-        }
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwZT9J1ID3LtE3GdCTIh5TojXHWC3azMhbzOWRkfVYtrPv5x9U2bmEqXZpKOoGDqbewHQ/exec';
+    
+    let rawDataTransaksi = [];
+    let rawDataBiaya = [];
+    let katalogProduk = {}; 
+    let charts = {};
+    
+    const KODE_SERI_MASTER = ['S WP', 'SAG', 'STT', 'STX', 'STC', 'SX', 'S'].sort((a,b) => b.length - a.length);
+    const WARNA_MASTER = ['HITAM', 'PUTIH', 'MERAH', 'BIRU', 'HIJAU', 'UNGU', 'ABU', 'KUNING', 'ORANGE', 'COKLAT', 'PINK', 'SILVER', 'GOLD', 'NAVY', 'MAROON', 'CREAM'];
 
-        function render() {
-            let sales = 0, retur = 0, opex = 0, hpp = 0;
-            const TARGET = 820000000;
+    const formatRp = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+    const svgJam = `<svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`;
 
-            // Buat kamus modal
-            let modal = {};
-            db.produk.forEach(p => modal[(p['Nama Barang']||'').toUpperCase().trim()] = parseFloat(p['HPP']||0));
+    // FUNGSI REFRESH DATA MURNI DARI SPREADSHEET
+    function tarikDataBaru() {
+        document.getElementById('loadingScreen').style.display = 'flex';
+        rawDataTransaksi = [];
+        rawDataBiaya = [];
+        katalogProduk = {};
+        initDashboard();
+    }
 
-            db.transaksi.forEach(t => {
-                let n = parseFloat(t['Total Harga'] || 0);
-                let q = parseInt(t['Kuantitas'] || 0);
-                let item = (t['Nama Barang']||'').toUpperCase().trim();
-                let tipe = (t['Tipe Transaksi']||'').toLowerCase();
+    async function initDashboard() {
+        try {
+            const res = await fetch(API_URL + "?action=getSalesData");
+            let dataMentah = await res.json();
 
-                if (tipe.includes('retur')) {
-                    retur += Math.abs(n);
-                    hpp -= (modal[item] || 0) * q;
-                } else {
-                    sales += n;
-                    hpp += (modal[item] || 0) * q;
-                }
+            if (Array.isArray(dataMentah)) {
+                dataMentah = { transaksi: dataMentah, produk: [], biaya: [] };
+            }
+            if (!dataMentah.transaksi) dataMentah.transaksi = [];
+
+            if (dataMentah.produk && Array.isArray(dataMentah.produk)) {
+                dataMentah.produk.forEach(p => {
+                    let nama = (p['Nama Barang'] || p['Barang'] || '').toString().toUpperCase().trim();
+                    if (nama) {
+                        katalogProduk[nama] = {
+                            seriesKode: p['Kode Series'] || p['Series'] || 'LAINNYA',
+                            seriesNama: p['Nama Series'] || 'Lainnya',
+                            kategori: p['Kategori Produk'] || p['Kategori'] || 'UMUM',
+                            hpp: parseFloat((p['HPP'] || p['Modal'] || 0).toString().replace(/[^0-9,-]/g, '')) || 0
+                        };
+                    }
+                });
+            }
+
+            rawDataTransaksi = dataMentah.transaksi.map(b => {
+                let mentahNilai = b['Total Harga'] || b['Penjualan'] || b['Harga'] || b['Nilai'] || 0;
+                let angkaAman = typeof mentahNilai === 'number' ? mentahNilai : parseFloat(mentahNilai.toString().replace(/[^0-9,-]/g, '').replace(/,/g, '.')) || 0;
+                
+                let mentahQty = b['Kuantitas'] || b['Qty'] || b['Jumlah'] || 0;
+                let qtyAman = typeof mentahQty === 'number' ? mentahQty : parseInt(mentahQty.toString().replace(/[^0-9]/g, '')) || 0;
+
+                let prodUp = (b['Nama Barang'] || b['Barang'] || b['Produk'] || '').toString().toUpperCase().trim();
+                let infoProduk = katalogProduk[prodUp] || { seriesKode: 'LAINNYA', seriesNama: 'Lainnya', kategori: 'UMUM', hpp: 0 };
+
+                let tglVal = b['Tanggal'] || b['Date'];
+                let pDate = new Date(tglVal);
+                if(isNaN(pDate.getTime())) pDate = new Date(); 
+
+                return {
+                    ...b,
+                    parsedDate: pDate,
+                    parsedNilai: angkaAman,
+                    parsedQty: qtyAman,
+                    tipeLow: (b['Tipe Transaksi'] || b['Tipe'] || '').toString().toLowerCase(),
+                    katUp: (b['Nama Kategori Pelanggan'] || b['Kategori Pelanggan'] || b['Nama Kategori P'] || 'UMUM').toString().toUpperCase(),
+                    prodUp: prodUp,
+                    namaPelanggan: b['Nama Pelanggan'] || b['Pelanggan'] || 'Tanpa Nama',
+                    statusLow: (b['Status'] || b['Status Transaksi'] || b['Status Pembayaran'] || '').toString().toLowerCase(),
+                    seriesKode: infoProduk.seriesKode,
+                    seriesNama: infoProduk.seriesNama,
+                    hppSatuan: infoProduk.hpp,
+                    totalHpp: infoProduk.hpp * qtyAman
+                };
             });
 
-            db.biaya.forEach(b => opex += parseFloat(b['Nominal'] || 0));
+            if (dataMentah.biaya && Array.isArray(dataMentah.biaya)) {
+                rawDataBiaya = dataMentah.biaya.map(c => {
+                    let mentahNominal = c['Nominal'] || c['Biaya'] || 0;
+                    let nominalAman = typeof mentahNominal === 'number' ? mentahNominal : parseFloat(mentahNominal.toString().replace(/[^0-9,-]/g, '').replace(/,/g, '.')) || 0;
+                    return {
+                        parsedDate: new Date(c['Tanggal'] || c['Date'] || new Date()),
+                        kategoriBiaya: (c['Kategori Biaya'] || c['Kategori'] || 'Lain-lain').toString().toUpperCase(),
+                        nominal: nominalAman
+                    };
+                });
+            }
 
-            let net = (sales - retur) - hpp - opex;
-            let pct = (sales / TARGET) * 100;
+            const katUnik = [...new Set(rawDataTransaksi.map(i => i.katUp))];
+            const selectProduk = document.getElementById('filterProdukKategori');
+            if (selectProduk) {
+                selectProduk.innerHTML = '<option value="ALL">SEMUA</option>';
+                katUnik.forEach(k => { if(k && k !== 'UMUM') selectProduk.add(new Option(k, k)); });
+            }
 
-            document.getElementById('kpiSales').innerText = fmt(sales);
-            document.getElementById('kpiPct').innerText = pct.toFixed(1) + "% dari 820JT";
-            document.getElementById('kpiBar').style.width = Math.min(pct, 100) + "%";
-            document.getElementById('kpiRetur').innerText = fmt(retur);
-            document.getElementById('kpiOpex').innerText = fmt(opex);
-            document.getElementById('kpiNet').innerText = fmt(net);
+            setTimeout(() => {
+                let ls = document.getElementById('loadingScreen');
+                if(ls) ls.style.display = 'none';
+                applyQuickFilter(); 
+            }, 100);
+
+        } catch (e) { 
+            console.error("Error Koneksi API:", e);
+            alert("Koneksi gagal! Cek URL API atau Spreadsheet lo."); 
+            let ls = document.getElementById('loadingScreen');
+            if(ls) ls.style.display = 'none';
+        }
+    }
+
+    function applyQuickFilter() {
+        const val = document.getElementById('quickFilter').value;
+        const sd = document.getElementById('startDate'), ed = document.getElementById('endDate');
+        let end = new Date(), start = new Date();
+        
+        if (val === 'today') {
+            start = new Date(); sd.style.display = 'none'; ed.style.display = 'none';
+        } else if (val === '7') {
+            start.setDate(end.getDate() - 7); sd.style.display = 'none'; ed.style.display = 'none';
+        } else if (val === '30') {
+            start.setDate(end.getDate() - 30); sd.style.display = 'none'; ed.style.display = 'none';
+        } else if (val === 'custom') {
+            sd.style.display = 'inline-block'; ed.style.display = 'inline-block';
+        } else if (val === 'all') {
+            start = new Date('2000-01-01'); sd.style.display = 'none'; ed.style.display = 'none';
         }
 
-        async function tanyaAI() {
-            const resBox = document.getElementById('aiRes');
-            resBox.innerText = "Berpikir...";
-            const ctx = `Data: Sales ${fmt(sales)}, Profit ${fmt(net)}. Berikan 2 saran singkat.`;
-            try {
-                const r = await fetch(API + "?action=getAnalysis&context=" + encodeURIComponent(ctx));
-                const j = await r.json();
-                resBox.innerText = j.analysis;
-            } catch (e) { resBox.innerText = "Gagal panggil AI."; }
+        if(val !== 'custom') {
+            sd.value = start.toISOString().split('T')[0];
+            ed.value = end.toISOString().split('T')[0];
+        }
+        document.getElementById('aiResultBox').style.display = 'none';
+        prosesData();
+    }
+
+    function prosesData() {
+        let gStart = new Date(document.getElementById('startDate').value);
+        let gEnd = new Date(document.getElementById('endDate').value);
+        gStart.setHours(0,0,0,0); gEnd.setHours(23,59,59);
+
+        let dSkrg = { sales: 0, salesQty: 0, retur: 0, returQty: 0, trx: 0, cogs: 0 };
+        let totalBiaya = 0; 
+        
+        let rekapTren = {}, rekapReseller = {}, rekapKat = {}, rekapProd = {}, rekapCont = {};
+        let lastOrder = {}, rekapHari = { 'Senin': 0, 'Selasa': 0, 'Rabu': 0, 'Kamis': 0, 'Jumat': 0, 'Sabtu': 0, 'Minggu': 0 };
+        let rekapSeri = {}, rekapWarna = {}, rekapBiaya = {}; 
+        const listHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+
+        let barisDihitung = 0; 
+
+        if(rawDataTransaksi && rawDataTransaksi.length > 0) {
+            rawDataTransaksi.forEach(b => {
+                let d = b.parsedDate;
+                if (isNaN(d.getTime())) return;
+                
+                let tipe = b.tipeLow;
+                let status = b.statusLow;
+                
+                let isRetur = tipe.includes('retur') || tipe.includes('kembali');
+                let isBatal = status.includes('batal') || status.includes('void') || status.includes('cancel');
+                let isPenjualan = tipe.includes('faktur') || tipe.includes('penjualan') || tipe.includes('sales');
+                if(!isPenjualan && !isRetur && tipe !== '') isPenjualan = true;
+
+                let nilai = b.parsedNilai || 0;
+                let qty = b.parsedQty || 0;
+                let hppTotalBaris = b.totalHpp || 0; 
+                
+                let kat = b.katUp; let pel = b.namaPelanggan; let prod = b.prodUp;
+                let seri = b.seriesKode; 
+
+                if(isPenjualan && !isBatal && d >= gStart && d <= gEnd) {
+                    if(seri && seri !== 'LAINNYA') rekapSeri[seri] = (rekapSeri[seri] || 0) + qty;
+                    else {
+                        let sDet = null;
+                        for (let m of KODE_SERI_MASTER) { if (prod.startsWith(m)) { sDet = m; break; } }
+                        if(sDet) rekapSeri[sDet] = (rekapSeri[sDet] || 0) + qty;
+                    }
+
+                    let words = prod.split(/[\s-]+/);
+                    let foundColor = null;
+                    for(let w of words) { if(WARNA_MASTER.includes(w)) { foundColor = w; break; } }
+                    if(foundColor) rekapWarna[foundColor] = (rekapWarna[foundColor] || 0) + qty;
+                    
+                    if(pel && kat.includes('RESELLER')) { 
+                        if(!lastOrder[pel] || d > lastOrder[pel]) lastOrder[pel] = d; 
+                    }
+                }
+
+                if (d >= gStart && d <= gEnd && !isBatal) {
+                    if(isRetur) { 
+                        dSkrg.retur += Math.abs(nilai); 
+                        dSkrg.returQty += qty; 
+                        dSkrg.cogs -= hppTotalBaris; 
+                    } else if (isPenjualan) { 
+                        dSkrg.sales += nilai; 
+                        dSkrg.salesQty += qty;
+                        dSkrg.cogs += hppTotalBaris; 
+                        barisDihitung++; 
+                        
+                        if(pel) rekapCont[pel] = (rekapCont[pel] || 0) + nilai;
+                        if(pel && kat.includes('RESELLER')) rekapReseller[pel] = (rekapReseller[pel] || 0) + nilai;
+                        if(kat) rekapKat[kat] = (rekapKat[kat] || 0) + nilai;
+                        
+                        let tK = document.getElementById('filterProdukKategori').value;
+                        if (tK === 'ALL' || kat === tK) {
+                            if(prod) rekapProd[prod] = (rekapProd[prod] || 0) + qty;
+                        }
+                        
+                        rekapHari[listHari[d.getDay()]] += nilai;
+                        dSkrg.trx += 1;
+                    }
+                    
+                    let tKey = d.setHours(0,0,0,0);
+                    if(!rekapTren[tKey]) rekapTren[tKey] = { label: d.toLocaleDateString('id-ID', {day: '2-digit', month: 'short'}), sales: 0, retur: 0, ts: tKey };
+                    
+                    if(isRetur) { rekapTren[tKey].retur += Math.abs(nilai); } 
+                    else if (isPenjualan) { rekapTren[tKey].sales += nilai; }
+                }
+            });
         }
 
-        loadData();
-    </script>
+        if(rawDataBiaya && rawDataBiaya.length > 0) {
+            rawDataBiaya.forEach(c => {
+                let d = c.parsedDate;
+                if (isNaN(d.getTime())) return;
+                if (d >= gStart && d <= gEnd) { 
+                    totalBiaya += c.nominal; 
+                    let katB = c.kategoriBiaya || 'LAINNYA';
+                    rekapBiaya[katB] = (rekapBiaya[katB] || 0) + c.nominal;
+                }
+            });
+        }
+
+        // AKUNTANSI & PROYEKSI
+        let netSales = (dSkrg.sales || 0) - (dSkrg.retur || 0);
+        let grossProfit = netSales - dSkrg.cogs;
+        let netProfit = grossProfit - totalBiaya;
+        let netMargin = netSales > 0 ? (netProfit / netSales) * 100 : 0;
+        
+        let today = new Date();
+        let hariBerjalan = Math.max(1, Math.ceil((Math.min(today, gEnd) - gStart) / (1000 * 3600 * 24)));
+        let totalHari = Math.max(1, Math.ceil((gEnd - gStart) / (1000 * 3600 * 24)));
+        let runRate = (netSales / hariBerjalan) * totalHari;
+
+        // BONGKAR PASANG UI KOTAK KPI AMAN DARI CRASH
+        const TARGET = 820000000; 
+        let persen = (netSales / TARGET) * 100;
+
+        if(document.getElementById('kpiSales')) document.getElementById('kpiSales').innerText = formatRp(netSales);
+        let barFill = document.getElementById('kpiSalesProgress');
+        if (barFill) {
+            let displayPersen = persen < 0 ? 0 : (persen > 100 ? 100 : persen); 
+            barFill.style.width = displayPersen + '%';
+            barFill.style.background = persen >= 100 ? 'var(--success)' : (persen >= 80 ? 'var(--warning)' : 'var(--primary)');
+        }
+        if(document.getElementById('kpiSalesPct')) document.getElementById('kpiSalesPct').innerText = `${persen.toFixed(1)}% | ${barisDihitung} Trx`;
+        if(document.getElementById('kpiSalesRunRate')) document.getElementById('kpiSalesRunRate').innerText = `Proyeksi: ${formatRp(runRate)}`;
+        let elGap = document.getElementById('kpiSalesGap');
+        if (elGap) {
+            if (persen >= 100) { elGap.innerText = '🔥 TARGET TEMBUS!'; elGap.style.color = 'var(--success)'; } 
+            else { elGap.innerText = 'Target: 820JT (Sisa ' + formatRp(TARGET - netSales) + ')'; elGap.style.color = '#64748b'; }
+        }
+
+        if(document.getElementById('kpiRetur')) document.getElementById('kpiRetur').innerText = formatRp(dSkrg.retur);
+        let pctRetur = netSales > 0 ? (dSkrg.retur / netSales * 100).toFixed(1) : 0;
+        if(document.getElementById('kpiReturDetail')) document.getElementById('kpiReturDetail').innerText = dSkrg.returQty + " Unit | " + pctRetur + "% Loss Rate";
+
+        if(document.getElementById('kpiNetProfit')) document.getElementById('kpiNetProfit').innerText = formatRp(netProfit);
+        if(document.getElementById('kpiOpexDetail')) document.getElementById('kpiOpexDetail').innerText = `Biaya: ${formatRp(totalBiaya)} | Margin: ${netMargin.toFixed(1)}%`;
+
+        let maxHari = Object.keys(rekapHari).reduce((a, b) => rekapHari[a] > rekapHari[b] ? a : b, '-');
+        if(document.getElementById('kpiGoldenDay')) document.getElementById('kpiGoldenDay').innerText = rekapHari[maxHari] > 0 ? maxHari : '-';
+        
+        const tC = Object.entries(rekapCont).sort((a,b) => b[1] - a[1]);
+        if(document.getElementById('kpiTopCont')) document.getElementById('kpiTopCont').innerText = tC.length > 0 ? tC[0][0] : '-';
+
+        // UPDATE LIST & GRAFIK
+        const urRes = Object.entries(rekapReseller).sort((a, b) => b[1] - a[1]).slice(0, 10);
+        if(document.getElementById('topResellerList')) {
+            document.getElementById('topResellerList').innerHTML = urRes.map((i, r) => `<div class="item-row"><span><b>${r+1}.</b> ${i[0]}</span><span style="font-weight:800; color:var(--success)">${formatRp(i[1])}</span></div>`).join('');
+        }
+
+        let hI = new Date();
+        const churn = Object.entries(lastOrder).filter(([n, dt]) => (hI - dt)/(1000*3600*24) > 14).sort((a,b) => a[1]-b[1]).slice(0, 10);
+        if(document.getElementById('churnList')) {
+            document.getElementById('churnList').innerHTML = churn.map(([n, dt]) => `<div class="item-row"><span>${n}</span><span class="tag-warn">${svgJam}${Math.floor((hI-dt)/(1000*3600*24))} HARI</span></div>`).join('') || '<div class="tag-success">AKTIF SEMUA</div>';
+        }
+
+        const tS = Object.entries(rekapSeri).sort((a,b) => b[1] - a[1]);
+        const tW = Object.entries(rekapWarna).sort((a,b) => b[1] - a[1]);
+        if(document.getElementById('variantAnalysis')) {
+            document.getElementById('variantAnalysis').innerHTML = `
+                <div style="margin-bottom: 15px;">
+                    <div style="font-size:11px; font-weight:800; color:#64748b; margin-bottom:8px; border-bottom: 1px solid var(--border); padding-bottom:4px;">SERI TERLARIS</div>
+                    ${tS.length > 0 ? tS.map((x, i) => `<div class="item-row"><span>${i+1}. ${x[0]}</span><span class="tag-success">${x[1]} Unit</span></div>`).join('') : '<div class="item-row">Data Kosong</div>'}
+                </div>
+                <div>
+                    <div style="font-size:11px; font-weight:800; color:#64748b; margin-bottom:8px; border-bottom: 1px solid var(--border); padding-bottom:4px;">WARNA TERLARIS</div>
+                    ${tW.length > 0 ? tW.map((x, i) => `<div class="item-row"><span>${i+1}. ${x[0]}</span><span class="tag-success">${x[1]} Unit</span></div>`).join('') : '<div class="item-row">Data Kosong</div>'}
+                </div>
+            `;
+        }
+        
+        const warnaKategori = ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+        const targetTabel = document.getElementById('tableKategori'); 
+        if (targetTabel) {
+            targetTabel.innerHTML = Object.keys(rekapKat).sort((a,b) => rekapKat[b] - rekapKat[a]).map((k, index) => {
+                let p = (rekapKat[k] / (netSales || 1) * 100).toFixed(1);
+                let warnaTeks = warnaKategori[index % warnaKategori.length];
+                return `<div class="item-row" style="color: ${warnaTeks}; font-weight: 700; border-bottom: 1px solid var(--accent); display: flex; justify-content: space-between; padding: 10px 12px;">
+                            <span><b style="color: ${warnaTeks};">${k}</b></span><span style="font-weight: 800; color: #000;">${p}%</span>
+                        </div>`;
+            }).join('');
+        }
+
+        setTimeout(() => {
+            if (typeof jalankanDiagnosaLokal === "function") {
+                jalankanDiagnosaLokal(dSkrg, urRes, churn, netSales, netProfit, totalBiaya, runRate);
+            }
+        }, 300); 
+        
+        renderCharts(Object.values(rekapTren).sort((a,b) => a.ts - b.ts), rekapKat, rekapProd);
+    }
+
+    function renderCharts(tA, kat, prod) {
+        if(charts['tren']) charts['tren'].destroy();
+        charts['tren'] = new Chart(document.getElementById('chartTren').getContext('2d'), {
+            type: 'line', data: { labels: tA.map(x => x.label), datasets: [{ label: 'Sales', data: tA.map(x => x.sales), borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.05)', fill: true, tension: 0.3, borderWidth: 3, pointRadius: 2 }, { label: 'Retur', data: tA.map(x => x.retur), borderColor: '#ef4444', borderDash: [5, 5], borderWidth: 1 }]},
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        if(charts['kategori']) charts['kategori'].destroy();
+        charts['kategori'] = new Chart(document.getElementById('chartKategori').getContext('2d'), {
+            type: 'doughnut',
+            data: { 
+                labels: Object.keys(kat), 
+                datasets: [{ 
+                    data: Object.values(kat), 
+                    backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'], 
+                    borderWidth: 2, borderColor: '#ffffff'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
+        });
+
+        const tP = Object.entries(prod).sort((a,b) => b[1] - a[1]).slice(0, 15);
+        if(charts['produk']) charts['produk'].destroy();
+        charts['produk'] = new Chart(document.getElementById('chartProduk').getContext('2d'), {
+            type: 'bar', plugins: [ChartDataLabels], 
+            data: { 
+                labels: tP.map(x=>x[0]), 
+                datasets: [{ label: 'Unit', data: tP.map(x=>x[1]), backgroundColor: '#6366f1', borderRadius: 6 }]
+            },
+            options: { 
+                responsive: true, maintainAspectRatio: false, indexAxis: 'y', layout: { padding: { right: 50 } },
+                plugins: { legend: { display: false }, datalabels: { anchor: 'end', align: 'right', color: '#1e293b', font: { weight: '800', size: 10 }, offset: 5 } }, 
+                scales: { x: { display: false }, y: { ticks: { font: { weight: '600', size: 10 } } } } 
+            }
+        });
+    }
+
+    let contextForAI = ""; 
+    function jalankanDiagnosaLokal(dSkrg, urRes, churnData, netSales, netProfit, totalBiaya, runRate) {
+        let warnings = [];
+        let lossRate = dSkrg.sales > 0 ? (dSkrg.retur / dSkrg.sales * 100) : 0;
+        const TARGET_SALES = 820000000;
+        
+        let achPct = (netSales / TARGET_SALES) * 100;
+        let gap = TARGET_SALES - netSales;
+        let proyPct = (runRate / TARGET_SALES) * 100;
+
+        if (proyPct < 100 && achPct < 100) warnings.push(`<span style="color:var(--danger)">🔴 <b>PROYEKSI MELESET:</b> Kecepatan sales saat ini cuma bawa omzet ke ${formatRp(runRate)} (${proyPct.toFixed(1)}%). Segera evaluasi!</span>`);
+        else if (proyPct >= 100 && achPct < 100) warnings.push(`<span style="color:var(--success)">🌟 <b>PROYEKSI AMAN:</b> Kecepatan saat ini bagus. Diproyeksikan tembus ${formatRp(runRate)}.</span>`);
+
+        if (netProfit < 0 && netSales > 0) warnings.push(`<span style="color:var(--danger)">🔴 <b>RUGI BANDAR:</b> Biaya operasional menggerus laba. Net Margin: ${(netProfit/netSales*100).toFixed(1)}%.</span>`);
+
+        if (lossRate > 5) warnings.push(`<span style="color:var(--danger)">🔴 <b>CRITICAL:</b> Loss rate tinggi (${lossRate.toFixed(1)}%).</span>`);
+        if (urRes.length > 0 && netSales > 0) {
+            let topResellerShare = (urRes[0][1] / netSales) * 100;
+            if (topResellerShare > 40) warnings.push(`<span style="color:var(--warning)">🟠 <b>RESIKO:</b> ${topResellerShare.toFixed(1)}% omzet dari 1 toko.</span>`);
+        }
+        if (churnData.length > 3) warnings.push(`<span style="color:var(--danger)">🔴 <b>URGENT:</b> ${churnData.length} Partner absen > 14 hari.</span>`);
+
+        document.getElementById('localWarningBox').innerHTML = `<ul style="margin-left: 15px; padding-left: 0;"><li>` + warnings.join('</li><li style="margin-top:6px;">') + `</li></ul>`;
+
+        contextForAI = `[SYSTEM: SUPERVISOR SALES ADVISOR]\nAnalisis data ini dan berikan 3 strategi taktis. Jawab to the point.\n\n[DATA]\n- Target: ${achPct.toFixed(1)}% (Sisa Rp ${gap})\n- Proyeksi Akhir: Rp ${runRate}\n- Net Sales: Rp ${netSales}\n- Net Profit: Rp ${netProfit}\n- Total Biaya: Rp ${totalBiaya}\n- Retur: ${lossRate.toFixed(1)}%\n- Partner Pasif: ${churnData.length} toko.`;
+    }
+
+    async function mintaSaranAI() {
+        const box = document.getElementById('aiResultBox');
+        const content = document.getElementById('aiContent');
+        box.style.display = 'block'; content.innerHTML = '<span style="color:#f59e0b;">Gemini memproses strategi... ⚡</span>';
+        try {
+            const res = await fetch(API_URL + "?action=getAnalysis&context=" + encodeURIComponent(contextForAI));
+            const json = await res.json();
+            let hasilAkhir = json.analysis;
+            if (typeof hasilAkhir === 'object') {
+                try { hasilAkhir = hasilAkhir.candidates[0].content.parts[0].text; } 
+                catch (e) { hasilAkhir = JSON.stringify(hasilAkhir); }
+            }
+            content.innerHTML = hasilAkhir.replace(/\n/g, '<br>');
+        } catch (e) { content.innerHTML = '<span style="color:#ef4444;">Gagal menghubungi Gemini.</span>'; }
+    }
+
+    initDashboard();
+</script>
 </body>
 </html>
