@@ -415,94 +415,96 @@
         prosesData();
     }
 
-    function prosesData() {
+        function prosesData() {
         let gStart = new Date(document.getElementById('startDate').value);
         let gEnd = new Date(document.getElementById('endDate').value);
-        gStart.setHours(0,0,0,0);
-        gEnd.setHours(23,59,59);
+        gStart.setHours(0,0,0,0); gEnd.setHours(23,59,59);
 
-        let dSkrg = { sales: 0, salesQty: 0, retur: 0, returQty: 0, trx: 0 };
+        let dSkrg = { sales: 0, salesQty: 0, retur: 0, returQty: 0, trx: 0, cogs: 0 };
+        let totalBiaya = 0; 
+        
         let rekapTren = {}, rekapReseller = {}, rekapKat = {}, rekapProd = {}, rekapCont = {};
         let lastOrder = {}, rekapHari = { 'Senin': 0, 'Selasa': 0, 'Rabu': 0, 'Kamis': 0, 'Jumat': 0, 'Sabtu': 0, 'Minggu': 0 };
         let rekapSeri = {}, rekapWarna = {};
         const listHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const WARNA_MASTER = ['HITAM', 'PUTIH', 'MERAH', 'BIRU', 'HIJAU', 'UNGU', 'ABU', 'KUNING', 'ORANGE', 'COKLAT', 'PINK', 'SILVER', 'GOLD', 'NAVY', 'MAROON', 'CREAM'];
 
         let barisDihitung = 0; 
 
-        rawData.forEach(b => {
-            let d = b.parsedDate;
-            if (isNaN(d.getTime())) return; // Skip kalau tanggalnya gak kebaca
-            
-            let tipe = b.tipeLow;
-            let isRetur = tipe.includes('retur');
-            // FIX TERPENTING: Selama bukan "retur" dan "batal", anggap sebagai Penjualan!
-            let isBatal = b.statusLow.includes('batal') || b.statusLow.includes('void');
-            let isPenjualan = !isRetur; 
-
-            let nilai = b.parsedNilai || 0;
-            let qty = b.parsedQty || 0;
-            
-            let kat = b.katUp;
-            let pel = b.namaPelanggan;
-            let prod = b.prodUp;
-
-            if(isPenjualan && !isBatal && d >= gStart && d <= gEnd) {
-                // Deteksi Seri & Warna
-                let sDet = null;
-                for (let m of KODE_SERI_MASTER) { if (prod.startsWith(m)) { sDet = m; break; } }
-                if(sDet) rekapSeri[sDet] = (rekapSeri[sDet] || 0) + qty;
-
-                let words = prod.split(/[\s-]+/);
-                let foundColor = null;
-                for(let w of words) { if(WARNA_MASTER.includes(w)) { foundColor = w; break; } }
-                if(foundColor) rekapWarna[foundColor] = (rekapWarna[foundColor] || 0) + qty;
+        // 1. MUTERIN DATA TRANSAKSI (Pake wadah baru: rawDataTransaksi)
+        if(typeof rawDataTransaksi !== 'undefined' && rawDataTransaksi.length > 0) {
+            rawDataTransaksi.forEach(b => {
+                let d = b.parsedDate;
+                if (isNaN(d.getTime())) return;
                 
-                if(pel && kat.includes('RESELLER')) { 
-                    if(!lastOrder[pel] || d > lastOrder[pel]) lastOrder[pel] = d; 
-                }
-            }
+                let tipe = b.tipeLow;
+                let isRetur = tipe.includes('retur');
+                let isBatal = b.statusLow.includes('batal') || b.statusLow.includes('void');
+                let isPenjualan = !isRetur; 
 
-            // Eksekusi Hitungan Utama
-            if (d >= gStart && d <= gEnd && !isBatal) {
-                if(isRetur) { 
-                    dSkrg.retur += Math.abs(nilai); 
-                    dSkrg.returQty += qty; 
-                } else if (isPenjualan) { 
-                    dSkrg.sales += nilai; 
-                    dSkrg.salesQty += qty;
-                    barisDihitung++; 
+                let nilai = b.parsedNilai || 0;
+                let qty = b.parsedQty || 0;
+                let hppTotalBaris = b.totalHpp || 0; 
+                
+                let kat = b.katUp; let pel = b.namaPelanggan; let prod = b.prodUp;
+                let seri = b.seriesKode; 
+
+                if(isPenjualan && !isBatal && d >= gStart && d <= gEnd) {
+                    if(seri && seri !== 'LAINNYA') rekapSeri[seri] = (rekapSeri[seri] || 0) + qty;
+
+                    let words = prod.split(/[\s-]+/);
+                    let foundColor = null;
+                    for(let w of words) { if(WARNA_MASTER.includes(w)) { foundColor = w; break; } }
+                    if(foundColor) rekapWarna[foundColor] = (rekapWarna[foundColor] || 0) + qty;
                     
-                    if(pel) rekapCont[pel] = (rekapCont[pel] || 0) + nilai;
-                    if(pel && kat.includes('RESELLER')) rekapReseller[pel] = (rekapReseller[pel] || 0) + nilai;
-                    if(kat) rekapKat[kat] = (rekapKat[kat] || 0) + nilai;
-                    
-                    let tK = document.getElementById('filterProdukKategori').value;
-                    if (tK === 'ALL' || kat === tK) {
-                        if(prod) rekapProd[prod] = (rekapProd[prod] || 0) + qty;
+                    if(pel && kat.includes('RESELLER')) { 
+                        if(!lastOrder[pel] || d > lastOrder[pel]) lastOrder[pel] = d; 
+                    }
+                }
+
+                if (d >= gStart && d <= gEnd && !isBatal) {
+                    if(isRetur) { 
+                        dSkrg.retur += Math.abs(nilai); 
+                        dSkrg.returQty += qty; 
+                        dSkrg.cogs -= hppTotalBaris; 
+                    } else if (isPenjualan) { 
+                        dSkrg.sales += nilai; 
+                        dSkrg.salesQty += qty;
+                        dSkrg.cogs += hppTotalBaris; 
+                        barisDihitung++; 
+                        
+                        if(pel) rekapCont[pel] = (rekapCont[pel] || 0) + nilai;
+                        if(pel && kat.includes('RESELLER')) rekapReseller[pel] = (rekapReseller[pel] || 0) + nilai;
+                        if(kat) rekapKat[kat] = (rekapKat[kat] || 0) + nilai;
+                        
+                        let tK = document.getElementById('filterProdukKategori').value;
+                        if (tK === 'ALL' || kat === tK) {
+                            if(prod) rekapProd[prod] = (rekapProd[prod] || 0) + qty;
+                        }
+                        
+                        rekapHari[listHari[d.getDay()]] += nilai;
+                        dSkrg.trx += 1;
                     }
                     
-                    rekapHari[listHari[d.getDay()]] += nilai;
-                    dSkrg.trx += 1;
+                    let tKey = d.setHours(0,0,0,0);
+                    if(!rekapTren[tKey]) rekapTren[tKey] = { label: d.toLocaleDateString('id-ID', {day: '2-digit', month: 'short'}), sales: 0, retur: 0, ts: tKey };
+                    
+                    if(isRetur) { rekapTren[tKey].retur += Math.abs(nilai); } 
+                    else if (isPenjualan) { rekapTren[tKey].sales += nilai; }
                 }
-                
-                let tKey = d.setHours(0,0,0,0);
-                if(!rekapTren[tKey]) rekapTren[tKey] = { label: d.toLocaleDateString('id-ID', {day: '2-digit', month: 'short'}), sales: 0, retur: 0, ts: tKey };
-                
-                if(isRetur) {
-                    rekapTren[tKey].retur += Math.abs(nilai); 
-                } else if (isPenjualan) {
-                    rekapTren[tKey].sales += nilai;
-                }
-            }
-        });
-
-        // Tampilkan indikator error kalau data kosong
-        if (barisDihitung === 0) {
-            console.log("INFO: Data JSON ketarik, tapi 0 baris lolos filter. Cek format Tanggal di Spreadsheet.");
+            });
         }
 
+        // 2. MUTERIN DATA BIAYA
+        if(typeof rawDataBiaya !== 'undefined' && rawDataBiaya.length > 0) {
+            rawDataBiaya.forEach(c => {
+                let d = c.parsedDate;
+                if (isNaN(d.getTime())) return;
+                if (d >= gStart && d <= gEnd) { totalBiaya += c.nominal; }
+            });
+        }
 
-        // 3. MATEMATIKA KEUANGAN (AKUNTANSI)
+        // 3. MATEMATIKA KEUANGAN
         let netSales = (dSkrg.sales || 0) - (dSkrg.retur || 0);
         let grossProfit = netSales - dSkrg.cogs;
         let netProfit = grossProfit - totalBiaya;
@@ -512,10 +514,10 @@
 
         // 4. UPDATE UI KOTAK KPI
         try {
-            // Update Omzet Vs Target
             const TARGET = 820000000; 
             let persen = (netSales / TARGET) * 100;
             
+            // Kotak 1: Omzet
             if (document.getElementById('kpiSales')) document.getElementById('kpiSales').innerText = formatRp(netSales); 
             let barFill = document.getElementById('kpiSalesProgress');
             if (barFill) {
@@ -524,100 +526,76 @@
                 barFill.style.background = persen >= 100 ? 'var(--success)' : (persen >= 80 ? 'var(--warning)' : 'var(--primary)');
             }
             if (document.getElementById('kpiSalesPct')) document.getElementById('kpiSalesPct').innerText = `${persen.toFixed(1)}% | ${barisDihitung} Trx`;
-            
             let elGap = document.getElementById('kpiSalesGap');
             if (elGap) {
-                if (persen >= 100) {
-                    elGap.innerText = '🔥 TARGET TEMBUS!'; elGap.style.color = 'var(--success)';
-                } else {
-                    elGap.innerText = '- ' + formatRp(TARGET - netSales); elGap.style.color = 'var(--danger)';
-                }
+                if (persen >= 100) { elGap.innerText = '🔥 TARGET TEMBUS!'; elGap.style.color = 'var(--success)'; } 
+                else { elGap.innerText = '- ' + formatRp(TARGET - netSales); elGap.style.color = 'var(--danger)'; }
             }
 
-            // Update Retur
+            // Kotak 2: Retur
             if (document.getElementById('kpiRetur')) document.getElementById('kpiRetur').innerText = formatRp(dSkrg.retur);
             let pctRetur = netSales > 0 ? (dSkrg.retur / netSales * 100).toFixed(1) : 0;
             if (document.getElementById('kpiReturDetail')) document.getElementById('kpiReturDetail').innerText = dSkrg.returQty + " Unit | " + pctRetur + "% Loss Rate";
 
-            // Update Laba Bersih & Biaya (Pengganti Rata-rata Order)
+            // Kotak 3: Laba Bersih
             if (document.getElementById('kpiNetProfit')) document.getElementById('kpiNetProfit').innerText = formatRp(netProfit);
             if (document.getElementById('kpiOpexDetail')) document.getElementById('kpiOpexDetail').innerText = `Biaya: ${formatRp(totalBiaya)} | Margin: ${netMargin.toFixed(1)}%`;
 
-            // Update Hari Gacor & Top Kontributor
+            // Kotak 4: Hari Gacor & Top Kontributor
             if (document.getElementById('kpiGoldenDay')) document.getElementById('kpiGoldenDay').innerText = Object.keys(rekapHari).reduce((a, b) => rekapHari[a] > rekapHari[b] ? a : b);
             const tC = Object.entries(rekapCont).sort((a,b) => b[1] - a[1]);
             if (document.getElementById('kpiTopCont')) document.getElementById('kpiTopCont').innerText = tC.length > 0 ? tC[0][0] : '-';
 
         } catch(err) { console.error("Error update KPI:", err); }
-        // ==========================================  
-        document.getElementById('kpiRetur').innerText = formatRp(dSkrg.retur);
-        let pctRetur = dSkrg.sales > 0 ? (dSkrg.retur / dSkrg.sales * 100).toFixed(1) : 0;
-        document.getElementById('kpiReturDetail').innerText = dSkrg.returQty + " Unit | " + pctRetur + "% Loss Rate";
-        
-        document.getElementById('kpiAov').innerText = formatRp(dSkrg.trx > 0 ? dSkrg.sales / dSkrg.trx : 0);
-        document.getElementById('kpiGoldenDay').innerText = Object.keys(rekapHari).reduce((a, b) => rekapHari[a] > rekapHari[b] ? a : b);
-        const tC = Object.entries(rekapCont).sort((a,b) => b[1] - a[1]);
-        document.getElementById('kpiTopCont').innerText = tC.length > 0 ? tC[0][0] : '-';
 
-        // Lists Update
+        // 5. UPDATE LIST BAWAH
         const urRes = Object.entries(rekapReseller).sort((a, b) => b[1] - a[1]).slice(0, 10);
-        document.getElementById('topResellerList').innerHTML = urRes.map((i, r) => `<div class="item-row"><span><b>${r+1}.</b> ${i[0]}</span><span style="font-weight:800; color:var(--success)">${formatRp(i[1])}</span></div>`).join('');
+        if(document.getElementById('topResellerList')) {
+            document.getElementById('topResellerList').innerHTML = urRes.map((i, r) => `<div class="item-row"><span><b>${r+1}.</b> ${i[0]}</span><span style="font-weight:800; color:var(--success)">${formatRp(i[1])}</span></div>`).join('');
+        }
 
         let hI = new Date();
         const churn = Object.entries(lastOrder).filter(([n, dt]) => (hI - dt)/(1000*3600*24) > 14).sort((a,b) => a[1]-b[1]).slice(0, 10);
-        document.getElementById('churnList').innerHTML = churn.map(([n, dt]) => `<div class="item-row"><span>${n}</span><span class="tag-warn">${svgJam}${Math.floor((hI-dt)/(1000*3600*24))} HARI</span></div>`).join('') || '<div class="tag-success">AKTIF SEMUA</div>';
+        if(document.getElementById('churnList')) {
+            document.getElementById('churnList').innerHTML = churn.map(([n, dt]) => `<div class="item-row"><span>${n}</span><span class="tag-warn">${Math.floor((hI-dt)/(1000*3600*24))} HARI</span></div>`).join('') || '<div class="tag-success">AKTIF SEMUA</div>';
+        }
 
-        // FIX 2: Tampilkan Analisa Semua (Tidak di Slice)
         const tS = Object.entries(rekapSeri).sort((a,b) => b[1] - a[1]);
         const tW = Object.entries(rekapWarna).sort((a,b) => b[1] - a[1]);
-        
-        document.getElementById('variantAnalysis').innerHTML = `
-            <div style="margin-bottom: 15px;">
-                <div style="font-size:11px; font-weight:800; color:#64748b; margin-bottom:8px; border-bottom: 1px solid var(--border); padding-bottom:4px;">SERI TERLARIS</div>
-                ${tS.length > 0 ? tS.map((x, i) => `<div class="item-row"><span>${i+1}. ${x[0]}</span><span class="tag-success">${x[1]} Unit</span></div>`).join('') : '<div class="item-row">Data Kosong</div>'}
-            </div>
-            <div>
-                <div style="font-size:11px; font-weight:800; color:#64748b; margin-bottom:8px; border-bottom: 1px solid var(--border); padding-bottom:4px;">WARNA TERLARIS</div>
-                ${tW.length > 0 ? tW.map((x, i) => `<div class="item-row"><span>${i+1}. ${x[0]}</span><span class="tag-success">${x[1]} Unit</span></div>`).join('') : '<div class="item-row">Data Kosong</div>'}
-            </div>
-        `;
-        
-        // === GANTI BLOK RENDER TABEL KATEGORI DI DALAM prosesData() DENGAN INI ===
-        const warnaKategori = ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
-        
-        // Cari element yang buat nampilin list kategori (sesuaikan ID-nya kalau beda)
-        const targetTabel = document.getElementById('tableKategori'); 
-        
-        if (targetTabel) {
-            targetTabel.innerHTML = Object.keys(rekapKat)
-                .sort((a,b) => rekapKat[b] - rekapKat[a])
-                .map((k, index) => {
-                    let p = (rekapKat[k] / (dSkrg.sales || 1) * 100).toFixed(1);
-                    let warnaTeks = warnaKategori[index % warnaKategori.length];
-                    
-                    return `
-                        <div class="item-row" style="color: ${warnaTeks}; font-weight: 700; border-bottom: 1px solid var(--accent); display: flex; justify-content: space-between; padding: 10px 12px;">
-                            <span><b style="color: ${warnaTeks};">${k}</b></span>
-                            <span style="font-weight: 800;">${p}%</span>
-                        </div>`;
-                }).join('');
+        if(document.getElementById('variantAnalysis')) {
+            document.getElementById('variantAnalysis').innerHTML = `
+                <div style="margin-bottom: 15px;">
+                    <div style="font-size:11px; font-weight:800; color:#64748b; margin-bottom:8px; border-bottom: 1px solid var(--border); padding-bottom:4px;">SERI TERLARIS</div>
+                    ${tS.length > 0 ? tS.map((x, i) => `<div class="item-row"><span>${i+1}. ${x[0]}</span><span class="tag-success">${x[1]} Unit</span></div>`).join('') : '<div class="item-row">Data Kosong</div>'}
+                </div>
+                <div>
+                    <div style="font-size:11px; font-weight:800; color:#64748b; margin-bottom:8px; border-bottom: 1px solid var(--border); padding-bottom:4px;">WARNA TERLARIS</div>
+                    ${tW.length > 0 ? tW.map((x, i) => `<div class="item-row"><span>${i+1}. ${x[0]}</span><span class="tag-success">${x[1]} Unit</span></div>`).join('') : '<div class="item-row">Data Kosong</div>'}
+                </div>
+            `;
         }
-        // ======================================================================
-        // === GANTI BARIS PEMANGGILAN DIAGNOSA LU JADI INI ===
         
-        // Biarkan tabel dan grafik ngerender duluan biar instan
+        const warnaKategori = ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+        const targetTabel = document.getElementById('tableKategori'); 
+        if (targetTabel) {
+            targetTabel.innerHTML = Object.keys(rekapKat).sort((a,b) => rekapKat[b] - rekapKat[a]).map((k, index) => {
+                let p = (rekapKat[k] / (netSales || 1) * 100).toFixed(1);
+                let warnaTeks = warnaKategori[index % warnaKategori.length];
+                return `<div class="item-row" style="color: ${warnaTeks}; font-weight: 700; border-bottom: 1px solid var(--accent); display: flex; justify-content: space-between; padding: 10px 12px;">
+                            <span><b style="color: ${warnaTeks};">${k}</b></span><span style="font-weight: 800; color: #000;">${p}%</span>
+                        </div>`;
+            }).join('');
+        }
+        
         setTimeout(() => {
-            // Cek dulu apakah fungsinya beneran ada biar ga error
             if (typeof jalankanDiagnosaLokal === "function") {
-                jalankanDiagnosaLokal(dSkrg, urRes, churn);
+                jalankanDiagnosaLokal(dSkrg, urRes, churn, netSales, grossProfit, netProfit, opexRatio);
             }
-        }, 300); // Delay 0.3 detik (300ms) di belakang layar
+        }, 300); 
         
-        // ====================================================
         renderCharts(Object.values(rekapTren).sort((a,b) => a.ts - b.ts), rekapKat, rekapProd);
-    
     }
-
+    
     function renderCharts(tA, kat, prod) {
         if(charts['tren']) charts['tren'].destroy();
         charts['tren'] = new Chart(document.getElementById('chartTren').getContext('2d'), {
