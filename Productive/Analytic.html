@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Intel Pro v7.4 - Focused Edition</title>
+    <title>Sales Intel Pro v7.5 - Advanced Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
@@ -95,7 +95,8 @@
         <div class="kpi-label"><svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/></svg> OMZET VS TARGET</div>
         <div class="kpi-val" id="kpiSales">Rp 0</div>
         <div class="progress-bg"><div class="progress-fill" id="kpiSalesProgress" style="width: 0%;"></div></div>
-        <div class="progress-text"><span id="kpiSalesPct">0%</span><span id="kpiSalesGap">Target: 820JT</span></div>
+        <div class="progress-text"><span id="kpiSalesPct">0%</span><span id="kpiSalesRunRate" style="color:var(--primary)">Proyeksi: Rp 0</span></div>
+        <div style="font-size: 9px; font-weight: 800; margin-top: 4px; text-align: right;" id="kpiSalesGap">Target: 820JT</div>
     </div>
     <div class="kpi-card" style="border-left-color:var(--danger)">
         <div class="kpi-label" style="color:var(--danger)"><svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg> RETUR</div>
@@ -144,6 +145,10 @@
                 <div id="tableKategori"></div>
             </div>
         </div>
+        <div class="card">
+            <div class="card-header" style="color:var(--danger)"><h3><svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> RADAR KEBOCORAN BIAYA</h3></div>
+            <div class="card-body" id="opexList"></div>
+        </div>
     </div>
 
     <div class="col">
@@ -178,7 +183,7 @@
 </div>
 
 <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbzKIYkTje5zb41JZ3H_PowtxrVRkbNDNmro4kEnMg-E9FY-fhDKDlrEvir14zvPRzigEw/exec';
+    const API_URL = 'https://script.google.com/macros/s/AKfycbysL2_UKpuAUDD6G-YtjB5kz4UaeHR1t4X6xyfa2qLXKgR3PYZNvvemNFVgJG3cXiAZUQ/exec';
     let rawDataTransaksi = [];
     let rawDataBiaya = [];
     let katalogProduk = {}; 
@@ -308,7 +313,7 @@
         
         let rekapTren = {}, rekapReseller = {}, rekapKat = {}, rekapProd = {}, rekapCont = {};
         let lastOrder = {}, rekapHari = { 'Senin': 0, 'Selasa': 0, 'Rabu': 0, 'Kamis': 0, 'Jumat': 0, 'Sabtu': 0, 'Minggu': 0 };
-        let rekapSeri = {}, rekapWarna = {};
+        let rekapSeri = {}, rekapWarna = {}, rekapBiaya = {}; // Tambahan Variabel Rekap Biaya
         const listHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
         let barisDihitung = 0; 
@@ -381,11 +386,16 @@
             });
         }
 
+        // PERUBAHAN 3: Hitung Rincian Opex
         if(typeof rawDataBiaya !== 'undefined' && rawDataBiaya.length > 0) {
             rawDataBiaya.forEach(c => {
                 let d = c.parsedDate;
                 if (isNaN(d.getTime())) return;
-                if (d >= gStart && d <= gEnd) { totalBiaya += c.nominal; }
+                if (d >= gStart && d <= gEnd) { 
+                    totalBiaya += c.nominal; 
+                    let katB = c.kategoriBiaya || 'LAINNYA';
+                    rekapBiaya[katB] = (rekapBiaya[katB] || 0) + c.nominal;
+                }
             });
         }
 
@@ -395,6 +405,12 @@
         
         let netMargin = netSales > 0 ? (netProfit / netSales) * 100 : 0;
         let opexRatio = netSales > 0 ? (totalBiaya / netSales) * 100 : 0;
+
+        // PERUBAHAN 4: Rumus Proyeksi (Run Rate)
+        let today = new Date();
+        let hariBerjalan = Math.max(1, Math.ceil((Math.min(today, gEnd) - gStart) / (1000 * 3600 * 24)));
+        let totalHari = Math.max(1, Math.ceil((gEnd - gStart) / (1000 * 3600 * 24)));
+        let runRate = (netSales / hariBerjalan) * totalHari;
 
         try {
             const TARGET = 820000000; 
@@ -408,10 +424,14 @@
                 barFill.style.background = persen >= 100 ? 'var(--success)' : (persen >= 80 ? 'var(--warning)' : 'var(--primary)');
             }
             if (document.getElementById('kpiSalesPct')) document.getElementById('kpiSalesPct').innerText = `${persen.toFixed(1)}% | ${barisDihitung} Trx`;
+            
+            // Tampilkan Proyeksi Run Rate
+            if (document.getElementById('kpiSalesRunRate')) document.getElementById('kpiSalesRunRate').innerText = `Proyeksi: ${formatRp(runRate)}`;
+
             let elGap = document.getElementById('kpiSalesGap');
             if (elGap) {
                 if (persen >= 100) { elGap.innerText = '🔥 TARGET TEMBUS!'; elGap.style.color = 'var(--success)'; } 
-                else { elGap.innerText = '- ' + formatRp(TARGET - netSales); elGap.style.color = 'var(--danger)'; }
+                else { elGap.innerText = 'Defisit: - ' + formatRp(TARGET - netSales); elGap.style.color = 'var(--danger)'; }
             }
 
             if (document.getElementById('kpiRetur')) document.getElementById('kpiRetur').innerText = formatRp(dSkrg.retur);
@@ -466,10 +486,16 @@
                         </div>`;
             }).join('');
         }
+
+        // PERUBAHAN 5: Tampilkan Radar Kebocoran Opex
+        const opexArr = Object.entries(rekapBiaya).sort((a, b) => b[1] - a[1]);
+        if(document.getElementById('opexList')) {
+            document.getElementById('opexList').innerHTML = opexArr.map((i, r) => `<div class="item-row"><span><b>${r+1}.</b> ${i[0]}</span><span style="font-weight:800; color:var(--danger)">${formatRp(i[1])}</span></div>`).join('') || '<div class="item-row">Belum ada pengeluaran dicatat</div>';
+        }
         
         setTimeout(() => {
             if (typeof jalankanDiagnosaLokal === "function") {
-                jalankanDiagnosaLokal(dSkrg, urRes, churn, netSales, grossProfit, netProfit, opexRatio);
+                jalankanDiagnosaLokal(dSkrg, urRes, churn, netSales, grossProfit, netProfit, opexRatio, runRate, opexArr);
             }
         }, 300); 
         
@@ -515,7 +541,7 @@
     }
 
     let contextForAI = ""; 
-    function jalankanDiagnosaLokal(dSkrg, urRes, churnData, netSales, grossProfit, netProfit, opexRatio) {
+    function jalankanDiagnosaLokal(dSkrg, urRes, churnData, netSales, grossProfit, netProfit, opexRatio, runRate, opexArr) {
         let warnings = [];
         let lossRate = dSkrg.sales > 0 ? (dSkrg.retur / dSkrg.sales * 100) : 0;
         const TARGET_SALES = 820000000;
@@ -523,15 +549,17 @@
         let achPct = (netSales / TARGET_SALES) * 100;
         let gap = TARGET_SALES - netSales;
 
-        if (netProfit < 0 && netSales > 0) {
-            warnings.push(`<span style="color:var(--danger)">🔴 <b>RUGI BANDAR:</b> Biaya operasional menggerus laba. Net Margin: ${(netProfit/netSales*100).toFixed(1)}%.</span>`);
-        } else if (opexRatio > 30) {
-            warnings.push(`<span style="color:var(--warning)">🟠 <b>BIAYA BENGKAK:</b> Opex nyedot ${opexRatio.toFixed(1)}% dari Omzet. Evaluasi pengeluaran.</span>`);
+        // PERUBAHAN 6: Diagnosa AI Makin Pinter (Baca Proyeksi & Biaya)
+        let proyPct = (runRate / TARGET_SALES) * 100;
+        if (proyPct < 100 && achPct < 100) {
+            warnings.push(`<span style="color:var(--danger)">🔴 <b>PROYEKSI MELESET:</b> Kecepatan sales saat ini cuma bawa omzet ke ${formatRp(runRate)} (${proyPct.toFixed(1)}%). Segera evaluasi!</span>`);
+        } else if (proyPct >= 100 && achPct < 100) {
+            warnings.push(`<span style="color:var(--success)">🌟 <b>PROYEKSI AMAN:</b> Kecepatan saat ini bagus. Diproyeksikan tembus ${formatRp(runRate)}. Pertahankan!</span>`);
         }
 
-        if (achPct >= 100) warnings.push(`<span style="color:var(--success)">🌟 <b>TARGET TERCAPAI:</b> Tembus ${achPct.toFixed(1)}% dari Rp 820 Juta!</span>`);
-        else if (achPct >= 80) warnings.push(`<span style="color:var(--warning)">🔥 <b>ON TRACK:</b> Capai ${achPct.toFixed(1)}%. Kurang ${formatRp(gap)} lagi!</span>`);
-        else warnings.push(`<span style="color:var(--danger)">⚠️ <b>DEFISIT TARGET:</b> Baru ${achPct.toFixed(1)}% (Minus ${formatRp(gap)}).</span>`);
+        if (netProfit < 0 && netSales > 0) {
+            warnings.push(`<span style="color:var(--danger)">🔴 <b>RUGI BANDAR:</b> Biaya operasional menggerus laba. Net Margin: ${(netProfit/netSales*100).toFixed(1)}%.</span>`);
+        }
 
         if (lossRate > 5) warnings.push(`<span style="color:var(--danger)">🔴 <b>CRITICAL:</b> Loss rate tinggi (${lossRate.toFixed(1)}%).</span>`);
         if (urRes.length > 0 && netSales > 0) {
@@ -542,7 +570,10 @@
 
         document.getElementById('localWarningBox').innerHTML = `<ul style="margin-left: 15px; padding-left: 0;"><li>` + warnings.join('</li><li style="margin-top:6px;">') + `</li></ul>`;
 
-        contextForAI = `[SYSTEM: SUPERVISOR SALES ADVISOR]\nAnalisis data ini. Berikan 3 strategi taktis. Jangan bahasa kaku.\n\n[DATA]\n- Target: ${achPct.toFixed(1)}% (Defisit Rp ${gap})\n- Net Sales: Rp ${netSales}\n- Net Profit: Rp ${netProfit}\n- Opex Ratio: ${opexRatio.toFixed(1)}%\n- Retur: ${lossRate.toFixed(1)}%\n- Partner Pasif: ${churnData.length} toko.`;
+        // Susun daftar Opex Terbesar buat dibaca AI
+        let topOpex = opexArr.length > 0 ? `${opexArr[0][0]} (${formatRp(opexArr[0][1])})` : "Belum ada";
+
+        contextForAI = `[SYSTEM: SUPERVISOR SALES ADVISOR]\nAnalisis data ini dan berikan 3 strategi taktis. Jawab to the point.\n\n[DATA]\n- Target: ${achPct.toFixed(1)}% (Sisa Rp ${gap})\n- Proyeksi Akhir: Rp ${runRate}\n- Net Sales: Rp ${netSales}\n- Net Profit: Rp ${netProfit}\n- Opex Terbesar: ${topOpex}\n- Retur: ${lossRate.toFixed(1)}%\n- Partner Pasif: ${churnData.length} toko.`;
     }
 
     async function mintaSaranAI() {
