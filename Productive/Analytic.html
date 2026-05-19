@@ -119,6 +119,39 @@
             background: var(--border);
         }
 
+        /* Pill Toggle untuk Compare Mode */
+        .compare-pill {
+            display: flex;
+            background: var(--accent);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .compare-pill button {
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .compare-pill button.active {
+            background: var(--primary);
+            color: white;
+            border-radius: 6px;
+        }
+
+        .compare-pill button:hover:not(.active) {
+            background: var(--border);
+        }
+
         .bento-container {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
@@ -462,12 +495,42 @@
         <p style="margin-top:10px; font-weight:800; font-size:12px; color:var(--text);">MEMUAT DATA KEUANGAN...</p>
     </div>
 
+    <!-- Settings Modal -->
+    <div id="settingsModal"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; flex-direction:column; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+        <div
+            style="background:var(--card); padding:30px; border-radius:24px; box-shadow:0 10px 30px rgba(0,0,0,0.2); border:1px solid var(--border); width:90%; max-width:400px; position:relative; animation:fadeInUp 0.3s ease;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="font-family:'Outfit',sans-serif; color:var(--text); margin:0; font-size:18px;">Pengaturan
+                    Target</h3>
+                <button onclick="document.getElementById('settingsModal').style.display='none'"
+                    style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1; font-weight:800;">&times;</button>
+            </div>
+            <p style="color:var(--text-muted); font-size:12px; margin-bottom:15px; font-weight:500;">Masukkan target
+                omzet bulan ini. Data akan disimpan otomatis ke dalam spreadsheet (Sheet: Settings).</p>
+            <input type="number" id="inputTargetSales" placeholder="Contoh: 820000000"
+                style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text); margin-bottom:16px; font-weight:800; outline:none; font-size:16px;">
+            <button onclick="saveTargetToGAS()" id="btnSaveTarget"
+                style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:14px; transition:0.2s;">SIMPAN
+                TARGET</button>
+        </div>
+    </div>
+
     <div class="nav-bar">
         <h1><svg class="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path d="M3 3v18h18" />
                 <path d="m19 9-5 5-4-4-3 3" />
             </svg> SAS - SALES ANALYTIC SIMPLIFY</h1>
         <div class="nav-controls">
+            <button class="theme-toggle" onclick="document.getElementById('settingsModal').style.display='flex'"
+                title="Pengaturan Target" style="padding: 8px 10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                    </path>
+                </svg>
+            </button>
             <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
                 <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2">
@@ -485,6 +548,12 @@
             <input type="text" id="reportrange"
                 style="background: var(--card); color: var(--text); cursor: pointer; padding: 10px 15px; border: 1px solid var(--border); border-radius: 8px; width: 100%; min-width: 220px; font-weight: 700; font-size: 12px; outline:none; text-align:center;">
             <input type="hidden" id="startDate"><input type="hidden" id="endDate">
+            <input type="hidden" id="comparisonMode" value="rolling">
+            <!-- Pill Toggle: Compare Mode -->
+            <div class="compare-pill" title="Mode Komparasi: Pilih cara sistem membandingkan periode">
+                <button id="pillRolling" class="active" onclick="setCompareMode('rolling')">↩ Periode Sebelumnya</button>
+                <button id="pillMonthly" onclick="setCompareMode('monthly')">📅 Bulan Lalu</button>
+            </div>
         </div>
     </div>
 
@@ -492,7 +561,9 @@
         <!-- ROW 1 -->
         <div class="bento-item col-span-3">
             <div class="bento-header">
-                <div class="bento-title">OMZET VS TARGET</div>
+                <div class="bento-title">OMZET VS TARGET <span class="help-icon"
+                        data-tooltip="Total omzet bersih (setelah dikurangi retur) vs Target yang ditentukan di Settings.">?</span>
+                </div>
                 <div class="badge primary"><svg class="icon" width="10" height="10" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor">
                         <rect width="20" height="12" x="2" y="6" rx="2" />
@@ -517,7 +588,9 @@
 
         <div class="bento-item col-span-3" style="border-color:var(--danger-light);">
             <div class="bento-header">
-                <div class="bento-title" style="color:var(--danger)">TOTAL RETUR</div>
+                <div class="bento-title" style="color:var(--danger)">TOTAL RETUR <span class="help-icon"
+                        data-tooltip="Total nominal barang yang dikembalikan. Loss dihitung dari persentase retur qty terhadap total unit terjual.">?</span>
+                </div>
                 <div class="badge danger"><svg class="icon" width="10" height="10" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor">
                         <path d="m7 15 5 5 5-5" />
@@ -534,7 +607,9 @@
 
         <div class="bento-item col-span-3" style="border-color:var(--success-light);">
             <div class="bento-header">
-                <div class="bento-title" style="color:var(--success)">LABA BERSIH</div>
+                <div class="bento-title" style="color:var(--success)">LABA BERSIH <span class="help-icon"
+                        data-tooltip="Omzet Bersih dikurangi HPP (Harga Pokok Penjualan) dan Total Biaya Operasional (Opex).">?</span>
+                </div>
                 <div class="badge success"><svg class="icon" width="10" height="10" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor">
                         <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
@@ -637,7 +712,9 @@
 
         <div class="bento-item col-span-4">
             <div class="bento-header">
-                <div class="bento-title">INTELIJEN KERANJANG & CAC</div>
+                <div class="bento-title">INTELIJEN KERANJANG & CAC <span class="help-icon"
+                        data-tooltip="AOV: Rata-rata nilai per transaksi. UPT: Rata-rata barang per keranjang. CAC: Biaya Akuisisi Pelanggan Baru.">?</span>
+                </div>
             </div>
             <div id="basketIntel" style="display:flex; flex-direction:column; gap:16px; margin-top:10px; flex:1;"></div>
 
@@ -676,7 +753,7 @@
         </div>
     </div>
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxG3hc_JRi7756FJJwntBaXgMdEEsM_o5sRK4QdGXijOPcmCMsg_J58XrnQq2CNzIrZzQ/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwZlBOxqP_3Uw20wIbrli75XxcqHGyugH9nnfqYyadakRqKkXERfxUCO5x6A5hRwim_mg/exec';
 
         let rawDataTransaksi = [];
         let rawDataBiaya = [];
@@ -697,8 +774,14 @@
             }
             if (dataMentah.konfigurasi && dataMentah.konfigurasi.targetSales) {
                 TARGET_SALES = dataMentah.konfigurasi.targetSales;
-                document.getElementById('kpiSalesGap').innerText = 'Target: ' + formatRp(TARGET_SALES);
             }
+            if (dataMentah.settings && dataMentah.settings.length > 0) {
+                let targetSet = dataMentah.settings.find(s => s.Key === 'Target');
+                if (targetSet && targetSet.Value) {
+                    TARGET_SALES = parseInt(targetSet.Value) || TARGET_SALES;
+                }
+            }
+            document.getElementById('kpiSalesGap').innerText = 'Target: ' + formatRp(TARGET_SALES);
             if (!dataMentah.transaksi) dataMentah.transaksi = [];
 
             // 1. Parsing Kamus Produk 
@@ -811,6 +894,7 @@
                 $('#reportrange').val(moment().subtract(29, 'days').format('DD MMM YYYY') + ' - ' + moment().format('DD MMM YYYY'));
                 document.getElementById('startDate').value = moment().subtract(29, 'days').format('YYYY-MM-DD');
                 document.getElementById('endDate').value = moment().format('YYYY-MM-DD');
+                document.getElementById('comparisonMode').value = 'rolling'; // Default: 30 Hari = rolling
 
                 $('body').on('mouseenter', '.ranges li', function () {
                     let text = $(this).text();
@@ -852,6 +936,12 @@
                 const res = await fetch(API_URL + "?action=getSalesData");
                 let dataMentah = await res.json();
 
+                // Pre-fill target input if available
+                if (dataMentah.settings && dataMentah.settings.length > 0) {
+                    let targetSet = dataMentah.settings.find(s => s.Key === 'Target');
+                    if (targetSet && targetSet.Value) document.getElementById('inputTargetSales').value = targetSet.Value;
+                }
+
                 // Simpan cache untuk buka web berikutnya!
                 localStorage.setItem("intel_pro_cache_v3", JSON.stringify(dataMentah));
 
@@ -880,12 +970,28 @@
             let gEnd = new Date(document.getElementById('endDate').value);
             gStart.setHours(0, 0, 0, 0); gEnd.setHours(23, 59, 59, 999);
 
-            // Perhitungan "Mesin Waktu" (Kalkulator Versus)
-            let totalHari = Math.round((gEnd - gStart) / (1000 * 3600 * 24));
-            let pEnd = new Date(gStart.getTime() - 1);
-            let pStart = new Date(pEnd.getTime() - ((totalHari - 1) * 24 * 3600 * 1000));
-            pStart.setHours(0, 0, 0, 0);
-            pEnd.setHours(23, 59, 59, 999);
+            // Perhitungan "Mesin Waktu" berdasarkan mode komparasi yang dipilih user
+            let comparisonMode = document.getElementById('comparisonMode')?.value || 'rolling';
+            let pStart, pEnd;
+
+            if (comparisonMode === 'monthly') {
+                // Bulan Ini / Bulan Lalu / Custom → Tanggal sama di bulan sebelumnya
+                // Contoh: 1 Mei - 19 Mei → dibandingkan dengan 1 Apr - 19 Apr
+                pStart = new Date(gStart);
+                pStart.setMonth(pStart.getMonth() - 1);
+                pStart.setHours(0, 0, 0, 0);
+                pEnd = new Date(gEnd);
+                pEnd.setMonth(pEnd.getMonth() - 1);
+                pEnd.setHours(23, 59, 59, 999);
+            } else {
+                // Hari Ini / Kemarin / 7 Hari / 30 Hari → Rolling N hari sebelumnya
+                // Contoh: 7 hari terakhir → bandingkan dengan 7 hari sebelum rentang ini
+                let totalHari = Math.round((gEnd - gStart) / (1000 * 3600 * 24)) + 1;
+                pEnd = new Date(gStart.getTime() - 1);
+                pStart = new Date(pEnd.getTime() - ((totalHari - 1) * 24 * 3600 * 1000));
+                pStart.setHours(0, 0, 0, 0);
+                pEnd.setHours(23, 59, 59, 999);
+            }
 
             let dSkrg = { sales: 0, salesQty: 0, retur: 0, returQty: 0, trx: 0, cogs: 0 };
             let dLalu = { sales: 0, salesQty: 0, retur: 0, returQty: 0, trx: 0, cogs: 0 };
@@ -974,7 +1080,8 @@
 
                             // Basket Tracking (UPT)
                             let bKey = dateKey + "_" + pel;
-                            if (!basketData[bKey]) basketData[bKey] = { items: new Set(), qty: 0, nominal: 0 };
+                            if (!basketData[bKey]) basketData[bKey] = { items: new Set(), qty: 0, nominal: 0, isReseller: false };
+                            if (kat && kat.includes('RESELLER')) basketData[bKey].isReseller = true;
                             basketData[bKey].items.add(prod);
                             basketData[bKey].qty += Math.abs(qty);
                             basketData[bKey].nominal += nilai;
@@ -1005,14 +1112,30 @@
                         }
 
                         let tKey = d.setHours(0, 0, 0, 0);
-                        if (!rekapTren[tKey]) rekapTren[tKey] = { label: d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }), sales: 0, retur: 0, ts: tKey };
+                        let dStartC = new Date(gStart).setHours(0, 0, 0, 0);
+                        let offsetSkrg = Math.floor((tKey - dStartC) / 86400000);
+                        if (!rekapTren[offsetSkrg]) rekapTren[offsetSkrg] = { label: d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }), sales: 0, retur: 0, salesLalu: 0, ts: offsetSkrg };
 
-                        if (isRetur) { rekapTren[tKey].retur += Math.abs(nilai); }
-                        else if (isPenjualan) { rekapTren[tKey].sales += nilai; }
+                        if (isRetur) { rekapTren[offsetSkrg].retur += Math.abs(nilai); }
+                        else if (isPenjualan) { rekapTren[offsetSkrg].sales += nilai; }
                     }
 
                     // Tancap Logika Membanting Data Periode Lalu
                     if (d >= pStart && d <= pEnd && !isBatal) {
+                        let tKeyP = d.setHours(0, 0, 0, 0);
+                        let dStartP = new Date(pStart).setHours(0, 0, 0, 0);
+                        let offsetLalu = Math.floor((tKeyP - dStartP) / 86400000);
+                        
+                        // Simpan label aktual tanggal bulan lalu (bukan ekuivalen bulan ini!)
+                        let labelBulanLalu = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+
+                        if (!rekapTren[offsetLalu]) {
+                            let equivDate = new Date(gStart);
+                            equivDate.setDate(equivDate.getDate() + offsetLalu);
+                            let lbl = equivDate.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+                            rekapTren[offsetLalu] = { label: lbl, labelLalu: labelBulanLalu, sales: 0, retur: 0, salesLalu: 0, ts: offsetLalu };
+                        }
+
                         if (isRetur) {
                             dLalu.retur += Math.abs(nilai);
                             dLalu.returQty += qty;
@@ -1022,6 +1145,7 @@
                             dLalu.salesQty += qty;
                             dLalu.cogs += Math.abs(hppTotalBaris);
                             if (kat) rekapKatLalu[kat] = (rekapKatLalu[kat] || 0) + nilai;
+                            rekapTren[offsetLalu].salesLalu += nilai;
                         }
                     }
                 });
@@ -1109,24 +1233,40 @@
 
                 // Modul 7 & 8: Basket Intelijen
                 let totalBasket = 0, totalItemsKeranjang = 0, totalNominalKeranjang = 0;
+                let basketReseller = { count: 0, nominal: 0 };
+                let basketOther = { count: 0, nominal: 0 };
                 for (let bk in basketData) {
                     totalBasket++;
                     totalItemsKeranjang += basketData[bk].qty;
                     totalNominalKeranjang += basketData[bk].nominal;
+                    if (basketData[bk].isReseller) {
+                        basketReseller.count++;
+                        basketReseller.nominal += basketData[bk].nominal;
+                    } else {
+                        basketOther.count++;
+                        basketOther.nominal += basketData[bk].nominal;
+                    }
                 }
                 let UPT = totalBasket > 0 ? (totalItemsKeranjang / totalBasket).toFixed(1) : 0;
-                let avgBasketValue = totalBasket > 0 ? formatRp(totalNominalKeranjang / totalBasket) : formatRp(0);
+                let avgRsl = basketReseller.count > 0 ? formatRp(basketReseller.nominal / basketReseller.count) : formatRp(0);
+                let avgOth = basketOther.count > 0 ? formatRp(basketOther.nominal / basketOther.count) : formatRp(0);
 
                 if (document.getElementById('basketIntel')) {
                     document.getElementById('basketIntel').innerHTML = `
-                    <div style="background:var(--primary); color:white; padding:15px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <div style="font-size:10px; font-weight:800; color:#94a3b8;">AVG ORDER VALUE (AOV)</div>
-                            <div style="font-size:20px; font-weight:900;">${avgBasketValue}</div>
+                    <div style="background:var(--primary); color:white; padding:15px; border-radius:12px; display:flex; flex-direction:column; gap:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:12px;">
+                            <div>
+                                <div style="font-size:10px; font-weight:800; color:#94a3b8;">AVG: RESELLER</div>
+                                <div style="font-size:16px; font-weight:900;">${avgRsl}</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-size:10px; font-weight:800; color:#94a3b8;">AVG: MARKETPLACE</div>
+                                <div style="font-size:16px; font-weight:900;">${avgOth}</div>
+                            </div>
                         </div>
-                        <div style="text-align:right;">
-                            <div style="font-size:10px; font-weight:800; color:#94a3b8;">UNIT/TRX (UPT)</div>
-                            <div style="font-size:20px; font-weight:900; color:#3b82f6;">${UPT} <span style="font-size:12px;">pcs</span></div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="font-size:10px; font-weight:800; color:#94a3b8;">GLOBAL UNIT/TRX (UPT)</div>
+                            <div style="font-size:14px; font-weight:900; color:#fff;">${UPT} <span style="font-size:10px;">pcs</span></div>
                         </div>
                     </div>
                     <div style="background:#fee2e2; padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; border-left:4px solid var(--danger);">
@@ -1287,7 +1427,8 @@
                 data: {
                     labels: tA.map(x => x.label),
                     datasets: [
-                        { label: 'Sales', data: tA.map(x => x.sales), borderColor: '#3b82f6', backgroundColor: gradTren, fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#3b82f6', pointRadius: 4, pointHoverRadius: 6 },
+                        { label: 'Periode Ini', data: tA.map(x => x.sales), borderColor: '#3b82f6', backgroundColor: gradTren, fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#3b82f6', pointRadius: 4, pointHoverRadius: 6 },
+                        { label: 'Periode Pembanding', data: tA.map(x => x.salesLalu || 0), borderColor: '#94a3b8', borderDash: [5, 5], borderWidth: 2, tension: 0.4, pointRadius: 0, fill: false },
                         { label: 'Retur', data: tA.map(x => x.retur), borderColor: '#ef4444', borderDash: [6, 6], borderWidth: 2, tension: 0.4, pointRadius: 0 }
                     ]
                 },
@@ -1296,6 +1437,27 @@
                     interaction: { mode: 'index', intersect: false },
                     plugins: {
                         legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: function(items) {
+                                    let mode = document.getElementById('comparisonMode')?.value || 'rolling';
+                                    let modeLabel = mode === 'monthly' ? '📅 Bandingkan: Bulan Lalu' : '↩ Bandingkan: Periode Sebelumnya';
+                                    return [items[0].label, modeLabel];
+                                },
+                                label: function(item) {
+                                    let idx = item.dataIndex;
+                                    let entry = tA[idx];
+                                    let fmt = (v) => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(v);
+                                    if (item.dataset.label === 'Periode Pembanding') {
+                                        let lblLalu = entry.labelLalu || '—';
+                                        let mode = document.getElementById('comparisonMode')?.value || 'rolling';
+                                        let periodLabel = mode === 'monthly' ? `Bulan Lalu (${lblLalu})` : `Periode Sblm (${lblLalu})`;
+                                        return ` ${periodLabel}: ${fmt(item.raw)}`;
+                                    }
+                                    return ` ${item.dataset.label}: ${fmt(item.raw)}`;
+                                }
+                            }
+                        },
                         zoom: {
                             zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
                             pan: { enabled: true, mode: 'x' }
@@ -1399,6 +1561,63 @@
             let topOpex = opexArr && opexArr.length > 0 ? `${opexArr[0][0]} (${formatRp(opexArr[0][1])})` : "Belum ada";
             let gthSales = ((netSales - (netSalesLalu || 0)) / (Math.abs(netSalesLalu || 0) || 1) * 100).toFixed(1);
             contextForAI = `[SYSTEM: SUPERVISOR SALES ADVISOR]\nAnalisis data ini dan berikan 3 strategi taktis. Jawab to the point.\n\n[DATA]\n- Target: ${achPct.toFixed(1)}% (Sisa Rp ${gap})\n- Proyeksi Akhir: Rp ${runRate}\n- Net Sales: Rp ${netSales} (Growth ${gthSales}% vs Periode Lalu Rp ${netSalesLalu || 0})\n- Net Profit: Rp ${netProfit}\n- Opex Terbesar: ${topOpex}\n- Retur: ${lossRate.toFixed(1)}%\n- Partner Pasif: ${churnData.length} toko.`;
+        }
+
+        function setCompareMode(mode) {
+            document.getElementById('comparisonMode').value = mode;
+
+            // Update Pill Toggle visual state
+            document.getElementById('pillRolling').classList.toggle('active', mode === 'rolling');
+            document.getElementById('pillMonthly').classList.toggle('active', mode === 'monthly');
+
+            // Update tooltip hint pada kartu-kartu yang relevan
+            const modeDesc = mode === 'monthly'
+                ? 'Membandingkan dengan tanggal yang sama di bulan sebelumnya.'
+                : 'Membandingkan dengan rentang N hari sebelum periode yang dipilih.';
+
+            // Update data-tooltip secara dinamis untuk semua kartu KPI
+            document.querySelectorAll('[data-tooltip]').forEach(el => {
+                let t = el.getAttribute('data-tooltip');
+                // Hapus keterangan mode lama jika ada, lalu tambah baru
+                t = t.replace(/ Mode komparasi: .+$/, '');
+                el.setAttribute('data-tooltip', t + ' Mode komparasi: ' + modeDesc);
+            });
+
+            // Re-render data dengan mode baru
+            prosesData();
+        }
+
+        async function saveTargetToGAS() {
+            const btn = document.getElementById('btnSaveTarget');
+            const targetVal = document.getElementById('inputTargetSales').value;
+            if (!targetVal || targetVal <= 0) return alert('Masukkan angka valid!');
+
+            btn.innerHTML = 'MENYIMPAN... <div style="display:inline-block; border:2px solid #fff; border-top:2px solid transparent; border-radius:50%; width:10px; height:10px; animation:spin 1s linear infinite;"></div>';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(API_URL + "?action=saveTarget&value=" + targetVal);
+                const data = await res.json();
+                if (data.status === 'success') {
+                    btn.innerHTML = 'BERHASIL DISIMPAN!';
+                    btn.style.background = 'var(--success)';
+                    setTimeout(() => {
+                        document.getElementById('settingsModal').style.display = 'none';
+                        btn.innerHTML = 'SIMPAN TARGET';
+                        btn.style.background = 'var(--primary)';
+                        btn.disabled = false;
+                        location.reload(); // Refresh to apply new target
+                    }, 1000);
+                }
+            } catch (err) {
+                btn.innerHTML = 'GAGAL MENYIMPAN';
+                btn.style.background = 'var(--danger)';
+                setTimeout(() => {
+                    btn.innerHTML = 'SIMPAN TARGET';
+                    btn.style.background = 'var(--primary)';
+                    btn.disabled = false;
+                }, 2000);
+            }
         }
 
         async function mintaSaranAI() {
