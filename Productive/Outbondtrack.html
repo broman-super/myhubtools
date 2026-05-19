@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --text: #334155;
+      --border: #e2e8f0;
+      --primary: #3b82f6;
+      --danger: #ef4444;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+      padding-bottom: 80px;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 100%;
+      margin: auto;
+      background: var(--surface);
+      padding: 15px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    h2,
+    h3 {
+      margin-top: 0;
+      text-align: center;
+      color: #0f172a;
+    }
+
+    .scan-frame {
+      background: #f0f9ff;
+      border: 2px dashed #7dd3fc;
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .scan-frame:focus-within {
+      background: #e0f2fe;
+      border-color: var(--primary);
+    }
+
+    .scan-frame-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .input-group {
+      margin-bottom: 15px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 14px;
+      box-sizing: border-box;
+      font-size: 16px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      outline: none;
+      background-color: var(--bg);
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary);
+      background-color: var(--surface);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--border);
+      padding: 12px 8px;
+      text-align: left;
+    }
+
+    th {
+      color: #64748b;
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .clickable-row {
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .clickable-row:hover {
+      background-color: #f1f5f9;
+    }
+
+    #detailArea,
+    #riwayatArea,
+    #detailRiwayatArea {
+      display: none;
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+    }
+
+    /* Grid Layout untuk List Resi (Mobile vs PC) */
+    .resi-grid-container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    @media (min-width: 768px) {
+      .resi-grid-container {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .resi-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .resi-card .kurir-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary);
+      background: #e0f2fe;
+      padding: 4px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    .resi-card .resi-text {
+      font-family: monospace;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    button {
+      padding: 12px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: opacity 0.2s;
+    }
+
+    button:active {
+      opacity: 0.8;
+    }
+
+    button.btn-outline {
+      background-color: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .del-btn {
+      background-color: #fee2e2;
+      color: var(--danger);
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-content {
+      background: var(--surface);
+      padding: 24px;
+      border-radius: 16px;
+      width: 85%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-content h3 {
+      margin-bottom: 8px;
+    }
+
+    .modal-content p {
+      margin: 0 0 10px 0;
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text);
+    }
+
+    .header-container {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0 15px 0;
+      z-index: 100;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 25%;
+      background: none;
+      border: none;
+      color: #64748b;
+      padding: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .nav-icon {
+      width: 24px;
+      height: 24px;
+      margin-bottom: 6px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .nav-item:active {
+      color: var(--primary);
+    }
+
+    .split-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .sticky-input {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--surface);
+      padding-top: 10px;
+      margin-top: -10px;
+    }
+
+    /* Tampilan Desktop (Web PC) */
+    @media (min-width: 768px) {
+      body {
+        padding-bottom: 20px; /* Reset bottom padding */
+      }
+      .header-container {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border);
+      }
+      .header-container h2 {
+        margin: 0;
+      }
+      .bottom-nav {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        width: auto;
+        border-top: none;
+        padding: 0;
+        justify-content: flex-end;
+        gap: 10px;
+        background: transparent;
+      }
+      .nav-item {
+        flex-direction: row;
+        width: auto;
+        padding: 8px 16px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 13px;
+        color: var(--text);
+      }
+      .nav-item:hover {
+        background: #f1f5f9;
+        color: var(--primary);
+      }
+      .nav-icon {
+        margin-bottom: 0;
+        margin-right: 8px;
+        width: 18px;
+        height: 18px;
+      }
+      .split-layout {
+        flex-direction: row;
+        align-items: flex-start;
+      }
+      .left-panel {
+        flex: 0 0 350px;
+        position: sticky;
+        top: 20px;
+      }
+      .right-panel {
+        flex: 1;
+        min-width: 0;
+      }
+      .sticky-input {
+        position: static;
+        padding-top: 0;
+        margin-top: 0;
+      }
+    }
+
+    #printArea {
+      display: none;
+    }
+
+    @media print {
+      body {
+        background-color: white;
+        padding: 0;
+        margin: 0;
+        color: black;
+        font-family: Arial, sans-serif;
+      }
+
+      #mainApp,
+      .bottom-nav,
+      .modal-overlay,
+      #detailArea,
+      #riwayatArea,
+      #detailRiwayatArea {
+        display: none !important;
+      }
+
+      #printArea {
+        display: block !important;
+        position: static;
+        width: 100%;
+      }
+
+      hr {
+        border-color: black;
+      }
+    }
+  </style>
+  <style id="dynamicPrintStyle"></style>
+</head>
+
+<body>
+
+  <div id="customAlertOverlay" class="modal-overlay">
+    <div class="modal-content">
+      <h3 style="color: var(--primary);">Scanner Gudang</h3>
+      <p id="alertMessageText"></p>
+      <button onclick="closeAlert()">Oke, Paham</button>
+    </div>
+  </div>
+
+  <div id="customConfirmOverlay" class="modal-overlay">
+    <div class="modal-content">
+      <h3 style="color: var(--danger);">Konfirmasi</h3>
+      <p id="confirmMessageText"></p>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn-outline" style="flex: 1;" onclick="closeConfirm()">Batal</button>
+        <button id="btnConfirmAction" style="flex: 1; background-color: var(--danger);">Ya, Selesai</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container" id="mainApp">
+    <div class="header-container">
+      <h2>Scanner Gudang</h2>
+      <div class="bottom-nav" id="mainNav">
+        <button class="nav-item" onclick="bukaModalPrint()" title="Print Resi (Alt+P)">
+          <svg class="nav-icon" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <span>Print Resi</span>
+        </button>
+        <button class="nav-item" onclick="cetakThermal()">
+          <svg class="nav-icon" viewBox="0 0 24 24">
+            <path d="M4 2v20l2-2 2 2 2-2 2 2 2-2 2 2 2-2 2 2V2l-2 2-2-2-2 2-2-2-2 2-2-2-2 2Z"></path>
+            <line x1="8" y1="10" x2="16" y2="10"></line>
+            <line x1="8" y1="14" x2="12" y2="14"></line>
+          </svg>
+          <span>Print Total</span>
+        </button>
+        <button class="nav-item" onclick="toggleRiwayat()">
+          <svg class="nav-icon" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span>Riwayat</span>
+        </button>
+        <button class="nav-item" onclick="simpanDanReset()" id="btnReset" title="Selesai (Alt+S)">
+          <svg class="nav-icon" viewBox="0 0 24 24">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>Selesai</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="split-layout">
+      <div class="left-panel">
+        <div class="sticky-input">
+          <div class="scan-frame">
+            <div class="scan-frame-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 7V4h16v3M4 17v3h16v-3M7 11h10v2H7z"/>
+              </svg>
+              Area Scanner Barcode
+            </div>
+            <div class="input-group" style="margin-bottom: 0;">
+              <input type="text" id="inputResi" placeholder="Tembakkan barcode di sini..." autofocus autocomplete="off">
+            </div>
+          </div>
+        </div>
+
+        <div id="summaryArea">
+          <table>
+            <thead>
+              <tr>
+                <th>Ekspedisi</th>
+                <th style="width: 50px; text-align:center;">Jml</th>
+              </tr>
+            </thead>
+            <tbody id="tabelRekap"></tbody>
+            <tfoot>
+              <tr>
+                <th style="color: #0f172a;">Total Semua</th>
+                <th id="totalSemua" style="text-align:center; color: #0f172a;">0</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <div id="detailArea">
+          <h3 id="judulDetail">Detail Resi</h3>
+          <input type="text" id="searchResi" placeholder="Cari resi..." onkeyup="filterDetail()"
+            style="margin-bottom: 10px;">
+          <div id="listResiDetail" class="resi-grid-container"></div>
+        </div>
+
+        <div id="riwayatArea">
+          <h3>Riwayat Sesi</h3>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Jam</th>
+                  <th>Ekspedisi</th>
+                </tr>
+              </thead>
+              <tbody id="tabelRiwayatData"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="detailRiwayatArea">
+          <h3>Detail ID: <br><span id="judulIdRiwayat" style="font-size: 14px; color: var(--primary);"></span></h3>
+          <input type="text" id="searchRiwayatResi" placeholder="Cari resi / ekspedisi..." onkeyup="filterDetailRiwayat()" style="margin-bottom: 10px;">
+          <div style="max-height: 400px; overflow-y: auto; padding: 5px;">
+            <div id="containerDetailRiwayat" class="resi-grid-container"></div>
+          </div>
+          <button class="btn-outline" style="width: 100%; margin-top: 15px;" onclick="tutupDetailRiwayat()">Tutup
+            Detail</button>
+          <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button class="btn-outline" style="flex: 1;" onclick="tutupDetailRiwayat()">Tutup</button>
+            <button style="flex: 1;" onclick="cetakRiwayatAktif()">Print Riwayat</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="printModal" class="modal-overlay">
+    <div class="modal-content" id="modalButtons">
+      <h3>Pilih Ekspedisi</h3>
+      <button class="btn-outline" onclick="tutupModalPrint()">Batal</button>
+    </div>
+  </div>
+
+  <div id="printArea">
+    <div id="kontenPrint"></div>
+  </div>
+
+  <script>
+    // URL Web App Google Apps Script Anda (WAJIB DIISI SETELAH DEPLOY)
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzWGeJrkRT7Ll6DEgSz2IxswFQaTq7tI2gZAtDetMgy83HdZWeya1coh1Yvr5pC6_E/exec";
+
+    // Fungsi Pembantu untuk Memanggil API
+    function apiCall(action, payload, onSuccess, onError) {
+      if (SCRIPT_URL === "URL_WEB_APP_ANDA_DISINI") {
+        customAlert("ERROR: SCRIPT_URL belum diisi. Silakan edit file HTML dan masukkan URL Web App Anda.");
+        if (onError) onError("URL Kosong");
+        return;
+      }
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8' // Trik menghindari CORS preflight
+        },
+        body: JSON.stringify({ action: action, payload: payload })
+      })
+        .then(res => res.json())
+        .then(res => {
+          if (res.success) {
+            if (onSuccess) onSuccess(res.data);
+          } else {
+            if (onError) onError(res.error);
+            else customAlert("Error dari server: " + res.error);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          if (onError) onError(err.message);
+          else customAlert("Gagal terhubung ke server Apps Script.");
+        });
+    }
+
+    let dataPengiriman = {};
+    let semuaResi = new Set();
+    let kurirSedangDilihat = "";
+    let dataDetailRiwayat = [];
+
+    function customAlert(pesan) {
+      document.getElementById('alertMessageText').innerText = pesan;
+      document.getElementById('customAlertOverlay').style.display = 'flex';
+    }
+    function closeAlert() {
+      document.getElementById('customAlertOverlay').style.display = 'none';
+      document.getElementById('inputResi').focus();
+    }
+
+    let actionConfirm = null;
+    function customConfirm(pesan, callback) {
+      document.getElementById('confirmMessageText').innerText = pesan;
+      actionConfirm = callback;
+      document.getElementById('customConfirmOverlay').style.display = 'flex';
+    }
+    function closeConfirm() {
+      document.getElementById('customConfirmOverlay').style.display = 'none';
+      actionConfirm = null;
+      document.getElementById('inputResi').focus();
+    }
+    document.getElementById('btnConfirmAction').addEventListener('click', function () {
+      if (actionConfirm) actionConfirm();
+      closeConfirm();
+    });
+
+    document.getElementById('inputResi').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        let resi = this.value.trim().toUpperCase();
+        if (resi !== "") {
+          prosesResi(resi);
+          this.value = "";
+        }
+      }
+    });
+
+    document.addEventListener('keydown', function (e) {
+      // Abaikan jika sedang ngetik di input pencarian
+      if (e.target.tagName === 'INPUT' && e.target.id !== 'inputResi') return;
+
+      if (e.altKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        simpanDanReset();
+      } else if (e.altKey && (e.key === 'p' || e.key === 'P')) {
+        e.preventDefault();
+        bukaModalPrint();
+      } else if (e.key === 'Escape') {
+        if (document.getElementById('customAlertOverlay').style.display === 'flex') {
+          closeAlert();
+        } else if (document.getElementById('customConfirmOverlay').style.display === 'flex') {
+          closeConfirm();
+        } else if (document.getElementById('printModal').style.display === 'flex') {
+          tutupModalPrint();
+        } else if (document.getElementById('detailRiwayatArea').style.display === 'block') {
+          tutupDetailRiwayat();
+        } else if (document.getElementById('detailArea').style.display === 'block') {
+          document.getElementById('detailArea').style.display = 'none';
+          kurirSedangDilihat = "";
+          document.getElementById('inputResi').focus();
+        } else if (document.getElementById('riwayatArea').style.display === 'block') {
+          toggleRiwayat();
+        }
+      }
+    });
+
+    function prosesResi(resi) {
+      if (semuaResi.has(resi)) {
+        customAlert("⚠️ Resi " + resi + " sudah discan!");
+        return;
+      }
+
+      let kurir = "Lainnya";
+      if (resi.startsWith("SHPE")) kurir = "POS Indonesia";
+      else if (resi.startsWith("SPX")) kurir = "Shopee Express";
+      else if (resi.startsWith("CM") || resi.match(/^[0-9]{15}$/)) kurir = "JNE";
+      else if (resi.startsWith("IDS")) kurir = "ID Express";
+      else if (resi.startsWith("JP") || resi.startsWith("JX") || resi.startsWith("JT")) kurir = "J&T";
+      else if (resi.startsWith("00")) kurir = "SiCepat";
+
+      if (!dataPengiriman[kurir]) dataPengiriman[kurir] = [];
+
+      dataPengiriman[kurir].push(resi);
+      semuaResi.add(resi);
+
+      updateTampilan();
+      if (kurirSedangDilihat === kurir) showDetails(kurir);
+    }
+
+    function updateTampilan() {
+      const tbody = document.getElementById('tabelRekap');
+      tbody.innerHTML = "";
+      let totalSemuaPaket = 0;
+
+      for (let kurir in dataPengiriman) {
+        let jumlah = dataPengiriman[kurir].length;
+        if (jumlah > 0) {
+          totalSemuaPaket += jumlah;
+          let row = `<tr class="clickable-row" onclick="showDetails('${kurir}')">
+                       <td>${kurir}</td><td style="text-align:center; font-weight:bold;">${jumlah}</td>
+                     </tr>`;
+          tbody.innerHTML += row;
+        }
+      }
+      document.getElementById('totalSemua').innerText = totalSemuaPaket;
+    }
+
+    function cetakRiwayatAktif() {
+      if (dataDetailRiwayat.length === 0) return customAlert("Data kosong!");
+
+      const kontenPrint = document.getElementById('kontenPrint');
+      const styleArea = document.getElementById('dynamicPrintStyle');
+      let idPenginputan = document.getElementById('judulIdRiwayat').innerText;
+
+      // Atur ke ukuran Thermal 100mm x 150mm
+      styleArea.innerHTML = `@page { size: 100mm 150mm; margin: 5mm; }`;
+
+      let htmlPrint = `<div style="text-align: center; font-family: monospace;">`;
+      htmlPrint += `<h2>REKAP RIWAYAT</h2>`;
+      htmlPrint += `<p style="font-size: 12px; word-break: break-all;">ID: ${idPenginputan}</p><hr style="border-top: 2px dashed black;">`;
+
+      // Kelompokkan data untuk menghitung jumlah (Qty) per ekspedisi
+      let rekapLokal = {};
+      let totalSemua = 0;
+      dataDetailRiwayat.forEach(item => {
+        if (!rekapLokal[item.ekspedisi]) rekapLokal[item.ekspedisi] = 0;
+        rekapLokal[item.ekspedisi]++;
+        totalSemua++;
+      });
+
+      // Render daftar ekspedisi dan jumlahnya
+      for (let kurir in rekapLokal) {
+        htmlPrint += `<p style="font-size: 16px; margin: 5px 0; display:flex; justify-content:space-between;"><span>${kurir}</span> <span><b>${rekapLokal[kurir]}</b></span></p>`;
+      }
+
+      htmlPrint += `<hr style="border-top: 2px dashed black;">`;
+      htmlPrint += `<h1 style="margin: 10px 0; font-size: 24px;">TOTAL: ${totalSemua}</h1></div>`;
+
+      kontenPrint.innerHTML = htmlPrint;
+
+      setTimeout(() => { window.print(); }, 300);
+    }
+
+    function showDetails(kurir) {
+      kurirSedangDilihat = kurir;
+      document.getElementById('detailArea').style.display = 'block';
+      document.getElementById('riwayatArea').style.display = 'none';
+      document.getElementById('detailRiwayatArea').style.display = 'none';
+      document.getElementById('judulDetail').innerText = `Daftar Resi: ${kurir}`;
+      document.getElementById('searchResi').value = "";
+      renderListDetail(kurir);
+    }
+
+    function renderListDetail(kurir, filterText = "") {
+      const listDetail = document.getElementById('listResiDetail');
+      listDetail.innerHTML = "";
+      if (!dataPengiriman[kurir]) return;
+
+      dataPengiriman[kurir].forEach(resi => {
+        if (resi.includes(filterText)) {
+          let item = document.createElement('div');
+          item.className = 'resi-card';
+          item.innerHTML = `<span class="resi-text">${resi}</span><button class="del-btn" onclick="hapusResi('${kurir}', '${resi}')">Hapus</button>`;
+          listDetail.appendChild(item);
+        }
+      });
+    }
+
+    function filterDetail() {
+      let filterText = document.getElementById('searchResi').value.trim().toUpperCase();
+      renderListDetail(kurirSedangDilihat, filterText);
+    }
+
+    function hapusResi(kurir, resi) {
+      // Gua pake default confirm aja di sini biar lu bisa hapus resi cepet
+      if (confirm(`Yakin ingin menghapus resi ${resi}?`)) {
+        dataPengiriman[kurir] = dataPengiriman[kurir].filter(r => r !== resi);
+        semuaResi.delete(resi);
+        updateTampilan();
+        renderListDetail(kurir);
+        if (dataPengiriman[kurir].length === 0) {
+          document.getElementById('detailArea').style.display = 'none';
+          kurirSedangDilihat = "";
+        }
+        document.getElementById('inputResi').focus();
+      }
+    }
+
+    function bukaModalPrint() {
+      if (semuaResi.size === 0) {
+        customAlert("Belum ada paket yang discan!");
+        return;
+      }
+      let htmlBtn = `<h3>Pilih Ekspedisi</h3><button style="background-color: #0f172a;" onclick="cetakDetailA3('Semua')">Cetak Semua</button>`;
+      for (let kurir in dataPengiriman) {
+        if (dataPengiriman[kurir].length > 0) {
+          htmlBtn += `<button onclick="cetakDetailA3('${kurir}')">${kurir}</button>`;
+        }
+      }
+      htmlBtn += `<button class="btn-outline" onclick="tutupModalPrint()" style="margin-top:5px;">Batal</button>`;
+
+      document.getElementById('modalButtons').innerHTML = htmlBtn;
+      document.getElementById('printModal').style.display = 'flex';
+    }
+
+    function tutupModalPrint() {
+      document.getElementById('printModal').style.display = 'none';
+      document.getElementById('inputResi').focus();
+    }
+
+    function cetakDetailA3(targetKurir) {
+      tutupModalPrint();
+      const kontenPrint = document.getElementById('kontenPrint');
+      const styleArea = document.getElementById('dynamicPrintStyle');
+      let tgl = new Date().toLocaleDateString('id-ID');
+
+      styleArea.innerHTML = `@page { size: A3; margin: 15mm; }`;
+      let htmlPrint = `<h1 style="text-align: center;">SURAT JALAN PENGIRIMAN</h1>`;
+      htmlPrint += `<p>Tanggal: ${tgl}</p><hr>`;
+
+      let totalCetak = 0;
+      for (let kurir in dataPengiriman) {
+        if (dataPengiriman[kurir].length > 0 && (targetKurir === 'Semua' || targetKurir === kurir)) {
+          htmlPrint += `<h3>${kurir} (${dataPengiriman[kurir].length} Paket)</h3><ul style="column-count: 2;">`;
+          dataPengiriman[kurir].forEach(resi => { htmlPrint += `<li style="margin-bottom: 5px; font-family: monospace;">${resi}</li>`; });
+          htmlPrint += "</ul><hr style='border: 1px dashed #ccc;'>";
+          totalCetak += dataPengiriman[kurir].length;
+        }
+      }
+      htmlPrint += `<h2>Total Paket Dicetak: ${totalCetak}</h2>`;
+
+      kontenPrint.innerHTML = htmlPrint;
+      setTimeout(() => { window.print(); document.getElementById('inputResi').focus(); }, 300);
+    }
+
+    function cetakThermal() {
+      if (semuaResi.size === 0) {
+        customAlert("Belum ada paket yang discan!");
+        return;
+      }
+      const kontenPrint = document.getElementById('kontenPrint');
+      const styleArea = document.getElementById('dynamicPrintStyle');
+      let tgl = new Date().toLocaleString('id-ID');
+
+      styleArea.innerHTML = `@page { size: 100mm 150mm; margin: 5mm; }`;
+      let htmlPrint = `<div style="text-align: center; font-family: monospace;">`;
+      htmlPrint += `<h2>REKAP TOTAL HARIAN</h2>`;
+      htmlPrint += `<p>${tgl}</p><hr style="border-top: 2px dashed black;">`;
+      for (let kurir in dataPengiriman) {
+        if (dataPengiriman[kurir].length > 0) {
+          htmlPrint += `<p style="font-size: 16px; margin: 5px 0; display:flex; justify-content:space-between;"><span>${kurir}</span> <span><b>${dataPengiriman[kurir].length}</b></span></p>`;
+        }
+      }
+      htmlPrint += `<hr style="border-top: 2px dashed black;">`;
+      htmlPrint += `<h1 style="margin: 10px 0; font-size: 24px;">TOTAL: ${semuaResi.size}</h1></div>`;
+
+      kontenPrint.innerHTML = htmlPrint;
+      setTimeout(() => { window.print(); document.getElementById('inputResi').focus(); }, 300);
+    }
+
+    function simpanDanReset() {
+      if (semuaResi.size === 0) {
+        customAlert("Tidak ada data yang perlu disimpan.");
+        return;
+      }
+
+      customConfirm("Apakah pengiriman sesi ini sudah selesai? Data akan direkap lalu di-reset.", function () {
+        const btnReset = document.getElementById('btnReset');
+        btnReset.style.opacity = "0.5";
+        btnReset.disabled = true;
+
+        // Bikin tanggal pake strip atau titik biar beneran kebaca text
+        let now = new Date();
+        let tgl = now.getDate().toString().padStart(2, '0') + '-' + (now.getMonth() + 1).toString().padStart(2, '0') + '-' + now.getFullYear();
+        let jam = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        let wkt = `${tgl}, ${jam}`;
+
+        let idPenginputan = "TRX-" + new Date().getTime();
+        let dataToSave = [];
+
+        for (let kurir in dataPengiriman) {
+          dataPengiriman[kurir].forEach(resi => {
+            dataToSave.push([wkt, idPenginputan, resi, kurir]);
+          });
+        }
+
+        // Ubah teks tombol jadi menyimpan
+        btnReset.innerHTML = `<svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span>Menyimpan...</span>`;
+
+        apiCall("simpanDataGudang", dataToSave, function () {
+          dataPengiriman = {};
+          semuaResi.clear();
+          kurirSedangDilihat = "";
+          document.getElementById('detailArea').style.display = 'none';
+          document.getElementById('riwayatArea').style.display = 'none';
+          document.getElementById('detailRiwayatArea').style.display = 'none';
+          updateTampilan();
+
+          btnReset.innerHTML = `<svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg><span>Selesai</span>`;
+          btnReset.style.opacity = "1";
+          btnReset.disabled = false;
+          customAlert("Data berhasil disimpan ke Spreadsheet!");
+        }, function (err) {
+          btnReset.innerHTML = `<svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg><span>Selesai</span>`;
+          btnReset.style.opacity = "1";
+          btnReset.disabled = false;
+          customAlert("Gagal menyimpan data: " + err);
+        });
+      });
+    }
+
+    // PEMISAHAN TANGGAL DI RIWAYAT UDAH DIAMANIN
+    function toggleRiwayat() {
+      const area = document.getElementById('riwayatArea');
+      if (area.style.display === 'none' || area.style.display === '') {
+        document.getElementById('detailArea').style.display = 'none';
+        document.getElementById('detailRiwayatArea').style.display = 'none';
+        area.style.display = 'block';
+        document.getElementById('tabelRiwayatData').innerHTML = "<tr><td colspan='3' style='text-align:center;'>Mengambil data...</td></tr>";
+
+        apiCall("getRiwayatGrouped", null, function (data) {
+          let html = "";
+          if (data.length === 0) {
+            html = "<tr><td colspan='3' style='text-align:center; color:#64748b;'>Belum ada riwayat.</td></tr>";
+          } else {
+            data.forEach(row => {
+              // Misah tanggal, bodo amat mau koma atau spasi tetep jalan
+              let waktuString = row.waktu || "-";
+              let splitChar = waktuString.includes(',') ? ',' : ' ';
+              let parts = waktuString.split(splitChar);
+              let tgl = parts[0] ? parts[0].trim() : "-";
+              let jam = parts[1] ? parts[1].trim() : "-";
+
+              html += `<tr class="clickable-row" onclick="bukaDetailRiwayat('${row.id}')">
+                         <td style="white-space:nowrap;">${tgl}</td>
+                         <td style="white-space:nowrap;">${jam}</td>
+                         <td style="font-size: 12px;">${row.ringkasan}</td>
+                       </tr>`;
+            });
+          }
+          document.getElementById('tabelRiwayatData').innerHTML = html;
+        });
+
+      } else {
+        area.style.display = 'none';
+        document.getElementById('detailRiwayatArea').style.display = 'none';
+        document.getElementById('inputResi').focus();
+      }
+    }
+
+    function bukaDetailRiwayat(idPenginputan) {
+      document.getElementById('detailRiwayatArea').style.display = 'block';
+      document.getElementById('judulIdRiwayat').innerText = idPenginputan;
+      document.getElementById('searchRiwayatResi').value = "";
+      document.getElementById('containerDetailRiwayat').innerHTML = "<div style='text-align:center; grid-column: 1 / -1; padding: 20px;'>Loading...</div>";
+
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+
+      apiCall("getDetailById", idPenginputan, function (details) {
+        dataDetailRiwayat = details; // <--- TAMBAHKAN BARIS INI
+        renderDetailRiwayat();
+      });
+    }
+
+    function renderDetailRiwayat(filterText = "") {
+      let html = "";
+      dataDetailRiwayat.forEach(item => {
+        let resiUpper = item.resi ? item.resi.toUpperCase() : "";
+        let kurirUpper = item.ekspedisi ? item.ekspedisi.toUpperCase() : "";
+        if (resiUpper.includes(filterText) || kurirUpper.includes(filterText)) {
+          html += `<div class="resi-card">
+                     <span class="kurir-badge">${item.ekspedisi}</span>
+                     <span class="resi-text">${item.resi}</span>
+                   </div>`;
+        }
+      });
+      if (html === "") {
+        html = "<div style='text-align:center; grid-column: 1 / -1; padding: 20px; color: #64748b;'>Data tidak ditemukan.</div>";
+      }
+      document.getElementById('containerDetailRiwayat').innerHTML = html;
+    }
+
+    function filterDetailRiwayat() {
+      let filterText = document.getElementById('searchRiwayatResi').value.trim().toUpperCase();
+      renderDetailRiwayat(filterText);
+    }
+
+    function tutupDetailRiwayat() {
+      document.getElementById('detailRiwayatArea').style.display = 'none';
+      document.getElementById('inputResi').focus();
+    }
+  </script>
+</body>
+
+</html>
