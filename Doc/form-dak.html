@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulir Dana Amanah PT EKT</title>
+    <style>
+        /* Setup Kertas A4 & Layout Dokumen */
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            background: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            color: #000;
+        }
+
+        .document-page {
+            background: white;
+            width: 21cm;
+            min-height: 29.7cm;
+            padding: 2cm;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* Tipografi Dokumen */
+        h3 {
+            text-align: center;
+            margin: 0;
+            font-size: 11pt;
+            font-weight: bold;
+        }
+
+        .doc-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 12pt;
+            margin: 0;
+        }
+
+        .doc-subtitle {
+            text-align: center;
+            font-weight: bold;
+            font-size: 12pt;
+            margin: 0 0 20px 0;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin: 15px 0 5px 0;
+            font-size: 11pt;
+        }
+
+        /* Tombol Cetak / Aksi Baru */
+        .print-actions {
+            width: 21cm;
+            margin: 0 auto 15px auto;
+            display: flex;
+            justify-content: flex-end;
+            box-sizing: border-box;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            background: #1e3a8a;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 10.5pt;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: #1e40af;
+        }
+
+        /* Format Tabel Dokumen */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+
+        td {
+            border: 1px solid black;
+            padding: 4px 8px;
+            vertical-align: middle;
+        }
+
+        .no-border-table td {
+            border: none;
+            padding: 2px 5px;
+            vertical-align: top;
+        }
+
+        /* Input Fields - Menyamar sebagai teks dokumen */
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        textarea {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-family: inherit;
+            font-size: inherit;
+            background: transparent;
+            padding: 2px;
+        }
+
+        textarea {
+            resize: none;
+            vertical-align: top;
+        }
+
+        /* Highlight editable fields in Web UI only */
+        @media screen {
+
+            input[type="text"]:not(:disabled):not(#ttdNama),
+            input[type="number"]:not(:disabled),
+            input[type="date"]:not(:disabled),
+            textarea:not(:disabled) {
+                background: #f0f4f8 !important;
+                border-bottom: 1px dashed #94a3b8 !important;
+                padding: 4px 6px;
+                border-radius: 4px;
+                box-sizing: border-box;
+                transition: all 0.2s ease;
+            }
+
+            input[type="text"]:not(:disabled):not(#ttdNama):hover,
+            input[type="number"]:not(:disabled):hover,
+            input[type="date"]:not(:disabled):hover,
+            textarea:not(:disabled):hover {
+                background: #e2e8f0 !important;
+            }
+
+            input[type="text"]:not(:disabled):not(#ttdNama):focus,
+            input[type="number"]:not(:disabled):focus,
+            input[type="date"]:not(:disabled):focus,
+            textarea:not(:disabled):focus {
+                background: #e2e8f0 !important;
+                border-bottom: 1px solid #1e3a8a !important;
+                outline: none;
+            }
+        }
+
+        .no-border-table input[type="text"] {
+            background: transparent !important;
+            border-bottom: 0 !important;
+            border-radius: 0 !important;
+            padding: 2px !important;
+        }
+
+        /* Checkbox & Radio - Style Dokumen */
+        .radio-group {
+            margin: 5px 0;
+        }
+
+        .radio-group label {
+            cursor: pointer;
+            display: inline-flex;
+            align-items: baseline;
+        }
+
+        .radio-group input {
+            margin-right: 5px;
+        }
+
+        .indent-text {
+            padding-left: 20px;
+            font-size: 10.5pt;
+        }
+
+        /* Custom Radio Button - Agar tercetak sempurna & seragam */
+        input[type="radio"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border: 1px solid #000;
+            border-radius: 50%;
+            outline: none;
+            display: inline-block;
+            vertical-align: middle;
+            position: relative;
+            margin-right: 6px;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        input[type="radio"]:checked::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #000;
+        }
+
+        input[type="radio"]:disabled {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        input[type="radio"]:disabled:checked::after {
+            background: #94a3b8;
+        }
+
+        /* Disabled input & textarea */
+        input:disabled,
+        textarea:disabled {
+            color: #64748b;
+            background: transparent;
+            cursor: not-allowed;
+        }
+
+        /* Lampiran Box Styling */
+        .lampiran-box {
+            border: 2px dashed #cbd5e1;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            background: #f8fafc;
+            margin-top: 10px;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .lampiran-box:hover {
+            border-color: #94a3b8;
+            background: #f1f5f9;
+        }
+
+        .lampiran-placeholder {
+            color: #64748b;
+            font-size: 10.5pt;
+        }
+
+        .lampiran-box img {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-hapus {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 8px;
+            font-size: 9.5pt;
+            font-weight: bold;
+            display: inline-block;
+            transition: background 0.2s ease;
+        }
+
+        .btn-hapus:hover {
+            background: #dc2626;
+        }
+
+        /* Mode Print */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+                display: block;
+            }
+
+            .document-page {
+                box-shadow: none;
+                padding: 0;
+                width: 100%;
+                min-height: auto;
+                margin: 0;
+            }
+
+            .print-actions {
+                display: none !important;
+            }
+
+            input:hover,
+            textarea:hover {
+                background: transparent;
+            }
+
+            input[type="date"]::-webkit-calendar-picker-indicator {
+                display: none;
+            }
+
+            /* Reset background and border values for print */
+            input[type="text"]:not(#ttdNama),
+            input[type="number"],
+            input[type="date"],
+            textarea {
+                background: transparent !important;
+                border-bottom: none !important;
+                padding: 2px !important;
+            }
+
+            .no-border-table input[type="text"] {
+                border-bottom: 1px solid #000 !important;
+            }
+
+            /* Tampilkan kedua form rincian di cetakan layaknya formulir fisik asli */
+            #formQardh,
+            #formMurabahah {
+                display: block !important;
+            }
+
+            /* Sembunyikan elemen upload & hapus */
+            .btn-hapus,
+            input[type="file"] {
+                display: none !important;
+            }
+
+            /* Sembunyikan seluruh section lampiran kosong saat dicetak */
+            #lampiranSection.empty {
+                display: none !important;
+            }
+
+            /* --- Optimalisasi Pemotongan Halaman (Page Break) --- */
+            /* Hindari pemotongan di tengah tabel, baris, dan kolom */
+            table,
+            tr,
+            td {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            /* Hindari judul bagian menggantung di akhir halaman (orphan headings) */
+            h3,
+            .section-title {
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+            }
+
+            /* Hindari pemotongan di tengah box lampiran & kolom ttd */
+            .lampiran-box,
+            .no-border-table {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
+            .lampiran-box {
+                border: 2px dashed #000 !important;
+                background: transparent !important;
+                cursor: default !important;
+            }
+
+            .lampiran-placeholder {
+                color: #000 !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="print-actions">
+        <button class="action-btn" onclick="window.print()">Cetak / Save as PDF</button>
+    </div>
+
+    <div class="document-page">
+        <div class="doc-title">FORMULIR PENGAJUAN DANA AMANAH KARYAWAN</div>
+        <div class="doc-subtitle">PT. ELFIQA KARYA TRIANGGA</div>
+
+        <div class="section-title">I. DATA DIRI PEMOHON</div>
+        <table>
+            <tr>
+                <td width="30%">Nama Lengkap</td>
+                <td><input type="text" id="nama" oninput="syncName()"></td>
+            </tr>
+            <tr>
+                <td>Entitas</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Jabatan</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>No. Telp</td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td>Alamat</td>
+                <td><textarea rows="2"></textarea></td>
+            </tr>
+        </table>
+
+        <div class="section-title">II. JENIS PENGAJUAN BANTUAN</div>
+        <div style="font-style: italic; margin-bottom: 5px;">Pilih salah satu sesuai jalur yang tersedia:</div>
+
+        <div class="radio-group">
+            <label><input type="radio" name="jenis" value="qardh" checked onchange="toggleForm()"> <b>Dana Darurat
+                    (Qardh)</b></label>
+            <div class="indent-text">Tujuan: Sakit, musibah, pendidikan anak, atau kebutuhan pokok mendesak.</div>
+            <div class="indent-text">Ketentuan: Nominal pengembalian sama dengan pinjaman (Tanpa Margin).</div>
+        </div>
+
+        <div class="radio-group">
+            <label><input type="radio" name="jenis" value="murabahah" onchange="toggleForm()"> <b>Pembiayaan Barang
+                    (Murabahah)</b></label>
+            <div class="indent-text">Tujuan: Pembelian HP kerja, laptop, alat produktif, atau kebutuhan rumah tangga.
+            </div>
+            <div class="indent-text">Ketentuan: Akad jual beli dengan margin yang disepakati.</div>
+        </div>
+
+        <div class="section-title">III. RINCIAN PENGAJUAN & KEMAMPUAN CICILAN</div>
+        <div style="font-style: italic; margin-bottom: 5px;">Pengisian disesuaikan dengan jenis pengajuan sebelumnya.
+        </div>
+
+        <div id="formQardh">
+            <div><b>Dana Darurat (Qardh)</b></div>
+            <table>
+                <tr>
+                    <td width="50%">Nominal yang Diajukan</td>
+                    <td>
+                        <div style="display:flex;">Rp. <input type="text" id="nomQardh" style="padding-left:5px;"
+                                oninput="formatNumberInput(this); calcQardh();"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Tenor/Jangka Waktu Cicilan (Bulan)</td>
+                    <td>
+                        <div style="display:flex;"><input type="number" id="tenorQardh" min="1" max="3"
+                                style="width:40px; text-align:center;" oninput="calcQardh()"> Bulan &nbsp;<span
+                                style="font-size:9pt; color:#64748b; align-self:center;">(Maks 3 Bulan)</span></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Estimasi Cicilan per Bulan<br><span style="font-size:9pt;">(Wajib maksimal 20% dari gaji bersih
+                            bulanan)</span></td>
+                    <td>
+                        <div style="display:flex;">Rp. <input type="text" id="cicilanQardh" readonly
+                                style="padding-left:5px;"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div id="formMurabahah" style="display:none;">
+            <div><b>Pembiayaan Barang (Murabahah)</b></div>
+            <table>
+                <tr>
+                    <td width="30%">Nama Barang</td>
+                    <td><textarea id="namaBarang" rows="1" style="overflow:hidden;"
+                            oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Spesifikasi</td>
+                    <td><textarea id="spesifikasi" rows="2" style="overflow:hidden;"
+                            oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Harga Barang</td>
+                    <td>
+                        <div style="display:flex;">Rp. <input type="text" id="hargaBarang" style="padding-left:5px;"
+                                oninput="formatNumberInput(this); calcMurabahah();"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Margin 8%</td>
+                    <td>
+                        <div style="display:flex;">Rp. <input type="text" id="marginBarang" readonly
+                                style="padding-left:5px;"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Total Pembiayaan</td>
+                    <td>
+                        <div style="display:flex;">Rp. <input type="text" id="totalBarang" readonly
+                                style="padding-left:5px;"></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Tenor/Jangka Waktu Cicilan</td>
+                    <td>
+                        <div style="display:flex;"><input type="number" id="tenorBarang" min="1" max="6"
+                                style="width:40px; text-align:center;" oninput="calcMurabahah()"> Bulan &nbsp;<span
+                                style="font-size:9pt; color:#64748b; align-self:center;">(Maks 6 Bulan)</span></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Estimasi Cicilan per Bulan<br><span style="font-size:9pt;">(Wajib maksimal 20% dari gaji bersih
+                            bulanan)</span></td>
+                    <td>
+                        <div style="display:flex;">Rp. <input type="text" id="cicilanBarang" readonly
+                                style="padding-left:5px;"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section-title">IV. PERNYATAAN KOMITMEN & AKAD AMANAH</div>
+        <div>Dengan mengisi formulir ini, saya menyatakan bahwa:</div>
+        <ul style="margin: 0; padding-left: 20px;">
+            <li>Informasi yang saya berikan adalah benar dan digunakan untuk kebutuhan yang mendesak, bukan untuk gaya
+                hidup atau kegiatan konsumtif yang tidak wajar.</li>
+            <li>Saya saat ini tidak memiliki pinjaman aktif lainnya dalam program Dana Amanah yang belum lunas.</li>
+            <li>Saya bersedia melakukan pembayaran melalui sistem pemotongan gaji secara otomatis setiap bulan sampai
+                kewajiban lunas.</li>
+            <li>Saya memahami bahwa pengajuan ini dapat disetujui, ditunda, atau ditolak berdasarkan kondisi dana dan
+                hasil verifikasi kemampuan bayar.</li>
+        </ul>
+        <div><b>Prinsip Utama: Amanah, Adil, Tertib, Syariah, dan Tidak Memberatkan.</b></div>
+
+        <div class="section-title">V. BAGIAN VERIFIKASI (DIISI OLEH PENGELOLA)</div>
+        <table>
+            <tr>
+                <td width="40%">Rasio Cicilan (Maks 20% Gaji)</td>
+                <td>
+                    <label><input type="radio" name="rasio" disabled> Aman</label> &nbsp;&nbsp;|&nbsp;&nbsp;
+                    <label><input type="radio" name="rasio" disabled> Tidak Aman</label>
+                </td>
+            </tr>
+            <tr>
+                <td>Rekomendasi Pengelola</td>
+                <td>
+                    <label><input type="radio" name="rekom" disabled> Disetujui</label> &nbsp;&nbsp;|&nbsp;&nbsp;
+                    <label><input type="radio" name="rekom" disabled> Ditolak</label> &nbsp;&nbsp;|&nbsp;&nbsp;
+                    <label><input type="radio" name="rekom" disabled> Ditunda</label>
+                </td>
+            </tr>
+            <tr>
+                <td>Catatan</td>
+                <td><textarea rows="2" style="width:100%; border-bottom:1px dotted #000;" disabled></textarea></td>
+            </tr>
+        </table>
+
+        <div style="margin-top: 15px;">
+            Tanggal Pengajuan, <input type="date" id="tgl" style="width: 150px;">
+        </div>
+
+        <table class="no-border-table" style="margin-top: 20px; text-align: center;">
+            <tr>
+                <td width="33%">Pemohon,</td>
+                <td width="33%">Mengetahui,</td>
+                <td width="33%">Menyetujui,</td>
+            </tr>
+            <tr>
+                <td height="80"></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>( <input type="text" id="ttdNama"
+                        style="width:80%; text-align:center; border-bottom:1px solid #000;"
+                        placeholder="......................"> )<br>&nbsp;</td>
+                <td>( <input type="text" style="width:80%; text-align:center; border-bottom:1px solid #000;"
+                        placeholder="......................"> )<br>HR - GA</td>
+                <td>( <input type="text" style="width:80%; text-align:center; border-bottom:1px solid #000;"
+                        placeholder="......................"> )<br>Accounting</td>
+            </tr>
+        </table>
+
+        <div id="lampiranSection" class="lampiran-section empty">
+            <div style="margin-top: 20px; font-size: 10pt;">
+                Lampiran (untuk pengajuan barang, sertakan gambar)
+            </div>
+            <input type="file" id="inputLampiran" accept="image/*" style="display: none;"
+                onchange="previewImage(event)">
+            <div id="lampiranBox" class="lampiran-box" onclick="document.getElementById('inputLampiran').click()">
+                <div id="lampiranPlaceholder" class="lampiran-placeholder">
+                    <span>Klik di sini untuk mengunggah Gambar Lampiran (Bukti / Brosur / Spesifikasi)</span>
+                </div>
+                <img id="lampiranPreview" src="" alt="Pratinjau Lampiran" style="display: none;">
+            </div>
+            <button id="btnHapusLampiran" type="button" class="btn-hapus" onclick="clearImage(event)"
+                style="display: none;">Hapus Gambar</button>
+        </div>
+    </div>
+
+    <script>
+        // Format Rupiah
+        const formatRp = (num) => new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0 }).format(num);
+
+        // Toggle Section
+        function toggleForm() {
+            const isQardh = document.querySelector('input[name="jenis"]:checked').value === 'qardh';
+            document.getElementById('formQardh').style.display = isQardh ? 'block' : 'none';
+            document.getElementById('formMurabahah').style.display = isQardh ? 'none' : 'block';
+
+            if (isQardh) {
+                // Clear Murabahah fields
+                const namaBarang = document.getElementById('namaBarang');
+                const spesifikasi = document.getElementById('spesifikasi');
+                if (namaBarang) {
+                    namaBarang.value = '';
+                    namaBarang.style.height = 'auto';
+                }
+                if (spesifikasi) {
+                    spesifikasi.value = '';
+                    spesifikasi.style.height = 'auto';
+                }
+
+                document.getElementById('hargaBarang').value = '';
+                document.getElementById('marginBarang').value = '';
+                document.getElementById('totalBarang').value = '';
+                document.getElementById('tenorBarang').value = '';
+                document.getElementById('cicilanBarang').value = '';
+            } else {
+                // Clear Qardh fields
+                document.getElementById('nomQardh').value = '';
+                document.getElementById('tenorQardh').value = '';
+                document.getElementById('cicilanQardh').value = '';
+            }
+        }
+
+        // Sync Nama ke TTD
+        function syncName() {
+            document.getElementById('ttdNama').value = document.getElementById('nama').value;
+        }
+
+        // Utility to format number inputs with thousand separators (dots)
+        function formatNumberInput(input) {
+            let cursorPosition = input.selectionStart;
+            let originalLength = input.value.length;
+            let value = input.value.replace(/\D/g, '');
+            if (value) {
+                let formatted = new Intl.NumberFormat('id-ID').format(value);
+                input.value = formatted;
+                let newLength = input.value.length;
+                cursorPosition = cursorPosition + (newLength - originalLength);
+                input.setSelectionRange(cursorPosition, cursorPosition);
+            } else {
+                input.value = '';
+            }
+        }
+
+        // Kalkulasi Qardh
+        function calcQardh() {
+            const tenorInput = document.getElementById('tenorQardh');
+            let tenor = parseInt(tenorInput.value) || 0;
+            if (tenor > 3) {
+                tenor = 3;
+                tenorInput.value = 3;
+            }
+            const nomRaw = document.getElementById('nomQardh').value.replace(/\./g, '');
+            const nom = parseFloat(nomRaw) || 0;
+            const finalTenor = tenor || 1;
+            document.getElementById('cicilanQardh').value = nom > 0 ? formatRp(nom / finalTenor) : '';
+        }
+
+        // Kalkulasi Murabahah
+        function calcMurabahah() {
+            const tenorInput = document.getElementById('tenorBarang');
+            let tenor = parseInt(tenorInput.value) || 0;
+            if (tenor > 6) {
+                tenor = 6;
+                tenorInput.value = 6;
+            }
+            const hargaRaw = document.getElementById('hargaBarang').value.replace(/\./g, '');
+            const harga = parseFloat(hargaRaw) || 0;
+            const finalTenor = tenor || 1;
+            const margin = harga * 0.08;
+            const total = harga + margin;
+
+            if (harga > 0) {
+                document.getElementById('marginBarang').value = formatRp(margin);
+                document.getElementById('totalBarang').value = formatRp(total);
+                document.getElementById('cicilanBarang').value = formatRp(total / finalTenor);
+            } else {
+                document.getElementById('marginBarang').value = '';
+                document.getElementById('totalBarang').value = '';
+                document.getElementById('cicilanBarang').value = '';
+            }
+        }
+
+        // Preview Lampiran Gambar
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('lampiranPreview').src = e.target.result;
+                    document.getElementById('lampiranPreview').style.display = 'block';
+                    document.getElementById('lampiranPlaceholder').style.display = 'none';
+                    document.getElementById('btnHapusLampiran').style.display = 'inline-block';
+                    document.getElementById('lampiranSection').classList.remove('empty');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Hapus Lampiran Gambar
+        function clearImage(event) {
+            event.stopPropagation();
+            document.getElementById('inputLampiran').value = '';
+            document.getElementById('lampiranPreview').src = '';
+            document.getElementById('lampiranPreview').style.display = 'none';
+            document.getElementById('lampiranPlaceholder').style.display = 'block';
+            document.getElementById('btnHapusLampiran').style.display = 'none';
+            document.getElementById('lampiranSection').classList.add('empty');
+        }
+    </script>
+
+</body>
+
+</html>
