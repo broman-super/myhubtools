@@ -328,6 +328,10 @@
                 border-bottom: 1px solid #000 !important;
             }
 
+            .no-border-table #ttdNama {
+                border-bottom: none !important;
+            }
+
             /* Tampilkan kedua form rincian di cetakan layaknya formulir fisik asli */
             #formQardh,
             #formMurabahah {
@@ -378,13 +382,124 @@
                 color: #000 !important;
             }
         }
+
+        /* ==========================================
+           MOBILE RESPONSIVE VIEW (Hanya Aktif di Layar / Screen)
+           ========================================== */
+        @media screen and (max-width: 840px) {
+            body {
+                padding: 12px;
+                background: #f1f5f9;
+            }
+            .document-page {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 1.5cm 1.2cm !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+                border-radius: 8px;
+            }
+            .print-actions {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin-bottom: 12px;
+            }
+        }
+
+        @media screen and (max-width: 600px) {
+            .document-page {
+                padding: 24px 16px !important;
+            }
+            
+            /* Konversi Tabel Data (BAB I, BAB III, BAB V) Menjadi Kartu Mewah */
+            table:not(.no-border-table),
+            table:not(.no-border-table) tbody,
+            table:not(.no-border-table) tr,
+            table:not(.no-border-table) td {
+                display: block !important;
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+            
+            table:not(.no-border-table) tr {
+                margin-bottom: 16px;
+                border: 1px solid #cbd5e1;
+                border-radius: 8px;
+                background: #f8fafc;
+                overflow: hidden;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            }
+            
+            table:not(.no-border-table) td {
+                border: none !important;
+                padding: 8px 14px !important;
+            }
+            
+            /* Judul Baris / Label Input */
+            table:not(.no-border-table) td:first-child {
+                font-weight: bold;
+                color: #1e3a8a;
+                background: #f1f5f9;
+                padding-top: 10px !important;
+                padding-bottom: 6px !important;
+                border-bottom: 1px solid #e2e8f0 !important;
+            }
+            
+            /* Area Input */
+            table:not(.no-border-table) td:last-child {
+                padding-top: 10px !important;
+                padding-bottom: 10px !important;
+            }
+            
+            /* Tabel Tanda Tangan Menjadi Vertikal Bertumpuk */
+            .no-border-table,
+            .no-border-table tbody,
+            .no-border-table tr,
+            .no-border-table td {
+                display: block !important;
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+            
+            .no-border-table tr {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 24px;
+            }
+            
+            .no-border-table td {
+                margin-bottom: 12px;
+                text-align: center !important;
+            }
+            
+            .no-border-table td input[type="text"] {
+                width: 75% !important;
+                margin: 0 auto !important;
+            }
+            
+            /* Penyesuaian Ukuran Font */
+            .doc-title {
+                font-size: 11pt !important;
+            }
+            .doc-subtitle {
+                font-size: 11pt !important;
+                margin-bottom: 15px !important;
+            }
+            .section-title {
+                margin-top: 18px !important;
+            }
+            
+            /* Radio group padding */
+            .indent-text {
+                padding-left: 15px;
+            }
+        }
     </style>
 </head>
 
 <body>
 
     <div class="print-actions">
-        <button class="action-btn" onclick="window.print()">Cetak / Save as PDF</button>
+        <button class="action-btn" onclick="validateAndPrint()">Cetak / Save as PDF</button>
     </div>
 
     <div class="document-page">
@@ -399,19 +514,19 @@
             </tr>
             <tr>
                 <td>Entitas</td>
-                <td><input type="text"></td>
+                <td><input type="text" id="entitas"></td>
             </tr>
             <tr>
                 <td>Jabatan</td>
-                <td><input type="text"></td>
+                <td><input type="text" id="jabatan"></td>
             </tr>
             <tr>
                 <td>No. Telp</td>
-                <td><input type="text"></td>
+                <td><input type="text" id="telp" oninput="formatPhoneInput(this)"></td>
             </tr>
             <tr>
                 <td>Alamat</td>
-                <td><textarea rows="2"></textarea></td>
+                <td><textarea id="alamat" rows="2"></textarea></td>
             </tr>
         </table>
 
@@ -561,25 +676,26 @@
             Tanggal Pengajuan, <input type="date" id="tgl" style="width: 150px;">
         </div>
 
-        <table class="no-border-table" style="margin-top: 20px; text-align: center;">
+        <table class="no-border-table" style="margin-top: 20px; text-align: center; width: 100%;">
             <tr>
-                <td width="33%">Pemohon,</td>
-                <td width="33%">Mengetahui,</td>
-                <td width="33%">Menyetujui,</td>
-            </tr>
-            <tr>
-                <td height="80"></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>( <input type="text" id="ttdNama"
-                        style="width:80%; text-align:center; border-bottom:1px solid #000;"
-                        placeholder="......................"> )<br>&nbsp;</td>
-                <td>( <input type="text" style="width:80%; text-align:center; border-bottom:1px solid #000;"
-                        placeholder="......................"> )<br>HR - GA</td>
-                <td>( <input type="text" style="width:80%; text-align:center; border-bottom:1px solid #000;"
-                        placeholder="......................"> )<br>Accounting</td>
+                <td width="33%" style="vertical-align: top;">
+                    <div>Pemohon,</div>
+                    <div style="height: 60px;"></div>
+                    <div>( <input type="text" id="ttdNama" style="width:80%; text-align:center; border-bottom:1px solid #000;" placeholder="......................"> )</div>
+                    <div style="font-size: 9pt;">&nbsp;</div>
+                </td>
+                <td width="33%" style="vertical-align: top;">
+                    <div>Mengetahui,</div>
+                    <div style="height: 60px;"></div>
+                    <div>( <input type="text" style="width:80%; text-align:center; border-bottom:1px solid #000;" placeholder="......................"> )</div>
+                    <div style="font-size: 9pt;">HR - GA</div>
+                </td>
+                <td width="33%" style="vertical-align: top;">
+                    <div>Menyetujui,</div>
+                    <div style="height: 60px;"></div>
+                    <div>( <input type="text" style="width:80%; text-align:center; border-bottom:1px solid #000;" placeholder="......................"> )</div>
+                    <div style="font-size: 9pt;">Accounting</div>
+                </td>
             </tr>
         </table>
 
@@ -639,6 +755,74 @@
         // Sync Nama ke TTD
         function syncName() {
             document.getElementById('ttdNama').value = document.getElementById('nama').value;
+        }
+
+        // Format Phone Number to Indonesian Format (08XX-XXXX-XXXX)
+        function formatPhoneInput(input) {
+            let value = input.value.replace(/\D/g, ''); // Keep only digits
+            if (value.length > 13) {
+                value = value.substring(0, 13);
+            }
+            
+            let formatted = '';
+            if (value.length > 0) {
+                formatted += value.substring(0, 4);
+            }
+            if (value.length > 4) {
+                formatted += '-' + value.substring(4, 8);
+            }
+            if (value.length > 8) {
+                formatted += '-' + value.substring(8, 13);
+            }
+            
+            input.value = formatted;
+        }
+
+        // Validate fields before printing
+        function validateAndPrint() {
+            // 1. Validate BAB I
+            const nama = document.getElementById('nama').value.trim();
+            const entitas = document.getElementById('entitas').value.trim();
+            const jabatan = document.getElementById('jabatan').value.trim();
+            const telp = document.getElementById('telp').value.trim();
+            const alamat = document.getElementById('alamat').value.trim();
+            
+            if (!nama || !entitas || !jabatan || !telp || !alamat) {
+                alert('Peringatan: Mohon lengkapi seluruh Data Diri Pemohon (BAB I) terlebih dahulu.');
+                return;
+            }
+            
+            // 2. Validate Tanggal Pengajuan
+            const tgl = document.getElementById('tgl').value;
+            if (!tgl) {
+                alert('Peringatan: Mohon isi Tanggal Pengajuan terlebih dahulu.');
+                return;
+            }
+            
+            // 3. Validate BAB III (Rincian Pengajuan)
+            const isQardh = document.querySelector('input[name="jenis"]:checked').value === 'qardh';
+            if (isQardh) {
+                const nomQardh = document.getElementById('nomQardh').value.trim();
+                const tenorQardh = document.getElementById('tenorQardh').value.trim();
+                
+                if (!nomQardh || !tenorQardh) {
+                    alert('Peringatan: Mohon lengkapi Rincian Pengajuan Dana Darurat (Qardh) terlebih dahulu.');
+                    return;
+                }
+            } else {
+                const namaBarang = document.getElementById('namaBarang').value.trim();
+                const spesifikasi = document.getElementById('spesifikasi').value.trim();
+                const hargaBarang = document.getElementById('hargaBarang').value.trim();
+                const tenorBarang = document.getElementById('tenorBarang').value.trim();
+                
+                if (!namaBarang || !spesifikasi || !hargaBarang || !tenorBarang) {
+                    alert('Peringatan: Mohon lengkapi Rincian Pengajuan Pembiayaan Barang (Murabahah) terlebih dahulu.');
+                    return;
+                }
+            }
+            
+            // Trigger print dialog
+            window.print();
         }
 
         // Utility to format number inputs with thousand separators (dots)
