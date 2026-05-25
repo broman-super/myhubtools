@@ -211,12 +211,15 @@
     ======================================== */
     #global-progress-bar {
       position: fixed;
-      top: 0; left: 0; right: 0;
+      top: 0;
+      left: 0;
+      right: 0;
       height: 3px;
       background: transparent;
       z-index: 9999;
       pointer-events: none;
     }
+
     #global-progress-bar .bar {
       height: 100%;
       background: linear-gradient(90deg, #2563EB, #7C3AED, #10B981);
@@ -225,16 +228,30 @@
       transition: width 0.3s ease;
       position: relative;
     }
+
     #global-progress-bar .bar::after {
       content: '';
       position: absolute;
-      right: 0; top: 0; bottom: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
       width: 60px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5));
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5));
       animation: shimmer 0.8s infinite;
     }
+
     @keyframes shimmer {
-      0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; }
+      0% {
+        opacity: 0;
+      }
+
+      50% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+      }
     }
 
     /* ========================================
@@ -250,6 +267,7 @@
       gap: 10px;
       pointer-events: none;
     }
+
     .toast {
       display: flex;
       align-items: flex-start;
@@ -259,220 +277,501 @@
       min-width: 280px;
       max-width: 380px;
       pointer-events: all;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
       animation: toastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
       position: relative;
       overflow: hidden;
       font-family: 'Inter', sans-serif;
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
+
     .toast.toast-out {
       animation: toastOut 0.25s ease-in forwards;
     }
+
     .toast::before {
       content: '';
       position: absolute;
-      top: 0; left: 0; right: 0;
+      top: 0;
+      left: 0;
+      right: 0;
       height: 2px;
       animation: toastProgress linear forwards;
     }
-    .toast-success { background: linear-gradient(135deg, #ECFDF5, #F0FDF4); border-color: #A7F3D0; }
-    .toast-success::before { background: linear-gradient(90deg, #10B981, #059669); animation-duration: 4s; }
-    .toast-error { background: linear-gradient(135deg, #FEF2F2, #FFF5F5); border-color: #FECACA; }
-    .toast-error::before { background: linear-gradient(90deg, #EF4444, #DC2626); animation-duration: 5s; }
-    .toast-warning { background: linear-gradient(135deg, #FFFBEB, #FEFCE8); border-color: #FDE68A; }
-    .toast-warning::before { background: linear-gradient(90deg, #F59E0B, #D97706); animation-duration: 4.5s; }
-    .toast-info { background: linear-gradient(135deg, #EFF6FF, #F0F9FF); border-color: #BAE6FD; }
-    .toast-info::before { background: linear-gradient(90deg, #2563EB, #0EA5E9); animation-duration: 4s; }
+
+    .toast-success {
+      background: linear-gradient(135deg, #ECFDF5, #F0FDF4);
+      border-color: #A7F3D0;
+    }
+
+    .toast-success::before {
+      background: linear-gradient(90deg, #10B981, #059669);
+      animation-duration: 4s;
+    }
+
+    .toast-error {
+      background: linear-gradient(135deg, #FEF2F2, #FFF5F5);
+      border-color: #FECACA;
+    }
+
+    .toast-error::before {
+      background: linear-gradient(90deg, #EF4444, #DC2626);
+      animation-duration: 5s;
+    }
+
+    .toast-warning {
+      background: linear-gradient(135deg, #FFFBEB, #FEFCE8);
+      border-color: #FDE68A;
+    }
+
+    .toast-warning::before {
+      background: linear-gradient(90deg, #F59E0B, #D97706);
+      animation-duration: 4.5s;
+    }
+
+    .toast-info {
+      background: linear-gradient(135deg, #EFF6FF, #F0F9FF);
+      border-color: #BAE6FD;
+    }
+
+    .toast-info::before {
+      background: linear-gradient(90deg, #2563EB, #0EA5E9);
+      animation-duration: 4s;
+    }
+
     .toast-icon {
-      width: 32px; height: 32px;
+      width: 32px;
+      height: 32px;
       border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
       font-size: 14px;
     }
-    .toast-success .toast-icon { background: #D1FAE5; color: #059669; }
-    .toast-error .toast-icon { background: #FEE2E2; color: #DC2626; }
-    .toast-warning .toast-icon { background: #FEF3C7; color: #D97706; }
-    .toast-info .toast-icon { background: #DBEAFE; color: #2563EB; }
-    .toast-body { flex: 1; }
+
+    .toast-success .toast-icon {
+      background: #D1FAE5;
+      color: #059669;
+    }
+
+    .toast-error .toast-icon {
+      background: #FEE2E2;
+      color: #DC2626;
+    }
+
+    .toast-warning .toast-icon {
+      background: #FEF3C7;
+      color: #D97706;
+    }
+
+    .toast-info .toast-icon {
+      background: #DBEAFE;
+      color: #2563EB;
+    }
+
+    .toast-body {
+      flex: 1;
+    }
+
     .toast-title {
-      font-size: 12px; font-weight: 800;
-      text-transform: uppercase; letter-spacing: 0.6px;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
       margin-bottom: 2px;
     }
-    .toast-success .toast-title { color: #065F46; }
-    .toast-error .toast-title { color: #991B1B; }
-    .toast-warning .toast-title { color: #92400E; }
-    .toast-info .toast-title { color: #1E40AF; }
-    .toast-message { font-size: 12px; line-height: 1.5; color: #374151; }
+
+    .toast-success .toast-title {
+      color: #065F46;
+    }
+
+    .toast-error .toast-title {
+      color: #991B1B;
+    }
+
+    .toast-warning .toast-title {
+      color: #92400E;
+    }
+
+    .toast-info .toast-title {
+      color: #1E40AF;
+    }
+
+    .toast-message {
+      font-size: 12px;
+      line-height: 1.5;
+      color: #374151;
+    }
+
     .toast-close {
-      background: none; border: none; cursor: pointer;
-      color: #9CA3AF; padding: 0; width: 20px; height: 20px;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 4px; transition: color 0.2s; min-height: unset;
-      font-size: 14px; flex-shrink: 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #9CA3AF;
+      padding: 0;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: color 0.2s;
+      min-height: unset;
+      font-size: 14px;
+      flex-shrink: 0;
     }
-    .toast-close:hover { color: #374151; background: rgba(0,0,0,0.05); }
+
+    .toast-close:hover {
+      color: #374151;
+      background: rgba(0, 0, 0, 0.05);
+    }
+
     @keyframes toastIn {
-      from { opacity: 0; transform: translateX(100%) scale(0.9); }
-      to { opacity: 1; transform: translateX(0) scale(1); }
+      from {
+        opacity: 0;
+        transform: translateX(100%) scale(0.9);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
     }
+
     @keyframes toastOut {
-      from { opacity: 1; transform: translateX(0); max-height: 200px; margin-bottom: 0; }
-      to { opacity: 0; transform: translateX(110%); max-height: 0; margin-bottom: -10px; }
+      from {
+        opacity: 1;
+        transform: translateX(0);
+        max-height: 200px;
+        margin-bottom: 0;
+      }
+
+      to {
+        opacity: 0;
+        transform: translateX(110%);
+        max-height: 0;
+        margin-bottom: -10px;
+      }
     }
+
     @keyframes toastProgress {
-      from { width: 100%; }
-      to { width: 0%; }
+      from {
+        width: 100%;
+      }
+
+      to {
+        width: 0%;
+      }
     }
 
     /* ========================================
        DATE RANGE PICKER MODAL
     ======================================== */
     #daterange-modal-overlay {
-      position: fixed; inset: 0;
+      position: fixed;
+      inset: 0;
       background: rgba(15, 23, 42, 0.5);
       backdrop-filter: blur(4px);
       z-index: 8888;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: 20px;
       animation: fadeInOverlay 0.2s ease;
     }
+
     #daterange-modal-overlay.closing {
       animation: fadeOutOverlay 0.2s ease forwards;
     }
-    @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes fadeOutOverlay { from { opacity: 1; } to { opacity: 0; } }
+
+    @keyframes fadeInOverlay {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeOutOverlay {
+      from {
+        opacity: 1;
+      }
+
+      to {
+        opacity: 0;
+      }
+    }
+
     .daterange-modal {
       background: #FFFFFF;
       border-radius: 24px;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.2), 0 8px 20px rgba(0,0,0,0.1);
-      width: 100%; max-width: 460px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2), 0 8px 20px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 460px;
       animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
       overflow: hidden;
     }
+
     @keyframes modalSlideIn {
-      from { opacity: 0; transform: scale(0.9) translateY(20px); }
-      to { opacity: 1; transform: scale(1) translateY(0); }
+      from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
     }
+
     .daterange-header {
       background: linear-gradient(135deg, #0F172A, #1E293B);
       padding: 20px 24px;
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
+
     .daterange-title {
-      font-size: 13px; font-weight: 800; color: #FFFFFF;
-      text-transform: uppercase; letter-spacing: 1px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #FFFFFF;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
+
     .daterange-subtitle {
-      font-size: 9px; color: #64748B; text-transform: uppercase;
-      letter-spacing: 1px; margin-top: 2px;
+      font-size: 9px;
+      color: #64748B;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 2px;
     }
+
     .daterange-close-btn {
-      width: 28px; height: 28px; border-radius: 8px;
-      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
-      color: #94A3B8; cursor: pointer; display: flex;
-      align-items: center; justify-content: center;
-      font-size: 12px; transition: all 0.2s;
-      min-height: unset; width: 28px;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #94A3B8;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      transition: all 0.2s;
+      min-height: unset;
+      width: 28px;
     }
-    .daterange-close-btn:hover { background: rgba(255,255,255,0.2); color: #FFFFFF; }
+
+    .daterange-close-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+
     .daterange-presets {
       padding: 16px 20px;
-      display: grid; grid-template-columns: repeat(4, 1fr);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
       border-bottom: 1px solid #F1F5F9;
     }
+
     .preset-chip {
       padding: 8px 6px;
       border-radius: 10px;
       border: 1.5px solid #E2E8F0;
       background: #F8FAFC;
       color: #475569;
-      font-size: 10px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.4px;
-      cursor: pointer; text-align: center;
-      transition: all 0.15s; min-height: unset;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      min-height: unset;
       line-height: 1.3;
     }
-    .preset-chip:hover { border-color: #2563EB; color: #2563EB; background: #EFF6FF; }
-    .preset-chip.active { background: #2563EB; color: #FFFFFF; border-color: #2563EB; box-shadow: 0 2px 8px rgba(37,99,235,0.3); }
+
+    .preset-chip:hover {
+      border-color: #2563EB;
+      color: #2563EB;
+      background: #EFF6FF;
+    }
+
+    .preset-chip.active {
+      background: #2563EB;
+      color: #FFFFFF;
+      border-color: #2563EB;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+    }
+
     .daterange-custom {
       padding: 16px 20px;
     }
+
     .daterange-custom-label {
-      font-size: 9px; font-weight: 800; color: #94A3B8;
-      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
+      font-size: 9px;
+      font-weight: 800;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
     }
+
     .daterange-inputs {
-      display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 8px;
+      align-items: center;
     }
+
     .daterange-input-group label {
-      font-size: 9px; font-weight: 700; color: #64748B;
-      text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      color: #64748B;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 4px;
     }
+
     .daterange-input-group input[type="date"] {
-      width: 100%; padding: 10px 12px;
-      border: 1.5px solid #E2E8F0; border-radius: 10px;
-      font-size: 12px; font-weight: 700; color: #0F172A;
-      background: #F8FAFC; outline: none; transition: border 0.2s;
-      margin-bottom: 0; min-height: unset;
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0F172A;
+      background: #F8FAFC;
+      outline: none;
+      transition: border 0.2s;
+      margin-bottom: 0;
+      min-height: unset;
     }
-    .daterange-input-group input[type="date"]:focus { border-color: #2563EB; background: #EFF6FF; }
-    .daterange-separator { font-size: 16px; color: #CBD5E1; font-weight: 800; padding-top: 18px; }
+
+    .daterange-input-group input[type="date"]:focus {
+      border-color: #2563EB;
+      background: #EFF6FF;
+    }
+
+    .daterange-separator {
+      font-size: 16px;
+      color: #CBD5E1;
+      font-weight: 800;
+      padding-top: 18px;
+    }
+
     .daterange-selected-display {
       margin: 0 20px 12px;
       padding: 10px 14px;
       background: linear-gradient(135deg, #EFF6FF, #F0FDF4);
       border-radius: 10px;
       border: 1px solid #BFDBFE;
-      font-size: 11px; font-weight: 700; color: #1E3A5F;
-      text-align: center; letter-spacing: 0.5px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #1E3A5F;
+      text-align: center;
+      letter-spacing: 0.5px;
     }
+
     .daterange-footer {
       padding: 14px 20px;
-      display: flex; gap: 8px; justify-content: flex-end;
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
       border-top: 1px solid #F1F5F9;
       background: #F8FAFC;
     }
+
     .btn-daterange-cancel {
-      padding: 10px 20px; border-radius: 10px;
-      border: 1.5px solid #E2E8F0; background: #FFFFFF; color: #64748B;
-      font-size: 11px; font-weight: 800; cursor: pointer;
-      transition: all 0.2s; min-height: unset; width: auto;
-      text-transform: uppercase; letter-spacing: 0.5px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: 1.5px solid #E2E8F0;
+      background: #FFFFFF;
+      color: #64748B;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-height: unset;
+      width: auto;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
-    .btn-daterange-cancel:hover { border-color: #CBD5E1; background: #F1F5F9; }
+
+    .btn-daterange-cancel:hover {
+      border-color: #CBD5E1;
+      background: #F1F5F9;
+    }
+
     .btn-daterange-apply {
-      padding: 10px 24px; border-radius: 10px;
-      background: linear-gradient(135deg, #2563EB, #3B82F6); color: #FFFFFF;
-      font-size: 11px; font-weight: 800; cursor: pointer;
-      transition: all 0.2s; min-height: unset; width: auto;
-      border: none; text-transform: uppercase; letter-spacing: 0.5px;
-      box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+      padding: 10px 24px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #2563EB, #3B82F6);
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-height: unset;
+      width: auto;
+      border: none;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
     }
-    .btn-daterange-apply:hover { background: linear-gradient(135deg, #1D4ED8, #2563EB); box-shadow: 0 4px 12px rgba(37,99,235,0.4); }
+
+    .btn-daterange-apply:hover {
+      background: linear-gradient(135deg, #1D4ED8, #2563EB);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    }
 
     /* Date Filter Trigger Button */
     .date-filter-trigger {
-      display: inline-flex; align-items: center; gap: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       padding: 8px 14px;
-      background: #FFFFFF; border: 1.5px solid #E2E8F0;
-      border-radius: 12px; cursor: pointer;
-      font-size: 11px; font-weight: 700; color: #334155;
-      transition: all 0.2s; min-height: unset; width: auto;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-      text-transform: none; letter-spacing: 0;
+      background: #FFFFFF;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+      color: #334155;
+      transition: all 0.2s;
+      min-height: unset;
+      width: auto;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      text-transform: none;
+      letter-spacing: 0;
     }
-    .date-filter-trigger:hover { border-color: #2563EB; color: #2563EB; background: #EFF6FF; }
+
+    .date-filter-trigger:hover {
+      border-color: #2563EB;
+      color: #2563EB;
+      background: #EFF6FF;
+    }
+
     .date-filter-trigger .trigger-label {
-      font-size: 9px; font-weight: 800; color: #94A3B8;
-      text-transform: uppercase; letter-spacing: 0.8px;
+      font-size: 9px;
+      font-weight: 800;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
     }
+
     .date-filter-trigger .trigger-value {
-      font-size: 11px; font-weight: 700; color: #0F172A;
+      font-size: 11px;
+      font-weight: 700;
+      color: #0F172A;
     }
   </style>
 </head>
@@ -481,7 +780,9 @@
 <body>
 
   <!-- GLOBAL LOADING PROGRESS BAR -->
-  <div id="global-progress-bar"><div class="bar" id="progress-bar-fill"></div></div>
+  <div id="global-progress-bar">
+    <div class="bar" id="progress-bar-fill"></div>
+  </div>
 
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div id="toast-container"></div>
@@ -492,7 +793,14 @@
       <div class="daterange-header">
         <div>
           <div class="daterange-title">
-            <svg style="display:inline;vertical-align:middle;margin-right:6px;" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <svg style="display:inline;vertical-align:middle;margin-right:6px;" width="14" height="14"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+              stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
             Pilih Rentang Waktu
           </div>
           <div class="daterange-subtitle">Periode Laporan & Filter Data</div>
@@ -536,9 +844,131 @@
       <div class="daterange-footer">
         <button class="btn-daterange-cancel" onclick="closeDateRangeModal()">Batal</button>
         <button class="btn-daterange-apply" onclick="applyDateRange()">
-          <svg style="display:inline;vertical-align:middle;margin-right:4px;" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <svg style="display:inline;vertical-align:middle;margin-right:4px;" width="12" height="12" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
           Terapkan Filter
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  <div id="delete-modal-overlay" style="display:none;"
+    class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+    onclick="if(event.target===this)tutupDeleteModal()">
+    <div
+      class="bg-white rounded-2xl shadow-xl border border-slate-100 max-w-sm w-full p-6 text-center animate-[modalSlideIn_0.25s_ease]"
+      onclick="event.stopPropagation()">
+      <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </div>
+      <h3 class="text-base font-extrabold text-slate-800 uppercase tracking-wide mb-2">Hapus Aktivitas?</h3>
+      <p class="text-xs text-slate-500 mb-6">Tindakan ini tidak dapat dibatalkan. Catatan aktivitas Anda akan dihapus
+        secara permanen dari spreadsheet.</p>
+      <div class="flex gap-3 justify-center">
+        <button onclick="tutupDeleteModal()"
+          class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors min-h-unset">Batal</button>
+        <button id="btn-confirm-delete" onclick="eksekusiHapus()"
+          class="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors shadow-md shadow-red-500/20 min-h-unset">Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT ACTIVITY MODAL -->
+  <div id="edit-modal-overlay" style="display:none;"
+    class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[9998] flex items-center justify-center p-4"
+    onclick="if(event.target===this)tutupEditModal()">
+    <div
+      class="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-lg w-full overflow-hidden animate-[modalSlideIn_0.3s_cubic-bezier(0.34,1.4,0.64,1)]"
+      onclick="event.stopPropagation()">
+      <div class="bg-gradient-to-r from-blue-700 to-indigo-800 px-6 py-5 flex items-center justify-between text-white">
+        <div>
+          <h3 class="text-sm font-extrabold uppercase tracking-widest flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+            </svg>
+            Koreksi Aktivitas
+          </h3>
+          <p class="text-[10px] text-blue-200/80 uppercase tracking-wider mt-0.5">Ubah detail laporan kegiatan Anda</p>
+        </div>
+        <button onclick="tutupEditModal()"
+          class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors min-h-unset p-0">✕</button>
+      </div>
+
+      <div class="p-6 max-h-[75vh] overflow-y-auto">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bidang Tugas / Divisi</label>
+            <select id="edit-kategori"
+              class="w-full text-xs font-bold border border-slate-200 rounded-lg p-2.5 focus:border-blue-600 focus:outline-none mb-0">
+              <option value="Manajemen">Manajemen</option>
+              <option value="Sales/CS">Sales / CSO</option>
+              <option value="Marketing/Kreatif">Marketing / Kreatif</option>
+              <option value="Operasional">Operasional / Logistik</option>
+              <option value="Keuangan/Admin">Keuangan / Akuntansi</option>
+              <option value="R&D">R&D / Riset</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Tipe Tugas</label>
+            <select id="edit-tipe"
+              class="w-full text-xs font-bold border border-slate-200 rounded-lg p-2.5 focus:border-blue-600 focus:outline-none mb-0">
+              <option value="Utama (Core)">Utama (Core)</option>
+              <option value="Rutin (Support)">Rutin (Support)</option>
+              <option value="Ad-hoc (Mendadak)">Ad-hoc (Mendadak)</option>
+              <option value="Luar Divisi (Cross)">Luar Divisi (Cross)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Beban Kerja</label>
+            <select id="edit-beban"
+              class="w-full text-xs font-bold border border-slate-200 rounded-lg p-2.5 focus:border-blue-600 focus:outline-none mb-0">
+              <option value="Ringan">Ringan / Rutin</option>
+              <option value="Sedang">Sedang / Fokus</option>
+              <option value="Tinggi">Tinggi / Kompleks</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Aktivitas Spesifik</label>
+          <textarea id="edit-deskripsi" rows="3"
+            class="w-full text-xs font-semibold border border-slate-200 rounded-lg p-3 focus:border-blue-600 focus:outline-none resize-none mb-0"
+            placeholder="Deskripsikan pekerjaan Anda secara detail..."></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Waktu Mulai</label>
+            <input type="time" id="edit-mulai"
+              class="w-full text-xs font-bold border border-slate-200 rounded-lg p-2.5 focus:border-blue-600 focus:outline-none mb-0">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Waktu Selesai</label>
+            <input type="time" id="edit-selesai"
+              class="w-full text-xs font-bold border border-slate-200 rounded-lg p-2.5 focus:border-blue-600 focus:outline-none mb-0">
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Output / Hasil</label>
+          <input type="text" id="edit-output"
+            class="w-full text-xs font-semibold border border-slate-200 rounded-lg p-2.5 focus:border-blue-600 focus:outline-none mb-0"
+            placeholder="Contoh: 1 SOP rilis, 3 Desain ACC">
+        </div>
+
+        <div class="flex gap-3 justify-end">
+          <button onclick="tutupEditModal()"
+            class="py-2.5 px-5 bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors min-h-unset w-auto">Batal</button>
+          <button id="btn-save-edit" onclick="eksekusiEdit()"
+            class="py-2.5 px-6 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shadow-md shadow-blue-500/20 min-h-unset w-auto">Simpan</button>
+        </div>
       </div>
     </div>
   </div>
@@ -567,23 +997,27 @@
     </div>
 
     <!-- TAB NAVIGATION BAR -->
-    <div id="tab-navigation-bar" class="col-12 hidden" style="grid-column: span 12; margin-top: 4px; margin-bottom: 8px;">
-      <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; background: #F1F5F9; padding: 6px; border-radius: 16px; border: 1px solid #E2E8F0; gap: 12px; width: 100%; flex-wrap: wrap;">
+    <div id="tab-navigation-bar" class="col-12 hidden"
+      style="grid-column: span 12; margin-top: 4px; margin-bottom: 8px;">
+      <div
+        style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; background: #F1F5F9; padding: 6px; border-radius: 16px; border: 1px solid #E2E8F0; gap: 12px; width: 100%; flex-wrap: wrap;">
         <!-- Left: Pills Tabs -->
         <div style="display: flex; align-items: center; gap: 6px;">
           <!-- Tab 1: Input Activity -->
-          <button onclick="switchTab('input')" id="btn-tab-input" 
+          <button onclick="switchTab('input')" id="btn-tab-input"
             style="width: auto; min-height: unset; padding: 10px 18px; border-radius: 12px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; border: none; text-transform: uppercase; margin: 0; line-height: 1; box-shadow: 0 1px 2px rgba(0,0,0,0.05); background: #FFFFFF; color: #2563EB;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+              stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 5v14M5 12h14"></path>
             </svg>
             Input Activity
           </button>
-          
+
           <!-- Tab 2: View Beban Kerja (Supervisor Only) -->
           <button onclick="switchTab('beban')" id="btn-tab-beban" class="hidden-tab-item hidden"
             style="width: auto; min-height: unset; padding: 10px 18px; border-radius: 12px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; border: none; text-transform: uppercase; margin: 0; line-height: 1; background: transparent; color: #64748B;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+              stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="3" width="7" height="9"></rect>
               <rect x="14" y="3" width="7" height="5"></rect>
               <rect x="14" y="12" width="7" height="9"></rect>
@@ -591,20 +1025,25 @@
             </svg>
             View Beban Kerja
           </button>
-          
+
           <!-- Tab 3: Audit Dengan AI (Supervisor Only) -->
           <button onclick="switchTab('audit')" id="btn-tab-audit" class="hidden-tab-item hidden"
             style="width: auto; min-height: unset; padding: 10px 18px; border-radius: 12px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; border: none; text-transform: uppercase; margin: 0; line-height: 1; background: transparent; color: #64748B;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polygon
+                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+              </polygon>
             </svg>
             Audit AI
           </button>
         </div>
 
         <!-- Right: Report Period -->
-        <div id="tab-date-container" class="hidden" style="display: flex; align-items: center; gap: 8px; padding: 6px 14px; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; font-size: 11px; font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin: 0;">
-          <span style="color: var(--text-secondary); letter-spacing: 0.5px; border-right: 1px solid var(--border-color); padding-right: 8px; margin-right: 4px; font-size: 9px; text-transform: uppercase; line-height: 1;">Periode</span>
+        <div id="tab-date-container" class="hidden"
+          style="display: flex; align-items: center; gap: 8px; padding: 6px 14px; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; font-size: 11px; font-weight: bold; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin: 0;">
+          <span
+            style="color: var(--text-secondary); letter-spacing: 0.5px; border-right: 1px solid var(--border-color); padding-right: 8px; margin-right: 4px; font-size: 9px; text-transform: uppercase; line-height: 1;">Periode</span>
           <input type="date" id="global-audit-date" onchange="syncGlobalDate(this.value)"
             style="margin: 0; padding: 0; border: none; font-weight: 700; background: transparent; outline: none; cursor: pointer; color: var(--text-primary); font-size: 11px; width: 110px; min-height: unset; height: auto; line-height: 1; box-shadow: none;">
         </div>
@@ -612,347 +1051,412 @@
     </div>
 
     <!-- TAB CONTAINER 1: INPUT ACTIVITY & PERSONAL HISTORY -->
-    <div id="tab-pane-input" class="col-12 flex flex-col gap-4" style="grid-column: span 12; display: flex; flex-direction: column; gap: 16px;">
-      
+    <div id="tab-pane-input" class="col-12 flex flex-col gap-4"
+      style="grid-column: span 12; display: flex; flex-direction: column; gap: 16px;">
+
       <div class="bento-box col-12 interactive">
-      <div
-        style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-        <div>
-          <h2
-            style="margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 0.5px; color: var(--text-primary); text-transform: uppercase;">
-            Input Aktivitas</h2>
-          <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--text-secondary);">Dokumentasikan alur kerja harian
-          </p>
-        </div>
-        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
-          <!-- Badge 1: Google Sheets Live Sync -->
-          <span
-            style="background: #DEF7EC; color: #03543F; font-size: 9px; font-weight: 800; padding: 4px 10px; border-radius: 12px; letter-spacing: 0.5px; text-transform: uppercase; font-family: 'Inter', sans-serif; line-height: 1.2;">
-            Google Sheets Live Sync
-          </span>
-          <!-- Badge 2: Dynamic Target Date -->
-          <span id="sync-target-date"
-            style="background: #EBF5FF; color: #1E429F; font-size: 9px; font-weight: 800; padding: 4px 10px; border-radius: 12px; letter-spacing: 0.5px; text-transform: uppercase; font-family: 'Inter', sans-serif; line-height: 1.2;">
-            Target: -
-          </span>
-        </div>
-      </div>
-
-      <div class="grid-form">
-        <div>
-          <label>Kategori Fungsi</label>
-          <select id="inp-kategori">
-            <option value="Manajemen">Manajemen</option>
-            <option value="Marketing/Kreatif">Marketing / Kreatif</option>
-            <option value="R&D">R&D / Riset</option>
-            <option value="Operasional">Operasional</option>
-          </select>
-        </div>
-        <div>
-          <label>Tipe Tugas</label>
-          <select id="inp-tipe">
-            <option value="Utama (Core)">Utama (Core)</option>
-            <option value="Rutin (Support)">Rutin (Support)</option>
-            <option value="Ad-hoc (Mendadak)">Ad-hoc (Mendadak)</option>
-            <option value="Luar Divisi (Cross)">Luar Divisi (Cross)</option>
-          </select>
-        </div>
-        <div>
-          <label>Beban Kerja</label>
-          <select id="inp-beban">
-            <option value="Ringan">Ringan / Rutin</option>
-            <option value="Sedang">Sedang / Fokus</option>
-            <option value="Tinggi">Tinggi / Kompleks</option>
-          </select>
-        </div>
-      </div>
-
-      <label>Aktivitas Spesifik</label>
-      <textarea id="inp-deskripsi"
-        placeholder="Gambarkan aktivitas teknis yang diselesaikan secara presisi..."></textarea>
-
-      <div class="grid-time">
-        <div>
-          <label>Waktu Mulai <span style="font-size: 11px; color: var(--cta-color); cursor: help;"
-              title="Pilih jam mulai aktivitas Anda">ⓘ</span></label>
-          <input type="time" id="inp-mulai">
-        </div>
-        <div>
-          <label>Waktu Selesai <span style="font-size: 11px; color: var(--cta-color); cursor: help;"
-              title="Pilih jam selesai aktivitas Anda">ⓘ</span></label>
-          <input type="time" id="inp-selesai">
-        </div>
-      </div>
-
-      <label>Output / Hasil</label>
-      <input type="text" id="inp-output" placeholder="Contoh: 1 SOP rilis, 3 Desain ACC">
-
-      <button onclick="submitData()" id="btn-submit">Submit Aktivitas</button>
-    </div>
-
-    <!-- Status Sinkronisasi Bento Box lama dihapus dan digabungkan menjadi badge di header atas -->
-
-    <!-- BENTO BOX: RIWAYAT AKTIVITAS (NEW FEATURE) -->
-    <div class="bento-box col-12" id="history-box" style="margin-top: 16px;">
-      <div
-        style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cta-color)" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round" style="transform: scaleX(-1);">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-            <polyline points="3 3 3 8 8 8"></polyline>
-            <line x1="12" y1="7" x2="12" y2="12"></line>
-            <line x1="12" y1="12" x2="16" y2="14"></line>
-          </svg>
-          <h2
-            style="margin: 0; font-size: 15px; font-weight: 700; letter-spacing: 0.8px; color: var(--text-primary); text-transform: uppercase;">
-            Riwayat Aktivitas</h2>
-        </div>
-        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <button onclick="loadUserHistory()"
-            style="width: auto; padding: 8px 14px; background: white; color: var(--text-primary); border: 1.5px solid #E2E8F0; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; border-radius: 12px; font-weight: 800; min-height: unset; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.06); text-transform: uppercase; letter-spacing: 0.5px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
-            Refresh
-          </button>
-          <!-- Hidden input for backward compatibility -->
-          <input type="date" id="history-date-filter" style="display:none;">
-          <!-- Date Range Trigger Button -->
-          <button class="date-filter-trigger" onclick="openDateRangeModal('history')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            <div>
-              <div class="trigger-label">Periode</div>
-              <div class="trigger-value" id="history-date-label">Hari Ini</div>
-            </div>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- Container list riwayat -->
-      <div id="history-container">
         <div
-          style="border: 2px dashed var(--border-color); border-radius: var(--radius); padding: 48px; text-align: center; background: #F8FAFC;">
-          <div
-            style="width: 48px; height: 48px; border-radius: 50%; background: #E2E8F0; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #64748B; margin-left: auto; margin-right: auto;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
+          style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h2
+              style="margin: 0; font-size: 18px; font-weight: 800; letter-spacing: 0.5px; color: var(--text-primary); text-transform: uppercase;">
+              Input Aktivitas</h2>
+            <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--text-secondary);">Dokumentasikan alur kerja
+              harian
+            </p>
           </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+            <!-- Badge 1: Google Sheets Live Sync -->
+            <span
+              style="background: #DEF7EC; color: #03543F; font-size: 9px; font-weight: 800; padding: 4px 10px; border-radius: 12px; letter-spacing: 0.5px; text-transform: uppercase; font-family: 'Inter', sans-serif; line-height: 1.2;">
+              Google Sheets Live Sync
+            </span>
+            <!-- Badge 2: Dynamic Target Date -->
+            <span id="sync-target-date"
+              style="background: #EBF5FF; color: #1E429F; font-size: 9px; font-weight: 800; padding: 4px 10px; border-radius: 12px; letter-spacing: 0.5px; text-transform: uppercase; font-family: 'Inter', sans-serif; line-height: 1.2;">
+              Target: -
+            </span>
+          </div>
+        </div>
+
+        <div class="grid-form">
+          <div>
+            <label style="display: flex; align-items: center; gap: 4px;">
+              Bidang Tugas / Divisi
+              <span style="font-size: 11px; color: var(--cta-color); cursor: help;"
+                title="Area cakupan tugas Anda dalam divisi ini. Pilih kategori yang paling mendeskripsikan aktivitas Anda.">ⓘ</span>
+            </label>
+            <select id="inp-kategori">
+              <option value="Manajemen">Manajemen</option>
+              <option value="Sales/CS">Sales / CSO</option>
+              <option value="Marketing/Kreatif">Marketing / Kreatif</option>
+              <option value="Operasional">Operasional / Logistik</option>
+              <option value="Keuangan/Admin">Keuangan / Akuntansi</option>
+              <option value="R&D">R&D / Riset</option>
+            </select>
+          </div>
+          <div>
+            <label>Tipe Tugas</label>
+            <select id="inp-tipe">
+              <option value="Utama (Core)">Utama (Core)</option>
+              <option value="Rutin (Support)">Rutin (Support)</option>
+              <option value="Ad-hoc (Mendadak)">Ad-hoc (Mendadak)</option>
+              <option value="Luar Divisi (Cross)">Luar Divisi (Cross)</option>
+            </select>
+          </div>
+          <div>
+            <label>Beban Kerja</label>
+            <select id="inp-beban">
+              <option value="Ringan">Ringan / Rutin</option>
+              <option value="Sedang">Sedang / Fokus</option>
+              <option value="Tinggi">Tinggi / Kompleks</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Banner Penjelasan Bidang Tugas Dinamis -->
+        <div id="kategori-desc"
+          style="margin-top: 12px; margin-bottom: 16px; font-size: 12px; color: #1E3A8A; background: #EFF6FF; border: 1.5px solid #BFDBFE; padding: 12px 16px; border-radius: 12px; line-height: 1.5; display: none;">
+        </div>
+
+        <label>Aktivitas Spesifik</label>
+        <textarea id="inp-deskripsi"
+          placeholder="Gambarkan aktivitas teknis yang diselesaikan secara presisi..."></textarea>
+
+        <div class="grid-time">
+          <div>
+            <label>Waktu Mulai <span style="font-size: 11px; color: var(--cta-color); cursor: help;"
+                title="Pilih jam mulai aktivitas Anda">ⓘ</span></label>
+            <input type="time" id="inp-mulai">
+          </div>
+          <div>
+            <label>Waktu Selesai <span style="font-size: 11px; color: var(--cta-color); cursor: help;"
+                title="Pilih jam selesai aktivitas Anda">ⓘ</span></label>
+            <input type="time" id="inp-selesai">
+          </div>
+        </div>
+
+        <label>Output / Hasil</label>
+        <input type="text" id="inp-output" placeholder="Contoh: 1 SOP rilis, 3 Desain ACC">
+
+        <button onclick="submitData()" id="btn-submit">Submit Aktivitas</button>
+      </div>
+
+      <!-- Status Sinkronisasi Bento Box lama dihapus dan digabungkan menjadi badge di header atas -->
+
+      <!-- BENTO BOX: RIWAYAT AKTIVITAS (NEW FEATURE) -->
+      <div class="bento-box col-12" id="history-box" style="margin-top: 16px;">
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cta-color)" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round" style="transform: scaleX(-1);">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <polyline points="3 3 3 8 8 8"></polyline>
+              <line x1="12" y1="7" x2="12" y2="12"></line>
+              <line x1="12" y1="12" x2="16" y2="14"></line>
+            </svg>
+            <h2
+              style="margin: 0; font-size: 15px; font-weight: 700; letter-spacing: 0.8px; color: var(--text-primary); text-transform: uppercase;">
+              Riwayat Aktivitas</h2>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <button onclick="loadUserHistory()"
+              style="width: auto; padding: 8px 14px; background: white; color: var(--text-primary); border: 1.5px solid #E2E8F0; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; border-radius: 12px; font-weight: 800; min-height: unset; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.06); text-transform: uppercase; letter-spacing: 0.5px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+              </svg>
+              Refresh
+            </button>
+            <!-- Hidden input for backward compatibility -->
+            <input type="date" id="history-date-filter" style="display:none;">
+            <!-- Date Range Trigger Button -->
+            <button class="date-filter-trigger" onclick="openDateRangeModal('history')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <div>
+                <div class="trigger-label">Periode</div>
+                <div class="trigger-value" id="history-date-label">Hari Ini</div>
+              </div>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="3"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Container list riwayat -->
+        <div id="history-container">
           <div
-            style="font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #94A3B8; text-transform: uppercase;">
-            Belum Ada Aktivitas Terdaftar</div>
+            style="border: 2px dashed var(--border-color); border-radius: var(--radius); padding: 48px; text-align: center; background: #F8FAFC;">
+            <div
+              style="width: 48px; height: 48px; border-radius: 50%; background: #E2E8F0; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #64748B; margin-left: auto; margin-right: auto;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <div
+              style="font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #94A3B8; text-transform: uppercase;">
+              Belum Ada Aktivitas Terdaftar</div>
+          </div>
         </div>
       </div>
-    </div>
     </div> <!-- Closes tab-pane-input -->
 
     <!-- TAB CONTAINER 2: VISUALISASI BEBAN KERJA TIM -->
-    <div id="tab-pane-beban" class="hidden col-12" style="grid-column: span 12; display: none; flex-direction: column; gap: 16px;">
+    <div id="tab-pane-beban" class="hidden col-12"
+      style="grid-column: span 12; display: none; flex-direction: column; gap: 16px;">
 
-    <div id="spv-module" class="col-12 flex flex-col gap-6" style="grid-column: span 12; width: 100%;">
+      <div id="spv-module" class="col-12 flex flex-col gap-6" style="grid-column: span 12; width: 100%;">
 
-      <!-- TOP ROW: KPI CARDS -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
+        <!-- TOP ROW: KPI CARDS -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 w-full">
 
-        <!-- CARD 1: TOTAL JAM KERJA -->
-        <div
-          class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[110px]">
-          <div>
-            <div class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Total Jam Kerja</div>
-            <div class="text-3xl font-extrabold text-slate-800 mt-2 flex items-baseline gap-1">
-              <span id="kpi-total-jam">0</span>
-              <span class="text-xs font-semibold text-slate-400">jam</span>
+          <!-- CARD 1: TOTAL JAM KERJA -->
+          <div
+            class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[110px]">
+            <div>
+              <div class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Total Jam Kerja</div>
+              <div class="text-3xl font-extrabold text-slate-800 mt-2 flex items-baseline gap-1">
+                <span id="kpi-total-jam">0</span>
+                <span class="text-xs font-semibold text-slate-400">jam</span>
+              </div>
+            </div>
+            <!-- FAINT CLOCK BACKGROUND SVG -->
+            <div class="absolute right-3 bottom-1 text-slate-200 opacity-[0.25] pointer-events-none">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
             </div>
           </div>
-          <!-- FAINT CLOCK BACKGROUND SVG -->
-          <div class="absolute right-3 bottom-1 text-slate-200 opacity-[0.25] pointer-events-none">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-          </div>
-        </div>
 
-        <!-- CARD 2: TUGAS SELESAI -->
-        <div
-          class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[110px]">
-          <div>
-            <div class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Tugas Selesai</div>
-            <div class="text-3xl font-extrabold text-slate-800 mt-2 flex items-baseline gap-1">
-              <span id="kpi-tugas-selesai">0</span>
-              <span class="text-xs font-semibold text-slate-400">item</span>
+          <!-- CARD 2: TUGAS SELESAI -->
+          <div
+            class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[110px]">
+            <div>
+              <div class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Tugas Selesai</div>
+              <div class="text-3xl font-extrabold text-slate-800 mt-2 flex items-baseline gap-1">
+                <span id="kpi-tugas-selesai">0</span>
+                <span class="text-xs font-semibold text-slate-400">item</span>
+              </div>
+            </div>
+            <!-- FAINT CHECKMARK BACKGROUND SVG -->
+            <div class="absolute right-3 bottom-1 text-slate-200 opacity-[0.25] pointer-events-none">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
             </div>
           </div>
-          <!-- FAINT CHECKMARK BACKGROUND SVG -->
-          <div class="absolute right-3 bottom-1 text-slate-200 opacity-[0.25] pointer-events-none">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          </div>
-        </div>
 
-        <!-- CARD 3: BEBAN TERTINGGI -->
-        <div
-          class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[110px]">
-          <div>
-            <div class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Beban Tertinggi</div>
-            <div class="text-base font-black text-blue-600 italic mt-3 truncate" id="kpi-beban-tertinggi">
-              -
+          <!-- CARD 3: BEBAN TERTINGGI -->
+          <div
+            class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[110px]">
+            <div>
+              <div class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Beban Tertinggi</div>
+              <div class="text-base font-black text-blue-600 italic mt-3 truncate" id="kpi-beban-tertinggi">
+                -
+              </div>
+            </div>
+            <!-- FAINT CHART BACKGROUND SVG -->
+            <div class="absolute right-3 bottom-1 text-slate-200 opacity-[0.25] pointer-events-none">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg>
             </div>
           </div>
-          <!-- FAINT CHART BACKGROUND SVG -->
-          <div class="absolute right-3 bottom-1 text-slate-200 opacity-[0.25] pointer-events-none">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <line x1="18" y1="20" x2="18" y2="10"></line>
-              <line x1="12" y1="20" x2="12" y2="4"></line>
-              <line x1="6" y1="20" x2="6" y2="14"></line>
-            </svg>
-          </div>
-        </div>
 
-        <!-- CARD 4: OVERLAP HARI INI -->
-        <div
-          class="bg-orange-50/70 rounded-2xl p-6 border border-orange-100 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[110px]">
-          <div>
-            <div class="text-[10px] font-bold text-orange-700/80 tracking-wider uppercase">Overlap Hari Ini</div>
-            <div class="text-3xl font-black text-orange-600 mt-2" id="kpi-overlap">
-              0
+          <!-- CARD 4: OVERLAP HARI INI -->
+          <div
+            class="bg-orange-50/70 rounded-2xl p-6 border border-orange-100 shadow-sm relative overflow-hidden flex flex-col justify-between min-h-[110px]">
+            <div>
+              <div class="text-[10px] font-bold text-orange-700/80 tracking-wider uppercase">Overlap Hari Ini</div>
+              <div class="text-3xl font-black text-orange-600 mt-2" id="kpi-overlap">
+                0
+              </div>
+            </div>
+            <!-- FAINT EXCLAMATION BACKGROUND SVG -->
+            <div class="absolute right-3 bottom-1 text-orange-400 opacity-[0.2] pointer-events-none">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
             </div>
           </div>
-          <!-- FAINT EXCLAMATION BACKGROUND SVG -->
-          <div class="absolute right-3 bottom-1 text-orange-400 opacity-[0.2] pointer-events-none">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-          </div>
+
         </div>
 
-      </div>
+        <!-- MAIN SECTION: TIMELINE -->
+        <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex flex-col gap-6 w-full">
 
-      <!-- MAIN SECTION: TIMELINE -->
-      <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex flex-col gap-6 w-full">
-
-        <!-- HEADER ROW: TITLE, REFRESH, DATE & LEGEND -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100"
-          style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
-              <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
-            </svg>
-            <h2
-              style="margin: 0; font-size: 14px; font-weight: 800; letter-spacing: 0.8px; color: var(--text-primary); text-transform: uppercase; line-height: 1;">
-              Visualisasi Beban Kerja Tim</h2>
-
-            <button onclick="loadSPVData()"
-              style="width: auto; min-height: unset; padding: 6px 14px; background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0; font-size: 10px; display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); text-transform: uppercase; margin-left: 8px; margin-bottom: 0;">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          <!-- HEADER ROW: TITLE, REFRESH, DATE & LEGEND -->
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100"
+            style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5"
                 stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
-              </svg> Refresh
+                <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+                <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+              </svg>
+              <h2
+                style="margin: 0; font-size: 14px; font-weight: 800; letter-spacing: 0.8px; color: var(--text-primary); text-transform: uppercase; line-height: 1;">
+                Visualisasi Beban Kerja Tim</h2>
+
+              <button onclick="loadSPVData()"
+                style="width: auto; min-height: unset; padding: 6px 14px; background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0; font-size: 10px; display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); text-transform: uppercase; margin-left: 8px; margin-bottom: 0;">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                </svg> Refresh
+              </button>
+            </div>
+
+            <!-- LEGENDS -->
+            <div class="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-500 uppercase mx-4">
+              <span class="flex items-center gap-1.5"><span
+                  class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>Manajemen</span>
+              <span class="flex items-center gap-1.5"><span
+                  class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>Sales/CS</span>
+              <span class="flex items-center gap-1.5"><span
+                  class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>Marketing/Kreatif</span>
+              <span class="flex items-center gap-1.5"><span
+                  class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>Operasional/Bahan Baku</span>
+              <span class="flex items-center gap-1.5"><span
+                  class="w-2.5 h-2.5 rounded-full bg-violet-500 inline-block"></span>Keuangan/Admin</span>
+            </div>
+
+            <!-- DATE FILTER (Beban Kerja) -->
+            <input type="date" id="filter-start" style="display:none;">
+            <button class="date-filter-trigger" onclick="openDateRangeModal('beban')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <div>
+                <div class="trigger-label">Filter Tgl</div>
+                <div class="trigger-value" id="beban-date-label">Hari Ini</div>
+              </div>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="3"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
             </button>
           </div>
 
-          <!-- LEGENDS -->
-          <div class="flex flex-wrap items-center gap-4 text-[10px] font-bold text-slate-500 uppercase mx-4">
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>Manajemen</span>
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>Sales/CS</span>
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>Marketing/Kreatif</span>
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>Operasional/Bahan Baku</span>
-            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-violet-500 inline-block"></span>Keuangan/Admin</span>
-          </div>
+          <!-- TIMELINE GRID CHART CONTAINER -->
+          <div class="w-full overflow-x-auto select-none mt-2" style="-webkit-overflow-scrolling: touch;">
+            <div class="min-w-[850px] pb-4 flex flex-col gap-4 relative">
 
-          <!-- DATE FILTER (Beban Kerja) -->
-          <input type="date" id="filter-start" style="display:none;">
-          <button class="date-filter-trigger" onclick="openDateRangeModal('beban')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            <div>
-              <div class="trigger-label">Filter Tgl</div>
-              <div class="trigger-value" id="beban-date-label">Hari Ini</div>
-            </div>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-          </button>
-        </div>
-
-        <!-- TIMELINE GRID CHART CONTAINER -->
-        <div class="w-full overflow-x-auto select-none mt-2" style="-webkit-overflow-scrolling: touch;">
-          <div class="min-w-[850px] pb-4 flex flex-col gap-4 relative">
-
-            <!-- TIME HEADER STRIP -->
-            <div class="flex items-center w-full">
-              <!-- Left spacer for employee name -->
-              <div class="w-[180px] shrink-0"></div>
-              <!-- Timeline hours -->
-              <div
-                class="flex-1 grid grid-cols-10 gap-0 text-center text-[10px] font-bold text-slate-400 tracking-wider">
-                <span class="border-l border-slate-100 py-1">08:00</span>
-                <span class="border-l border-slate-100 py-1">09:00</span>
-                <span class="border-l border-slate-100 py-1">10:00</span>
-                <span class="border-l border-slate-100 py-1">11:00</span>
-                <span class="border-l border-slate-100 py-1">12:00</span>
-                <span class="border-l border-slate-100 py-1">13:00</span>
-                <span class="border-l border-slate-100 py-1">14:00</span>
-                <span class="border-l border-slate-100 py-1">15:00</span>
-                <span class="border-l border-slate-100 py-1">16:00</span>
-                <span class="border-l border-slate-100 py-1">17:00</span>
+              <!-- TIME HEADER STRIP -->
+              <div class="flex items-center w-full">
+                <!-- Left spacer for employee name -->
+                <div class="w-[180px] shrink-0"></div>
+                <!-- Timeline hours -->
+                <div
+                  class="flex-1 grid grid-cols-10 gap-0 text-center text-[10px] font-bold text-slate-400 tracking-wider">
+                  <span class="border-l border-slate-100 py-1">08:00</span>
+                  <span class="border-l border-slate-100 py-1">09:00</span>
+                  <span class="border-l border-slate-100 py-1">10:00</span>
+                  <span class="border-l border-slate-100 py-1">11:00</span>
+                  <span class="border-l border-slate-100 py-1">12:00</span>
+                  <span class="border-l border-slate-100 py-1">13:00</span>
+                  <span class="border-l border-slate-100 py-1">14:00</span>
+                  <span class="border-l border-slate-100 py-1">15:00</span>
+                  <span class="border-l border-slate-100 py-1">16:00</span>
+                  <span class="border-l border-slate-100 py-1">17:00</span>
+                </div>
+                <!-- Right space for 18:00 marker -->
+                <div class="w-8 text-[10px] font-bold text-slate-400 text-right py-1">18:00</div>
               </div>
-              <!-- Right space for 18:00 marker -->
-              <div class="w-8 text-[10px] font-bold text-slate-400 text-right py-1">18:00</div>
-            </div>
 
-            <!-- ROW BODY: RENDERED DYNAMICALLY BY JAVASCRIPT -->
-            <div id="spv-timeline-rows" class="flex flex-col gap-3 relative w-full">
-              <div class="text-center py-12 text-slate-400 font-semibold text-xs">Pilih tanggal dan tarik data riwayat
-                beban kerja...</div>
-            </div>
+              <!-- ROW BODY: RENDERED DYNAMICALLY BY JAVASCRIPT -->
+              <div id="spv-timeline-rows" class="flex flex-col gap-3 relative w-full">
+                <div class="text-center py-12 text-slate-400 font-semibold text-xs">Pilih tanggal dan tarik data riwayat
+                  beban kerja...</div>
+              </div>
 
+            </div>
           </div>
+
         </div>
 
       </div>
-
-    </div>
     </div> <!-- Closes tab-pane-beban -->
 
     <!-- =============================================
          TAB CONTAINER 3: AUDIT DENGAN AI
     ============================================== -->
-    <div id="tab-pane-audit" class="hidden col-12" style="grid-column: span 12; display: none; flex-direction: column; gap: 16px;">
+    <div id="tab-pane-audit" class="hidden col-12"
+      style="grid-column: span 12; display: none; flex-direction: column; gap: 16px;">
 
       <!-- HEADER DASHBOARD EVALUASI -->
       <div class="bento-box" style="background: transparent; border: none; padding: 0; box-shadow: none;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+        <div
+          style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
           <div>
-            <h1 style="margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -0.5px; color: var(--text-primary); text-transform: uppercase; font-style: italic;">Dashboard Evaluasi</h1>
-            <p style="margin: 4px 0 0 0; font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px;">Pemantauan Beban Kerja &amp; Efisiensi Tim</p>
+            <h1
+              style="margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -0.5px; color: var(--text-primary); text-transform: uppercase; font-style: italic;">
+              Dashboard Evaluasi</h1>
+            <p
+              style="margin: 4px 0 0 0; font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px;">
+              Pemantauan Beban Kerja &amp; Efisiensi Tim</p>
           </div>
           <!-- Date Picker Tab Audit -->
           <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
             <!-- Hidden input for backward compat -->
             <input type="date" id="audit-date-picker" style="display:none;">
             <!-- Trigger Button for Audit Date Range -->
-            <button class="date-filter-trigger" onclick="openDateRangeModal('audit')" style="padding: 8px 16px; border-radius: 14px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <button class="date-filter-trigger" onclick="openDateRangeModal('audit')"
+              style="padding: 8px 16px; border-radius: 14px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
               <div>
                 <div class="trigger-label">Periode Laporan</div>
                 <div class="trigger-value" id="audit-date-label" style="font-size:13px;">Hari Ini</div>
               </div>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="3"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
             </button>
 
             <!-- Tabs Analytics & System Audit -->
-            <div style="display: flex; align-items: center; gap: 4px; background: #F1F5F9; padding: 4px; border-radius: 10px; border: 1px solid #E2E8F0;">
-              <button id="audit-sub-tab-analytics" onclick="switchAuditSubTab('analytics')" style="width: auto; min-height: unset; padding: 6px 14px; border-radius: 8px; font-size: 10px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s; border: none; text-transform: uppercase; margin: 0; background: #FFFFFF; color: #2563EB; box-shadow: 0 1px 2px rgba(0,0,0,0.06);">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            <div
+              style="display: flex; align-items: center; gap: 4px; background: #F1F5F9; padding: 4px; border-radius: 10px; border: 1px solid #E2E8F0;">
+              <button id="audit-sub-tab-analytics" onclick="switchAuditSubTab('analytics')"
+                style="width: auto; min-height: unset; padding: 6px 14px; border-radius: 8px; font-size: 10px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s; border: none; text-transform: uppercase; margin: 0; background: #FFFFFF; color: #2563EB; box-shadow: 0 1px 2px rgba(0,0,0,0.06);">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
                 Analytics
               </button>
-              <button id="audit-sub-tab-system" onclick="switchAuditSubTab('system')" style="width: auto; min-height: unset; padding: 6px 14px; border-radius: 8px; font-size: 10px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s; border: none; text-transform: uppercase; margin: 0; background: transparent; color: #64748B;">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              <button id="audit-sub-tab-system" onclick="switchAuditSubTab('system')"
+                style="width: auto; min-height: unset; padding: 6px 14px; border-radius: 8px; font-size: 10px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s; border: none; text-transform: uppercase; margin: 0; background: transparent; color: #64748B;">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
                 System Audit
               </button>
             </div>
@@ -965,76 +1469,117 @@
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
 
           <!-- CARD 1: BEBAN HARIAN DIVISI -->
-          <div class="bento-box interactive" style="padding: 24px; min-height: 110px; position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;">
+          <div class="bento-box interactive"
+            style="padding: 24px; min-height: 110px; position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="13 17 18 12 13 7"></polyline>
+                <polyline points="6 17 11 12 6 7"></polyline>
               </svg>
-              <span style="font-size: 10px; font-weight: 800; color: #EF4444; text-transform: uppercase; letter-spacing: 1px;">Beban Harian Divisi</span>
+              <span
+                style="font-size: 10px; font-weight: 800; color: #EF4444; text-transform: uppercase; letter-spacing: 1px;">Beban
+                Harian Divisi</span>
             </div>
-            <div id="audit-divisi-status" style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.8px; line-height: 1.5;">
+            <div id="audit-divisi-status"
+              style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.8px; line-height: 1.5;">
               Pilih tanggal untuk memuat metrik...
             </div>
             <!-- Detail breakdown per divisi -->
-            <div id="audit-divisi-detail" style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;"></div>
+            <div id="audit-divisi-detail" style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
+            </div>
           </div>
 
           <!-- CARD 2: DETEKSI OVERLAP -->
-          <div class="bento-box interactive" style="padding: 24px; min-height: 110px; position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;">
+          <div class="bento-box interactive"
+            style="padding: 24px; min-height: 110px; position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
-              <span style="font-size: 10px; font-weight: 800; color: #F59E0B; text-transform: uppercase; letter-spacing: 1px;">Deteksi Overlap</span>
+              <span
+                style="font-size: 10px; font-weight: 800; color: #F59E0B; text-transform: uppercase; letter-spacing: 1px;">Deteksi
+                Overlap</span>
             </div>
-            <div id="audit-overlap-status" style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.8px; line-height: 1.5;">
+            <div id="audit-overlap-status"
+              style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.8px; line-height: 1.5;">
               Pilih tanggal untuk memuat metrik...
             </div>
-            <div id="audit-overlap-detail" style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;"></div>
+            <div id="audit-overlap-detail" style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
+            </div>
           </div>
 
           <!-- CARD 3: JOB MISALIGNMENT -->
-          <div class="bento-box interactive" style="padding: 24px; min-height: 110px; position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;">
+          <div class="bento-box interactive"
+            style="padding: 24px; min-height: 110px; position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
-              <span style="font-size: 10px; font-weight: 800; color: #2563EB; text-transform: uppercase; letter-spacing: 1px;">Job Misalignment</span>
+              <span
+                style="font-size: 10px; font-weight: 800; color: #2563EB; text-transform: uppercase; letter-spacing: 1px;">Job
+                Misalignment</span>
             </div>
-            <div id="audit-misalign-status" style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.8px; line-height: 1.5;">
+            <div id="audit-misalign-status"
+              style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.8px; line-height: 1.5;">
               Pilih tanggal untuk memuat metrik...
             </div>
-            <div id="audit-misalign-detail" style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;"></div>
+            <div id="audit-misalign-detail" style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
+            </div>
           </div>
 
         </div><!-- End 3-col grid -->
 
         <!-- GEMINI AI AUDITOR DARK CARD -->
-        <div style="background: #0F172A; border-radius: 28px; padding: 48px 40px; text-align: center; position: relative; overflow: hidden;">
+        <div
+          style="background: #0F172A; border-radius: 28px; padding: 48px 40px; text-align: center; position: relative; overflow: hidden;">
           <!-- Subtle glow orbs -->
-          <div style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 200px; height: 200px; background: radial-gradient(circle, rgba(37,99,235,0.18) 0%, transparent 70%); pointer-events: none;"></div>
-          
+          <div
+            style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 200px; height: 200px; background: radial-gradient(circle, rgba(37,99,235,0.18) 0%, transparent 70%); pointer-events: none;">
+          </div>
+
           <!-- Gemini Sparkle Icon -->
-          <div style="width: 60px; height: 60px; border-radius: 18px; background: linear-gradient(135deg, #2563EB, #3B82F6); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 0 30px rgba(37,99,235,0.4);">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white" stroke="none"/>
-              <circle cx="12" cy="12" r="2" fill="#2563EB"/>
+          <div
+            style="width: 60px; height: 60px; border-radius: 18px; background: linear-gradient(135deg, #2563EB, #3B82F6); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 0 30px rgba(37,99,235,0.4);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+                fill="white" stroke="none" />
+              <circle cx="12" cy="12" r="2" fill="#2563EB" />
             </svg>
           </div>
 
           <!-- Title & Subtitle -->
-          <h3 style="margin: 0 0 10px 0; font-size: 16px; font-weight: 900; color: #FFFFFF; text-transform: uppercase; letter-spacing: 1.5px;">Ingin Analisa Yang Lebih Dalam?</h3>
-          <p style="margin: 0 0 28px 0; font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 1.2px; max-width: 400px; margin-left: auto; margin-right: auto; line-height: 1.7;">AI Gemini akan memberikan ringkasan eksekutif dan<br>saran strategis berdasarkan konteks kerja hari ini.</p>
+          <h3
+            style="margin: 0 0 10px 0; font-size: 16px; font-weight: 900; color: #FFFFFF; text-transform: uppercase; letter-spacing: 1.5px;">
+            Ingin Analisa Yang Lebih Dalam?</h3>
+          <p
+            style="margin: 0 0 28px 0; font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 1.2px; max-width: 400px; margin-left: auto; margin-right: auto; line-height: 1.7;">
+            AI Gemini akan memberikan ringkasan eksekutif dan<br>saran strategis berdasarkan konteks kerja hari ini.</p>
 
           <!-- API Key Input (Collapsible) -->
-          <div id="ai-apikey-section" style="margin-bottom: 16px; max-width: 380px; margin-left: auto; margin-right: auto; display: none;">
-            <div style="background: #1E293B; border: 1px solid #334155; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 8px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+          <div id="ai-apikey-section"
+            style="margin-bottom: 16px; max-width: 380px; margin-left: auto; margin-right: auto; display: none;">
+            <div
+              style="background: #1E293B; border: 1px solid #334155; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 8px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2">
+                <path
+                  d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4">
+                </path>
+              </svg>
               <input type="password" id="gemini-api-key" placeholder="Paste Gemini API Key Anda di sini (opsional)"
                 style="flex: 1; background: transparent; border: none; outline: none; color: #CBD5E1; font-size: 11px; font-weight: 600; margin: 0; padding: 0; min-height: unset; box-shadow: none; font-family: monospace;">
-              <button onclick="saveGeminiKey()" style="width: auto; min-height: unset; padding: 4px 10px; background: #2563EB; color: white; border: none; border-radius: 6px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase; margin: 0; line-height: 1.4;">Simpan</button>
+              <button onclick="saveGeminiKey()"
+                style="width: auto; min-height: unset; padding: 4px 10px; background: #2563EB; color: white; border: none; border-radius: 6px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase; margin: 0; line-height: 1.4;">Simpan</button>
             </div>
-            <p style="margin: 6px 0 0; font-size: 9px; color: #475569; text-transform: uppercase; letter-spacing: 0.8px;">Disimpan aman di browser lokal Anda. Tidak dikirim ke server kami.</p>
+            <p
+              style="margin: 6px 0 0; font-size: 9px; color: #475569; text-transform: uppercase; letter-spacing: 0.8px;">
+              Disimpan aman di browser lokal Anda. Tidak dikirim ke server kami.</p>
           </div>
 
           <!-- CTA Button -->
@@ -1042,22 +1587,35 @@
             style="width: auto; min-height: unset; padding: 14px 36px; background: linear-gradient(135deg, #2563EB, #3B82F6); color: white; border: none; border-radius: 14px; font-size: 11px; font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 1.5px; margin: 0; transition: all 0.2s; box-shadow: 0 4px 20px rgba(37,99,235,0.4); display: inline-block;">
             Gunakan AI Auditor (Opsional)
           </button>
-          <button onclick="document.getElementById('ai-apikey-section').style.display = document.getElementById('ai-apikey-section').style.display === 'none' ? 'block' : 'none';"
+          <button
+            onclick="document.getElementById('ai-apikey-section').style.display = document.getElementById('ai-apikey-section').style.display === 'none' ? 'block' : 'none';"
             style="width: auto; min-height: unset; padding: 8px 16px; background: transparent; color: #475569; border: 1px solid #334155; border-radius: 10px; font-size: 9px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; margin: 0; margin-left: 10px; transition: all 0.2s; display: inline-block;">
             ⚙ API Key
           </button>
         </div>
 
         <!-- AI AUDIT OUTPUT CONTAINER -->
-        <div id="ai-audit-output" style="display: none; background: #FFFFFF; border-radius: 20px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 32px; position: relative; overflow: hidden;">
-          <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #2563EB, #8B5CF6, #10B981);"></div>
-          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #F1F5F9;">
-            <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #2563EB, #3B82F6); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+        <div id="ai-audit-output"
+          style="display: none; background: #FFFFFF; border-radius: 20px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 32px; position: relative; overflow: hidden;">
+          <div
+            style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #2563EB, #8B5CF6, #10B981);">
+          </div>
+          <div
+            style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #F1F5F9;">
+            <div
+              style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #2563EB, #3B82F6); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                <path
+                  d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+              </svg>
             </div>
             <div>
-              <div style="font-size: 11px; font-weight: 800; color: var(--text-primary); text-transform: uppercase; letter-spacing: 1px;">Laporan Audit AI Gemini</div>
-              <div id="ai-output-date-label" style="font-size: 9px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;"></div>
+              <div
+                style="font-size: 11px; font-weight: 800; color: var(--text-primary); text-transform: uppercase; letter-spacing: 1px;">
+                Laporan Audit AI Gemini</div>
+              <div id="ai-output-date-label"
+                style="font-size: 9px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">
+              </div>
             </div>
           </div>
           <div id="ai-audit-content" style="font-size: 13px; line-height: 1.8; color: var(--text-primary);"></div>
@@ -1069,17 +1627,25 @@
       <div id="audit-sub-pane-system" style="display: none; flex-direction: column; gap: 16px;">
         <div class="bento-box" style="padding: 32px;">
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
-            <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #0F172A, #1E293B); display: flex; align-items: center; justify-content: center;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <div
+              style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #0F172A, #1E293B); display: flex; align-items: center; justify-content: center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
             </div>
             <div>
-              <div style="font-size: 13px; font-weight: 800; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.8px;">System Audit Log</div>
-              <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Rekam jejak sistem dan validasi integritas data</div>
+              <div
+                style="font-size: 13px; font-weight: 800; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.8px;">
+                System Audit Log</div>
+              <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600;">Rekam jejak sistem dan
+                validasi integritas data</div>
             </div>
           </div>
           <div id="system-audit-log" style="display: flex; flex-direction: column; gap: 8px;">
             <div style="border: 2px dashed #E2E8F0; border-radius: 12px; padding: 32px; text-align: center;">
-              <div style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px;">Pilih tanggal laporan untuk memuat rekam jejak sistem</div>
+              <div
+                style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px;">
+                Pilih tanggal laporan untuk memuat rekam jejak sistem</div>
             </div>
           </div>
         </div>
@@ -1093,9 +1659,47 @@
     // ==========================================
     // SILAKAN SALIN & PASTE URL WEB APP GAS DI SINI
     // ==========================================
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyTPsWJ1jfNpBlKEoXfmCZbf5PvdMBRSCDkzJTlZPgUKnCdCybeSQrQ2vxCBTSZ3eRFbw/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwV4ccXXIZOCDYoDWQApA1kUBuwFLQp2x3BYoufuLIUEqN7hoaHkFpIcB-8KD4tF7QMUA/exec";
 
     let sessionUser = {};
+
+    // Global pointers untuk penanganan aksi Edit & Hapus
+    let activeDeleteRowIndex = null;
+    let activeEditRowIndex = null;
+
+    // Peta deskripsi cakupan Bidang Tugas / Divisi
+    const descsBidangTugas = {
+      'Manajemen': '💼 <strong>Manajemen</strong>: Perencanaan strategis, koordinasi antar divisi, pengawasan operasional, penyusunan kebijakan sistem, evaluasi kinerja, dan koordinasi internal.',
+      'Sales/CS': '📞 <strong>Sales / CSO</strong>: Komunikasi dengan klien, layanan pelanggan (CSO), demo produk, tindak lanjut klien potensial, penawaran harga, dan hubungan kemitraan.',
+      'Marketing/Kreatif': '🎨 <strong>Marketing / Kreatif</strong>: Pembuatan desain promosi, pengelolaan akun media sosial, penulisan copy/konten, kampanye digital, dan event pemasaran.',
+      'Operasional': '📦 <strong>Operasional / Logistik</strong>: Penerimaan & penyusunan barang, packing pengiriman, kontrol inventori/stok gudang, logistik kurir, dan koordinasi operasional gudang.',
+      'Keuangan/Admin': '💵 <strong>Keuangan / Akuntansi</strong>: Pembukuan transaksi masuk/keluar, pembuatan invoice, penagihan, pencatatan kas kecil, rekonsiliasi bank, dan tugas administrasi kantor.',
+      'R&D': '🧬 <strong>R&D / Riset</strong>: Pengembangan formulasi/sistem baru, penelitian berkala produk, pengujian mutu/quality control, perbaikan bug tracker, dan dokumentasi riset.'
+    };
+
+    // Fungsi memperbarui asisten keterangan dinamis di bawah form
+    function updateKategoriDesc() {
+      const selectEl = document.getElementById('inp-kategori');
+      const descEl = document.getElementById('kategori-desc');
+      if (!selectEl || !descEl) return;
+
+      const val = selectEl.value;
+      if (descsBidangTugas[val]) {
+        descEl.innerHTML = descsBidangTugas[val];
+        descEl.style.display = 'block';
+      } else {
+        descEl.innerHTML = '';
+        descEl.style.display = 'none';
+      }
+    }
+
+    // Daftarkan event listener perubahan select bidang tugas
+    document.addEventListener('DOMContentLoaded', function () {
+      const selectEl = document.getElementById('inp-kategori');
+      if (selectEl) {
+        selectEl.addEventListener('change', updateKategoriDesc);
+      }
+    });
 
     // Memuat daftar karyawan secara dinamis dari Google Sheets untuk pilihan login dropdown
     function loadUsersList() {
@@ -1167,7 +1771,7 @@
             // Inisialisasi tanggal global
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('history-date-filter').value = today;
-            
+
             // Set tanggal target sinkronisasi secara dinamis di badge
             const syncTarget = document.getElementById('sync-target-date');
             if (syncTarget) syncTarget.innerText = 'Target: ' + today;
@@ -1194,6 +1798,21 @@
 
             // Sambut pengguna dengan toast
             showToast('success', 'Login Berhasil', 'Selamat datang, ' + res.name + '! Role: ' + res.role + '.');
+
+            // Pilihan Otomatis Kategori Bidang Kerja berdasarkan Role Karyawan
+            const selectKategori = document.getElementById('inp-kategori');
+            if (selectKategori && res.role) {
+              const role = res.role.trim();
+              let mappedValue = 'Operasional';
+              if (role === 'SPV') mappedValue = 'Manajemen';
+              else if (role === 'SMS' || role === 'CSO') mappedValue = 'Sales/CS';
+              else if (role === 'Akutansi') mappedValue = 'Keuangan/Admin';
+              else if (role === 'R&D') mappedValue = 'R&D';
+              else if (role === 'Logistik') mappedValue = 'Operasional';
+
+              selectKategori.value = mappedValue;
+              updateKategoriDesc();
+            }
 
             // Default to Tab 1: Input Activity
             switchTab('input');
@@ -1227,13 +1846,13 @@
       var activeStyle = 'background:#FFFFFF;color:#2563EB;box-shadow:0 1px 2px rgba(0,0,0,0.05);width:auto;min-height:unset;padding:10px 18px;border-radius:12px;font-size:11px;font-weight:800;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:all 0.2s;border:none;text-transform:uppercase;margin:0;line-height:1;';
       var inactiveStyle = 'background:transparent;color:#64748B;box-shadow:none;width:auto;min-height:unset;padding:10px 18px;border-radius:12px;font-size:11px;font-weight:800;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:all 0.2s;border:none;text-transform:uppercase;margin:0;line-height:1;';
 
-      Object.keys(panes).forEach(function(key) {
+      Object.keys(panes).forEach(function (key) {
         var pane = document.getElementById(panes[key]);
         if (!pane) return;
         if (key === tabId) { pane.style.display = 'flex'; pane.classList.remove('hidden'); }
         else { pane.style.display = 'none'; pane.classList.add('hidden'); }
       });
-      Object.keys(buttons).forEach(function(key) {
+      Object.keys(buttons).forEach(function (key) {
         var btn = document.getElementById(buttons[key]);
         if (btn) btn.style.cssText = (key === tabId ? activeStyle : inactiveStyle);
       });
@@ -1279,10 +1898,10 @@
     function loadAuditDashboard(dateStr) {
       if (!dateStr) return;
       lastAuditDate = dateStr;
-      ['audit-divisi-status','audit-overlap-status','audit-misalign-status'].forEach(function(id) {
+      ['audit-divisi-status', 'audit-overlap-status', 'audit-misalign-status'].forEach(function (id) {
         var el = document.getElementById(id); if (el) el.innerText = 'Memuat data...';
       });
-      ['audit-divisi-detail','audit-overlap-detail','audit-misalign-detail'].forEach(function(id) {
+      ['audit-divisi-detail', 'audit-overlap-detail', 'audit-misalign-detail'].forEach(function (id) {
         var el = document.getElementById(id); if (el) el.innerHTML = '';
       });
 
@@ -1291,8 +1910,8 @@
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'getSPVSummary', startDate: dateStr, endDate: dateStr })
       })
-        .then(function(res) { return res.json(); })
-        .then(function(response) {
+        .then(function (res) { return res.json(); })
+        .then(function (response) {
           var resObj = response.data || {};
           var data = resObj.activities || [];
           lastAuditData = data;
@@ -1300,7 +1919,7 @@
 
           // METRIC 1: BEBAN HARIAN DIVISI
           var divisiMinutes = {};
-          data.forEach(function(row) {
+          data.forEach(function (row) {
             var cat = row.kategori || 'Lainnya';
             var times = (row.durasi || '0:00 - 0:00').split(' - ');
             var dur = Math.max(0, timeToMinutes(times[1]) - timeToMinutes(times[0]));
@@ -1313,7 +1932,7 @@
             divisiStatusEl.style.color = '#94A3B8';
           } else {
             var hasOverload = false; var divisiHTML = '';
-            Object.keys(divisiMinutes).forEach(function(cat) {
+            Object.keys(divisiMinutes).forEach(function (cat) {
               var hours = (divisiMinutes[cat] / 60).toFixed(1);
               var overload = divisiMinutes[cat] > 480;
               if (overload) hasOverload = true;
@@ -1328,7 +1947,7 @@
 
           // METRIC 2: DETEKSI OVERLAP
           var userTasks = {};
-          data.forEach(function(row) {
+          data.forEach(function (row) {
             var nk = (row.nama || '').toLowerCase().trim();
             if (!nk) return;
             if (!userTasks[nk]) userTasks[nk] = [];
@@ -1336,12 +1955,12 @@
             userTasks[nk].push({ start: timeToMinutes(times[0]), end: timeToMinutes(times[1]), act: row.aktivitas });
           });
           var overlapCount = 0; var overlapDetails = [];
-          Object.keys(userTasks).forEach(function(user) {
-            var tasks = userTasks[user].sort(function(a, b) { return a.start - b.start; });
+          Object.keys(userTasks).forEach(function (user) {
+            var tasks = userTasks[user].sort(function (a, b) { return a.start - b.start; });
             for (var i = 1; i < tasks.length; i++) {
               if (tasks[i].start < tasks[i - 1].end) {
                 overlapCount++;
-                overlapDetails.push({ user: user, t1: tasks[i-1].act, t2: tasks[i].act });
+                overlapDetails.push({ user: user, t1: tasks[i - 1].act, t2: tasks[i].act });
               }
             }
           });
@@ -1351,36 +1970,36 @@
             overlapStatusEl.innerText = 'Jam kerja teratur (No Conflicts).'; overlapStatusEl.style.color = '#10B981'; overlapDetailEl.innerHTML = '';
           } else {
             overlapStatusEl.innerText = 'Ditemukan ' + overlapCount + ' tumpang tindih jadwal.'; overlapStatusEl.style.color = '#EF4444';
-            var oh = ''; overlapDetails.slice(0, 3).forEach(function(od) { oh += '<div style="font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;padding:3px 6px;background:#FEF2F2;border-radius:4px;margin-bottom:2px;">⛔ ' + od.user + ': "' + (od.t1 || '').substring(0,18) + '..." vs "' + (od.t2 || '').substring(0,18) + '..."</div>'; });
+            var oh = ''; overlapDetails.slice(0, 3).forEach(function (od) { oh += '<div style="font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;padding:3px 6px;background:#FEF2F2;border-radius:4px;margin-bottom:2px;">⛔ ' + od.user + ': "' + (od.t1 || '').substring(0, 18) + '..." vs "' + (od.t2 || '').substring(0, 18) + '..."</div>'; });
             overlapDetailEl.innerHTML = oh;
           }
 
           // METRIC 3: JOB MISALIGNMENT
-          var roleToCategory = { 'SMS': ['sales','cs','customer'], 'CSO': ['sales','cs','customer'], 'Akutansi': ['keuangan','admin','akutansi'], 'R&D': ['r&d','riset'], 'Logistik': ['operasional','bahan','logistik'], 'SPV': ['manajemen','operasional'] };
+          var roleToCategory = { 'SMS': ['sales', 'cs', 'customer'], 'CSO': ['sales', 'cs', 'customer'], 'Akutansi': ['keuangan', 'admin', 'akutansi'], 'R&D': ['r&d', 'riset'], 'Logistik': ['operasional', 'bahan', 'logistik'], 'SPV': ['manajemen', 'operasional'] };
           var misalignCount = 0; var misalignMap = {};
-          data.forEach(function(row) {
-            var si = staffList.find(function(s) { return s.name.toLowerCase().trim() === (row.nama || '').toLowerCase().trim(); });
+          data.forEach(function (row) {
+            var si = staffList.find(function (s) { return s.name.toLowerCase().trim() === (row.nama || '').toLowerCase().trim(); });
             if (!si || !si.role) return;
             var expectedCats = roleToCategory[si.role] || [];
             if (expectedCats.length === 0) return;
             var cat = (row.kategori || '').toLowerCase();
-            var isAligned = expectedCats.some(function(kw) { return cat.indexOf(kw) !== -1; });
+            var isAligned = expectedCats.some(function (kw) { return cat.indexOf(kw) !== -1; });
             if (!isAligned) { misalignCount++; if (!misalignMap[si.name]) misalignMap[si.name] = { role: si.role, cats: [] }; if (!misalignMap[si.name].cats.includes(row.kategori)) misalignMap[si.name].cats.push(row.kategori); }
           });
           var msEl = document.getElementById('audit-misalign-status'); var mdEl = document.getElementById('audit-misalign-detail');
           if (misalignCount === 0) { msEl.innerText = 'Tugas sesuai spesialisasi.'; msEl.style.color = '#10B981'; mdEl.innerHTML = ''; }
           else {
             msEl.innerText = misalignCount + ' tugas di luar spesialisasi divisi.'; msEl.style.color = '#F59E0B';
-            var mh = ''; Object.keys(misalignMap).slice(0, 3).forEach(function(n) { mh += '<div style="font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;padding:3px 6px;background:#FFFBEB;border-radius:4px;margin-bottom:2px;">🔀 ' + n + ' (' + misalignMap[n].role + '): ' + misalignMap[n].cats.join(', ') + '</div>'; });
+            var mh = ''; Object.keys(misalignMap).slice(0, 3).forEach(function (n) { mh += '<div style="font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;padding:3px 6px;background:#FFFBEB;border-radius:4px;margin-bottom:2px;">🔀 ' + n + ' (' + misalignMap[n].role + '): ' + misalignMap[n].cats.join(', ') + '</div>'; });
             mdEl.innerHTML = mh;
           }
 
           // Update system audit log
           updateSystemAuditLog(dateStr, data.length, overlapCount, misalignCount);
         })
-        .catch(function(err) {
+        .catch(function (err) {
           console.error('Audit Dashboard error:', err);
-          ['audit-divisi-status','audit-overlap-status','audit-misalign-status'].forEach(function(id) {
+          ['audit-divisi-status', 'audit-overlap-status', 'audit-misalign-status'].forEach(function (id) {
             var el = document.getElementById(id); if (el) { el.innerText = 'Gagal memuat data.'; el.style.color = '#EF4444'; }
           });
         });
@@ -1396,7 +2015,7 @@
         { label: 'Job Misalignment', status: misalignC > 0 ? misalignC + ' item' : 'Sesuai Spesialisasi', color: misalignC > 0 ? '#F59E0B' : '#10B981', icon: misalignC > 0 ? '🔀' : '✓' },
         { label: 'Terakhir Diperbarui', status: now, color: '#64748B', icon: '🕐' }
       ];
-      logEl.innerHTML = entries.map(function(e) { return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:#F8FAFC;border-radius:8px;border:1px solid #F1F5F9;"><span style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">' + e.icon + ' ' + e.label + '</span><span style="font-size:11px;font-weight:800;color:' + e.color + ';text-transform:uppercase;">' + e.status + '</span></div>'; }).join('');
+      logEl.innerHTML = entries.map(function (e) { return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:#F8FAFC;border-radius:8px;border:1px solid #F1F5F9;"><span style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">' + e.icon + ' ' + e.label + '</span><span style="font-size:11px;font-weight:800;color:' + e.color + ';text-transform:uppercase;">' + e.status + '</span></div>'; }).join('');
     }
 
     // ============================================
@@ -1428,42 +2047,42 @@
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'getSPVSummary', startDate: dateStr, endDate: dateStr })
       })
-        .then(function(res) { return res.json(); })
-        .then(function(response) {
+        .then(function (res) { return res.json(); })
+        .then(function (response) {
           var data = (response.data || {}).activities || [];
           lastAuditData = data;
           var geminiKey = localStorage.getItem('gemini_api_key') || document.getElementById('gemini-api-key').value.trim();
           if (geminiKey) {
-            var contextLines = data.length === 0 ? 'Tidak ada aktivitas.' : data.map(function(row, i) { return (i+1) + '. [' + row.nama + '] (' + row.kategori + '|' + row.tipe + '|' + row.beban + ') "' + row.aktivitas + '" | ' + row.durasi + ' | Output: "' + row.output + '"'; }).join('\n');
+            var contextLines = data.length === 0 ? 'Tidak ada aktivitas.' : data.map(function (row, i) { return (i + 1) + '. [' + row.nama + '] (' + row.kategori + '|' + row.tipe + '|' + row.beban + ') "' + row.aktivitas + '" | ' + row.durasi + ' | Output: "' + row.output + '"'; }).join('\n');
             var prompt = 'Anda konsultan manajemen operasional. Log aktivitas kerja tim pada ' + dateStr + ':\n\n' + contextLines + '\n\nBuat laporan evaluasi dalam Bahasa Indonesia mencakup:\n1. Ringkasan Eksekutif (2-3 kalimat)\n2. Temuan Kritis (overload, overlap, misalignment)\n3. Rekomendasi Strategis (3 langkah konkret)\n4. Kesimpulan (1 kalimat)\n\nGunakan heading yang jelas, bahasa padat dan profesional.';
             fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + geminiKey, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
             })
-              .then(function(r) { return r.json(); })
-              .then(function(result) {
+              .then(function (r) { return r.json(); })
+              .then(function (result) {
                 btn.innerHTML = '✓ Audit Selesai'; btn.disabled = false;
                 var text = ((((result.candidates || [])[0] || {}).content || {}).parts || [{}])[0].text || 'Tidak ada respons AI.';
                 dateLabelEl.innerText = 'Dianalisa: ' + dateStr + ' · Real AI Gemini';
                 contentEl.innerHTML = formatMarkdownToHTML(text);
                 outputContainer.style.display = 'block';
                 outputContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                setTimeout(function() { btn.innerHTML = 'Gunakan AI Auditor (Opsional)'; }, 3000);
+                setTimeout(function () { btn.innerHTML = 'Gunakan AI Auditor (Opsional)'; }, 3000);
               })
-              .catch(function(err) { generateHeuristicReport(dateStr, data, btn, outputContainer, contentEl, dateLabelEl); });
+              .catch(function (err) { generateHeuristicReport(dateStr, data, btn, outputContainer, contentEl, dateLabelEl); });
           } else {
             generateHeuristicReport(dateStr, data, btn, outputContainer, contentEl, dateLabelEl);
           }
         })
-        .catch(function(err) { btn.innerHTML = 'Gunakan AI Auditor (Opsional)'; btn.disabled = false; alert('Gagal memuat data: ' + err.message); });
+        .catch(function (err) { btn.innerHTML = 'Gunakan AI Auditor (Opsional)'; btn.disabled = false; showToast('error', 'Koneksi Gagal', 'Gagal memuat data: ' + err.message); });
     }
 
     function generateHeuristicReport(dateStr, data, btn, outputContainer, contentEl, dateLabelEl) {
-      setTimeout(function() {
+      setTimeout(function () {
         btn.innerHTML = '✓ Laporan Siap'; btn.disabled = false;
         var divisiCounts = {}, divisiMinutes = {}, userTasks = {}, overlapCount = 0;
-        data.forEach(function(row) {
+        data.forEach(function (row) {
           var cat = row.kategori || 'Lainnya';
           divisiCounts[cat] = (divisiCounts[cat] || 0) + 1;
           var times = (row.durasi || '0:00 - 0:00').split(' - ');
@@ -1473,19 +2092,19 @@
           if (!userTasks[nk]) userTasks[nk] = [];
           userTasks[nk].push({ start: timeToMinutes(times[0]), end: timeToMinutes(times[1]) });
         });
-        Object.keys(userTasks).forEach(function(u) {
-          var tasks = userTasks[u].sort(function(a,b){return a.start-b.start;});
-          for (var i = 1; i < tasks.length; i++) { if (tasks[i].start < tasks[i-1].end) overlapCount++; }
+        Object.keys(userTasks).forEach(function (u) {
+          var tasks = userTasks[u].sort(function (a, b) { return a.start - b.start; });
+          for (var i = 1; i < tasks.length; i++) { if (tasks[i].start < tasks[i - 1].end) overlapCount++; }
         });
-        var topDivisi = Object.keys(divisiCounts).sort(function(a,b){return divisiCounts[b]-divisiCounts[a];})[0] || '-';
-        var totalJam = (Object.values(divisiMinutes).reduce(function(a,b){return a+b;}, 0) / 60).toFixed(1);
+        var topDivisi = Object.keys(divisiCounts).sort(function (a, b) { return divisiCounts[b] - divisiCounts[a]; })[0] || '-';
+        var totalJam = (Object.values(divisiMinutes).reduce(function (a, b) { return a + b; }, 0) / 60).toFixed(1);
         var uniqueStaff = Object.keys(userTasks).length;
-        var bebanWarning = Object.keys(divisiMinutes).find(function(cat){return divisiMinutes[cat] > 480;});
+        var bebanWarning = Object.keys(divisiMinutes).find(function (cat) { return divisiMinutes[cat] > 480; });
 
         dateLabelEl.innerText = 'Dianalisa: ' + dateStr + ' · Analitik Lokal Cerdas';
         contentEl.innerHTML =
           '<h3 style="font-size:13px;font-weight:900;color:#0F172A;text-transform:uppercase;letter-spacing:0.8px;margin:0 0 12px;">1. Ringkasan Eksekutif</h3>' +
-          '<p style="margin:0 0 16px;color:#334155;line-height:1.8;">Tim merekam <strong>' + data.length + ' aktivitas</strong> pada ' + dateStr + ', melibatkan <strong>' + uniqueStaff + ' staf</strong> dengan total <strong>' + totalJam + ' jam kerja</strong>. Divisi dengan beban tertinggi: <em style="color:#2563EB;">' + topDivisi + '</em> (' + (divisiCounts[topDivisi]||0) + ' tugas).' + (data.length === 0 ? ' Tidak ada data aktivitas — pastikan tim melakukan input rutin harian.' : '') + '</p>' +
+          '<p style="margin:0 0 16px;color:#334155;line-height:1.8;">Tim merekam <strong>' + data.length + ' aktivitas</strong> pada ' + dateStr + ', melibatkan <strong>' + uniqueStaff + ' staf</strong> dengan total <strong>' + totalJam + ' jam kerja</strong>. Divisi dengan beban tertinggi: <em style="color:#2563EB;">' + topDivisi + '</em> (' + (divisiCounts[topDivisi] || 0) + ' tugas).' + (data.length === 0 ? ' Tidak ada data aktivitas — pastikan tim melakukan input rutin harian.' : '') + '</p>' +
           '<h3 style="font-size:13px;font-weight:900;color:#0F172A;text-transform:uppercase;letter-spacing:0.8px;margin:0 0 12px;">2. Temuan Kritis</h3>' +
           '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">' +
           '<div style="padding:10px 14px;border-radius:8px;border-left:3px solid ' + (overlapCount > 0 ? '#EF4444' : '#10B981') + ';background:' + (overlapCount > 0 ? '#FEF2F2' : '#F0FDF4') + ';"><span style="font-size:11px;font-weight:800;color:' + (overlapCount > 0 ? '#991B1B' : '#166534') + ';text-transform:uppercase;">' + (overlapCount > 0 ? '⛔ ' + overlapCount + ' Konflik Jadwal Terdeteksi' : '✓ Tidak Ada Konflik Jadwal') + '</span></div>' +
@@ -1505,7 +2124,7 @@
 
         outputContainer.style.display = 'block';
         outputContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        setTimeout(function() { btn.innerHTML = 'Gunakan AI Auditor (Opsional)'; }, 3000);
+        setTimeout(function () { btn.innerHTML = 'Gunakan AI Auditor (Opsional)'; }, 3000);
       }, 1800);
     }
 
@@ -1844,12 +2463,13 @@
             <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px;">
               <thead>
                 <tr style="border-bottom: 2px solid var(--border-color);">
-                  <th style="padding: 12px; text-align: left; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 11px;">Kategori</th>
+                  <th style="padding: 12px; text-align: left; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 11px;">Bidang / Divisi</th>
                   <th style="padding: 12px; text-align: left; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 11px;">Tipe</th>
                   <th style="padding: 12px; text-align: left; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 11px;">Beban</th>
                   <th style="padding: 12px; text-align: left; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 11px;">Aktivitas</th>
                   <th style="padding: 12px; text-align: left; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 11px;">Durasi</th>
                   <th style="padding: 12px; text-align: left; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 11px;">Output</th>
+                  <th style="padding: 12px; text-align: center; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 11px; width: 100px;">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -1867,6 +2487,9 @@
               colorBeban = '#92400E';
             }
 
+            // Encode row data as a URI component safely for click handler
+            const encodedRow = encodeURIComponent(JSON.stringify(row));
+
             html += `
             <tr style="border-bottom: 1px solid var(--border-color);">
               <td style="padding: 12px; font-weight: 600; color: var(--cta-color);">${row.kategori}</td>
@@ -1875,6 +2498,22 @@
               <td style="padding: 12px; color: var(--text-primary); max-width: 250px; white-space: normal; word-wrap: break-word;">${row.aktivitas}</td>
               <td style="padding: 12px; color: var(--text-secondary); font-family: monospace;">${row.durasi}</td>
               <td style="padding: 12px; font-weight: 600; color: var(--text-primary);">${row.output}</td>
+              <td style="padding: 12px; text-align: center; white-space: nowrap;">
+                <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
+                  <button onclick="bukaModalEdit(${row.rowIndex}, '${encodedRow}')"
+                    class="w-7 h-7 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 hover:text-blue-700 flex items-center justify-center p-0 transition-colors cursor-pointer"
+                    style="min-height: unset; width: 28px;"
+                    title="Koreksi Aktivitas">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                  </button>
+                  <button onclick="konfirmasiHapus(${row.rowIndex})"
+                    class="w-7 h-7 rounded-lg bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 hover:text-red-700 flex items-center justify-center p-0 transition-colors cursor-pointer"
+                    style="min-height: unset; width: 28px;"
+                    title="Hapus Aktivitas">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                  </button>
+                </div>
+              </td>
             </tr>
           `;
           });
@@ -1896,6 +2535,146 @@
     }
 
     // ============================================
+    // KONTROL AKSI EDIT & HAPUS RIWAYAT AKTIVITAS
+    // ============================================
+    function konfirmasiHapus(rowIndex) {
+      activeDeleteRowIndex = rowIndex;
+      document.getElementById('delete-modal-overlay').style.display = 'flex';
+    }
+
+    function tutupDeleteModal() {
+      activeDeleteRowIndex = null;
+      document.getElementById('delete-modal-overlay').style.display = 'none';
+    }
+
+    function eksekusiHapus() {
+      if (!activeDeleteRowIndex) return;
+      const btn = document.getElementById('btn-confirm-delete');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '⏳ Menghapus...';
+      btn.disabled = true;
+      showProgress();
+
+      fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'deleteActivity',
+          rowIndex: activeDeleteRowIndex,
+          username: sessionUser.name
+        })
+      })
+        .then(res => res.json())
+        .then(res => {
+          completeProgress();
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          tutupDeleteModal();
+
+          if (res.success) {
+            showToast('success', 'Aktivitas Dihapus', res.msg || 'Catatan aktivitas berhasil dihapus secara permanen.');
+            loadUserHistory();
+          } else {
+            showToast('error', 'Gagal Menghapus', res.msg || 'Terjadi kesalahan sistem saat menghapus data.');
+          }
+        })
+        .catch(err => {
+          console.error('Error deleteActivity:', err);
+          completeProgress();
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          tutupDeleteModal();
+          showToast('error', 'Koneksi Gagal', 'Gagal menghubungi server Google Sheets. Periksa koneksi internet Anda.');
+        });
+    }
+
+    function bukaModalEdit(rowIndex, encodedRow) {
+      activeEditRowIndex = rowIndex;
+      const row = JSON.parse(decodeURIComponent(encodedRow));
+
+      document.getElementById('edit-kategori').value = row.kategori;
+      document.getElementById('edit-tipe').value = row.tipe;
+      document.getElementById('edit-beban').value = row.beban;
+      document.getElementById('edit-deskripsi').value = row.aktivitas;
+      document.getElementById('edit-mulai').value = row.mulai || '';
+      document.getElementById('edit-selesai').value = row.selesai || '';
+      document.getElementById('edit-output').value = row.output || '';
+
+      document.getElementById('edit-modal-overlay').style.display = 'flex';
+    }
+
+    function tutupEditModal() {
+      activeEditRowIndex = null;
+      document.getElementById('edit-modal-overlay').style.display = 'none';
+    }
+
+    function eksekusiEdit() {
+      if (!activeEditRowIndex) return;
+
+      const kategori = document.getElementById('edit-kategori').value;
+      const tipe = document.getElementById('edit-tipe').value;
+      const beban = document.getElementById('edit-beban').value;
+      const deskripsi = document.getElementById('edit-deskripsi').value;
+      const mulai = document.getElementById('edit-mulai').value;
+      const selesai = document.getElementById('edit-selesai').value;
+      const output = document.getElementById('edit-output').value;
+
+      if (!deskripsi || !mulai || !selesai) {
+        showToast('warning', 'Data Tidak Lengkap', 'Waktu mulai, selesai, dan deskripsi aktivitas tidak boleh kosong.');
+        return;
+      }
+
+      const btn = document.getElementById('btn-save-edit');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '⏳ Menyimpan...';
+      btn.disabled = true;
+      showProgress();
+
+      const updatedData = {
+        kategori: kategori,
+        tipe: tipe,
+        beban: beban,
+        deskripsi: deskripsi,
+        mulai: mulai,
+        selesai: selesai,
+        output: output
+      };
+
+      fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'editActivity',
+          rowIndex: activeEditRowIndex,
+          username: sessionUser.name,
+          data: updatedData
+        })
+      })
+        .then(res => res.json())
+        .then(res => {
+          completeProgress();
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          tutupEditModal();
+
+          if (res.success) {
+            showToast('success', 'Aktivitas Diperbarui', res.msg || 'Perubahan aktivitas berhasil disimpan.');
+            loadUserHistory();
+          } else {
+            showToast('error', 'Gagal Memperbarui', res.msg || 'Terjadi kesalahan sistem saat menyimpan perubahan.');
+          }
+        })
+        .catch(err => {
+          console.error('Error editActivity:', err);
+          completeProgress();
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          tutupEditModal();
+          showToast('error', 'Koneksi Gagal', 'Gagal merekam data perubahan ke Spreadsheet. Cek koneksi Anda.');
+        });
+    }
+
+    // ============================================
     // GLOBAL PROGRESS BAR
     // ============================================
     var progressTimer = null;
@@ -1908,7 +2687,7 @@
       progressVal = 15;
       bar.style.transition = 'width 0.3s ease';
       bar.style.width = progressVal + '%';
-      progressTimer = setTimeout(function() {
+      progressTimer = setTimeout(function () {
         progressVal = 40 + Math.random() * 20;
         bar.style.width = progressVal + '%';
       }, 300);
@@ -1920,10 +2699,10 @@
       clearTimeout(progressTimer);
       bar.style.transition = 'width 0.2s ease';
       bar.style.width = '100%';
-      progressTimer = setTimeout(function() {
+      progressTimer = setTimeout(function () {
         bar.style.transition = 'opacity 0.3s ease';
         bar.style.opacity = '0';
-        progressTimer = setTimeout(function() {
+        progressTimer = setTimeout(function () {
           bar.style.width = '0%';
           bar.style.opacity = '1';
           bar.style.transition = 'width 0.3s ease';
@@ -1953,22 +2732,22 @@
       toast.innerHTML =
         '<div class="toast-icon">' + (icons[type] || icons.info) + '</div>' +
         '<div class="toast-body">' +
-          '<div class="toast-title">' + title + '</div>' +
-          (message ? '<div class="toast-message">' + message + '</div>' : '') +
+        '<div class="toast-title">' + title + '</div>' +
+        (message ? '<div class="toast-message">' + message + '</div>' : '') +
         '</div>' +
         '<button class="toast-close" onclick="dismissToast(\'' + toastId + '\')">✕</button>';
 
       container.appendChild(toast);
 
       // Auto dismiss
-      setTimeout(function() { dismissToast(toastId); }, duration);
+      setTimeout(function () { dismissToast(toastId); }, duration);
     }
 
     function dismissToast(toastId) {
       var toast = document.getElementById(toastId);
       if (!toast) return;
       toast.classList.add('toast-out');
-      setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 280);
+      setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 280);
     }
 
     // ============================================
@@ -1982,13 +2761,13 @@
     function formatDateID(dateStr) {
       if (!dateStr) return '-';
       var d = new Date(dateStr + 'T00:00:00');
-      var months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+      var months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
       return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
     }
 
     function getPresetDates(preset) {
       var today = new Date();
-      var toStr = function(d) { return d.toISOString().split('T')[0]; };
+      var toStr = function (d) { return d.toISOString().split('T')[0]; };
       switch (preset) {
         case 'today':
           return { start: toStr(today), end: toStr(today), label: 'Hari Ini' };
@@ -2033,7 +2812,7 @@
     function closeDateRangeModal() {
       var overlay = document.getElementById('daterange-modal-overlay');
       overlay.classList.add('closing');
-      setTimeout(function() {
+      setTimeout(function () {
         overlay.style.display = 'none';
         overlay.classList.remove('closing');
       }, 200);
@@ -2042,7 +2821,7 @@
     function applyPreset(preset, silentMode) {
       selectedPreset = preset;
       // Remove active from all chips
-      document.querySelectorAll('.preset-chip').forEach(function(c) { c.classList.remove('active'); });
+      document.querySelectorAll('.preset-chip').forEach(function (c) { c.classList.remove('active'); });
       // Find and highlight the clicked chip
       var chips = document.querySelectorAll('.preset-chip');
       var presetOrder = ['today', 'yesterday', '7days', '14days', '30days', 'thismonth', 'lastmonth', 'custom'];
