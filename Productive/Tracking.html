@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>SUPERSUB Ops - Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* CSS Variabel untuk konsistensi Bento Style */
+    :root {
+      --bg-color: #F8FAFC;
+      --box-bg: #FFFFFF;
+      --border-color: #E2E8F0;
+      --text-primary: #0F172A;
+      --text-secondary: #64748B;
+      --cta-color: #2563EB;
+      --cta-hover: #1D4ED8;
+      --radius: 12px;
+      --gutter: 16px;
+      --padding-inner: 24px;
+    }
+
+    * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background-color: var(--bg-color); margin: 0; padding: 20px; color: var(--text-primary); }
+
+    /* Layout Bento Grid Utama */
+    .bento-container {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: var(--gutter);
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    /* Kotak Individual Bento */
+    .bento-box {
+      background: var(--box-bg);
+      border-radius: var(--radius);
+      padding: var(--padding-inner);
+      border: 1px solid var(--border-color);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    /* Interaksi Hover & Kursor */
+    .bento-box.interactive:hover {
+      transform: scale(1.01);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+    }
+
+    /* Hirarki Ukuran Grid */
+    .col-12 { grid-column: span 12; }
+    .col-8 { grid-column: span 8; }
+    .col-4 { grid-column: span 4; }
+    .col-6 { grid-column: span 6; }
+
+    /* Tipografi */
+    h2 { margin: 0 0 8px 0; font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    p { margin: 0 0 16px 0; font-size: 14px; color: var(--text-secondary); }
+    label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--text-secondary); text-transform: uppercase;}
+    
+    /* Elemen Form */
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      transition: border 0.2s ease;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--cta-color); }
+    textarea { resize: vertical; min-height: 80px; }
+    
+    /* Tombol */
+    button {
+      background-color: var(--cta-color);
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      min-height: 44px; /* Standar aksesibilitas klik */
+      transition: background-color 0.2s ease;
+    }
+    button:hover { background-color: var(--cta-hover); }
+
+    /* Utility */
+    .hidden { display: none !important; }
+    .grid-form { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .grid-time { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* Tabel SPV */
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 12px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
+    th { color: var(--text-secondary); font-weight: 600; text-transform: uppercase; }
+
+    /* Responsivitas Mobile (Collapsing ke 1 kolom) */
+    @media (max-width: 768px) {
+      .col-8, .col-4, .col-6, .grid-form, .grid-time { grid-column: span 12; grid-template-columns: 1fr; }
+      .bento-container { gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="login-module" class="bento-container">
+    <div class="bento-box col-12 interactive" style="max-width: 400px; margin: 10vh auto; grid-column: 1 / -1;">
+      <h2>Akses Sistem Operasional</h2>
+      <p>Supersub Activity Tracker</p>
+      <label>Identitas Karyawan</label>
+      <input type="text" id="login-user" placeholder="Nama..." autocomplete="off">
+      <label>Kunci Akses</label>
+      <input type="password" id="login-pass" placeholder="Password...">
+      <button onclick="prosesLogin()">Masuk Sistem</button>
+      <div id="login-msg" style="color: red; font-size: 12px; margin-top: 10px; text-align: center;"></div>
+    </div>
+  </div>
+
+  <div id="app-module" class="bento-container hidden">
+    
+    <div class="bento-box col-12">
+      <h2 style="color: var(--cta-color);">SUPERSUB WORKSPACE</h2>
+      <p>Otoritas: <span id="user-role-display" style="font-weight: 600; color: var(--text-primary);"></span> | Identitas: <span id="user-name-display" style="font-weight: bold;"></span></p>
+    </div>
+
+    <div class="bento-box col-8 interactive">
+      <h2>Input Aktivitas Sistematis</h2>
+      <p>Dokumentasikan alur kerja harian</p>
+      
+      <div class="grid-form">
+        <div>
+          <label>Kategori Fungsi</label>
+          <select id="inp-kategori">
+            <option value="Manajemen">Manajemen</option>
+            <option value="Marketing/Kreatif">Marketing / Kreatif</option>
+            <option value="R&D">R&D / Riset</option>
+            <option value="Operasional">Operasional</option>
+          </select>
+        </div>
+        <div>
+          <label>Tipe Tugas</label>
+          <select id="inp-tipe">
+            <option value="Core">Utama (Core)</option>
+            <option value="Ad-Hoc">Tambahan (Ad-Hoc)</option>
+          </select>
+        </div>
+        <div>
+          <label>Beban Kerja</label>
+          <select id="inp-beban">
+            <option value="Ringan">Ringan / Rutin</option>
+            <option value="Sedang">Sedang / Fokus</option>
+            <option value="Tinggi">Tinggi / Kompleks</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Aktivitas Spesifik</label>
+      <textarea id="inp-deskripsi" placeholder="Gambarkan aktivitas teknis yang diselesaikan secara presisi..."></textarea>
+
+      <div class="grid-time">
+        <div>
+          <label>Waktu Mulai</label>
+          <input type="time" id="inp-mulai">
+        </div>
+        <div>
+          <label>Waktu Selesai</label>
+          <input type="time" id="inp-selesai">
+        </div>
+      </div>
+
+      <label>Output / Hasil</label>
+      <input type="text" id="inp-output" placeholder="Contoh: 1 SOP rilis, 3 Desain ACC">
+      
+      <button onclick="submitData()" id="btn-submit">Submit Aktivitas</button>
+    </div>
+
+    <div class="bento-box col-4">
+      <h2>Status Sinkronisasi</h2>
+      <p>Data terhubung langsung ke Spreadsheet pusat operasional.</p>
+      <div style="padding: 16px; background: #F1F5F9; border-radius: 8px; text-align: center; font-size: 12px; color: var(--text-secondary);">
+        Sistem Siap.
+      </div>
+    </div>
+
+    <div id="spv-module" class="bento-box col-12 hidden">
+      <h2>Dashboard Evaluasi (SPV Only)</h2>
+      <p>Pemantauan beban kerja dan efisiensi tim</p>
+      
+      <div class="grid-time" style="margin-bottom: 20px; max-width: 400px;">
+        <input type="date" id="filter-start">
+        <button onclick="loadSPVData()">Tarik Data Rangkuman</button>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table id="spv-table">
+          <thead>
+            <tr>
+              <th>Nama</th>
+              <th>Fungsi</th>
+              <th>Tugas</th>
+              <th>Waktu</th>
+              <th>Output</th>
+            </tr>
+          </thead>
+          <tbody id="spv-table-body">
+            <tr><td colspan="5">Pilih tanggal dan tarik data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ==========================================
+    // SILAKAN SALIN & PASTE URL WEB APP GAS DI SINI
+    // ==========================================
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzVcNUL1xJ9A35wujmH92Rysp9zXXfKacjjB-9KiKtl_4_1_XdBSxhKNZPo774xJsC1bw/exec";
+
+    let sessionUser = {};
+
+    function prosesLogin() {
+      const u = document.getElementById('login-user').value;
+      const p = document.getElementById('login-pass').value;
+      const btn = event.target;
+      btn.innerHTML = 'Memverifikasi...';
+      
+      fetch(GAS_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify({
+          action: 'checkLogin',
+          username: u,
+          password: p
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if(res.success) {
+          sessionUser = res;
+          document.getElementById('login-module').classList.add('hidden');
+          document.getElementById('app-module').classList.remove('hidden');
+          document.getElementById('user-name-display').innerText = res.name;
+          document.getElementById('user-role-display').innerText = res.role;
+          
+          if(res.role === 'SPV') {
+            document.getElementById('spv-module').classList.remove('hidden');
+          }
+        } else {
+          document.getElementById('login-msg').innerText = res.msg;
+          btn.innerHTML = 'Masuk Sistem';
+        }
+      })
+      .catch(err => {
+        console.error('Error Login:', err);
+        document.getElementById('login-msg').innerText = 'Gagal memverifikasi: ' + err.message;
+        btn.innerHTML = 'Masuk Sistem';
+      });
+    }
+
+    function submitData() {
+      const btn = document.getElementById('btn-submit');
+      const data = {
+        name: sessionUser.name,
+        kategori: document.getElementById('inp-kategori').value,
+        tipe: document.getElementById('inp-tipe').value,
+        beban: document.getElementById('inp-beban').value,
+        deskripsi: document.getElementById('inp-deskripsi').value,
+        mulai: document.getElementById('inp-mulai').value,
+        selesai: document.getElementById('inp-selesai').value,
+        output: document.getElementById('inp-output').value
+      };
+
+      if(!data.deskripsi || !data.mulai || !data.selesai) {
+        alert("Parameter waktu dan deskripsi tidak boleh kosong.");
+        return;
+      }
+
+      btn.innerHTML = 'Mengirim...';
+      btn.disabled = true;
+
+      fetch(GAS_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify({
+          action: 'submitActivity',
+          data: data
+        })
+      })
+      .then(res => res.json())
+      .then(res => {
+        alert(res.msg);
+        btn.innerHTML = 'Submit Aktivitas';
+        btn.disabled = false;
+        document.getElementById('inp-deskripsi').value = '';
+        document.getElementById('inp-output').value = '';
+      })
+      .catch(err => {
+        console.error('Error Submit:', err);
+        alert('Gagal merekam data ke Spreadsheet.');
+        btn.innerHTML = 'Submit Aktivitas';
+        btn.disabled = false;
+      });
+    }
+
+    function loadSPVData() {
+      const dateStart = document.getElementById('filter-start').value;
+      const tbody = document.getElementById('spv-table-body');
+      tbody.innerHTML = '<tr><td colspan="5">Memuat data...</td></tr>';
+      
+      fetch(GAS_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify({
+          action: 'getSPVSummary',
+          startDate: dateStart,
+          endDate: dateStart
+        })
+      })
+      .then(res => res.json())
+      .then(response => {
+        tbody.innerHTML = '';
+        const data = response.data || [];
+        if(data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5">Tidak ada aktivitas pada rentang ini.</td></tr>';
+          return;
+        }
+        data.forEach(function(row) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${row.nama}</strong></td>
+            <td>${row.kategori}</td>
+            <td>${row.aktivitas}</td>
+            <td>${row.durasi}</td>
+            <td>${row.output}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      })
+      .catch(err => {
+        console.error('Error Load SPV Data:', err);
+        tbody.innerHTML = '<tr><td colspan="5" style="color: red;">Gagal memuat data dari Spreadsheet.</td></tr>';
+      });
+    }
+  </script>
+</body>
+</html>
