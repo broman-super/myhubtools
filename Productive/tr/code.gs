@@ -166,30 +166,96 @@ function ensureLogSheetStructure(sheet) {
   }
 }
 
-function getRowTanggalLog(row) {
-  if (row.length > 1 && row[1]) {
-    var s = row[1].toString().trim();
+function getLogColumnMap(sheet) {
+  var lastCol = Math.max(sheet.getLastColumn(), 1);
+  var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  var indexOf = function(name) {
+    for (var i = 0; i < headers.length; i++) {
+      if ((headers[i] || '').toString().trim() === name) return i;
+    }
+    return -1;
+  };
+  var hasTanggalLog = indexOf('Tanggal_Log') >= 0;
+  return {
+    hasTanggalLog: hasTanggalLog,
+    tanggalLog: indexOf('Tanggal_Log'),
+    nama: indexOf('Nama') >= 0 ? indexOf('Nama') : (hasTanggalLog ? 2 : 1),
+    fungsi: indexOf('Fungsi') >= 0 ? indexOf('Fungsi') : (hasTanggalLog ? 3 : 2),
+    tipe: indexOf('Tipe_Tugas') >= 0 ? indexOf('Tipe_Tugas') : (hasTanggalLog ? 4 : 3),
+    beban: indexOf('Beban') >= 0 ? indexOf('Beban') : (hasTanggalLog ? 5 : 4),
+    aktivitas: indexOf('Aktivitas') >= 0 ? indexOf('Aktivitas') : (hasTanggalLog ? 6 : 5),
+    mulai: indexOf('Waktu_Mulai') >= 0 ? indexOf('Waktu_Mulai') : (hasTanggalLog ? 7 : 6),
+    selesai: indexOf('Waktu_Selesai') >= 0 ? indexOf('Waktu_Selesai') : (hasTanggalLog ? 8 : 7),
+    output: indexOf('Output') >= 0 ? indexOf('Output') : (hasTanggalLog ? 9 : 8)
+  };
+}
+
+function cellVal(row, idx) {
+  if (idx < 0 || idx >= row.length) return '';
+  var v = row[idx];
+  return v == null ? '' : v;
+}
+
+function getRowTanggalLog(row, colMap) {
+  if (colMap.tanggalLog >= 0) {
+    var s = cellVal(row, colMap.tanggalLog).toString().trim();
     if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
   }
   if (row[0]) return formatDateJakarta(row[0]);
   return '';
 }
 
-function rowToActivityObject(row, rowIndex1Based) {
-  var tanggal = getRowTanggalLog(row);
-  var startTime = formatTimeCell(row[7]);
-  var endTime = formatTimeCell(row[8]);
+function normalizePersonName(val) {
+  return (val || '').toString().trim();
+}
+
+function isKnownDivisiLabel(name) {
+  var n = normalizePersonName(name).toLowerCase();
+  if (!n) return true;
+  var labels = [
+    'manajemen', 'sales/cs', 'sales / cs', 'marketing/kreatif', 'marketing / kreatif',
+    'operasional', 'keuangan/admin', 'keuangan / admin', 'r&d', 'r&d / riset'
+  ];
+  for (var i = 0; i < labels.length; i++) {
+    if (n === labels[i]) return true;
+  }
+  return false;
+}
+
+function isRegisteredUser(name) {
+  var n = normalizePersonName(name).toLowerCase();
+  if (!n) return false;
+  var users = getCachedUsers(false);
+  for (var i = 0; i < users.length; i++) {
+    if (users[i].name.toLowerCase() === n) return true;
+  }
+  return false;
+}
+
+function rowToActivityObject(row, rowIndex1Based, colMap) {
+  var tanggal = getRowTanggalLog(row, colMap);
+  var rawNama = normalizePersonName(cellVal(row, colMap.nama));
+  var rawFungsi = normalizePersonName(cellVal(row, colMap.fungsi));
+  var nama = rawNama;
+
+  // Perbaiki baris lama / salah kolom: jika "nama" berisi label divisi, abaikan baris
+  if (isKnownDivisiLabel(nama)) {
+    return null;
+  }
+
+  var startTime = formatTimeCell(cellVal(row, colMap.mulai));
+  var endTime = formatTimeCell(cellVal(row, colMap.selesai));
   return {
     rowIndex: rowIndex1Based,
-    nama: row[2],
-    kategori: row[3],
-    tipe: row[4],
-    beban: row[5],
-    aktivitas: row[6],
+    nama: nama,
+    kategori: rawFungsi || 'Operasional',
+    tipe: normalizePersonName(cellVal(row, colMap.tipe)),
+    beban: normalizePersonName(cellVal(row, colMap.beban)),
+    aktivitas: normalizePersonName(cellVal(row, colMap.aktivitas)),
     mulai: startTime,
     selesai: endTime,
     durasi: startTime + ' - ' + endTime,
-    output: row[9],
+    output: normalizePersonName(cellVal(row, colMap.output)),
     tanggal: tanggal
   };
 }
@@ -296,6 +362,7 @@ function filterActivitiesByDateRange(startDate, endDate) {
   var data = sheet.getDataRange().getValues();
   if (data.length <= 1) return [];
 
+  var colMap = getLogColumnMap(sheet);
   var startStr = startDate;
   var endStr = endDate || startDate;
   var filtered = [];
@@ -303,9 +370,12 @@ function filterActivitiesByDateRange(startDate, endDate) {
   for (var i = 1; i < data.length; i++) {
     var row = data[i];
     if (!row[0]) continue;
-    var rowDateStr = getRowTanggalLog(row);
+    var rowDateStr = getRowTanggalLog(row, colMap);
     if (rowDateStr >= startStr && rowDateStr <= endStr) {
-      filtered.push(rowToActivityObject(row, i + 1));
+      var act = rowToActivityObject(row, i + 1, colMap);
+      if (act && act.nama && isRegisteredUser(act.nama)) {
+        filtered.push(act);
+      }
     }
   }
   return filtered;
