@@ -3258,18 +3258,8 @@
           // 2. RENDERING ROW TIMELINE CHART
           // ----------------------------------------
 
-          // Ambil daftar staff dinamis dari Google Sheets (Daftar_User)
-          var staffToRender = resObj.staff || [];
-
-          // Cek jika ada karyawan luar yang submit tugas hari ini
-          data.forEach(function (row) {
-            var exists = staffToRender.some(function (s) {
-              return s.name.toLowerCase().trim() === row.nama.toLowerCase().trim();
-            });
-            if (!exists && row.nama) {
-              staffToRender.push({ name: row.nama, role: 'Staff' });
-            }
-          });
+          // Hanya petugas terdaftar di Daftar_User (hindari divisi/kategori salah kolom)
+          var staffToRender = (resObj.staff || []).slice();
 
           // Render baris untuk setiap karyawan
           staffToRender.forEach(function (staff) {
