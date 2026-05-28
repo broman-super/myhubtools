@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Label Merger V2 - Gabung & Analisis PDF Resi A6</title>
+
+    <!-- Library -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #007bff;
+            --primary-hover: #0056b3;
+            --danger: #dc3545;
+            --success: #28a745;
+            --bg: #f8f9fa;
+            --border: #dee2e6;
+            --radius: 8px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            width: 100%;
+            max-width: 900px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 2rem;
+        }
+
+        h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
+        .subtitle { font-size: 0.9rem; color: #666; margin-bottom: 1.5rem; }
+
+        #dropzone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 2rem;
+            text-align: center;
+            background: var(--bg);
+            cursor: pointer;
+            transition: 0.2s;
+            margin-bottom: 1.25rem;
+        }
+        #dropzone.dragover { background: #e0efff; border-color: var(--primary); }
+        #file-input { display: none; }
+
+        .file-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        #file-list {
+            list-style: none;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow-y: auto;
+            max-height: 300px;
+            margin-bottom: 1.25rem;
+        }
+        #file-list li {
+            display: flex;
+            align-items: center;
+            padding: 0.6rem 0.75rem;
+            background: white;
+            border-bottom: 1px solid #eee;
+            cursor: grab;
+        }
+        #file-list li .handle { margin-right: 0.5rem; color: #999; cursor: grab; user-select: none; }
+        #file-list li .name { flex: 1; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem; white-space: nowrap; }
+        #file-list li .remove-btn {
+            background: none; border: none; color: var(--danger); font-size: 1.2rem;
+            cursor: pointer; padding: 0 0.3rem; opacity: 0.7; transition: 0.2s;
+        }
+        #file-list li .remove-btn:hover { opacity: 1; }
+
+        .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .btn {
+            padding: 0.6rem 1.2rem; font-size: 0.9rem; border: none; border-radius: 6px;
+            cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 0.3rem;
+            transition: 0.2s;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+        .btn-outline { background: white; border: 1px solid var(--border); color: #333; }
+        .btn-outline:hover { background: #f1f1f1; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        #status { text-align: center; min-height: 1.5em; font-size: 0.9rem; margin-top: 0.5rem; }
+
+        .summary {
+            margin-top: 1.5rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            background: #fafafa;
+        }
+        .summary h2 { font-size: 1.1rem; margin-bottom: 0.75rem; }
+        .summary-stats { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .stat-card {
+            background: white; border: 1px solid var(--border); border-radius: 6px;
+            padding: 0.5rem 1rem; min-width: 100px;
+        }
+        .stat-card .label { font-size: 0.8rem; color: #666; }
+        .stat-card .value { font-size: 1.2rem; font-weight: bold; }
+
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.5rem; }
+        .data-table th, .data-table td {
+            border: 1px solid var(--border); padding: 0.4rem 0.6rem; text-align: left;
+        }
+        .data-table th { background: #f1f1f1; }
+        .duplicate { background: #fff3cd !important; }
+        .hidden { display: none; }
+
+        @media (max-width: 600px) {
+            .container { padding: 1rem; }
+            .actions { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📦 Label Merger V2</h1>
+    <p class="subtitle">Gabung, Analisis & Ekspor Data Label Resi A6</p>
+
+    <div id="dropzone">
+        <strong>📂 Seret & letakkan file PDF di sini</strong><br>
+        <small>atau klik untuk memilih file (Shopee, TikTok, Lazada)</small>
+    </div>
+    <input type="file" id="file-input" accept=".pdf" multiple>
+
+    <div class="file-list-header">
+        <span><strong>Daftar Label</strong> (<span id="file-count">0</span>)</span>
+        <button class="btn-outline btn" id="clear-btn" style="padding:0.3rem 0.8rem; font-size:0.8rem;">Hapus Semua</button>
+    </div>
+    <ul id="file-list"><li class="empty-message">Belum ada file</li></ul>
+
+    <div class="actions">
+        <button class="btn btn-primary" id="merge-btn" disabled>Gabung Semua & Download</button>
+        <button class="btn btn-outline" id="analyze-btn" disabled>🔍 Analisis Data</button>
+        <button class="btn btn-outline hidden" id="merge-per-kurir-btn">📦 Gabung per Kurir</button>
+        <button class="btn btn-outline hidden" id="download-csv-btn">📥 Unduh CSV</button>
+    </div>
+
+    <div id="status"></div>
+
+    <div id="summary-container" class="summary hidden">
+        <h2>📊 Ringkasan Pengiriman</h2>
+        <div class="summary-stats" id="summary-stats"></div>
+        <div style="overflow-x: auto;">
+            <table class="data-table" id="data-table">
+                <thead>
+                    <tr>
+                        <th>No</th><th>Platform</th><th>Resi</th><th>Kurir</th><th>Layanan</th>
+                        <th>Penerima</th><th>Pengirim</th><th>No.Pesanan</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript Modules -->
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/merger.js"></script>
+<script src="assets/js/extractor.js"></script>
+<script src="assets/js/parser.js"></script>
+<script src="assets/js/app.js"></script>
+
+</body>
+</html>
