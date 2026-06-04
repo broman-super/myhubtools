@@ -186,7 +186,7 @@
             font-size: 10.5pt;
         }
 
-        /* Custom Radio Button - Agar tercetak sempurna & seragam */
+        /* Custom Radio Button - Styled as Checkbox - Agar tercetak sempurna & seragam */
         input[type="radio"] {
             -webkit-appearance: none;
             -moz-appearance: none;
@@ -194,7 +194,7 @@
             width: 14px;
             height: 14px;
             border: 1px solid #000;
-            border-radius: 50%;
+            border-radius: 2px;
             outline: none;
             display: inline-block;
             vertical-align: middle;
@@ -207,12 +207,13 @@
         input[type="radio"]:checked::after {
             content: '';
             position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #000;
+            left: 4px;
+            top: 1px;
+            width: 4px;
+            height: 7px;
+            border: solid #000;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
         }
 
         input[type="radio"]:disabled {
@@ -222,7 +223,7 @@
         }
 
         input[type="radio"]:disabled:checked::after {
-            background: #94a3b8;
+            border-color: #94a3b8;
         }
 
         /* Disabled input & textarea */
@@ -654,21 +655,21 @@
             <tr>
                 <td width="40%">Rasio Cicilan (Maks 20% Gaji)</td>
                 <td>
-                    <label><input type="radio" name="rasio" disabled> Aman</label> &nbsp;&nbsp;|&nbsp;&nbsp;
-                    <label><input type="radio" name="rasio" disabled> Tidak Aman</label>
+                    <label><input type="radio" name="rasio"> Aman</label> &nbsp;&nbsp;|&nbsp;&nbsp;
+                    <label><input type="radio" name="rasio"> Tidak Aman</label>
                 </td>
             </tr>
             <tr>
                 <td>Rekomendasi Pengelola</td>
                 <td>
-                    <label><input type="radio" name="rekom" disabled> Disetujui</label> &nbsp;&nbsp;|&nbsp;&nbsp;
-                    <label><input type="radio" name="rekom" disabled> Ditolak</label> &nbsp;&nbsp;|&nbsp;&nbsp;
-                    <label><input type="radio" name="rekom" disabled> Ditunda</label>
+                    <label><input type="radio" name="rekom"> Disetujui</label> &nbsp;&nbsp;|&nbsp;&nbsp;
+                    <label><input type="radio" name="rekom"> Ditolak</label> &nbsp;&nbsp;|&nbsp;&nbsp;
+                    <label><input type="radio" name="rekom"> Ditunda</label>
                 </td>
             </tr>
             <tr>
                 <td>Catatan</td>
-                <td><textarea rows="2" style="width:100%; border-bottom:1px dotted #000;" disabled></textarea></td>
+                <td><textarea rows="2" style="width:100%; border-bottom:1px dotted #000;"></textarea></td>
             </tr>
         </table>
 
@@ -681,19 +682,19 @@
                 <td width="33%" style="vertical-align: top;">
                     <div>Pemohon,</div>
                     <div style="height: 60px;"></div>
-                    <div>( <input type="text" id="ttdNama" style="width:80%; text-align:center; border-bottom:1px solid #000;" placeholder="......................"> )</div>
+                    <div>( <input type="text" id="ttdNama" style="width:80%; text-align:center; border-bottom:1px solid #000; text-transform: uppercase;" placeholder="......................"> )</div>
                     <div style="font-size: 9pt;">&nbsp;</div>
                 </td>
                 <td width="33%" style="vertical-align: top;">
                     <div>Mengetahui,</div>
                     <div style="height: 60px;"></div>
-                    <div>( <input type="text" style="width:80%; text-align:center; border-bottom:1px solid #000;" placeholder="......................"> )</div>
+                    <div>( <input type="text" style="width:80%; text-align:center; border-bottom:1px solid #000; text-transform: uppercase;" placeholder="......................" value="R.M TAQWA"> )</div>
                     <div style="font-size: 9pt;">HR - GA</div>
                 </td>
                 <td width="33%" style="vertical-align: top;">
                     <div>Menyetujui,</div>
                     <div style="height: 60px;"></div>
-                    <div>( <input type="text" style="width:80%; text-align:center; border-bottom:1px solid #000;" placeholder="......................"> )</div>
+                    <div>( <input type="text" style="width:80%; text-align:center; border-bottom:1px solid #000; text-transform: uppercase;" placeholder="......................" value="SALSA MEIDA H.P"> )</div>
                     <div style="font-size: 9pt;">Accounting</div>
                 </td>
             </tr>
@@ -754,7 +755,7 @@
 
         // Sync Nama ke TTD
         function syncName() {
-            document.getElementById('ttdNama').value = document.getElementById('nama').value;
+            document.getElementById('ttdNama').value = document.getElementById('nama').value.toUpperCase();
         }
 
         // Format Phone Number to Indonesian Format (08XX-XXXX-XXXX)
