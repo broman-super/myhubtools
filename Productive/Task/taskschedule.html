@@ -1216,6 +1216,404 @@
         margin-bottom: 0;
       }
     }
+
+    /* ═══════════════════════════════════════
+       TIMELINE VIEW
+    ═══════════════════════════════════════ */
+    .timeline-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .timeline-scroll-x {
+      overflow-x: auto;
+      overflow-y: auto;
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: #fff;
+    }
+
+    .timeline-scroll-x.zoom-active {
+      cursor: grab;
+    }
+
+    .timeline-scroll-x.zoom-active:active {
+      cursor: grabbing;
+    }
+
+    /* Label column drag handle */
+    .tl-label-drag {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: var(--tl-label-w, 180px);
+      width: 5px;
+      cursor: col-resize;
+      z-index: 30;
+      background: transparent;
+      transition: background 0.15s;
+    }
+
+    .tl-label-drag:hover,
+    .tl-label-drag:active {
+      background: rgba(99, 102, 241, 0.3);
+    }
+
+    #tl-zoom-info {
+      font-size: 11px;
+      color: var(--text-soft);
+      white-space: nowrap;
+    }
+
+    .timeline-grid {
+      display: grid;
+      min-width: max-content;
+      position: relative;
+    }
+
+    /* Header row (day numbers) */
+    .timeline-header-row {
+      display: grid;
+      grid-template-columns: var(--tl-label-w, 180px) repeat(var(--tl-days, 31), var(--tl-day-w, 40px));
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: #fff;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .tl-corner {
+      width: var(--tl-label-w, 180px);
+      min-width: var(--tl-label-w, 180px);
+      padding: 8px 12px;
+      font-weight: 800;
+      font-size: 12px;
+      border-right: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tl-day-header {
+      width: var(--tl-day-w, 40px);
+      min-width: var(--tl-day-w, 40px);
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 0;
+      border-right: 1px solid #f1f5f9;
+      color: var(--text-soft);
+      flex-shrink: 0;
+      line-height: 1.2;
+    }
+
+    .tl-day-name {
+      display: block;
+      font-size: 7px;
+      font-weight: 400;
+      opacity: 0.5;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tl-day-header.today {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 0 0 4px 4px;
+    }
+
+    .tl-day-header.weekend {
+      background: #f8fafc;
+    }
+
+    .tl-day-header.sunday {
+      background: rgba(239, 68, 68, 0.06);
+    }
+
+    .tl-day-header.holiday {
+      color: #ef4444;
+    }
+
+    .tl-day-header .holi-name {
+      font-size: 7px;
+      line-height: 1;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Body rows */
+    .timeline-body-rows {
+      position: relative;
+      background: #fff;
+    }
+
+    .timeline-row-label {
+      width: var(--tl-label-w, 180px);
+      min-width: var(--tl-label-w, 180px);
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-right: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      color: #1e293b;
+      background: #fff;
+    }
+
+    .timeline-row {
+      display: grid;
+      grid-template-columns: var(--tl-label-w, 180px) 1fr;
+      min-height: 34px;
+      border-bottom: 1px solid #e5e7eb;
+      transition: 0.15s;
+    }
+
+    .timeline-row:hover {
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    .timeline-row.campaign-row {
+      background: rgba(99, 102, 241, 0.03);
+    }
+
+    .timeline-row-label .expand-toggle {
+      font-size: 9px;
+      cursor: pointer;
+      opacity: 0.5;
+      transition: 0.2s;
+      flex-shrink: 0;
+    }
+
+    .timeline-row-label .expand-toggle:hover {
+      opacity: 1;
+    }
+
+    .timeline-row-label .expand-toggle.expanded {
+      transform: rotate(90deg);
+    }
+
+    .timeline-row-track {
+      position: relative;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      padding: 2px 0;
+    }
+
+    .timeline-bar {
+      position: absolute;
+      height: 26px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.15s;
+      white-space: nowrap;
+      z-index: 2;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+
+    .timeline-bar:hover {
+      height: 34px;
+      z-index: 5;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .timeline-bar.campaign {
+      color: #1e293b;
+    }
+
+    .timeline-bar.task {
+      border-left: 3px solid;
+    }
+
+    .timeline-bar.single {
+      border-radius: 13px;
+    }
+
+    .timeline-bar.start {
+      border-radius: 13px 0 0 13px;
+    }
+
+    .timeline-bar.end {
+      border-radius: 0 13px 13px 0;
+    }
+
+    .timeline-bar.mid {
+      border-radius: 0;
+    }
+
+    .timeline-bar.done {
+      opacity: 0.5;
+      text-decoration: line-through;
+    }
+
+    .timeline-bar .quick-toggle {
+      margin-left: auto;
+      font-size: 10px;
+      opacity: 0.5;
+      cursor: pointer;
+      flex-shrink: 0;
+      padding: 2px 4px;
+    }
+
+    .timeline-bar .quick-toggle:hover {
+      opacity: 1;
+    }
+
+    .timeline-children {
+      display: none;
+    }
+
+    .timeline-children.open {
+      display: block;
+    }
+
+    .timeline-child-row {
+      display: grid;
+      grid-template-columns: var(--tl-label-w, 180px) 1fr;
+      min-height: 28px;
+      background: rgba(0,0,0,0.02);
+    }
+
+    .timeline-child-row .timeline-row-label {
+      padding-left: 28px;
+      font-size: 11px;
+      opacity: 0.8;
+    }
+
+    /* Grid lines */
+    .tl-grid-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: rgba(0,0,0,0.035);
+      pointer-events: none;
+    }
+
+    .tl-grid-line.weekend {
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    /* Filter chips */
+    .filter-chip {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #f1f5f9;
+      color: var(--text-soft);
+      border: 1px solid transparent;
+      transition: 0.15s;
+      user-select: none;
+    }
+
+    .filter-chip:hover {
+      background: #e2e8f0;
+    }
+
+    .filter-chip.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    /* Tooltip on timeline bars */
+    .timeline-bar[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 0;
+      background: #1e293b;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 400;
+      white-space: pre-line;
+      max-width: 280px;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      pointer-events: none;
+      line-height: 1.4;
+    }
+
+    /* View transition animation */
+    .view {
+      display: none;
+      animation: viewFadeIn 0.3s ease-out;
+    }
+
+    @keyframes viewFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Load more */
+    .load-more {
+      text-align: center;
+      padding: 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+      cursor: pointer;
+      background: #fff;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-sm);
+      margin-top: 8px;
+      transition: 0.2s;
+    }
+
+    .load-more:hover {
+      background: rgba(99,102,241,0.05);
+      border-color: var(--accent);
+    }
+
+    @media (max-width: 650px) {
+      .timeline-row {
+        grid-template-columns: 140px 1fr;
+      }
+      .timeline-row-label {
+        width: 140px;
+        min-width: 140px;
+        font-size: 11px;
+        padding: 4px 8px;
+      }
+      .timeline-header-row {
+        grid-template-columns: 140px repeat(var(--tl-days, 31), var(--tl-day-w, 40px));
+      }
+      .tl-corner {
+        width: 140px;
+        min-width: 140px;
+        font-size: 11px;
+        padding: 6px 8px;
+      }
+      .timeline-bar {
+        height: 32px;
+        font-size: 10px;
+      }
+      .timeline-container {
+        padding: 8px;
+      }
+    }
   </style>
 </head>
 
@@ -1265,6 +1663,15 @@
               </svg>
               <span>Bulanan</span>
             </div>
+            <div class="nav-item" onclick="switchView('timeline',this)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 5h18M3 12h18M3 19h18" />
+                <circle cx="7" cy="5" r="2" />
+                <circle cx="14" cy="12" r="2" />
+                <circle cx="10" cy="19" r="2" />
+              </svg>
+              <span>Timeline</span>
+            </div>
           </nav>
         </div>
 
@@ -1304,6 +1711,8 @@
             </div>
             <input class="search-box" type="text" placeholder="Cari agenda atau detail..."
               oninput="handleSearch(this.value)">
+            <div id="tag-filters" style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;"></div>
+            <div id="priority-filters" style="display:flex;gap:4px;align-items:center;"></div>
           </div>
           <div class="task-list" id="task-list-el"></div>
         </div>
@@ -1347,6 +1756,31 @@
             <div>MIN</div>
           </div>
           <div class="cal-grid" id="cal-grid"></div>
+        </div>
+
+        <!-- Timeline View -->
+        <div id="view-timeline" class="view">
+          <div class="toolbar" style="justify-content:center; gap:12px; flex-wrap:wrap;">
+            <button class="btn btn-ghost" onclick="changeTimelineMonth(-1)" style="padding:6px 12px;">←</button>
+            <div style="font-weight:800; font-size:clamp(14px, 1.5vw, 18px); min-width:140px; text-align:center;" id="timeline-month-label"></div>
+            <button class="btn btn-ghost" onclick="changeTimelineMonth(1)" style="padding:6px 12px;">→</button>
+            <button class="btn btn-ghost" onclick="goThisTimelineMonth()" style="padding:6px 12px;font-size:12px;">Bulan Ini</button>
+            <div style="display:flex;align-items:center;gap:12px;margin-left:auto;">
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;">
+                <input type="checkbox" id="toggle-tl-tasks" onchange="renderTimeline()" style="width:16px;height:16px;">
+                <span>Tampilkan Task</span>
+              </label>
+              <button class="btn btn-ghost" onclick="printTimelineView()" style="padding:6px 10px;font-size:11px;">🖨️ Cetak</button>
+              <span id="tl-zoom-info"></span>
+            </div>
+          </div>
+          <div class="timeline-container">
+            <div class="timeline-scroll-x" id="timeline-scroll">
+              <div class="tl-label-drag" id="tl-label-drag"></div>
+              <div class="timeline-header" id="timeline-header"></div>
+              <div class="timeline-body" id="timeline-body"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1400,11 +1834,20 @@
       </div>
 
       <div class="field-row" style="margin-bottom:12px;">
-        <div class="field" style="margin-bottom:0;">
+        <div class="field" style="margin-bottom:0;" id="wrap-tag">
           <label>Tag</label>
           <input type="text" id="f-tag" placeholder="cth: Marketing">
+          <select id="f-channel" style="display:none;" onchange="onChannelChange()">
+            <option value="">— Pilih Channel —</option>
+            <option value="Instagram">📸 Instagram</option>
+            <option value="Whatsapp">💬 Whatsapp</option>
+            <option value="Tiktok">🎵 Tiktok</option>
+            <option value="Shopee">🛒 Shopee</option>
+            <option value="Web">🌐 Web</option>
+            <option value="Event">📅 Event</option>
+          </select>
         </div>
-        <div class="field" style="margin-bottom:0;">
+        <div class="field" style="margin-bottom:0;" id="wrap-color">
           <label>Warna</label>
           <div class="color-row" id="color-swatches" style="display:flex;gap:8px;margin-top:4px;"></div>
         </div>
@@ -1433,6 +1876,10 @@
       <div id="dp-month-label" style="font-weight:800; font-size:14px;"></div>
       <button class="btn btn-ghost" onclick="navDP(1)" style="padding:4px 8px;">&gt;</button>
     </div>
+    <div class="dp-actions" style="display:flex; gap:8px; margin-bottom:12px; justify-content:center;">
+      <button class="btn btn-primary" onclick="goToTodayDP()" style="padding:6px 12px; font-size:12px;">Hari ini</button>
+      <button class="btn btn-ghost" onclick="clearDateDP()" style="padding:6px 12px; font-size:12px;">Hapus</button>
+    </div>
     <div class="dp-day-names">
       <div>SN</div>
       <div>SL</div>
@@ -1453,13 +1900,25 @@
       weekOffset: 0, showMonthTasks: false,
       calYear: new Date().getFullYear(), calMonth: new Date().getMonth(),
       selectedId: null, dpTarget: null,
-      dpYear: new Date().getFullYear(), dpMonth: new Date().getMonth()
+      dpYear: new Date().getFullYear(), dpMonth: new Date().getMonth(),
+      timelineYear: new Date().getFullYear(), timelineMonth: new Date().getMonth(),
+      timelineSelectedDate: null, timelineZoom: 0, timelineExpanded: {}, timelineLabelWidth: 180,
+      activeTags: [], activePriorities: [],
+      listPage: 0, undoStack: [], redoStack: []
     };
 
     const MONTHS_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     const DAYS_ID = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
     const DAYS_SHORT = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
     const COLORS = ['#212121', '#ffffff', '#f97316', '#06b6d4', '#10b981', '#ef4444', '#6366f1'];
+    const CHANNELS = {
+      'Instagram': { color: '#a855f7', prefix: 'IG |' },
+      'Whatsapp':  { color: '#22c55e', prefix: 'WA |' },
+      'Tiktok':    { color: '#9ca3af', prefix: 'TT |' },
+      'Shopee':    { color: '#f97316', prefix: 'SP |' },
+      'Web':       { color: '#3b82f6', prefix: 'WB |' },
+      'Event':     { color: '#14b8a6', prefix: 'EV |' }
+    };
 
     // Normalize ISO date strings to YYYY-MM-DD
     function normDate(v) {
@@ -1480,6 +1939,10 @@
     function esc(t) { return (t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
     function pad(n) { return n < 10 ? '0' + n : n; }
     function dateStr(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+    function formatShortDate(d) {
+      const p = d.split('-');
+      return parseInt(p[2], 10) + ' ' + MONTHS_ID[parseInt(p[1], 10) - 1].slice(0, 3);
+    }
     function hexAlpha(hex, a) {
       let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
       return `rgba(${r},${g},${b},${a})`;
@@ -1597,6 +2060,62 @@
           clearTimeout(safetyTimer);
           hideLoading();
         });
+
+      // Label column drag resize
+      const dragHandle = document.getElementById('tl-label-drag');
+      if (dragHandle) {
+        let dragging = false;
+        dragHandle.addEventListener('mousedown', function(e) {
+          dragging = true;
+          e.preventDefault();
+          document.body.style.cursor = 'col-resize';
+          document.body.style.userSelect = 'none';
+        });
+        // Double-click to auto-fit to longest title
+        dragHandle.addEventListener('dblclick', function() {
+          let maxW = 120;
+          const items = S.view === 'timeline' ? getTimelineItems() : [];
+          items.forEach(item => {
+            const title = item.title || '';
+            // Approximate: ~7px per char for 12px font
+            const est = title.length * 7 + 40;
+            if (est > maxW) maxW = est;
+          });
+          S.timelineLabelWidth = Math.min(250, Math.max(120, maxW));
+          renderTimeline();
+        });
+        document.addEventListener('mousemove', function(e) {
+          if (!dragging) return;
+          const scrollEl = document.getElementById('timeline-scroll');
+          if (!scrollEl) return;
+          const rect = scrollEl.getBoundingClientRect();
+          let w = e.clientX - rect.left;
+          w = Math.max(120, Math.min(250, w));
+          S.timelineLabelWidth = w;
+          renderTimeline();
+        });
+        document.addEventListener('mouseup', function() {
+          if (dragging) {
+            dragging = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+          }
+        });
+      }
+      const tlScroll = document.getElementById('timeline-scroll');
+      if (tlScroll) {
+        tlScroll.addEventListener('wheel', handleTimelineWheel, { passive: false });
+        tlScroll.addEventListener('dblclick', resetTimelineZoom);
+      }
+
+      // Resize: re-render timeline for auto-fit recalculation
+      let resizeTimer;
+      window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+          if (S.view === 'timeline') renderTimeline();
+        }, 150);
+      });
     };
 
     function renderAll() {
@@ -1604,6 +2123,7 @@
       if (S.view === 'list') renderList();
       if (S.view === 'weekly') renderWeekly();
       if (S.view === 'month') renderMonth();
+      if (S.view === 'timeline') renderTimeline();
     }
 
     function setMeta() {
@@ -1640,8 +2160,11 @@
       el.classList.add('active');
       document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
       document.getElementById('view-' + v).classList.add('active');
+      // Toggle zoom cursor on timeline scroll
+      const tlScroll = document.getElementById('timeline-scroll');
+      if (tlScroll) tlScroll.classList.toggle('zoom-active', v === 'timeline');
       const titleEl = document.getElementById('page-title');
-      if (titleEl) titleEl.textContent = v === 'list' ? 'Task List' : (v === 'weekly' ? 'Weekly Plan' : 'Month View');
+      if (titleEl) titleEl.textContent = v === 'list' ? 'Task List' : (v === 'weekly' ? 'Weekly Plan' : v === 'month' ? 'Month View' : 'Timeline');
       renderAll();
     }
 
@@ -1656,21 +2179,32 @@
 
     function renderList() {
       const filtered = S.tasks.filter(t => {
-        // ONLY show tasks — campaigns belong in weekly/month views
         if (t.type === 'campaign') return false;
         if (S.filter === 'pending' && t.done) return false;
         if (S.filter === 'done' && !t.done) return false;
         if (S.q && !t.title.toLowerCase().includes(S.q) && !(t.description || '').toLowerCase().includes(S.q)) return false;
+        if (S.activeTags.length) {
+          const itemTags = (t.tag || '').split(',').map(x => x.trim().toLowerCase());
+          if (!S.activeTags.some(tag => itemTags.includes(tag.toLowerCase()))) return false;
+        }
+        if (S.activePriorities.length && !S.activePriorities.includes(t.priority)) return false;
         return true;
       });
 
       const el = document.getElementById('task-list-el');
       if (!filtered.length) {
         el.innerHTML = `<div style="text-align:center;padding:40px;opacity:0.4;">Tidak ada task ditemukan 📭</div>`;
+        buildTagFilters();
+        buildPriorityFilters();
         return;
       }
 
-      el.innerHTML = filtered.map(t => `
+      const BATCH_SIZE = 30;
+      const total = filtered.length;
+      const batch = filtered.slice(0, (S.listPage + 1) * BATCH_SIZE);
+      const hasMore = batch.length < total;
+
+      el.innerHTML = batch.map(t => `
         <div class="task-row ${t.done ? 'done' : ''} ${S.selectedId === t.id ? 'selected' : ''}" onclick="selectTask('${t.id}')" style="border-left:3px solid ${t.color || '#6366f1'}">
           <div class="task-check ${t.done ? 'checked' : ''}" onclick="event.stopPropagation();toggleDone('${t.id}')"></div>
           <div class="task-main">
@@ -1683,6 +2217,54 @@
           </div>
         </div>
       `).join('');
+
+      if (hasMore) {
+        const remaining = total - batch.length;
+        el.innerHTML += `<div class="load-more" onclick="S.listPage++;renderList();buildTagFilters();">Muat ${Math.min(BATCH_SIZE, remaining)} lagi (${remaining} tersisa)</div>`;
+      }
+      buildTagFilters();
+      buildPriorityFilters();
+    }
+
+    function buildTagFilters() {
+      const tags = [...new Set(S.tasks.filter(t => t.tag).flatMap(t => t.tag.split(',').map(x => x.trim())).filter(Boolean))];
+      const el = document.getElementById('tag-filters');
+      if (!el) return;
+      if (!tags.length) { el.innerHTML = ''; return; }
+      el.innerHTML = tags.map(tag => {
+        const active = S.activeTags.includes(tag) ? ' active' : '';
+        return `<span class="filter-chip${active}" onclick="toggleTagFilter('${esc(tag)}')">#${esc(tag)}</span>`;
+      }).join('');
+    }
+
+    function toggleTagFilter(tag) {
+      const idx = S.activeTags.indexOf(tag);
+      if (idx > -1) S.activeTags.splice(idx, 1); else S.activeTags.push(tag);
+      S.listPage = 0;
+      buildTagFilters();
+      renderList();
+    }
+
+    function buildPriorityFilters() {
+      const el = document.getElementById('priority-filters');
+      if (!el) return;
+      const priorities = [
+        { key: 'high', label: '🏁 Tinggi' },
+        { key: 'medium', label: '🔵 Sedang' },
+        { key: 'low', label: '🐌 Rendah' }
+      ];
+      el.innerHTML = priorities.map(p => {
+        const active = S.activePriorities.includes(p.key) ? ' active' : '';
+        return `<span class="filter-chip${active}" onclick="togglePriorityFilter('${p.key}')">${p.label}</span>`;
+      }).join('');
+    }
+
+    function togglePriorityFilter(p) {
+      const idx = S.activePriorities.indexOf(p);
+      if (idx > -1) S.activePriorities.splice(idx, 1); else S.activePriorities.push(p);
+      S.listPage = 0;
+      buildPriorityFilters();
+      renderList();
     }
 
     // Weekly View (STRETCH MATRIX)
@@ -1696,7 +2278,8 @@
       start.setHours(0, 0, 0, 0);
       const end = new Date(start); end.setDate(start.getDate() + 6);
 
-      document.getElementById('week-label').textContent = `${start.getDate()} ${MONTHS_ID[start.getMonth()]} - ${end.getDate()} ${MONTHS_ID[end.getMonth()]} ${end.getFullYear()}`;
+      const weekNum = getWeekNumber(start);
+      document.getElementById('week-label').textContent = `W-${weekNum} · ${start.getDate()} ${MONTHS_ID[start.getMonth()]} - ${end.getDate()} ${MONTHS_ID[end.getMonth()]} ${end.getFullYear()}`;
 
       const days = [];
       for (let i = 0; i < 7; i++) {
@@ -1756,7 +2339,7 @@
           const bg = isC ? t.color : hexAlpha(t.color || '#ccc', 0.1);
           const co = isC ? '#fff' : '#000';
           const br = isC ? 'none' : `3px solid ${t.color || '#ccc'}`;
-          return `<div class="week-chip ${cls}" style="background:${bg};color:${co};border-left:${br};" onclick="event.stopPropagation();selectTask('${t.id}')">${showText ? esc(t.title) : '&nbsp;'}</div>`;
+          return `<div class="week-chip ${cls}" style="background:${bg};color:${co};border-left:${br};${t.done ? 'opacity:0.55;text-decoration:line-through;' : ''}" draggable="true" ondragstart="dragStart(event,'${t.id}')" onclick="event.stopPropagation();selectTask('${t.id}')">${showText ? esc(t.title) : '&nbsp;'}${!isC ? '<span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\')" style="margin-left:auto;font-size:10px;opacity:0.6;cursor:pointer;flex-shrink:0;padding:0 2px;">' + (t.done ? '↩' : '✓') + '</span>' : ''}</div>`;
         }).join('');
 
         const holi = holidaysCache[ds];
@@ -1765,7 +2348,7 @@
         const dateNum = ds === today ? `<span class="today-marker">${dObj.getDate()}</span>` : dObj.getDate();
 
         // ↓ Clicking the day header shows a list of items for that day
-        return `<div class="week-col ${ds === today ? 'today' : ''} ${isHoliCls}">
+        return `<div class="week-col ${ds === today ? 'today' : ''} ${isHoliCls}" ondragover="dragOver(event)" ondrop="dropTask(event,'${ds}')" ondragleave="dragLeave(event)">
           <div class="week-col-head" onclick="showDayDetail('${ds}')" style="cursor:pointer;" title="Lihat semua agenda tanggal ini">
             <div style="display:flex;align-items:center;gap:8px;">
               <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">${DAYS_SHORT[dObj.getDay()]}</div>
@@ -1840,7 +2423,7 @@
             if (idx % 7 === 0) text = true;
           }
           const isC = t.type === 'campaign';
-          return `<div class="cal-chip ${cls}" style="background:${isC ? t.color : hexAlpha(t.color || '#ccc', 0.1)};color:${isC ? '#fff' : '#000'};border-left:${isC ? 'none' : `2px solid ${t.color}`}" onclick="event.stopPropagation();selectTask('${t.id}')"><span>${text ? esc(t.title) : '&nbsp;'}</span></div>`;
+          return `<div class="cal-chip ${cls}" style="background:${isC ? t.color : hexAlpha(t.color || '#ccc', 0.1)};color:${isC ? '#fff' : '#000'};border-left:${isC ? 'none' : `2px solid ${t.color}`};${t.done ? 'opacity:0.55;text-decoration:line-through;' : ''}" onclick="event.stopPropagation();selectTask('${t.id}')"><span>${text ? esc(t.title) : '&nbsp;'}</span>${!isC ? '<span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\')" style="margin-left:auto;font-size:10px;opacity:0.6;cursor:pointer;flex-shrink:0;padding:0 2px;">' + (t.done ? '↩' : '✓') + '</span>' : ''}</div>`;
         }).join('');
 
         // Dots for Mobile View
@@ -1853,12 +2436,528 @@
         const holiHtml = holi ? `<div class="holiday-label ${holi.type === 'leave' ? 'leave-label' : ''}">${esc(holi.name)}</div>` : '';
         const dateHtml = ds === today ? `<span class="today-marker">${c.d}</span>` : c.d;
 
-        return `<div class="cal-cell ${c.other ? 'other' : ''} ${ds === today ? 'today' : ''} ${isHoliCls}" onclick="showDayDetail('${ds}')">
+        return `<div class="cal-cell ${c.other ? 'other' : ''} ${ds === today ? 'today' : ''} ${isHoliCls}" onclick="showDayDetail('${ds}')" ondragover="dragOver(event)" ondrop="dropTask(event,'${ds}')" ondragleave="dragLeave(event)">
           <div class="cal-cell-num">${dateHtml}${holiHtml}</div>${chips}${moreLabel}
           <div class="day-dots">${dots}</div>
         </div>`;
       }).join('');
     }
+
+    // ═══════════════════════════════════════
+    // TIMELINE VIEW
+    // ═══════════════════════════════════════
+    function changeTimelineMonth(d) {
+      S.timelineMonth += d;
+      if (S.timelineMonth > 11) { S.timelineMonth = 0; S.timelineYear++; }
+      if (S.timelineMonth < 0) { S.timelineMonth = 11; S.timelineYear--; }
+      S.timelineSelectedDate = null;
+      renderTimeline();
+    }
+    function goThisTimelineMonth() {
+      S.timelineYear = new Date().getFullYear();
+      S.timelineMonth = new Date().getMonth();
+      S.timelineSelectedDate = null;
+      renderTimeline();
+    }
+
+    function getTimelineItems() {
+      const monthStart = S.timelineYear + '-' + pad(S.timelineMonth + 1) + '-01';
+      const daysIn = new Date(S.timelineYear, S.timelineMonth + 1, 0).getDate();
+      const monthEnd = S.timelineYear + '-' + pad(S.timelineMonth + 1) + '-' + pad(daysIn);
+      const showTasks = document.getElementById('toggle-tl-tasks') ? document.getElementById('toggle-tl-tasks').checked : false;
+      return S.tasks.filter(t => {
+        if (!t.date) return false;
+        if (t.type === 'task' && !showTasks) return false;
+        const s = t.date, e = t.enddate || t.date;
+        return s <= monthEnd && e >= monthStart;
+      }).sort((a, b) => {
+        if (a.type !== b.type) return a.type === 'campaign' ? -1 : 1;
+        return a.date.localeCompare(b.date);
+      });
+    }
+
+    function getTimelineDayWidth() {
+      const container = document.getElementById('timeline-scroll');
+      if (!container) return 40;
+      const labelW = S.timelineLabelWidth || 180;
+      const avail = container.clientWidth - labelW;
+      if (avail <= 0) return 40;
+      if (S.timelineZoom <= 0) {
+        // Auto-fit: all days fit the screen
+        const daysIn = new Date(S.timelineYear, S.timelineMonth + 1, 0).getDate();
+        return Math.max(20, avail / daysIn);
+      }
+      return S.timelineZoom;
+    }
+
+    function renderTimeline() {
+      const y = S.timelineYear, m = S.timelineMonth;
+      document.getElementById('timeline-month-label').textContent = MONTHS_ID[m] + ' ' + y;
+      const daysIn = new Date(y, m + 1, 0).getDate();
+      const zoom = getTimelineDayWidth();
+      const scrollEl = document.getElementById('timeline-scroll');
+      const labelW = S.timelineLabelWidth || 180;
+      scrollEl.style.setProperty('--tl-days', daysIn);
+      scrollEl.style.setProperty('--tl-day-w', zoom + 'px');
+      scrollEl.style.setProperty('--tl-label-w', labelW + 'px');
+      document.getElementById('timeline-header').style.setProperty('--tl-day-w', zoom + 'px');
+      document.getElementById('timeline-header').style.setProperty('--tl-label-w', labelW + 'px');
+
+      // Zoom info
+      const infoEl = document.getElementById('tl-zoom-info');
+      if (infoEl) {
+        if (S.timelineZoom <= 0) {
+          infoEl.textContent = '🔍 Auto';
+        } else {
+          const avail = scrollEl.clientWidth - labelW;
+          const vis = Math.round(avail / S.timelineZoom);
+          infoEl.textContent = '🔍 ' + vis + ' hr';
+        }
+      }
+
+      renderTimelineHeader(y, m, daysIn);
+      renderTimelineBars(y, m, daysIn);
+      // Ensure body rows extend to match header width for proper scroll
+      const bodyRows = document.querySelector('.timeline-body-rows');
+      if (bodyRows) bodyRows.style.minWidth = (labelW + daysIn * zoom) + 'px';
+      // Arahkan detail ke main panel
+      if (S.selectedId) renderDetail();
+    }
+
+    function renderTimelineHeader(year, month, daysIn) {
+      const DAY_SHORT = ['MIN', 'SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB'];
+      const todayStr = dateStr(new Date());
+      let html = '<div class="timeline-header-row"><div class="tl-corner">📅 ' + MONTHS_ID[month].slice(0, 3) + '</div>';
+      for (let d = 1; d <= daysIn; d++) {
+        const ds = year + '-' + pad(month + 1) + '-' + pad(d);
+        const isToday = ds === todayStr;
+        const dObj = new Date(year, month, d);
+        const isWeekend = dObj.getDay() === 0 || dObj.getDay() === 6;
+        const isSunday = dObj.getDay() === 0;
+        const holi = holidaysCache[ds];
+        const cls = (isToday ? ' today' : '') + (isSunday ? ' sunday' : '') + (isWeekend && !isToday ? ' weekend' : '') + (holi ? ' holiday' : '');
+        const dayName = '<span class="tl-day-name">' + DAY_SHORT[dObj.getDay()] + '</span>';
+        const holiName = holi ? '<span class="holi-name">' + esc(holi.name.split(' ')[0]) + '</span>' : '';
+        html += '<div class="tl-day-header' + cls + '" onclick="selectTimelineDate(\'' + ds + '\')">' + dayName + d + holiName + '</div>';
+      }
+      html += '</div>';
+      document.getElementById('timeline-header').innerHTML = html;
+    }
+
+    function renderTimelineBars(year, month, daysIn) {
+      const items = getTimelineItems();
+      const monthStart = year + '-' + pad(month + 1) + '-01';
+      const monthEnd = year + '-' + pad(month + 1) + '-' + pad(daysIn);
+      const z = getTimelineDayWidth();
+
+      if (!items.length) {
+        document.getElementById('timeline-body').innerHTML = '<div style="text-align:center;padding:40px;opacity:0.4;">Tidak ada campaign atau task bulan ini</div>';
+        return;
+      }
+
+      let gridLinesHtml = '';
+      for (let d = 1; d <= daysIn; d++) {
+        const dObj = new Date(year, month, d);
+        const isSunday = dObj.getDay() === 0;
+        const extra = isSunday ? 'width:' + z + 'px;' : '';
+        gridLinesHtml += '<div class="tl-grid-line' + (isSunday ? ' weekend' : '') + '" style="left:' + ((d - 1) * z) + 'px;' + extra + '"></div>';
+      }
+
+      if (!S.timelineExpanded) S.timelineExpanded = {};
+
+      let rowsHtml = '';
+      items.forEach((item) => {
+        const isCampaign = item.type === 'campaign';
+        const s = item.date < monthStart ? 1 : parseInt(item.date.split('-')[2], 10);
+        const endD = item.enddate || item.date;
+        const e = endD > monthEnd ? daysIn : parseInt(endD.split('-')[2], 10);
+        const leftPx = (s - 1) * z;
+        const widthPx = (e - s + 1) * z;
+        const bg = isCampaign ? item.color : 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.12)';
+        const color = '#1e293b';
+        let cls = 'timeline-bar';
+        if (s === e) cls += ' single'; else if (s === parseInt(item.date.split('-')[2], 10) || item.date < monthStart) cls += ' start'; else if (e === daysIn || e === parseInt(endD.split('-')[2], 10)) cls += ' end'; else cls += ' mid';
+        if (isCampaign) cls += ' campaign'; else cls += ' task';
+        if (item.done) cls += ' done';
+
+        const tooltip = esc(item.title) + '\\n' + formatShortDate(item.date) + (item.enddate && item.enddate !== item.date ? ' → ' + formatShortDate(item.enddate) : '') + (item.tag ? '\\n#' + item.tag.replace(/,/g, ' #') : '') + (item.description ? '\\n' + esc(item.description.substring(0, 100)) : '');
+
+        const barHtml = '<div class="' + cls + '" style="left:' + leftPx + 'px;width:' + widthPx + 'px;background:' + bg + ';color:' + color + ';border-left:' + (isCampaign ? 'none' : '3px solid ' + item.color) + ';" onclick="selectTask(\'' + item.id + '\')" data-tooltip="' + tooltip + '">' + esc(item.title) + (!isCampaign ? '<span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + item.id + '\')">' + (item.done ? '↩' : '✓') + '</span>' : '') + '</div>';
+
+        const labelIcon = isCampaign ? '📢' : (item.done ? '✅' : '📝');
+
+        let expandToggle = '';
+        const childTasks = getChildTasks(item);
+        if (isCampaign && childTasks.length) {
+          const expanded = S.timelineExpanded[item.id] || false;
+          expandToggle = '<span class="expand-toggle' + (expanded ? ' expanded' : '') + '" onclick="event.stopPropagation();toggleCampaignExpand(\'' + item.id + '\')">▶</span>';
+        }
+
+        rowsHtml += '<div class="timeline-row' + (isCampaign ? ' campaign-row' : '') + '">';
+        rowsHtml += '<div class="timeline-row-label' + (isCampaign ? ' campaign-label' : '') + '" onclick="selectTask(\'' + item.id + '\')">' + expandToggle + ' ' + labelIcon + ' ' + esc(item.title) + '</div>';
+        rowsHtml += '<div class="timeline-row-track">' + barHtml + gridLinesHtml + '</div>';
+        rowsHtml += '</div>';
+
+        if (isCampaign && childTasks.length && (S.timelineExpanded[item.id] || false)) {
+          childTasks.forEach(child => {
+            const childS = child.date < monthStart ? 1 : parseInt(child.date.split('-')[2], 10);
+            const childEndD = child.enddate || child.date;
+            const childE = childEndD > monthEnd ? daysIn : parseInt(childEndD.split('-')[2], 10);
+            const childLeftPx = (childS - 1) * z;
+            const childWidthPx = (childE - childS + 1) * z;
+            const childBg = 'rgba(' + hexToRgbArr(child.color).join(',') + ',0.12)';
+            const childCls = 'timeline-bar task' + (child.done ? ' done' : '');
+            const childTooltip = esc(child.title) + '\\n' + formatShortDate(child.date) + (child.enddate && child.enddate !== child.date ? ' → ' + formatShortDate(child.enddate) : '') + (child.description ? '\\n' + esc(child.description.substring(0, 100)) : '');
+
+            const childBar = '<div class="' + childCls + '" style="left:' + childLeftPx + 'px;width:' + childWidthPx + 'px;background:' + childBg + ';border-left:3px solid ' + child.color + ';" onclick="selectTask(\'' + child.id + '\')" data-tooltip="' + childTooltip + '">' + esc(child.title) + '<span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + child.id + '\')">' + (child.done ? '↩' : '✓') + '</span></div>';
+
+            rowsHtml += '<div class="timeline-child-row"><div class="timeline-row-label" style="padding-left:28px;font-size:11px;opacity:0.8;" onclick="selectTask(\'' + child.id + '\')">📝 ' + esc(child.title) + '</div>';
+            rowsHtml += '<div class="timeline-row-track">' + childBar + gridLinesHtml + '</div></div>';
+          });
+        }
+      });
+
+      document.getElementById('timeline-body').innerHTML = '<div class="timeline-body-rows">' + rowsHtml + '</div>';
+    }
+
+    function getChildTasks(campaign) {
+      if (campaign.type !== 'campaign' || !campaign.date) return [];
+      const cs = campaign.date, ce = campaign.enddate || campaign.date;
+      return S.tasks.filter(t => {
+        if (t.type !== 'task' || !t.date) return false;
+        const ts = t.date, te = t.enddate || t.date;
+        return ts >= cs && te <= ce;
+      });
+    }
+
+    function toggleCampaignExpand(id) {
+      if (!S.timelineExpanded) S.timelineExpanded = {};
+      S.timelineExpanded[id] = !S.timelineExpanded[id];
+      renderTimeline();
+    }
+
+    function hexToRgbArr(hex) {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return [r, g, b];
+    }
+
+    function setTimelineZoom(px) {
+      // px <= 0 resets to auto-fit
+      S.timelineZoom = px <= 0 ? 0 : px;
+      renderTimeline();
+    }
+
+    function resetTimelineZoom() {
+      S.timelineZoom = 0;
+      renderTimeline();
+    }
+
+    function handleTimelineWheel(e) {
+      const el = document.getElementById('timeline-scroll');
+      if (!el || !el.contains(e.target)) return;
+      // Only zoom when Ctrl/Meta is held, OR if we detect pinch-like trackpad
+      // We'll use deltaY to adjust visible day count
+      const labelW = S.timelineLabelWidth || 180;
+      const avail = el.clientWidth - labelW;
+      if (avail <= 0) return;
+
+      const daysIn = new Date(S.timelineYear, S.timelineMonth + 1, 0).getDate();
+      // Current visible days
+      const curZoom = S.timelineZoom <= 0 ? avail / daysIn : S.timelineZoom;
+      const curVis = avail / curZoom;
+
+      let newVis;
+      if (e.deltaY < 0) {
+        // Zoom in: fewer days
+        newVis = Math.max(7, Math.round(curVis / 1.2));
+      } else {
+        // Zoom out: more days
+        newVis = Math.min(daysIn, Math.round(curVis * 1.2));
+      }
+
+      const newZoom = avail / newVis;
+
+      S.timelineZoom = (newVis >= daysIn - 1) ? 0 : newZoom;
+      renderTimeline();
+      e.preventDefault();
+    }
+
+    function selectTimelineDate(ds) {
+      S.timelineSelectedDate = S.timelineSelectedDate === ds ? null : ds;
+      // Route ke main detail panel
+      if (S.timelineSelectedDate) {
+        showDayDetail(S.timelineSelectedDate);
+      } else {
+        const el = document.getElementById('detail-panel');
+        if (el) {
+          el.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.4;">Klik agenda atau tanggal untuk melihat detail</div>';
+          el.classList.add('empty');
+        }
+      }
+    }
+
+    // ═══════════════════════════════════════
+    // PRINT TIMELINE VIEW
+    // ═══════════════════════════════════════
+    function printTimelineView() {
+      const y = S.timelineYear, m = S.timelineMonth;
+      const monthName = MONTHS_ID[m] + ' ' + y;
+      const daysIn = new Date(y, m + 1, 0).getDate();
+      const items = getTimelineItems();
+      const todayStr = dateStr(new Date());
+
+      const DAY_SHORT = ['MIN', 'SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB'];
+
+      // Build header row with day names
+      let hd = '<div class="p-corner">📅</div>';
+      for (let d = 1; d <= daysIn; d++) {
+        const ds = y + '-' + pad(m + 1) + '-' + pad(d);
+        const isToday = ds === todayStr;
+        const holi = holidaysCache[ds];
+        const dObj = new Date(y, m, d);
+        const isSunday = dObj.getDay() === 0;
+        const cls = (isToday ? ' today' : '') + (holi ? ' holiday' : '') + (isSunday ? ' weekend' : '');
+        const dn = '<span class="pdn">' + DAY_SHORT[dObj.getDay()] + '</span>';
+        const hn = holi ? '<span class="phn">' + esc(holi.name.split(' ')[0]) + '</span>' : '';
+        hd += '<div class="pdh' + cls + '">' + dn + d + hn + '</div>';
+      }
+
+      // Build rows
+      let sunMarkers = '';
+      for (let d = 1; d <= daysIn; d++) {
+        const dObj = new Date(y, m, d);
+        if (dObj.getDay() === 0) {
+          sunMarkers += '<div class="p-sun" style="grid-column:' + d + ';"></div>';
+        }
+      }
+
+      let rows = '';
+      items.forEach(item => {
+        const s = item.date < (y + '-' + pad(m + 1) + '-01') ? 1 : parseInt(item.date.split('-')[2], 10);
+        const eD = item.enddate || item.date;
+        const e = eD > (y + '-' + pad(m + 1) + '-' + pad(daysIn)) ? daysIn : parseInt(eD.split('-')[2], 10);
+        if (e < 1 || s > daysIn) return;
+        const cs = Math.max(1, s);
+        const ce = Math.min(daysIn, e);
+        const isC = item.type === 'campaign';
+        const bg = isC ? item.color : 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.12)';
+        const color = '#1e293b';
+        const bar = '<div class="tpb ' + (isC ? 'camp' : 'task') + '" style="grid-column:' + cs + '/span ' + (ce - cs + 1) + ';background:' + bg + ';color:' + color + ';border-left:' + (isC ? 'none' : '2px solid ' + item.color) + ';"><span class="tpb-text">' + esc(item.title) + '</span></div>';
+        rows += '<div class="p-label">' + esc(item.title) + '</div><div class="p-track">' + sunMarkers + bar + '</div>';
+      });
+
+      // Legend
+      let leg = '';
+      items.forEach(item => {
+        const isC = item.type === 'campaign';
+        const dr = item.enddate && item.enddate !== item.date ? formatShortDate(item.date) + ' → ' + formatShortDate(item.enddate) : formatShortDate(item.date);
+        const tags = item.tag ? ' #' + item.tag.replace(/,/g, ' #') : '';
+        const prio = !isC && item.priority ? ' · ' + (item.priority === 'high' ? 'Tinggi' : item.priority === 'low' ? 'Rendah' : 'Sedang') : '';
+        const st = !isC && item.done ? ' ✓ Selesai' : '';
+        leg += '<div class="tpi" style="border-left:4px solid ' + item.color + ';"><div class="tpit">' + (isC ? '📢' : '📝') + ' ' + esc(item.title) + '</div><div class="tpid">' + dr + tags + prio + st + '</div><div class="tpidesc">' + esc(item.description || '—') + '</div></div>';
+      });
+
+      const html = '<!DOCTYPE html><html><head><title>Cetak Timeline - ' + monthName + '</title><style>@page{size:landscape;margin:8mm;}*{box-sizing:border-box;}body{font-family:system-ui,sans-serif;margin:0;padding:0;font-size:12px;color:#1e293b;background:#fff;}.p-grid{display:grid;grid-template-columns:130px repeat(' + daysIn + ',1fr);gap:0;}.p-corner{padding:4px 8px;font-weight:800;font-size:11px;border-bottom:1px solid #e5e7eb;grid-column:1;color:#1e293b;}.p-label{grid-column:1;padding:3px 8px;font-size:9px;font-weight:600;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1e293b;background:#fff;}.p-track{grid-column:2/-1;display:grid;grid-template-columns:repeat(' + daysIn + ',1fr);border-bottom:1px solid rgba(0,0,0,0.05);min-height:22px;align-items:center;}.pdh{padding:3px 3px;text-align:center;font-size:8px;font-weight:700;border-bottom:1px solid rgba(0,0,0,0.07);border-right:1px solid rgba(0,0,0,0.04);color:#475569;}.pdh.today{background:#3b82f6;color:#fff;}.pdh.weekend{background:rgba(239,68,68,0.08);}.pdh.holiday{color:#ef4444;}.pdn{display:block;font-size:6px;font-weight:400;opacity:0.5;text-transform:uppercase;letter-spacing:0.5px;}.phn{font-size:6px;display:block;font-weight:400;}.tpb{height:16px;border-radius:3px;font-size:7px;display:flex;align-items:center;padding:0 5px;white-space:nowrap;overflow:visible;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,0.08);-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:1px 0;min-width:0;}.tpb.camp{color:#1e293b;}.tpb.task{border-left:2px solid;color:#1e293b;}.tpb-text{white-space:nowrap;overflow:visible;}.p-sun{align-self:stretch;background:rgba(239,68,68,0.08);}.p-leg{margin-top:16px;padding-top:12px;border-top:1.5px solid #cbd5e1;}.p-leg h2{margin:0 0 10px;font-size:14px;color:#1e293b;}.p-lst{column-count:2;column-gap:20px;}.tpi{break-inside:avoid;margin-bottom:8px;padding:6px 10px;background:#f8fafc;border-bottom:1px solid #e5e7eb;border-radius:4px;}.tpit{font-weight:700;font-size:10px;color:#1e293b;margin-bottom:2px;}.tpid{font-size:9px;color:#475569;}.tpidesc{font-size:9px;color:#334155;margin-top:2px;}@media print{.no-print{display:none!important;}}</style></head><body><div class="p-grid">' + hd + rows + '</div><div class="p-leg"><h2>Daftar Campaign & Tugas - ' + monthName + '</h2><div class="p-lst">' + leg + '</div></div></body></html>';
+      const win = window.open('', '_blank');
+      win.document.write(html);
+      win.document.close();
+      win.focus();
+      setTimeout(function() { win.print(); }, 300);
+    }
+
+    // ═══════════════════════════════════════
+    // UX FEATURES
+    // ═══════════════════════════════════════
+
+    // Week Number
+    function getWeekNumber(d) {
+      const temp = new Date(d.valueOf());
+      const dayNum = (d.getDay() + 6) % 7;
+      temp.setDate(temp.getDate() - dayNum + 3);
+      const firstThursday = temp.valueOf();
+      temp.setMonth(0, 1);
+      if (temp.getDay() !== 4) temp.setMonth(0, 1 + ((4 - temp.getDay()) + 7) % 7);
+      return 1 + Math.ceil((firstThursday - temp) / 604800000);
+    }
+
+    // Undo stack
+    function pushUndo() {
+      S.undoStack.push(JSON.parse(JSON.stringify(S.tasks)));
+      if (S.undoStack.length > 50) S.undoStack.shift();
+      S.redoStack = [];
+    }
+
+    function undo() {
+      if (!S.undoStack.length) return;
+      S.redoStack.push(JSON.parse(JSON.stringify(S.tasks)));
+      S.tasks = S.undoStack.pop();
+      renderAll();
+      renderDetail();
+      toast('↩ Perubahan dibatalkan');
+    }
+
+    function showUndoSnackbar(msg, onUndo) {
+      const el = document.getElementById('toast');
+      if (!el) return;
+      el.innerHTML = msg + ' <span style="cursor:pointer;font-weight:700;text-decoration:underline;margin-left:8px;" onclick="' + onUndo + ';this.parentElement.style.opacity=0;">Batalkan</span>';
+      el.style.background = '#1e293b';
+      el.style.transform = 'translateX(-50%) translateY(0)';
+      el.style.opacity = '1';
+      clearTimeout(el._timeout);
+      el._timeout = setTimeout(function() {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(-50%) translateY(30px)';
+      }, 5000);
+    }
+
+    // Override deleteTask with undo
+    async function deleteTask() {
+      const id = document.getElementById('edit-id').value;
+      if (!id || !confirm('Hapus agenda ini?')) return;
+      pushUndo();
+      const deleted = S.tasks.find(x => x.id === id);
+      S.tasks = S.tasks.filter(x => x.id !== id);
+      closeModal();
+      renderAll();
+      renderDetail();
+      try {
+        await api('deleteTask', id);
+        showUndoSnackbar('🗑 Agenda dihapus', 'undo()');
+        await refreshData(true);
+      } catch (e) {
+        toast('Gagal menghapus!', true);
+      }
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+      // Esc close modal
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('task-modal');
+        if (modal.classList.contains('open')) { closeModal(); return; }
+        const dp = document.getElementById('datepicker');
+        if (dp.classList.contains('open')) { dp.classList.remove('open'); return; }
+      }
+      // Ctrl+N new task
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        openTaskModal(null);
+      }
+      // Ctrl+F focus search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        const search = document.querySelector('.search-box');
+        if (search) search.focus();
+      }
+      // Ctrl+Z undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        undo();
+      }
+    });
+
+    // Drag & Drop for list view reorder
+    let dragItem = null;
+
+    function initDragReorder() {
+      document.querySelectorAll('.task-row').forEach(row => {
+        row.setAttribute('draggable', 'true');
+        row.addEventListener('dragstart', function(e) {
+          dragItem = this;
+          this.style.opacity = '0.5';
+        });
+        row.addEventListener('dragend', function(e) {
+          this.style.opacity = '1';
+          dragItem = null;
+          document.querySelectorAll('.task-row').forEach(r => r.style.borderLeft = '');
+        });
+        row.addEventListener('dragover', function(e) {
+          e.preventDefault();
+          if (this !== dragItem) {
+            this.style.borderLeft = '3px solid var(--accent)';
+          }
+        });
+        row.addEventListener('dragleave', function() {
+          this.style.borderLeft = '';
+        });
+        row.addEventListener('drop', function(e) {
+          e.preventDefault();
+          this.style.borderLeft = '';
+          if (dragItem && this !== dragItem) {
+            const parent = this.parentNode;
+            const items = [...parent.querySelectorAll('.task-row')];
+            const fromIdx = items.indexOf(dragItem);
+            const toIdx = items.indexOf(this);
+            if (fromIdx > -1 && toIdx > -1) {
+              const filtered = S.tasks.filter(t => t.type !== 'campaign');
+              const task = filtered[fromIdx];
+              if (task) {
+                filtered.splice(fromIdx, 1);
+                filtered.splice(toIdx, 0, task);
+                const campaigns = S.tasks.filter(t => t.type === 'campaign');
+                const tasks = S.tasks.filter(t => t.type !== 'campaign');
+                const reordered = [];
+                filtered.forEach(f => {
+                  const found = tasks.find(t => t.id === f.id);
+                  if (found) reordered.push(found);
+                });
+                tasks.forEach(t => { if (!reordered.find(r => r.id === t.id)) reordered.push(t); });
+                S.tasks = [...campaigns, ...reordered];
+                renderList();
+              }
+            }
+          }
+        });
+      });
+    }
+
+    // Drag & Drop to week/month grid cells
+    let dragTaskId = null;
+
+    function dragStart(e, id) {
+      dragTaskId = id;
+      e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function dragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      e.currentTarget.style.background = 'rgba(99,102,241,0.08)';
+    }
+
+    function dragLeave(e) {
+      e.currentTarget.style.background = '';
+    }
+
+    function dropTask(e, targetDate) {
+      e.preventDefault();
+      e.currentTarget.style.background = '';
+      if (!dragTaskId) return;
+      const task = S.tasks.find(t => t.id === dragTaskId);
+      if (!task || !targetDate) { dragTaskId = null; return; }
+      pushUndo();
+      const oldDate = task.date;
+      if (task.enddate && task.enddate !== task.date) {
+        const diff = (new Date(task.enddate) - new Date(task.date)) / 86400000;
+        task.date = targetDate;
+        task.enddate = dateStr(new Date(new Date(targetDate).getTime() + diff * 86400000));
+      } else {
+        task.date = targetDate;
+        task.enddate = targetDate;
+      }
+      dragTaskId = null;
+      renderAll();
+      toast('✓ ' + esc(task.title) + ' dipindahkan ke ' + targetDate);
+    }
+
+    // Override renderList to enable drag reorder after render
+    const origRenderList = renderList;
+    renderList = function() {
+      origRenderList();
+      initDragReorder();
+    };
 
     // Custom Date Picker
     function openDatePicker(id) {
@@ -1896,12 +2995,14 @@
       document.getElementById('dp-month-label').textContent = MONTHS_ID[m] + ' ' + y;
       const first = (new Date(y, m, 1).getDay() || 7) - 1;
       const days = new Date(y, m + 1, 0).getDate();
+      const todayStr = dateStr(new Date());
       let html = '';
       for (let i = 0; i < first; i++) html += `<div class="dp-cell other"></div>`;
       for (let d = 1; d <= days; d++) {
         const ds = y + '-' + pad(m + 1) + '-' + pad(d);
         const isSel = document.getElementById(S.dpTarget).value === ds;
-        html += `<div class="dp-cell ${isSel ? 'selected' : ''}" onclick="selectDP('${ds}')">${d}</div>`;
+        const isToday = ds === todayStr;
+        html += `<div class="dp-cell${isSel ? ' selected' : ''}${isToday ? ' today' : ''}" onclick="selectDP('${ds}')">${d}</div>`;
       }
       document.getElementById('dp-grid').innerHTML = html;
     }
@@ -1909,6 +3010,18 @@
       document.getElementById(S.dpTarget).value = ds;
       document.getElementById('datepicker').classList.remove('open');
       if (S.dpTarget === 'f-date') document.getElementById('f-enddate').value = ds;
+    }
+    function goToTodayDP() {
+      const today = new Date();
+      S.dpYear = today.getFullYear();
+      S.dpMonth = today.getMonth();
+      const ds = dateStr(today);
+      selectDP(ds);
+      renderDP();
+    }
+    function clearDateDP() {
+      document.getElementById(S.dpTarget).value = '';
+      document.getElementById('datepicker').classList.remove('open');
     }
 
     // CRUD & Modals
@@ -1923,7 +3036,19 @@
       document.getElementById('f-date').value = t ? t.date : (pre || '');
       document.getElementById('f-enddate').value = t ? t.enddate : (pre || '');
       document.getElementById('f-priority').value = t ? (t.priority || 'medium') : 'medium';
-      document.getElementById('f-tag').value = t ? (t.tag || '') : '';
+      // Set tag or channel
+      const isC = t && t.type === 'campaign';
+      const channelEl = document.getElementById('f-channel');
+      const tagEl = document.getElementById('f-tag');
+      if (isC) {
+        // Match tag to channel by name (not prefix)
+        const match = Object.keys(CHANNELS).find(k => t.tag === k);
+        channelEl.value = match || '';
+        tagEl.value = '';
+      } else {
+        channelEl.value = '';
+        tagEl.value = t ? (t.tag || '') : '';
+      }
       selectSwatch(t ? t.color : COLORS[0]);
       toggleTypeFields();
       document.getElementById('btn-delete').style.display = t ? 'block' : 'none';
@@ -1942,7 +3067,17 @@
       document.getElementById('f-date').value = t.date || '';
       document.getElementById('f-enddate').value = t.enddate || '';
       document.getElementById('f-priority').value = t.priority || 'medium';
-      document.getElementById('f-tag').value = t.tag || '';
+      const isC = t.type === 'campaign';
+      const channelEl = document.getElementById('f-channel');
+      const tagEl = document.getElementById('f-tag');
+      if (isC) {
+        const match = Object.keys(CHANNELS).find(k => t.tag === k);
+        channelEl.value = match || '';
+        tagEl.value = '';
+      } else {
+        channelEl.value = '';
+        tagEl.value = t.tag || '';
+      }
       selectSwatch(t.color || COLORS[0]);
       toggleTypeFields();
       document.getElementById('btn-delete').style.display = 'none';
@@ -1952,6 +3087,23 @@
     function toggleTypeFields() {
       const isC = document.getElementById('f-type').value === 'campaign';
       document.getElementById('wrap-priority').style.display = isC ? 'none' : 'block';
+      document.getElementById('wrap-tag').querySelector('label').textContent = isC ? 'Channel' : 'Tag';
+      document.getElementById('f-tag').style.display = isC ? 'none' : 'block';
+      document.getElementById('f-channel').style.display = isC ? 'block' : 'none';
+      document.getElementById('wrap-color').style.display = isC ? 'none' : 'block';
+    }
+    function onChannelChange() {
+      const ch = document.getElementById('f-channel').value;
+      const data = CHANNELS[ch];
+      if (data) {
+        selectSwatch(data.color);
+        const titleEl = document.getElementById('f-title');
+        // Remove any existing prefix
+        const prefixes = Object.values(CHANNELS).map(c => c.prefix);
+        let clean = titleEl.value;
+        prefixes.forEach(p => { if (clean.startsWith(p)) clean = clean.slice(p.length).trim(); });
+        titleEl.value = data.prefix + ' ' + clean;
+      }
     }
     function buildSwatches() {
       const el = document.getElementById('color-swatches');
@@ -1989,7 +3141,7 @@
 
       const listHtml = items.length ? items.map((t, i) => {
         const isC = t.type === 'campaign';
-        const span = (t.enddate && t.enddate !== t.date) ? ` → ${t.enddate}` : '';
+        const span = (t.enddate && t.enddate !== t.date) ? ` → ${formatShortDate(t.enddate)}` : '';
         const prioColor = t.priority === 'high' ? '#ef4444' : t.priority === 'low' ? '#10b981' : '#3b82f6';
         const desc = esc(t.description) || '<em style="opacity:0.4">Tidak ada deskripsi.</em>';
         return `
@@ -1999,7 +3151,7 @@
               <button class="btn btn-ghost" style="padding:2px 6px; font-size:10px;" onclick="event.stopPropagation();openTaskModal('${t.id}')">Edit</button>
             </div>
             <div style="font-size:10px; color:var(--text-soft); margin-top:2px;">
-              ${t.date}${span} ${t.tag ? ' · ' + esc(t.tag) : ''}
+              ${formatShortDate(t.date)}${span} ${t.tag ? ' · ' + esc(t.tag) : ''}
               ${!isC && t.priority ? ' · <span style="color:' + prioColor + '; font-weight:600">' + (t.priority === 'high' ? '🏁 Tinggi' : t.priority === 'low' ? '🐌 Rendah' : '🔵 Sedang') + '</span>' : ''}
             </div>
             <div style="font-size:11.5px; margin-top:4px; opacity:0.85; line-height:1.3;">${desc}</div>
@@ -2047,23 +3199,36 @@
             <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="openTaskModal('${t.id}')">Edit</button>
           </div>
         </div>
-        <div style="font-size:11.5px;font-weight:700;color:var(--accent);margin:8px 0 4px;">📅 ${t.date}${t.enddate ? ` → ${t.enddate}` : ''}</div>
+        <div style="font-size:11.5px;font-weight:700;color:var(--accent);margin:8px 0 4px;">📅 ${formatShortDate(t.date)}${t.enddate && t.enddate !== t.date ? ` → ${formatShortDate(t.enddate)}` : ''}</div>
         <div class="detail-desc" style="min-height:20px; font-size:12px; line-height:1.4;">${esc(t.description) || '<span style="opacity:0.4;font-style:italic;">Tanpa deskripsi.</span>'}</div>
       `;
     }
 
     async function submitTask() {
+      const isC = document.getElementById('f-type').value === 'campaign';
+      const editId = document.getElementById('edit-id').value;
+      const channel = document.getElementById('f-channel').value;
+      const chData = CHANNELS[channel];
+      let title = document.getElementById('f-title').value;
+      if (isC && chData) {
+        if (!title.startsWith(chData.prefix)) {
+          const prefixes = Object.values(CHANNELS).map(c => c.prefix);
+          prefixes.forEach(p => { if (title.startsWith(p)) title = title.slice(p.length).trim(); });
+          title = chData.prefix + ' ' + title;
+        }
+      }
+      const oldTask = editId ? S.tasks.find(x => x.id === editId) : null;
       const task = {
-        id: document.getElementById('edit-id').value || 'T' + Date.now(),
-        title: document.getElementById('f-title').value,
+        id: editId || 'T' + Date.now(),
+        title: title,
         type: document.getElementById('f-type').value,
         description: document.getElementById('f-desc').value,
         date: document.getElementById('f-date').value,
         enddate: document.getElementById('f-enddate').value,
-        priority: document.getElementById('f-priority').value,
-        tag: document.getElementById('f-tag').value,
-        color: S.tempColor || COLORS[0],
-        done: false
+        priority: isC ? 'medium' : document.getElementById('f-priority').value,
+        tag: isC ? (channel || (oldTask ? oldTask.tag : '')) : document.getElementById('f-tag').value,
+        color: isC && chData ? chData.color : (S.tempColor || COLORS[0]),
+        done: oldTask ? oldTask.done : false
       };
       if (!task.title || !task.date) return toast('Isi judul & tanggal!', true);
 
@@ -2102,19 +3267,7 @@
       }
     }
 
-    async function deleteTask() {
-      const id = document.getElementById('edit-id').value;
-      if (!id || !confirm('Hapus agenda ini?')) return;
-      S.tasks = S.tasks.filter(x => x.id !== id);
-      closeModal(); renderAll(); renderDetail();
-      try {
-        await api('deleteTask', id);
-        toast('🗑 Agenda dihapus');
-        await refreshData(true);
-      } catch (e) {
-        toast('Gagal menghapus!', true);
-      }
-    }
+    // deleteTask now defined above with undo support
 
     function toast(m, e) {
       const el = document.getElementById('toast');
