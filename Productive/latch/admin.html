@@ -1,0 +1,99 @@
+<div id="dashboardContent" style="display:none;">
+  <div class="card card-atm card-atm-admin">
+    <div class="atm-brand">
+      <h1 class="atm-title">LATCH</h1>
+      <p class="atm-tagline">DASHBOARD <span class="brand-by">|</span> <strong>Admin Panel</strong></p>
+    </div>
+    <div class="atm-divider"></div>
+    <div class="admin-header-row">
+      <button id="bulkDeleteBtn" class="dash-btn dash-btn-danger" style="display:none" title="Hapus terpilih">🗑</button>
+      <span class="dashboard-count" id="dashCount">0 link</span>
+    </div>
+    <button id="logoutBtn" class="dash-btn dash-btn-logout">Keluar</button>
+    <div class="atm-clock dash-clock" id="dashClock"></div>
+  </div>
+
+  <div class="dashboard-toolbar">
+    <button id="addRowBtn" class="dash-btn dash-btn-primary">+ Tambah Baris</button>
+    <button id="catManageBtn" class="dash-btn dash-btn-secondary">📂 Kategori</button>
+    <div class="toolbar-right">
+      <button id="exportCsvBtn" class="dash-btn" title="Export CSV">📤 Export</button>
+      <button id="importCsvBtn" class="dash-btn" title="Import CSV">📥 Import</button>
+    </div>
+  </div>
+
+  <div class="dashboard-search">
+    <div class="search-bar">
+      <i data-feather="search" class="search-icon"></i>
+      <input type="text" id="dashSearchInput" placeholder="Cari di dashboard..." autocomplete="off">
+    </div>
+  </div>
+
+  <div class="dashboard-layout">
+    <div class="dashboard-table" id="dashboardTable"></div>
+    <nav class="dash-nav" id="dashNav"></nav>
+    <button class="dash-nav-toggle" id="dashNavToggle" title="Kategori">📂</button>
+  </div>
+
+  <div id="catSheet" class="sheet-overlay" style="display:none;">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h3 class="sheet-title">Kategori</h3>
+      <div class="sheet-body" id="catSheetBody"></div>
+    </div>
+  </div>
+
+  <div id="slideDrawer" class="drawer-overlay" style="display:none;">
+    <div class="drawer">
+      <div class="drawer-header">
+        <h3 class="drawer-title" id="drawerTitle">Tambah/Edit Link</h3>
+        <button class="drawer-close" id="drawerClose">&times;</button>
+      </div>
+      <div class="drawer-body">
+        <label class="drawer-label">Judul</label>
+        <input type="text" id="drawerTitleInput" class="drawer-input" placeholder="Judul link">
+        <label class="drawer-label">URL</label>
+        <input type="url" id="drawerUrlInput" class="drawer-input" placeholder="https://">
+        <label class="drawer-label">Kategori</label>
+        <div class="dash-select-wrap">
+          <input type="text" id="drawerCatInput" class="drawer-input" list="drawerCatList" placeholder="Pilih kategori">
+          <svg class="dash-select-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <datalist id="drawerCatList"></datalist>
+      </div>
+      <div class="drawer-footer">
+        <button id="drawerSave" class="dash-btn dash-btn-primary">Simpan</button>
+        <button id="drawerCancel" class="dash-btn">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="catModal" class="modal-overlay" style="display:none;">
+    <div class="modal modal-wide">
+      <h3 class="modal-title">Kelola Kategori</h3>
+      <div class="cat-list" id="catList"></div>
+      <div class="cat-add-row">
+        <input type="text" id="catNameInput" class="modal-input" placeholder="Nama kategori baru">
+        <button id="catAddBtn" class="dash-btn dash-btn-primary">Tambah</button>
+      </div>
+      <div class="modal-actions">
+        <button id="catClose" class="dash-btn">Selesai</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="shortcutModal" class="modal-overlay" style="display:none;">
+  <div class="modal">
+    <h3 class="modal-title">Pintasan Keyboard</h3>
+    <div class="shortcut-list">
+      <div class="shortcut-row"><kbd>Ctrl+K</kbd><span>Fokus pencarian</span></div>
+      <div class="shortcut-row"><kbd>Ctrl+L</kbd><span>Buka link terpilih</span></div>
+      <div class="shortcut-row"><kbd>Esc</kbd><span>Tutup modal / Hapus pencarian</span></div>
+      <div class="shortcut-row"><kbd>?</kbd><span>Tampilkan bantuan ini</span></div>
+    </div>
+    <div class="modal-actions">
+      <button id="shortcutClose" class="dash-btn">Tutup</button>
+    </div>
+  </div>
+</div>
