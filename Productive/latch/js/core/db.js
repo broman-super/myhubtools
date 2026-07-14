@@ -3,6 +3,8 @@
   var U = window.LATCH.utils;
   var cache = {};
 
+  var GAS_URL = 'https://script.google.com/macros/s/AKfycbwzQuMgZWQUUgbz1umfs8zWcTqn0v9-mLrbbehxbMk53b5M79W0y7E0Yk8CnqgL30lI/exec';
+
   function invalidate() {
     cache = {};
   }
@@ -21,86 +23,83 @@
     });
   }
 
-  function withError(fn) {
-    return function () {
-      var args = arguments;
-      return new Promise(function (resolve) {
-        try {
-          fn.apply(null, args).then(function (r) { resolve(r); }).catch(function (err) {
-            console.error('[DB] Error:', err);
-            resolve({ success: false, error: err.message || 'Unknown error' });
-          });
-        } catch (err) {
-          console.error('[DB] Error:', err);
-          resolve({ success: false, error: err.message || 'Unknown error' });
-        }
-      });
+  function gasFetch(action, payload) {
+    var url = GAS_URL + '?action=' + encodeURIComponent(action);
+    var options = {
+      method: payload ? 'POST' : 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      redirect: 'follow'
     };
+    if (payload) options.body = JSON.stringify(payload);
+    return fetch(url, options).then(function (r) { return r.json(); });
   }
 
   var DB = {
     getData: function (force) {
       if (force) invalidate();
       return cached('allData', 5000, function () {
-        return window.db.getData().then(function (data) {
-          data.categories.sort(function (a, b) { return (a.sort || 0) - (b.sort || 0); });
+        return gasFetch('getData').then(function (data) {
+          if (data && data.categories) {
+            data.categories.sort(function (a, b) { return (a.sort || 0) - (b.sort || 0); });
+          }
           return data;
         });
       });
     },
 
     verifyPin: function (pin) {
-      return window.db.verifyPin(pin);
+      return gasFetch('verifyPin', { pin: pin });
     },
 
-    addRow: withError(function (data) {
-      return window.db.addRow(data).then(function (r) {
-        if (r.success) invalidate();
+    addRow: function (data) {
+      return gasFetch('addRow', data).then(function (r) {
+        if (r && r.success) invalidate();
         return r;
       });
-    }),
+    },
 
-    saveRow: withError(function (id, data) {
-      return window.db.saveRow(id, data).then(function (r) {
-        if (r.success) invalidate();
+    saveRow: function (id, data) {
+      var payload = Object.assign({ id: id }, data);
+      return gasFetch('saveRow', payload).then(function (r) {
+        if (r && r.success) invalidate();
         return r;
       });
-    }),
+    },
 
-    deleteRow: withError(function (id) {
-      return window.db.deleteRow(id).then(function (r) {
-        if (r.success) invalidate();
+    deleteRow: function (id) {
+      return gasFetch('deleteRow', { id: id }).then(function (r) {
+        if (r && r.success) invalidate();
         return r;
       });
-    }),
+    },
 
-    deleteMany: withError(function (ids) {
-      return window.db.deleteMany(ids).then(function (r) {
-        if (r.success) invalidate();
+    deleteMany: function (ids) {
+      return gasFetch('deleteMany', { ids: ids }).then(function (r) {
+        if (r && r.success) invalidate();
         return r;
       });
-    }),
+    },
 
-    addCategory: withError(function (name) {
-      return window.db.addCategory(name).then(function (r) {
-        if (r.success) invalidate();
+    addCategory: function (name) {
+      return gasFetch('addCategory', { name: name }).then(function (r) {
+        if (r && r.success) invalidate();
         return r;
       });
-    }),
+    },
 
-    deleteCategory: withError(function (id) {
-      return window.db.deleteCategory(id).then(function (r) {
-        if (r.success) invalidate();
+    deleteCategory: function (id) {
+      return gasFetch('deleteCategory', { id: id }).then(function (r) {
+        if (r && r.success) invalidate();
         return r;
       });
-    }),
+    },
 
-    reorderLinks: withError(function (catId, orderedIds) {
-      return window.db.reorderLinks(catId, orderedIds).then(function (r) {
-        if (r.success) invalidate();
+    reorderLinks: function (catId, orderedIds) {
+      return gasFetch('reorderLinks', { catId: catId, orderedIds: orderedIds }).then(function (r) {
+        if (r && r.success) invalidate();
         return r;
       });
-    }),
+    },
 
     invalidate: invalidate
   };
