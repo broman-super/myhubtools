@@ -9,7 +9,7 @@
  *    deploy (lihat DEPLOY_GUIDE.md). Kosongkan untuk mode demo (localStorage).
  * ---------------------------------------------------------------------- */
 const CONFIG = {
-  API_URL: "https://script.google.com/macros/s/AKfycbyITzzos5-tN6HVCis1QO2mz0Fgnzd---s1iCI_SzpKQ4edFJ2-M8vhVdrJCTafg5fZ/exec", // contoh: "https://script.google.com/macros/s/XXXXXXXX/exec"
+  API_URL: "https://script.google.com/macros/s/AKfycbwekDk4m_F4qSiu15VcwOwrYUOMcNwaZr7Ri32xn7FwiiJip5CXHf_SXKJit-atdTO4/exec", // contoh: "https://script.google.com/macros/s/XXXXXXXX/exec"
   BATCH_SIZE: 24,
   LOAD_TIMEOUT_MS: 15000,
   APP_NAME: "LATCH"
@@ -954,24 +954,26 @@ const dashboard = (() => {
   }
 
   let editCategoryId = null;
+  let selectedIcon = "folder";
 
   function renderIconPicker() {
     const container = document.getElementById("iconPicker");
     if (!container) return;
     container.innerHTML = ICONS.map(icon =>
-      `<button class="icon-picker-item" data-icon="${icon}" title="${icon}"><i data-feather="${icon}"></i></button>`
+      `<button class="icon-picker-item${icon === selectedIcon ? " selected" : ""}" data-icon="${icon}" title="${icon}"><i data-feather="${icon}"></i></button>`
     ).join("");
     if (typeof feather !== "undefined") feather.replace();
     container.querySelectorAll(".icon-picker-item").forEach(btn => {
       btn.addEventListener("click", () => {
         container.querySelectorAll(".icon-picker-item").forEach(b => b.classList.remove("selected"));
         btn.classList.add("selected");
+        selectedIcon = btn.dataset.icon;
       });
     });
-    highlightIcon("folder");
   }
 
   function highlightIcon(icon) {
+    selectedIcon = icon;
     const container = document.getElementById("iconPicker");
     if (!container) return;
     container.querySelectorAll(".icon-picker-item").forEach(b => b.classList.remove("selected"));
@@ -1036,7 +1038,7 @@ const dashboard = (() => {
     const input = document.getElementById("newCategoryName");
     const name = input.value.trim();
     if (!name) return;
-    const icon = document.querySelector("#iconPicker .selected")?.dataset?.icon || "folder";
+    const icon = selectedIcon;
     try {
       if (editCategoryId) {
         await db.updateCategory(editCategoryId, name, icon, state.get("adminPin"));
