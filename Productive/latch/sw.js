@@ -14,7 +14,6 @@ var PRECACHE = [
   'js/ui/dashboard.js',
   'js/ui/theme.js',
   'js/app.js',
-  'js/db-offline.js',
   'views/public.html',
   'views/admin.html',
   'views/modals.html',
