@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>LATCH — Link Attach</title>
+<meta name="description" content="Gudang kumpulan link — LATCH by Supersub">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231a1a1e'/%3E%3Ctext x='16' y='22' font-family='Helvetica,Arial,sans-serif' font-size='16' font-weight='700' fill='white' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ============ FRAGMENT: PUBLIC VIEW ============ -->
+<div id="fragment-public" style="display:none">
+  <div class="topbar">
+    <div class="brand" data-feather-brand></div>
+    <div class="topbar-actions">
+      <button class="icon-btn raised pressable" id="btnAdminSwitch" title="Admin"><i data-feather="lock"></i></button>
+      <button class="icon-btn raised pressable" id="themeToggle" title="Tema"><i data-feather="moon"></i></button>
+    </div>
+  </div>
+
+  <div class="atm-card">
+    <div>
+      <div class="atm-title">LATCH</div>
+      <div class="atm-tagline">LINK ATTACH by Supersub</div>
+    </div>
+    <div>
+      <hr class="atm-divider">
+      <div class="atm-footer-row">
+        <div class="atm-announce"><i data-feather="volume-2" style="width:14px;height:14px;flex-shrink:0"></i><span id="announceText">Selamat datang di LATCH.</span></div>
+        <div class="atm-clock"><i data-feather="clock" style="width:12px;height:12px"></i><span id="clockText">--:--</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="search-bar raised" id="searchBar">
+    <i data-feather="search"></i>
+    <input type="text" id="searchInput" placeholder="Cari link..." autocomplete="off">
+    <span class="search-hint">Ctrl+K</span>
+  </div>
+
+  <div class="tabs" id="tabsWrap"></div>
+
+  <div class="link-grid" id="linkGrid"></div>
+
+  <div id="loadMoreSentinel" style="height:1px"></div>
+</div>
+
+<!-- ============ FRAGMENT: ADMIN DASHBOARD ============ -->
+<div id="fragment-admin" style="display:none">
+  <div class="topbar">
+    <div class="brand" data-feather-brand></div>
+    <div class="topbar-actions">
+      <button class="icon-btn raised pressable" id="btnPublicSwitch" title="Lihat Publik"><i data-feather="eye"></i></button>
+      <button class="icon-btn raised pressable" id="themeToggleDash" title="Tema"><i data-feather="moon"></i></button>
+      <button class="icon-btn raised pressable" id="btnLogout" title="Keluar"><i data-feather="log-out"></i></button>
+    </div>
+  </div>
+
+  <div class="dash-toolbar">
+    <button class="btn btn-primary pressable" id="btnAddLink"><i data-feather="plus"></i> Tambah Link</button>
+    <button class="btn raised pressable" id="btnAddCategory"><i data-feather="folder-plus"></i> Kategori</button>
+    <div class="spacer"></div>
+    <button class="btn raised pressable" id="btnImportCsv"><i data-feather="upload"></i> Import</button>
+    <button class="btn raised pressable" id="btnExportCsv"><i data-feather="download"></i> Export</button>
+    <button class="btn raised pressable hidden" id="btnBulkDelete"><i data-feather="trash-2"></i> Hapus (<span id="bulkCount">0</span>)</button>
+  </div>
+
+  <div class="dash-layout">
+    <nav class="dash-nav raised" id="dashNav">
+      <div class="dash-nav-label">Kategori</div>
+      <div id="dashNavList"></div>
+    </nav>
+    <div class="dash-main" id="dashMain"></div>
+  </div>
+
+  <button class="dash-nav-toggle pressable" id="dashNavToggle"><i data-feather="folder"></i></button>
+</div>
+
+<!-- ============ FRAGMENT: MODALS ============ -->
+<div id="fragment-modals" style="display:none">
+
+  <div class="overlay-bg" id="overlayBg"></div>
+
+  <!-- Drawer: Add/Edit Link -->
+  <div class="drawer" id="linkDrawer">
+    <div class="drawer-header">
+      <h3 id="drawerTitle">Tambah Link</h3>
+      <button class="drawer-close" id="drawerClose"><i data-feather="x"></i></button>
+    </div>
+    <div class="drawer-body">
+      <div class="field">
+        <label for="fieldTitle">Judul</label>
+        <input type="text" id="fieldTitle" placeholder="Judul link">
+      </div>
+      <div class="field">
+        <label for="fieldUrl">URL</label>
+        <input type="url" id="fieldUrl" placeholder="https://">
+      </div>
+      <div class="field">
+        <label for="fieldCategory">Kategori</label>
+        <select id="fieldCategory"></select>
+      </div>
+      <div class="field">
+        <label for="fieldBadge">Badge</label>
+        <select id="fieldBadge">
+          <option value="">Tanpa badge</option>
+          <option value="hot">Hot</option>
+          <option value="daily">Daily</option>
+          <option value="core">Core</option>
+          <option value="archive">Archive</option>
+        </select>
+      </div>
+      <input type="hidden" id="fieldId">
+    </div>
+    <div class="drawer-footer">
+      <button class="btn btn-ghost raised pressable" id="drawerCancel">Batal</button>
+      <button class="btn btn-primary pressable" id="drawerSave">Simpan</button>
+    </div>
+  </div>
+
+  <!-- Bottom sheet: category nav (mobile) -->
+  <div class="bottom-sheet" id="categorySheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Kategori</div>
+    <div id="sheetCategoryList"></div>
+  </div>
+
+  <!-- Modal: Login -->
+  <div class="modal" id="loginModal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-box">
+      <div class="modal-title">Login Admin</div>
+      <div class="field">
+        <label for="pinInput">PIN</label>
+        <input type="password" id="pinInput" inputmode="numeric" placeholder="••••" autocomplete="off">
+      </div>
+      <div class="modal-error" id="loginError"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost raised pressable" id="loginCancel">Batal</button>
+        <button class="btn btn-primary pressable" id="loginSubmit">Masuk</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Delete confirm -->
+  <div class="modal" id="deleteModal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-box">
+      <div class="modal-title">Hapus item ini?</div>
+      <p style="font-size:13px;color:var(--text-tertiary);text-align:center" id="deleteModalText">Tindakan ini tidak dapat dibatalkan.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost raised pressable" id="deleteCancel">Batal</button>
+        <button class="btn btn-primary pressable" id="deleteConfirm" style="background:var(--accent)">Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Category editor -->
+  <div class="modal" id="categoryModal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-box" style="max-width:420px">
+      <div class="modal-title" id="categoryModalTitle">Kelola Kategori</div>
+      <div id="categoryModalList" style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;margin-bottom:12px"></div>
+      <div class="field">
+        <label for="newCategoryName">Nama kategori</label>
+        <input type="text" id="newCategoryName" placeholder="Nama kategori">
+      </div>
+      <div class="field">
+        <label>Icon</label>
+        <div class="icon-picker" id="iconPicker"></div>
+      </div>
+      <input type="hidden" id="editCategoryId">
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-ghost raised pressable hidden" id="cancelEditCatBtn" style="flex:1">Batal</button>
+        <button class="btn btn-primary pressable" id="addCategoryBtn" style="flex:1"><i data-feather="plus"></i> Tambah</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost raised pressable" id="categoryModalClose">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Import CSV -->
+  <div class="modal" id="importModal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-box" style="max-width:380px">
+      <div class="modal-title">Import CSV</div>
+      <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">Format kolom: Title,URL,Category,Badge</p>
+      <label class="file-drop" id="fileDropLabel">
+        <i data-feather="upload-cloud"></i>
+        <div id="fileDropText">Pilih atau tarik file .csv ke sini</div>
+        <input type="file" id="csvFileInput" accept=".csv" class="hidden">
+      </label>
+      <div class="modal-error" id="importError"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost raised pressable" id="importCancel">Batal</button>
+        <button class="btn btn-primary pressable" id="importConfirm">Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: keyboard shortcut help -->
+  <div class="modal" id="helpModal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-box">
+      <div class="modal-title">Keyboard Shortcuts</div>
+      <div class="kbd-row"><span>Fokus pencarian</span><span class="kbd">Ctrl+K</span></div>
+      <div class="kbd-row"><span>Buka link pertama</span><span class="kbd">Ctrl+L</span></div>
+      <div class="kbd-row"><span>Tutup modal / hapus pencarian</span><span class="kbd">Esc</span></div>
+      <div class="kbd-row"><span>Tampilkan bantuan ini</span><span class="kbd">?</span></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary pressable" id="helpClose">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="brand" style="font-size:16px" data-feather-brand></div>
+    <div class="loading-grid" id="skeletonGrid"></div>
+  </div>
+
+</div>
+
+<!-- ============ FRAGMENT: FOOTER / TOAST ============ -->
+<div id="fragment-footer" style="display:none">
+  <div class="toast-wrap" id="toastWrap"></div>
+  <button class="back-to-top raised pressable hidden" id="backToTop"><i data-feather="arrow-up"></i></button>
+  <footer class="app-footer">
+    LATCH — Link Attach · dibuat dengan Google Sheets sebagai database
+  </footer>
+</div>
+
+<div class="container" id="app"></div>
+
+<script src="https://unpkg.com/feather-icons@4.29.2/dist/feather.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
