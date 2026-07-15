@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retur Track — Terminal Scanner</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #171717; background: #EDEDED;
+      height: 100vh; overflow: hidden; display: flex;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+
+    h2 {
+      font-size: 11px; font-weight: 600; margin-bottom: 14px;
+      text-transform: uppercase; letter-spacing: 1.5px; color: #444;
+    }
+
+    /* ---- LAYOUT ---- */
+    .container { display: flex; width: 100%; height: 100%; }
+
+    .panel-left {
+      width: 55%; padding: 28px 32px;
+      display: flex; flex-direction: column;
+      background: #EDEDED; border-right: 1px solid #ddd;
+    }
+
+    .panel-right {
+      width: 45%; padding: 24px 28px;
+      display: flex; flex-direction: column;
+      background: #fff; overflow: hidden;
+    }
+
+    /* ---- INPUT ---- */
+    .input-group { margin-bottom: 20px; }
+
+    #inputResi {
+      width: 100%; padding: 16px 20px; font-size: 20px; font-weight: 600;
+      color: #171717; letter-spacing: 0.5px;
+      background: #fff; border: 1px solid #ddd;
+      border-radius: 10px; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    #inputResi::placeholder { color: #aaa; font-weight: 400; font-size: 14px; letter-spacing: 2px; }
+    #inputResi:focus { border-color: #DA0037; box-shadow: 0 0 0 3px rgba(218,0,55,0.08); }
+
+    /* ---- TABLE ---- */
+    .table-wrap {
+      flex-grow: 1; overflow: hidden; background: #fff;
+      border: 1px solid #ddd; border-radius: 10px;
+      display: flex; flex-direction: column;
+    }
+
+    .table-scroll { flex-grow: 1; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    thead { position: sticky; top: 0; z-index: 2; }
+
+    th {
+      padding: 12px 16px; font-size: 11px; font-weight: 600;
+      color: #444; text-transform: uppercase; letter-spacing: 0.8px;
+      background: #f7f7f7; border-bottom: 1px solid #eee;
+    }
+
+    td {
+      padding: 14px 16px; vertical-align: middle;
+      border-bottom: 1px solid #f0f0f0; font-size: 14px;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: #fafafa; }
+
+    .table-empty {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 48px 20px; color: #bbb; text-align: center; flex-grow: 1;
+    }
+
+    .table-empty-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: #f0f0f0; border: 1px dashed #ddd;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; color: #ccc; margin-bottom: 12px;
+    }
+
+    .table-empty-text { font-size: 13px; color: #bbb; }
+
+    /* ---- SELECT ---- */
+    select {
+      background: #f7f7f7; color: #171717; border: 1px solid #e0e0e0;
+      border-radius: 6px; padding: 7px 28px 7px 10px; font-size: 13px; font-weight: 500;
+      outline: none; cursor: pointer; transition: 0.15s;
+      -webkit-appearance: none; -moz-appearance: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+    }
+
+    select:hover { border-color: #ccc; }
+    select:focus { border-color: #DA0037; box-shadow: 0 0 0 3px rgba(218,0,55,0.08); }
+
+    /* ---- BUTTON DELETE ---- */
+    .btn-del {
+      width: 30px; height: 30px; background: transparent; color: #bbb;
+      border: 1px solid transparent; border-radius: 6px;
+      cursor: pointer; font-size: 16px; font-weight: 300;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: 0.15s;
+    }
+
+    .btn-del:hover { color: #DA0037; background: rgba(218,0,55,0.05); border-color: rgba(218,0,55,0.1); }
+
+    /* ---- ACTION BAR ---- */
+    .action-bar {
+      position: relative; display: flex; justify-content: space-between;
+      align-items: center; margin-top: 16px; padding-top: 16px;
+    }
+
+    .action-bar::before {
+      content: ''; position: absolute; left: 0; right: 0;
+      top: 0; height: 1px; background: #e5e5e5;
+    }
+
+    #stagedCount { font-size: 13px; color: #888; }
+
+    /* ---- BUTTON PRIMARY ---- */
+    button.primary {
+      background: #DA0037; color: #fff; border: none;
+      padding: 12px 28px; font-size: 13px; font-weight: 600;
+      border-radius: 8px; cursor: pointer; text-transform: uppercase;
+      letter-spacing: 0.8px; transition: background 0.15s, transform 0.1s;
+    }
+
+    button.primary:hover { background: #c20031; }
+    button.primary:active { transform: scale(0.98); }
+    button.primary:disabled { background: #ddd; color: #aaa; cursor: not-allowed; }
+
+    .unknown td:first-child { position: relative; }
+    .unknown td:first-child::before {
+      content: ''; position: absolute; left: 0; top: 20%; height: 60%; width: 3px;
+      background: #DA0037; border-radius: 2px;
+    }
+
+    /* ==========================================================
+       RIGHT PANEL — RIWAYAT SCAN
+       ========================================================== */
+    .panel-right { overflow-y: auto; }
+
+    /* ---- FILTER BAR ---- */
+    .filter-bar {
+      display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: #f5f5f5; color: #666; border: 1px solid #e0e0e0;
+      padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 500;
+      cursor: pointer; transition: 0.15s;
+    }
+
+    .filter-btn:hover { background: #eee; color: #333; }
+
+    .filter-btn.active {
+      background: #171717; color: #fff; border-color: #171717;
+    }
+
+    /* ---- HISTORY LIST ---- */
+    .history-list { flex-grow: 1; overflow-y: auto; }
+
+    .history-loading {
+      text-align: center; padding: 32px; color: #bbb; font-size: 13px;
+    }
+
+    .history-empty {
+      text-align: center; padding: 40px 20px; color: #bbb; font-size: 13px;
+    }
+
+    /* ---- HISTORY GROUP (Accordion) ---- */
+    .history-group { margin-bottom: 8px; }
+
+    .history-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 14px; background: #f7f7f7;
+      border: 1px solid #eee; border-radius: 8px;
+      cursor: pointer; transition: 0.15s; user-select: none;
+    }
+
+    .history-header:hover { background: #f0f0f0; }
+
+    .history-header.open {
+      border-radius: 8px 8px 0 0;
+      border-bottom-color: transparent;
+    }
+
+    .history-date {
+      font-size: 13px; font-weight: 600; color: #171717;
+      white-space: nowrap;
+    }
+
+    .history-tags {
+      display: flex; gap: 4px; flex-wrap: wrap; flex-grow: 1;
+    }
+
+    .history-tag {
+      font-size: 10px; font-weight: 600; padding: 2px 7px;
+      border-radius: 4px; background: #e8e8e8; color: #555;
+      white-space: nowrap;
+    }
+
+    .history-tag.total {
+      background: #DA0037; color: #fff;
+    }
+
+    .history-arrow {
+      font-size: 10px; color: #999; transition: transform 0.2s;
+      margin-left: auto; flex-shrink: 0;
+    }
+
+    .history-header.open .history-arrow { transform: rotate(180deg); }
+
+    /* ---- HISTORY DETAIL ---- */
+    .history-detail {
+      display: none; border: 1px solid #eee; border-top: none;
+      border-radius: 0 0 8px 8px; overflow: hidden;
+    }
+
+    .history-detail.show { display: block; }
+
+    .history-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; font-size: 13px;
+      border-bottom: 1px solid #f5f5f5;
+      transition: background 0.15s;
+    }
+
+    .history-item:last-child { border-bottom: none; }
+    .history-item:hover { background: #fafafa; }
+
+    .item-resi {
+      font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+      font-size: 13px; font-weight: 500; color: #171717;
+      min-width: 0; flex-shrink: 0;
+    }
+
+    .item-exp {
+      font-size: 12px; color: #888; white-space: nowrap;
+    }
+
+    .item-waktu {
+      font-size: 11px; color: #bbb; margin-left: auto; white-space: nowrap;
+    }
+
+    .item-actions {
+      display: flex; gap: 4px; margin-left: 8px; flex-shrink: 0;
+    }
+
+    .btn-status {
+      width: 28px; height: 28px; border-radius: 6px;
+      border: 1px solid #e0e0e0; background: #fff;
+      cursor: pointer; font-size: 11px; font-weight: 700;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: 0.15s;
+    }
+
+    .btn-done { color: #888; }
+    .btn-done:hover { color: #16a34a; background: #f0fdf4; border-color: #16a34a; }
+    .btn-done.active { color: #fff; background: #16a34a; border-color: #16a34a; }
+
+    .btn-err { color: #888; }
+    .btn-err:hover { color: #DA0037; background: #fff5f5; border-color: #DA0037; }
+    .btn-err.active { color: #fff; background: #DA0037; border-color: #DA0037; }
+
+    /* Status visual */
+    .history-item.status-valid { opacity: 0.45; }
+    .history-item.status-valid .item-resi { text-decoration: line-through; }
+    .history-item.status-error { opacity: 0.45; }
+    .history-item.status-error .item-resi { text-decoration: line-through; color: #DA0037; }
+
+    /* ---- RESPONSIVE ---- */
+    @media (max-width: 900px) {
+      .container { flex-direction: column; }
+      .panel-left, .panel-right { width: 100%; height: auto; }
+      .panel-left { max-height: 55vh; border-right: none; border-bottom: 1px solid #ddd; }
+      body { flex-direction: column; overflow: auto; }
+      .table-wrap { min-height: 160px; }
+      .panel-right { max-height: 45vh; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- PANEL KIRI -->
+  <div class="panel-left">
+    <h2>Terminal Input Retur</h2>
+    <div class="input-group">
+      <input type="text" id="inputResi" placeholder="SCAN BARCODE RESI..." autofocus autocomplete="off">
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table id="stagingTable">
+          <thead>
+            <tr>
+              <th style="width:35%">Nomor Resi</th>
+              <th style="width:30%">Ekspedisi</th>
+              <th style="width:25%">Waktu</th>
+              <th style="width:10%"></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <div class="table-empty" id="tableEmpty">
+          <div class="table-empty-icon">+</div>
+          <div class="table-empty-text">Mulai scan resi untuk menambah data</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <span id="stagedCount">0 Paket</span>
+      <button class="primary" id="btnSubmit" onclick="pushToDatabase()">Proses Ke Database</button>
+    </div>
+  </div>
+
+  <!-- PANEL KANAN -->
+  <div class="panel-right">
+    <h2>Riwayat Scan</h2>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all" onclick="loadHistory('all', this)">Semua</button>
+      <button class="filter-btn" data-filter="today" onclick="loadHistory('today', this)">Hari Ini</button>
+      <button class="filter-btn" data-filter="7days" onclick="loadHistory('7days', this)">7 Hari</button>
+      <button class="filter-btn" data-filter="30days" onclick="loadHistory('30days', this)">1 Bulan</button>
+    </div>
+
+    <div class="history-list" id="historyList">
+      <div class="history-loading">Memuat riwayat...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  // CONFIG & GAS BRIDGE
+  // ============================================================
+  var GAS_URL = "https://script.google.com/macros/s/AKfycbyz-cZ7hslCQMKGbTHGKMRpNS5UE8TsgM8gWUYcoaq5c_hv1omk7acvS0BeOmdp0krgHg/exec";
+
+  var GAS = {
+    call: function(fnName, args, onSuccess, onFailure) {
+      args = args || [];
+      var native = (typeof google !== "undefined" && google.script && google.script.run);
+      if (native) {
+        var r = google.script.run;
+        if (onSuccess) r.withSuccessHandler(onSuccess);
+        if (onFailure) r.withFailureHandler(onFailure);
+        r[fnName].apply(null, args);
+      } else {
+        if (!GAS_URL) { if (onFailure) onFailure(new Error("GAS_URL belum dikonfigurasi")); return; }
+        fetch(GAS_URL, { method: "POST", body: JSON.stringify({ function: fnName, args: args }) })
+          .then(function(r) { return r.json(); })
+          .then(function(res) { if (onSuccess) onSuccess(res); })
+          .catch(function(err) { if (onFailure) onFailure(err); });
+      }
+    }
+  };
+
+  // ============================================================
+  // STATE
+  // ============================================================
+  var configEkspedisi = [];
+  var stagingData = [];
+  var currentFilter = "all";
+  var elInput = document.getElementById("inputResi");
+  var elTableBody = document.getElementById("tableBody");
+  var elTableEmpty = document.getElementById("tableEmpty");
+  var elCount = document.getElementById("stagedCount");
+  var elHistory = document.getElementById("historyList");
+
+  // ============================================================
+  // AUTO FOCUS
+  // ============================================================
+  function focusInput() { elInput.focus(); }
+
+  window.onload = function() {
+    focusInput();
+    GAS.call("getExpeditionConfig", [], function(r) { configEkspedisi = r || []; });
+    loadHistory("all", document.querySelector('.filter-btn.active'));
+  };
+
+  document.addEventListener("click", function(e) {
+    var tag = e.target.tagName;
+    if (tag === "SELECT" || tag === "BUTTON" || e.target.closest("select") || e.target.closest("button")) return;
+    focusInput();
+  });
+
+  setInterval(function() {
+    var a = document.activeElement;
+    if (!a || a === document.body || a === document.documentElement) focusInput();
+  }, 1000);
+
+  // ============================================================
+  // SCANNER
+  // ============================================================
+  elInput.addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      var resi = this.value.trim();
+      if (resi) { processScan(resi); this.value = ""; }
+    }
+  });
+
+  function processScan(resi) {
+    if (stagingData.some(function(d) { return d.resi === resi; })) return;
+    var exp = "UNKNOWN";
+    for (var i = 0; i < configEkspedisi.length; i++) {
+      if (new RegExp(configEkspedisi[i].regex, "i").test(resi)) { exp = configEkspedisi[i].name; break; }
+    }
+    stagingData.unshift({ resi: resi, ekspedisi: exp, timestamp: Date.now() });
+    renderTable();
+  }
+
+  function renderTable() {
+    elTableBody.innerHTML = "";
+    if (stagingData.length === 0) {
+      elTableEmpty.style.display = "flex";
+    } else {
+      elTableEmpty.style.display = "none";
+      var opts = '<option value="UNKNOWN">-- Pilih Manual --</option>';
+      configEkspedisi.forEach(function(c) { opts += '<option value="' + c.name + '">' + c.name + "</option>"; });
+      stagingData.forEach(function(d, i) {
+        var tr = document.createElement("tr");
+        if (d.ekspedisi === "UNKNOWN") tr.className = "unknown";
+        var sel = opts.replace('value="' + d.ekspedisi + '"', 'value="' + d.ekspedisi + '" selected');
+        tr.innerHTML =
+          '<td style="font-family:monospace;font-size:14px">' + d.resi + "</td>" +
+          '<td><select onchange="updateRowExpedition(' + i + ',this.value)">' + sel + "</select></td>" +
+          '<td style="color:#999;font-size:13px">' + new Date(d.timestamp).toLocaleTimeString("id-ID") + "</td>" +
+          '<td><button class="btn-del" onclick="deleteRow(' + i + ')">&#215;</button></td>';
+        elTableBody.appendChild(tr);
+      });
+    }
+    elCount.innerText = stagingData.length + " Paket";
+  }
+
+  function updateRowExpedition(i, v) { stagingData[i].ekspedisi = v; renderTable(); }
+  function deleteRow(i) { stagingData.splice(i, 1); renderTable(); focusInput(); }
+
+  function pushToDatabase() {
+    if (stagingData.length === 0) return;
+    if (stagingData.some(function(d) { return d.ekspedisi === "UNKNOWN"; })) {
+      alert("Terdapat resi tanpa ekspedisi. Pastikan semua telah dikonfigurasi."); return;
+    }
+    var btn = document.getElementById("btnSubmit");
+    btn.innerText = "MENGIRIM..."; btn.disabled = true;
+    GAS.call("submitBatchData", [stagingData], function() {
+      stagingData = []; renderTable();
+      loadHistory(currentFilter, document.querySelector('.filter-btn.active'));
+      btn.innerText = "Proses Ke Database"; btn.disabled = false; focusInput();
+    }, function(err) {
+      alert("Gagal: " + (err.message || err));
+      btn.innerText = "Proses Ke Database"; btn.disabled = false; focusInput();
+    });
+  }
+
+  // ============================================================
+  // HISTORY — Load & Render
+  // ============================================================
+  function loadHistory(filter, btnEl) {
+    currentFilter = filter;
+    document.querySelectorAll(".filter-btn").forEach(function(b) { b.classList.remove("active"); });
+    if (btnEl) btnEl.classList.add("active");
+
+    elHistory.innerHTML = '<div class="history-loading">Memuat riwayat...</div>';
+
+    GAS.call("getTrackingHistory", [filter], function(res) {
+      if (!res.success || !res.groups || res.groups.length === 0) {
+        elHistory.innerHTML = '<div class="history-empty">Belum ada riwayat scan</div>';
+        return;
+      }
+      renderHistory(res.groups);
+    }, function() {
+      elHistory.innerHTML = '<div class="history-empty">Gagal memuat riwayat</div>';
+    });
+  }
+
+  function renderHistory(groups) {
+    elHistory.innerHTML = "";
+    groups.forEach(function(g) {
+      var groupEl = document.createElement("div");
+      groupEl.className = "history-group";
+
+      // Header tags
+      var tags = '<span class="history-tag total">' + g.total + ' resi</span>';
+      var keys = Object.keys(g.summary).sort();
+      keys.forEach(function(k) {
+        tags += '<span class="history-tag">' + k + ': ' + g.summary[k] + '</span>';
+      });
+
+      // Header
+      var header = document.createElement("div");
+      header.className = "history-header";
+      header.innerHTML =
+        '<span class="history-date">' + g.label + '</span>' +
+        '<span class="history-tags">' + tags + '</span>' +
+        '<span class="history-arrow">&#9662;</span>';
+      header.onclick = function() { toggleGroup(this); };
+
+      // Detail
+      var detail = document.createElement("div");
+      detail.className = "history-detail";
+
+      g.items.forEach(function(item) {
+        var statusClass = item.status === "Valid" ? " status-valid" : item.status === "Error" ? " status-error" : "";
+        var doneActive = item.status === "Valid" ? " active" : "";
+        var errActive = item.status === "Error" ? " active" : "";
+
+        var div = document.createElement("div");
+        div.className = "history-item" + statusClass;
+        div.innerHTML =
+          '<span class="item-resi">' + item.resi + '</span>' +
+          '<span class="item-exp">' + item.ekspedisi + '</span>' +
+          '<span class="item-waktu">' + item.waktu + '</span>' +
+          '<div class="item-actions">' +
+            '<button class="btn-status btn-done' + doneActive + '" onclick="markStatus(' + item.row + ',\'Valid\',this)" title="Valid">&#10003;</button>' +
+            '<button class="btn-status btn-err' + errActive + '" onclick="markStatus(' + item.row + ',\'Error\',this)" title="Error">&#10007;</button>' +
+          '</div>';
+        detail.appendChild(div);
+      });
+
+      groupEl.appendChild(header);
+      groupEl.appendChild(detail);
+      elHistory.appendChild(groupEl);
+    });
+  }
+
+  function toggleGroup(headerEl) {
+    var detail = headerEl.nextElementSibling;
+    var isOpen = headerEl.classList.contains("open");
+
+    if (isOpen) {
+      headerEl.classList.remove("open");
+      detail.classList.remove("show");
+    } else {
+      headerEl.classList.add("open");
+      detail.classList.add("show");
+    }
+  }
+
+  // ============================================================
+  // STATUS UPDATE
+  // ============================================================
+  function markStatus(rowNum, status, btnEl) {
+    var item = btnEl.closest(".history-item");
+    var allBtns = item.querySelectorAll(".btn-status");
+
+    // Toggle: kalau sudah aktif, balikkan ke Pending
+    if (btnEl.classList.contains("active")) {
+      status = "Pending";
+    }
+
+    allBtns.forEach(function(b) { b.classList.remove("active"); });
+    item.classList.remove("status-valid", "status-error");
+
+    if (status === "Valid") {
+      btnEl.classList.add("active");
+      item.classList.add("status-valid");
+    } else if (status === "Error") {
+      btnEl.classList.add("active");
+      item.classList.add("status-error");
+    }
+
+    GAS.call("updateTrackingStatus", [rowNum, status], function() {}, function() {});
+  }
+</script>
+</body>
+</html>
