@@ -38,8 +38,19 @@
       background: #fff; overflow: hidden;
     }
 
+    /* ---- SEARCH INPUTS ---- */
+    .search-box {
+      width: 100%; padding: 8px 14px; font-size: 13px;
+      color: #171717; background: #fff; border: 1px solid #ddd;
+      border-radius: 8px; outline: none; margin-bottom: 14px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .search-box::placeholder { color: #bbb; }
+    .search-box:focus { border-color: #DA0037; box-shadow: 0 0 0 3px rgba(218,0,55,0.08); }
+
     /* ---- INPUT ---- */
-    .input-group { margin-bottom: 20px; }
+    .input-group { margin-bottom: 14px; }
 
     #inputResi {
       width: 100%; padding: 16px 20px; font-size: 20px; font-weight: 600;
@@ -70,7 +81,7 @@
     }
 
     td {
-      padding: 14px 16px; vertical-align: middle;
+      padding: 12px 16px; vertical-align: middle;
       border-bottom: 1px solid #f0f0f0; font-size: 14px;
     }
 
@@ -103,6 +114,28 @@
 
     select:hover { border-color: #ccc; }
     select:focus { border-color: #DA0037; box-shadow: 0 0 0 3px rgba(218,0,55,0.08); }
+
+    /* ---- MANUAL EXPEDITION INPUT ---- */
+    .manual-exp-input {
+      width: 110px; padding: 6px 8px; font-size: 12px; font-weight: 500;
+      color: #171717; background: #fff; border: 1px solid #DA0037;
+      border-radius: 6px; outline: none; margin-left: 6px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .manual-exp-input::placeholder { color: #bbb; font-weight: 400; }
+    .manual-exp-input:focus { box-shadow: 0 0 0 3px rgba(218,0,55,0.08); }
+
+    /* ---- COPY BUTTON ---- */
+    .btn-copy {
+      background: transparent; color: #bbb; border: none;
+      padding: 2px 6px; font-size: 11px; font-family: monospace;
+      cursor: pointer; border-radius: 4px; transition: 0.15s;
+      white-space: nowrap; margin-left: 4px;
+    }
+
+    .btn-copy:hover { color: #DA0037; background: rgba(218,0,55,0.06); }
+    .btn-copy.copied { color: #16a34a; }
 
     /* ---- BUTTON DELETE ---- */
     .btn-del {
@@ -153,7 +186,7 @@
 
     /* ---- FILTER BAR ---- */
     .filter-bar {
-      display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap;
+      display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; align-items: center;
     }
 
     .filter-btn {
@@ -167,6 +200,15 @@
     .filter-btn.active {
       background: #171717; color: #fff; border-color: #171717;
     }
+
+    /* ---- PENDING BADGE ---- */
+    .pending-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 12px;
+      font-size: 11px; font-weight: 600; background: #DA0037; color: #fff;
+      margin-bottom: 14px; white-space: nowrap;
+    }
+
+    .pending-badge.zero { background: #ccc; color: #888; }
 
     /* ---- HISTORY LIST ---- */
     .history-list { flex-grow: 1; overflow-y: auto; }
@@ -231,7 +273,7 @@
     .history-detail.show { display: block; }
 
     .history-item {
-      display: flex; align-items: center; gap: 10px;
+      display: flex; align-items: center; gap: 8px;
       padding: 10px 14px; font-size: 13px;
       border-bottom: 1px solid #f5f5f5;
       transition: background 0.15s;
@@ -255,7 +297,7 @@
     }
 
     .item-actions {
-      display: flex; gap: 4px; margin-left: 8px; flex-shrink: 0;
+      display: flex; gap: 4px; margin-left: 6px; flex-shrink: 0;
     }
 
     .btn-status {
@@ -297,6 +339,9 @@
   <!-- PANEL KIRI -->
   <div class="panel-left">
     <h2>Terminal Input Retur</h2>
+
+    <input type="text" class="search-box" id="searchLeft" placeholder="Cari nomor resi..." oninput="filterStaging()">
+
     <div class="input-group">
       <input type="text" id="inputResi" placeholder="SCAN BARCODE RESI..." autofocus autocomplete="off">
     </div>
@@ -306,10 +351,10 @@
         <table id="stagingTable">
           <thead>
             <tr>
-              <th style="width:35%">Nomor Resi</th>
-              <th style="width:30%">Ekspedisi</th>
-              <th style="width:25%">Waktu</th>
-              <th style="width:10%"></th>
+              <th style="width:32%">Nomor Resi</th>
+              <th style="width:33%">Ekspedisi</th>
+              <th style="width:20%">Waktu</th>
+              <th style="width:15%"></th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
@@ -338,6 +383,10 @@
       <button class="filter-btn" data-filter="30days" onclick="loadHistory('30days', this)">1 Bulan</button>
     </div>
 
+    <input type="text" class="search-box" id="searchRight" placeholder="Cari nomor resi..." oninput="filterHistory()">
+
+    <div class="pending-badge zero" id="pendingBadge">0 Resi Belum Diproses</div>
+
     <div class="history-list" id="historyList">
       <div class="history-loading">Memuat riwayat...</div>
     </div>
@@ -348,7 +397,7 @@
   // ============================================================
   // CONFIG & GAS BRIDGE
   // ============================================================
-  var GAS_URL = "https://script.google.com/macros/s/AKfycbyz-cZ7hslCQMKGbTHGKMRpNS5UE8TsgM8gWUYcoaq5c_hv1omk7acvS0BeOmdp0krgHg/exec";
+  var GAS_URL = "https://script.google.com/macros/s/AKfycbxPk-ldIYuVD9-EeXmwmobxr3FyOSUR2zAi_sO0oAOCqxDGTRUtYmbqZihUCC-iyW8q/exec";
 
   var GAS = {
     call: function(fnName, args, onSuccess, onFailure) {
@@ -375,11 +424,15 @@
   var configEkspedisi = [];
   var stagingData = [];
   var currentFilter = "all";
+  var loadedHistory = [];
   var elInput = document.getElementById("inputResi");
   var elTableBody = document.getElementById("tableBody");
   var elTableEmpty = document.getElementById("tableEmpty");
   var elCount = document.getElementById("stagedCount");
   var elHistory = document.getElementById("historyList");
+  var elSearchLeft = document.getElementById("searchLeft");
+  var elSearchRight = document.getElementById("searchRight");
+  var elPendingBadge = document.getElementById("pendingBadge");
 
   // ============================================================
   // AUTO FOCUS
@@ -394,7 +447,8 @@
 
   document.addEventListener("click", function(e) {
     var tag = e.target.tagName;
-    if (tag === "SELECT" || tag === "BUTTON" || e.target.closest("select") || e.target.closest("button")) return;
+    if (tag === "SELECT" || tag === "BUTTON" || tag === "INPUT") return;
+    if (e.target.closest("select") || e.target.closest("button") || e.target.closest("input")) return;
     focusInput();
   });
 
@@ -424,21 +478,46 @@
     renderTable();
   }
 
+  // ============================================================
+  // LEFT PANEL — Search / Filter Staging
+  // ============================================================
+  function filterStaging() { renderTable(); }
+
+  function getFilteredStaging() {
+    var q = elSearchLeft.value.trim().toLowerCase();
+    if (!q) return stagingData;
+    return stagingData.filter(function(d) { return d.resi.toLowerCase().indexOf(q) !== -1; });
+  }
+
+  // ============================================================
+  // LEFT PANEL — Render Table
+  // ============================================================
   function renderTable() {
     elTableBody.innerHTML = "";
+    var filtered = getFilteredStaging();
+
     if (stagingData.length === 0) {
       elTableEmpty.style.display = "flex";
     } else {
       elTableEmpty.style.display = "none";
       var opts = '<option value="UNKNOWN">-- Pilih Manual --</option>';
       configEkspedisi.forEach(function(c) { opts += '<option value="' + c.name + '">' + c.name + "</option>"; });
-      stagingData.forEach(function(d, i) {
+
+      filtered.forEach(function(d) {
+        var i = stagingData.indexOf(d);
         var tr = document.createElement("tr");
         if (d.ekspedisi === "UNKNOWN") tr.className = "unknown";
+
         var sel = opts.replace('value="' + d.ekspedisi + '"', 'value="' + d.ekspedisi + '" selected');
+
+        var expCell = '<select onchange="updateRowExpedition(' + i + ',this.value)">' + sel + '</select>';
+        if (d.ekspedisi === "UNKNOWN") {
+          expCell += '<input class="manual-exp-input" type="text" placeholder="Tulis manual..." value="' + (d.manualExp || "") + '" oninput="updateRowManual(' + i + ',this.value)">';
+        }
+
         tr.innerHTML =
-          '<td style="font-family:monospace;font-size:14px">' + d.resi + "</td>" +
-          '<td><select onchange="updateRowExpedition(' + i + ',this.value)">' + sel + "</select></td>" +
+          '<td><span style="font-family:monospace;font-size:14px">' + d.resi + '</span><button class="btn-copy" onclick="copyResi(this,\'' + d.resi + '\')">copy</button></td>' +
+          '<td>' + expCell + '</td>' +
           '<td style="color:#999;font-size:13px">' + new Date(d.timestamp).toLocaleTimeString("id-ID") + "</td>" +
           '<td><button class="btn-del" onclick="deleteRow(' + i + ')">&#215;</button></td>';
         elTableBody.appendChild(tr);
@@ -448,13 +527,37 @@
   }
 
   function updateRowExpedition(i, v) { stagingData[i].ekspedisi = v; renderTable(); }
+  function updateRowManual(i, v) { stagingData[i].manualExp = v; }
   function deleteRow(i) { stagingData.splice(i, 1); renderTable(); focusInput(); }
 
+  // ============================================================
+  // COPY RESI
+  // ============================================================
+  function copyResi(btn, text) {
+    navigator.clipboard.writeText(text).then(function() {
+      btn.innerText = "\u2713";
+      btn.classList.add("copied");
+      setTimeout(function() { btn.innerText = "copy"; btn.classList.remove("copied"); }, 1200);
+    });
+  }
+
+  // ============================================================
+  // SUBMIT
+  // ============================================================
   function pushToDatabase() {
     if (stagingData.length === 0) return;
+
+    // Resolve manual expedition names
+    stagingData.forEach(function(d) {
+      if (d.ekspedisi === "UNKNOWN" && d.manualExp && d.manualExp.trim()) {
+        d.ekspedisi = d.manualExp.trim();
+      }
+    });
+
     if (stagingData.some(function(d) { return d.ekspedisi === "UNKNOWN"; })) {
-      alert("Terdapat resi tanpa ekspedisi. Pastikan semua telah dikonfigurasi."); return;
+      alert("Terdapat resi tanpa ekspedisi. Pilih dari dropdown atau ketik nama ekspedisi."); return;
     }
+
     var btn = document.getElementById("btnSubmit");
     btn.innerText = "MENGIRIM..."; btn.disabled = true;
     GAS.call("submitBatchData", [stagingData], function() {
@@ -468,7 +571,7 @@
   }
 
   // ============================================================
-  // HISTORY — Load & Render
+  // RIGHT PANEL — History Load
   // ============================================================
   function loadHistory(filter, btnEl) {
     currentFilter = filter;
@@ -479,26 +582,80 @@
 
     GAS.call("getTrackingHistory", [filter], function(res) {
       if (!res.success || !res.groups || res.groups.length === 0) {
+        loadedHistory = [];
+        updatePendingBadge();
         elHistory.innerHTML = '<div class="history-empty">Belum ada riwayat scan</div>';
         return;
       }
+      loadedHistory = res.groups;
+      updatePendingBadge();
       renderHistory(res.groups);
     }, function() {
+      loadedHistory = [];
+      updatePendingBadge();
       elHistory.innerHTML = '<div class="history-empty">Gagal memuat riwayat</div>';
     });
   }
 
+  // ============================================================
+  // RIGHT PANEL — Pending Count Badge
+  // ============================================================
+  function updatePendingBadge() {
+    var count = 0;
+    loadedHistory.forEach(function(g) {
+      g.items.forEach(function(item) {
+        if (item.status === "Pending") count++;
+      });
+    });
+    elPendingBadge.innerText = count + " Resi Belum Diproses";
+    if (count === 0) {
+      elPendingBadge.classList.add("zero");
+    } else {
+      elPendingBadge.classList.remove("zero");
+    }
+  }
+
+  // ============================================================
+  // RIGHT PANEL — Search / Filter History
+  // ============================================================
+  function filterHistory() {
+    renderHistory(loadedHistory);
+  }
+
+  function getFilteredHistory(groups) {
+    var q = elSearchRight.value.trim().toLowerCase();
+    if (!q) return groups;
+    return groups.map(function(g) {
+      var filtered = g.items.filter(function(item) {
+        return item.resi.toLowerCase().indexOf(q) !== -1 ||
+               item.ekspedisi.toLowerCase().indexOf(q) !== -1;
+      });
+      return { label: g.label, summary: g.summary, total: g.total, items: filtered };
+    }).filter(function(g) { return g.items.length > 0; });
+  }
+
+  // ============================================================
+  // RIGHT PANEL — Render History Accordion
+  // ============================================================
   function renderHistory(groups) {
+    var filtered = getFilteredHistory(groups);
     elHistory.innerHTML = "";
-    groups.forEach(function(g) {
+
+    if (filtered.length === 0) {
+      elHistory.innerHTML = '<div class="history-empty">Tidak ada hasil ditemukan</div>';
+      return;
+    }
+
+    filtered.forEach(function(g) {
       var groupEl = document.createElement("div");
       groupEl.className = "history-group";
 
       // Header tags
-      var tags = '<span class="history-tag total">' + g.total + ' resi</span>';
-      var keys = Object.keys(g.summary).sort();
-      keys.forEach(function(k) {
-        tags += '<span class="history-tag">' + k + ': ' + g.summary[k] + '</span>';
+      var tags = '<span class="history-tag total">' + g.items.length + ' resi</span>';
+      var expCount = {};
+      g.items.forEach(function(item) { expCount[item.ekspedisi] = (expCount[item.ekspedisi] || 0) + 1; });
+      Object.keys(expCount).sort().forEach(function(k) {
+        tags += '<span class="history-tag">' + k + ': ' + expCount[k] + '</span>';
       });
 
       // Header
@@ -523,6 +680,7 @@
         div.className = "history-item" + statusClass;
         div.innerHTML =
           '<span class="item-resi">' + item.resi + '</span>' +
+          '<button class="btn-copy" onclick="copyResi(this,\'' + item.resi + '\')">copy</button>' +
           '<span class="item-exp">' + item.ekspedisi + '</span>' +
           '<span class="item-waktu">' + item.waktu + '</span>' +
           '<div class="item-actions">' +
@@ -573,6 +731,14 @@
       btnEl.classList.add("active");
       item.classList.add("status-error");
     }
+
+    // Update local loadedHistory status
+    loadedHistory.forEach(function(g) {
+      g.items.forEach(function(it) {
+        if (it.row === rowNum) it.status = status;
+      });
+    });
+    updatePendingBadge();
 
     GAS.call("updateTrackingStatus", [rowNum, status], function() {}, function() {});
   }
