@@ -1024,6 +1024,7 @@
                 <path d="M3 3v18h18" />
                 <path d="m19 9-5 5-4-4-3 3" />
             </svg> SAS - SALES ANALYTIC SIMPLIFY</h1>
+        <div id="syncStatus" style="font-size: 11px; color: var(--text-muted); font-weight: 500; margin-left: 20px;">Mengecek data...</div>
         <div class="nav-controls">
             <button class="theme-toggle" onclick="document.getElementById('settingsModal').style.display='flex'"
                 title="Pengaturan Target" style="padding: 8px 10px;">
@@ -1798,6 +1799,8 @@
         }
 
         async function initDashboard() {
+            const syncStatus = document.getElementById('syncStatus');
+            if(syncStatus) syncStatus.innerText = "Memuat...";
             if (document.getElementById('inputExpenseDate')) {
                 document.getElementById('inputExpenseDate').value = moment().format('YYYY-MM-DD');
             }
@@ -1813,6 +1816,7 @@
                         if (ls) ls.style.display = 'none';
                         setupDatePicker();
                         prosesData();
+                        if(syncStatus) syncStatus.innerText = "Data Offline (Cached)";
                     }, 50); // Eksekusi super kilat 
                 } catch (e) { }
             } else {
@@ -1822,6 +1826,7 @@
 
             try {
                 // Background Sync: Tarik data diam-diam dari API
+                if(syncStatus) syncStatus.innerText = "Sinkronisasi...";
                 const res = await fetch(API_URL + "?action=getSalesData");
                 let dataMentah = await res.json();
 
@@ -1835,6 +1840,7 @@
                 localStorage.setItem("intel_pro_cache_v3", JSON.stringify(dataMentah));
 
                 olahDataMentah(dataMentah);
+                if(syncStatus) syncStatus.innerText = "Data Terkini";
 
                 setTimeout(() => {
                     let ls = document.getElementById('loadingScreen');
@@ -1845,6 +1851,7 @@
 
             } catch (e) {
                 console.error("Sinkronisasi gagal:", e);
+                if(syncStatus) syncStatus.innerText = "Gagal Sinkronisasi";
                 if (!memoriLama) alert("Gagal mengambil data dari Google Sheet. Cek API!");
                 let ls = document.getElementById('loadingScreen');
                 if (ls) ls.style.display = 'none';
