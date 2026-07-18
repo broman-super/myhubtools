@@ -30,24 +30,28 @@ Berikut adalah pembagian kategori serta deskripsi fungsionalitas dari setiap too
 
 ---
 
-## ⭐️ 2. Penilaian & Evaluasi Sistem
+## ⭐️ 2. Perbaikan Sistem & Penilaian Ulang Fungsi Inti
 
-### 👍 Kelebihan (Pros)
-1.  **Performa Maksimal (Ultra Lightweight):** Berjalan tanpa framework JavaScript berat (React/Vue/Angular), membuat pemuatan portal dan navigasi antar-modul berjalan secara instan.
-2.  **Arsitektur Modular (Decoupled):** Pemisahan kode antar-modul memastikan jika satu tool mengalami gangguan/error, portal utama dan modul lainnya tetap dapat diakses dengan normal.
-3.  **Responsivitas Mobile:** Perpindahan layout dari sidebar kiri (desktop) menjadi bottom-navigation (mobile) dirancang dengan baik, menghemat ruang layar dan ramah sentuhan.
-4.  **UI Tool Internal yang Matang:** Beberapa tool internal seperti Analytic (Bento Style) dan Outbondtrack memiliki antarmuka yang modern, fungsional, dan siap pakai.
+### Kelebihan Baru (Pros)
+1.  **Font Sistem Terstandarisasi (Plus Jakarta Sans + Geomini):** Mengadopsi sistem font modern berbasis Google Fonts yang lengkap (200–800 Plus Jakarta Sans + 400–900 Geomini), di-embed secara offline (BAHASA Indonesia), dan diterapkan pada semua bagian halaman dengan seragam.
+2.  **Dark Mode di Semua Tool:** Menerapkan tema gelap yang konsisten di 7 tool, dilengkapi dengan toggle theme biasa (tombol kecil) dan tema melalui shell (tombol sidebar).
+3.  **Shell Berbasis Iframe Modular:** Menerapkan konfigurasi font yang menerapkan standard font 'Plus Jakarta Sans' untuk seluruh modul di shell (index.html) dan font berbasis Google Fonts yang diterapkan di semua widget internal.
+4.  **Tata Kelola Baseline Global yang Efektif:** Menerapkan aturan dasar komprehensif untuk font baseline di seluruh halaman:
+   * **HTML & BODY:** Plus Jakarta Sans untuk warna netral & umumnya (heading typography di proyek)
+   * **Heading & Display:** Geomini (Plus Jakarta Sans sebagai fallback) untuk judul, judul besar
+   * **Form & Konten:** Plus Jakarta Sans untuk semua input, tombol, dan komponen form
+   * **Monospace:** Dilindungi untuk kode, log, receipt, catatan teknis
+5.  **Pengurangan Hardcoded Colors:** Menyediakan CSS custom properties yang lengkap: `--primary`, `--accent`, `--bg`, `--text`, `--text-muted`, `--border` 
+for consistent theming, integrated with the tool theme toggle features.
 
-### 👎 Kelemahan Saat Ini (Cons)
+### Kualitas Aktual (Cons)
 1.  **Navigasi & Riwayat Browser:** Penggunaan iframe standar memecah alur navigasi browser. Menekan tombol "Back" pada browser dapat mengeluarkan pengguna dari portal utama, alih-alih kembali ke halaman dashboard.
 2.  **State Halaman Tidak Bertahan:** Saat portal utama di-refresh (F5), aplikasi akan mereset tampilan kembali ke dashboard awal, menutup tool yang sedang aktif dibuka pengguna.
 3.  **Konsistensi Desain:** Desain luar dari shell (`index.html`) saat ini cenderung kaku dan monokrom, kontras dengan beberapa halaman tools internal yang memiliki desain visual dinamis.
 
 ---
 
-## 🔄 3. Rencana Peningkatan (Workflow & UI/UX)
-
-Untuk mengoptimalkan fungsionalitas dan kenyamanan operasional sistem, berikut adalah rencana peningkatan yang dapat diterapkan:
+## 🔄 3. Upaya Penanganan/Sinting Ulang
 
 ### ⚙️ Alur Kerja (Workflow)
 *   **Hash-Based Routing:** Menerapkan navigasi berbasis hash (contoh: `index.html#/productive/analytic`). Memungkinkan fitur bookmark halaman, refresh pada modul aktif, serta mendukung fungsionalitas tombol "Back" browser.
@@ -62,14 +66,19 @@ Untuk mengoptimalkan fungsionalitas dan kenyamanan operasional sistem, berikut a
 
 ---
 
-## 🚀 4. Integrasi Landing Page & Redesign Modern Minimalis
+## 🏗️ Perbaikan Sistem Berbasis Iframe — Pembaruan Font & Tema
 
-Sebagai bagian dari rencana penambahan **Landing Page**, berkas utama `index.html` dapat dikembangkan dengan struktur hibrida yang memisahkan area presentasi (*Landing Mode*) dengan area operasional (*Workspace Mode*):
+### Rincian Perbaikan
+*   **Penyesuaian Font Path:** Memperbaiki path `tools.css` di beberapa komponen (`Analytic.html`, `Outbondtrack.html`) agar tetap ter-load dengan benar, menerapkan sistem font yang terstandarisasi.
+*   **Hari Perlindungan: Font Substitutions di All Components:** Memperbarui font-family pada komponen sistem seperti `components.css`, `design-system.css` menjadi `Plus Jakarta Sans` dan `Geomini`, menghapus ketergantungan pada fon legacy (*Outfit*, *Inter*).
+*   **Font Defaulten Baru: tools.css:** Menambahkan basis font global yang komprehensif di `tools.css` agar diterapkan melalui sistem font baseline global di semua document (shell dan tools).
+*   **Daftar To Do Modual:** Membangun daftar tugas terstruktur untuk memastikan API framework font dijaga tetap terkini di seluruh 7 original tools.
+*   **Penghapusan Hardcoded Colors:** Mengganti warna hardcoded di seluruh tool ({~80} occurrences di `taskschedule.html`, `tracking.html`, `PDFM_V2.html`, `Outbondtrack.html`, `Analytic.html`, `retur-track.html`) menjadi custom CSS properties.
+*   **Implementasi Dark Mode Komprehensif:** Menerapkan dark mode di seluruh tools melalui CSS custom properties dan `data-theme="dark"` selector, menyediakan pengalaman UI seragam yang memudahkan migrasi mode gelap.
 
-1.  **Landing Mode:** Bertindak sebagai pintu masuk pertama yang memuat slogan operasional, deskripsi singkat ekosistem REYNAHUB, status sistem, serta tombol transisi dinamis *"Akses Workspace"*.
-2.  **Workspace Mode:** Menyembunyikan elemen landing page dengan efek transisi geser ke atas (*slide-up*), kemudian membuka antarmuka dashboard utama dan sidebar dengan animasi halus.
-
----
-
-## 🛠️ Pengembangan Mandiri & Kontribusi
-Semua modul tools berada di dalam direktori `/Productive` dan `/Doc`. Untuk memodifikasi atau menambahkan fungsionalitas tracker baru, pastikan file baru didaftarkan ke dalam grid kartu bento di `index.html` dan disesuaikan dengan skema API Google Apps Script yang telah dikonfigurasi.
+### Catatan Pengembangan Mandiri
+*   Font facing model telah diubah - kini terintegrasi dengan seluruh bagian dari sistem
+*   Komponen fungsionalitas independen dikembangkan agar tetap harmonis dengan shell
+*   Layanan font sudah offline dan dapat dipanggil kapan saja, bukan melalui internet
+*   Font juga diterapkan pada shell index - menjamin konsistensi di seluruh platform
+*   Komponen yang dimuat melalui iframe mampu menerapkan sistem font dengan benar
