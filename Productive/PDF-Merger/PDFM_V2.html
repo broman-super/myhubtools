@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="light">
 <head>
+    <link rel="stylesheet" href="../../src/styles/tools.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Label Merger V2 - Gabung & Analisis PDF Resi A6</title>
@@ -12,8 +13,8 @@
 
     <style>
         :root {
-            --primary: #007bff;
-            --primary-hover: #0056b3;
+            --primary: #ff0000;
+            --primary-hover: #cc0000;
             --danger: #dc3545;
             --success: #28a745;
             --bg: #f8f9fa;
@@ -21,18 +22,17 @@
             --radius: 8px;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f0f2f5;
+            margin: 0;
+            font-family: 'Plus Jakarta Sans';
+            background: var(--bg);
             padding: 1rem;
             display: flex;
             justify-content: center;
         }
 
         .container {
-            background: white;
+            background: var(--bg);
             width: 100%;
             max-width: 900px;
             border-radius: 12px;
@@ -41,7 +41,7 @@
         }
 
         h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
-        .subtitle { font-size: 0.9rem; color: #666; margin-bottom: 1.5rem; }
+        .subtitle { font-size: 0.9rem; color: #94a3b8; margin-bottom: 1.5rem; }
 
         #dropzone {
             border: 2px dashed var(--border);
@@ -74,8 +74,8 @@
             display: flex;
             align-items: center;
             padding: 0.6rem 0.75rem;
-            background: white;
-            border-bottom: 1px solid #eee;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
             cursor: grab;
         }
         #file-list li .handle { margin-right: 0.5rem; color: #999; cursor: grab; user-select: none; }
@@ -92,9 +92,8 @@
             cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 0.3rem;
             transition: 0.2s;
         }
-        .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
-        .btn-outline { background: white; border: 1px solid var(--border); color: #333; }
+        .btn-outline { background: var(--bg); border: 1px solid var(--border); color: #f1f5f9; }
         .btn-outline:hover { background: #f1f1f1; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -105,15 +104,15 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             padding: 1rem;
-            background: #fafafa;
+            background: var(--bg);
         }
         .summary h2 { font-size: 1.1rem; margin-bottom: 0.75rem; }
         .summary-stats { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
         .stat-card {
-            background: white; border: 1px solid var(--border); border-radius: 6px;
+            background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
             padding: 0.5rem 1rem; min-width: 100px;
         }
-        .stat-card .label { font-size: 0.8rem; color: #666; }
+        .stat-card .label { font-size: 0.8rem; color: #94a3b8; }
         .stat-card .value { font-size: 1.2rem; font-weight: bold; }
 
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.5rem; }
@@ -122,13 +121,53 @@
         }
         .data-table th { background: #f1f1f1; }
         .duplicate { background: #fff3cd !important; }
-        .hidden { display: none; }
 
         @media (max-width: 600px) {
             .container { padding: 1rem; }
             .actions { flex-direction: column; }
             .btn { width: 100%; justify-content: center; }
         }
+
+        .theme-toggle {
+            background: var(--bg, #f8fafc);
+            border: 1px solid var(--border, #e2e8f0);
+            color: var(--text, #0f172a);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-family: 'Plus Jakarta Sans';
+            font-weight: 600;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .theme-toggle:hover {
+            background: var(--primary-light, rgba(255,0,0,0.08));
+            color: var(--primary, #ff0000);
+            border-color: var(--primary, #ff0000);
+        }
+        .theme-toggle svg { width: 16px; height: 16px; }
+
+        [data-theme="dark"] {
+            --primary: #ff3b3b;
+            --primary-hover: #ff5c5c;
+            --danger: #f87171;
+            --success: #34d399;
+            --bg: #0f172a;
+            --border: #334155;
+        }
+        [data-theme="dark"] body { background: var(--bg); color: #f1f5f9; }
+        [data-theme="dark"] .container { background: var(--bg); }
+        [data-theme="dark"] .card, [data-theme="dark"] .file-label, [data-theme="dark"] .file-item {
+            background: #1e293b; border-color: var(--border); color: #f1f5f9;
+        }
+        [data-theme="dark"] input, [data-theme="dark"] select {
+            background: #1e293b; border-color: var(--border); color: #f1f5f9;
+        }
+        [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3 { color: #f1f5f9; }
+        [data-theme="dark"] .dropzone { border-color: #475569; color: #94a3b8; }
     </style>
 </head>
 <body>
@@ -150,6 +189,10 @@
     <ul id="file-list"><li class="empty-message">Belum ada file</li></ul>
 
     <div class="actions">
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        Theme
+                    </button>
         <button class="btn btn-primary" id="merge-btn" disabled>Gabung Semua & Download</button>
         <button class="btn btn-outline" id="analyze-btn" disabled>🔍 Analisis Data</button>
         <button class="btn btn-outline hidden" id="merge-per-kurir-btn">📦 Gabung per Kurir</button>
@@ -182,5 +225,18 @@
 <script src="assets/js/parser.js"></script>
 <script src="assets/js/app.js"></script>
 
+    <script>
+        function toggleTheme() {
+            var html = document.documentElement;
+            var current = html.getAttribute('data-theme') || 'light';
+            var next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+        }
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'SET_THEME') {
+                document.documentElement.setAttribute('data-theme', e.data.theme);
+            }
+        });
+    </script>
 </body>
 </html>

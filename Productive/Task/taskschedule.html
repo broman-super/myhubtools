@@ -1,20 +1,12 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="light">
 
 <head>
+    <link rel="stylesheet" href="../../src/styles/tools.css">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Premium Team Planner</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
     :root {
       --accent: #6366f1;
       --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
@@ -24,6 +16,8 @@
       --border: #e2e8f0;
       --radius: 16px;
       --radius-sm: 12px;
+      --primary: #ff0000;
+      --primary-light: rgba(255, 0, 0, 0.08);
     }
 
     /* TOP LOADER (YouTube Style) */
@@ -72,7 +66,7 @@
       font-weight: 600;
       color: var(--text-soft);
       padding: 2px 6px;
-      background: #f1f5f9;
+      background: var(--bg);
       border-radius: 6px;
       cursor: pointer;
       display: inline-block;
@@ -80,15 +74,14 @@
     }
 
     .more-indicator:hover {
-      background: #e2e8f0;
+      background: var(--border);
     }
 
     body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans';
       background-image: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
-      color: var(--text);
-      overflow-x: hidden;
     }
 
     /* ═══════════════════════════════════════
@@ -124,7 +117,7 @@
     .nav {
       display: flex;
       gap: 4px;
-      background: #f1f5f9;
+      background: var(--bg);
       padding: 4px;
       border-radius: 12px;
     }
@@ -148,7 +141,7 @@
     }
 
     .nav-item.active {
-      background: #fff;
+      background: var(--bg);
       color: var(--accent);
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
@@ -195,14 +188,14 @@
       gap: 10px;
       align-items: center;
       border-bottom: 1px solid var(--border);
-      background: #fff;
+      background: var(--bg);
     }
 
     .stat-pill {
       display: flex;
       align-items: center;
       gap: 6px;
-      background: #fff;
+      background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 20px;
       padding: 5px 14px;
@@ -216,7 +209,7 @@
 
 
     .stat-card {
-      background: #fff;
+      background: var(--bg);
       padding: 20px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
@@ -246,7 +239,7 @@
 
     .stat-bar {
       height: 6px;
-      background: #f1f5f9;
+      background: var(--bg);
       border-radius: 10px;
       margin-top: 8px;
       overflow: hidden;
@@ -284,13 +277,13 @@
     }
 
     .btn-ghost {
-      background: #fff;
+      background: var(--bg);
       border: 1px solid var(--border);
       color: var(--text-soft);
     }
 
     .btn-ghost:hover {
-      background: #f8fafc;
+      background: var(--bg);
       border-color: var(--accent);
       color: var(--accent);
     }
@@ -306,7 +299,7 @@
 
     .tab-group {
       display: flex;
-      background: #fff;
+      background: var(--bg);
       padding: 4px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
@@ -376,7 +369,7 @@
       align-items: center;
       gap: 12px;
       padding: 8px 16px;
-      background: #fff;
+      background: var(--bg);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       cursor: pointer;
@@ -437,7 +430,7 @@
 
     .week-col,
     .cal-cell {
-      background: #fff;
+      background: var(--bg);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       min-height: clamp(60px, 10vh, 180px);
@@ -455,7 +448,7 @@
     .cal-cell.other {
       opacity: 0.45;
       filter: grayscale(100%);
-      background: #fafbfc;
+      background: var(--bg);
     }
 
     .week-col-head,
@@ -641,7 +634,7 @@
       top: 100%;
       left: 0;
       z-index: 3000;
-      background: #fff;
+      background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 20px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
@@ -767,7 +760,7 @@
     .modal {
       width: 90%;
       max-width: 500px;
-      background: #fff;
+      background: var(--bg);
       border-radius: var(--radius);
       padding: 32px;
       box-shadow: var(--shadow-lg);
@@ -850,7 +843,7 @@
     /* Detail Panel */
     .detail-panel {
       margin: 16px 40px 32px;
-      background: #fff;
+      background: var(--bg);
       border-radius: var(--radius);
       padding: 24px;
       border: 1px solid var(--border);
@@ -879,13 +872,13 @@
 
     /* Utility */
     .btn-danger {
-      background: #fef2f2;
-      color: #ef4444;
+      background: var(--primary-light);
+      color: var(--primary);
       border: 1px solid rgba(239, 68, 68, 0.2);
     }
 
     .btn-danger:hover {
-      background: #fee2e2;
+      background: var(--primary-light);
     }
 
     /* Day-detail accordion dropdown */
@@ -915,7 +908,7 @@
       font-size: 13px;
       color: var(--text-soft);
       line-height: 1.6;
-      border-top: 1px dashed rgba(0, 0, 0, 0.08);
+      border-top: 1px dashed var(--border);
     }
 
     .dd-body.open {
@@ -959,7 +952,7 @@
         gap: 12px;
         position: sticky;
         top: 0;
-        background: #fff;
+        background: var(--bg);
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
       }
 
@@ -979,7 +972,7 @@
         width: 100%;
         order: 3;
         justify-content: space-between;
-        background: #f8fafc;
+        background: var(--bg);
         border: 1px solid var(--border);
         margin-top: 4px;
       }
@@ -1153,13 +1146,13 @@
 
     .cal-cell.is-holiday,
     .week-col.is-holiday {
-      border-color: #ef4444;
-      background: #fef2f2;
+      border-color: var(--primary);
+      background: var(--primary-light);
     }
 
     .cal-cell.is-holiday .cal-cell-num,
     .week-col.is-holiday .week-col-head {
-      color: #ef4444;
+      color: var(--primary);
     }
 
     .cal-cell.is-leave,
@@ -1186,7 +1179,7 @@
 
     .holiday-label {
       font-size: 8.5px;
-      color: #ef4444;
+      color: var(--primary);
       line-height: 1.1;
       font-weight: 700;
       text-align: right;
@@ -1224,7 +1217,7 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      background: #fff;
+      background: var(--bg);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 16px;
@@ -1236,7 +1229,7 @@
       position: relative;
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      background: #fff;
+      background: var(--bg);
     }
 
     .timeline-scroll-x.zoom-active {
@@ -1284,7 +1277,7 @@
       position: sticky;
       top: 0;
       z-index: 20;
-      background: #fff;
+      background: var(--bg);
       border-bottom: 2px solid var(--border);
     }
 
@@ -1307,7 +1300,7 @@
       font-size: 11px;
       font-weight: 700;
       padding: 4px 0;
-      border-right: 1px solid #f1f5f9;
+      border-right: 1px solid var(--border);
       color: var(--text-soft);
       flex-shrink: 0;
       line-height: 1.2;
@@ -1329,7 +1322,7 @@
     }
 
     .tl-day-header.weekend {
-      background: #f8fafc;
+      background: var(--bg);
     }
 
     .tl-day-header.sunday {
@@ -1337,7 +1330,7 @@
     }
 
     .tl-day-header.holiday {
-      color: #ef4444;
+      color: var(--primary);
     }
 
     .tl-day-header .holi-name {
@@ -1352,7 +1345,7 @@
     /* Body rows */
     .timeline-body-rows {
       position: relative;
-      background: #fff;
+      background: var(--bg);
     }
 
     .timeline-row-label {
@@ -1361,7 +1354,7 @@
       padding: 6px 12px;
       font-size: 12px;
       font-weight: 600;
-      border-right: 1px solid #e5e7eb;
+      border-right: 1px solid var(--border);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -1369,15 +1362,15 @@
       overflow: hidden;
       text-overflow: ellipsis;
       cursor: pointer;
-      color: #1e293b;
-      background: #fff;
+      color: var(--text);
+      background: var(--bg);
     }
 
     .timeline-row {
       display: grid;
       grid-template-columns: var(--tl-label-w, 180px) 1fr;
       min-height: 34px;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid var(--border);
       transition: 0.15s;
     }
 
@@ -1436,7 +1429,7 @@
     }
 
     .timeline-bar.campaign {
-      color: #1e293b;
+      color: var(--text);
     }
 
     .timeline-bar.task {
@@ -1519,7 +1512,7 @@
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
-      background: #f1f5f9;
+      background: var(--bg);
       color: var(--text-soft);
       border: 1px solid transparent;
       transition: 0.15s;
@@ -1527,7 +1520,7 @@
     }
 
     .filter-chip:hover {
-      background: #e2e8f0;
+      background: var(--border);
     }
 
     .filter-chip.active {
@@ -1542,7 +1535,7 @@
       position: absolute;
       bottom: calc(100% + 6px);
       left: 0;
-      background: #1e293b;
+      background: var(--text);
       color: #fff;
       padding: 8px 12px;
       border-radius: 8px;
@@ -1575,7 +1568,7 @@
       font-weight: 600;
       color: var(--accent);
       cursor: pointer;
-      background: #fff;
+      background: var(--bg);
       border: 1px dashed var(--border);
       border-radius: var(--radius-sm);
       margin-top: 8px;
@@ -1614,6 +1607,60 @@
         padding: 8px;
       }
     }
+
+    .theme-toggle {
+      background: var(--bg, #f8fafc);
+      border: 1px solid var(--border, #e2e8f0);
+      color: var(--text, #0f172a);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-family: 'Plus Jakarta Sans';
+      font-weight: 600;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .theme-toggle:hover {
+      background: var(--primary-light, rgba(255,0,0,0.08));
+      color: var(--primary, #ff0000);
+      border-color: var(--primary, #ff0000);
+    }
+    .theme-toggle svg { width: 16px; height: 16px; }
+
+    [data-theme="dark"] {
+        --accent: #818cf8;
+        --accent-gradient: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+        --bg: #0f172a;
+        --text: #f1f5f9;
+        --text-soft: #94a3b8;
+        --border: #334155;
+        --primary: #ff3b3b;
+        --primary-light: rgba(255, 59, 59, 0.15);
+    }
+    [data-theme="dark"] body {
+        background-image: radial-gradient(circle at 20% 30%, rgba(129,140,248,0.06) 0%, transparent 50%),
+                          radial-gradient(circle at 80% 70%, rgba(192,132,252,0.06) 0%, transparent 50%);
+    }
+    [data-theme="dark"] .topbar,
+    [data-theme="dark"] .sidebar,
+    [data-theme="dark"] .main-content,
+    [data-theme="dark"] .card,
+    [data-theme="dark"] .modal-content,
+    [data-theme="dark"] .timeline-item,
+    [data-theme="dark"] .stat-card,
+    [data-theme="dark"] .form-section,
+    [data-theme="dark"] input,
+    [data-theme="dark"] select,
+    [data-theme="dark"] textarea {
+        background: #1e293b;
+        border-color: #334155;
+        color: #f1f5f9;
+    }
+    [data-theme="dark"] .stat-card { background: #1e293b; }
+    [data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7); }
   </style>
 </head>
 
@@ -1676,6 +1723,10 @@
         </div>
 
         <div class="topbar-right">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    Theme
+                </button>
           <button class="btn btn-ghost" style="padding:8px 12px;font-size:13px;" onclick="refreshData()"
             id="refresh-btn-top" title="Refresh">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2759,7 +2810,7 @@
         leg += '<div class="tpi" style="border-left:4px solid ' + item.color + ';"><div class="tpit">' + (isC ? '📢' : '📝') + ' ' + esc(item.title) + '</div><div class="tpid">' + dr + tags + prio + st + '</div><div class="tpidesc">' + esc(item.description || '—') + '</div></div>';
       });
 
-      const html = '<!DOCTYPE html><html><head><title>Cetak Timeline - ' + monthName + '</title><style>@page{size:landscape;margin:8mm;}*{box-sizing:border-box;}body{font-family:system-ui,sans-serif;margin:0;padding:0;font-size:12px;color:#1e293b;background:#fff;}.p-grid{display:grid;grid-template-columns:130px repeat(' + daysIn + ',1fr);gap:0;}.p-corner{padding:4px 8px;font-weight:800;font-size:11px;border-bottom:1px solid #e5e7eb;grid-column:1;color:#1e293b;}.p-label{grid-column:1;padding:3px 8px;font-size:9px;font-weight:600;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1e293b;background:#fff;}.p-track{grid-column:2/-1;display:grid;grid-template-columns:repeat(' + daysIn + ',1fr);border-bottom:1px solid rgba(0,0,0,0.05);min-height:22px;align-items:center;}.pdh{padding:3px 3px;text-align:center;font-size:8px;font-weight:700;border-bottom:1px solid rgba(0,0,0,0.07);border-right:1px solid rgba(0,0,0,0.04);color:#475569;}.pdh.today{background:#3b82f6;color:#fff;}.pdh.weekend{background:rgba(239,68,68,0.08);}.pdh.holiday{color:#ef4444;}.pdn{display:block;font-size:6px;font-weight:400;opacity:0.5;text-transform:uppercase;letter-spacing:0.5px;}.phn{font-size:6px;display:block;font-weight:400;}.tpb{height:16px;border-radius:3px;font-size:7px;display:flex;align-items:center;padding:0 5px;white-space:nowrap;overflow:visible;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,0.08);-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:1px 0;min-width:0;}.tpb.camp{color:#1e293b;}.tpb.task{border-left:2px solid;color:#1e293b;}.tpb-text{white-space:nowrap;overflow:visible;}.p-sun{align-self:stretch;background:rgba(239,68,68,0.08);}.p-leg{margin-top:16px;padding-top:12px;border-top:1.5px solid #cbd5e1;}.p-leg h2{margin:0 0 10px;font-size:14px;color:#1e293b;}.p-lst{column-count:2;column-gap:20px;}.tpi{break-inside:avoid;margin-bottom:8px;padding:6px 10px;background:#f8fafc;border-bottom:1px solid #e5e7eb;border-radius:4px;}.tpit{font-weight:700;font-size:10px;color:#1e293b;margin-bottom:2px;}.tpid{font-size:9px;color:#475569;}.tpidesc{font-size:9px;color:#334155;margin-top:2px;}@media print{.no-print{display:none!important;}}</style></head><body><div class="p-grid">' + hd + rows + '</div><div class="p-leg"><h2>Daftar Campaign & Tugas - ' + monthName + '</h2><div class="p-lst">' + leg + '</div></div></body></html>';
+      const html = '<!DOCTYPE html><html><head><title>Cetak Timeline - ' + monthName + '</title><style>@page{size:landscape;margin:8mm;}*{box-sizing:border-box;}body{font-family:'Plus Jakarta Sans';margin:0;padding:0;font-size:12px;color:#1e293b;background:#fff;}.p-grid{display:grid;grid-template-columns:130px repeat(' + daysIn + ',1fr);gap:0;}.p-corner{padding:4px 8px;font-weight:800;font-size:11px;border-bottom:1px solid #e5e7eb;grid-column:1;color:#1e293b;}.p-label{grid-column:1;padding:3px 8px;font-size:9px;font-weight:600;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1e293b;background:#fff;}.p-track{grid-column:2/-1;display:grid;grid-template-columns:repeat(' + daysIn + ',1fr);border-bottom:1px solid rgba(0,0,0,0.05);min-height:22px;align-items:center;}.pdh{padding:3px 3px;text-align:center;font-size:8px;font-weight:700;border-bottom:1px solid rgba(0,0,0,0.07);border-right:1px solid rgba(0,0,0,0.04);color:#475569;}.pdh.today{background:#3b82f6;color:#fff;}.pdh.weekend{background:rgba(239,68,68,0.08);}.pdh.holiday{color:#ef4444;}.pdn{display:block;font-size:6px;font-weight:400;opacity:0.5;text-transform:uppercase;letter-spacing:0.5px;}.phn{font-size:6px;display:block;font-weight:400;}.tpb{height:16px;border-radius:3px;font-size:7px;display:flex;align-items:center;padding:0 5px;white-space:nowrap;overflow:visible;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,0.08);-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:1px 0;min-width:0;}.tpb.camp{color:#1e293b;}.tpb.task{border-left:2px solid;color:#1e293b;}.tpb-text{white-space:nowrap;overflow:visible;}.p-sun{align-self:stretch;background:rgba(239,68,68,0.08);}.p-leg{margin-top:16px;padding-top:12px;border-top:1.5px solid #cbd5e1;}.p-leg h2{margin:0 0 10px;font-size:14px;color:#1e293b;}.p-lst{column-count:2;column-gap:20px;}.tpi{break-inside:avoid;margin-bottom:8px;padding:6px 10px;background:#f8fafc;border-bottom:1px solid #e5e7eb;border-radius:4px;}.tpit{font-weight:700;font-size:10px;color:#1e293b;margin-bottom:2px;}.tpid{font-size:9px;color:#475569;}.tpidesc{font-size:9px;color:#334155;margin-top:2px;}@media print{.no-print{display:none!important;}}</style></head><body><div class="p-grid">' + hd + rows + '</div><div class="p-leg"><h2>Daftar Campaign & Tugas - ' + monthName + '</h2><div class="p-lst">' + leg + '</div></div></body></html>';
       const win = window.open('', '_blank');
       win.document.write(html);
       win.document.close();
@@ -3386,10 +3437,10 @@
       const win = window.open('', '_blank');
       win.document.write(`
         <html>
-        <head>
+<head>
           <title>Print - ${title}</title>
           <style>
-            body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 15px; color: #1e293b; background: #fff; width: 100%; box-sizing: border-box; }
+            body { font-family: 'Plus Jakarta Sans'; margin: 0; padding: 15px; color: #1e293b; background: #fff; width: 100%; box-sizing: border-box; }
             .container { ${isMany ? 'display: block;' : 'display: flex; gap: 24px; width: 100%;'} }
             .cal-side { ${!isMany ? 'flex: 7.2; min-width: 0;' : 'margin-bottom: 24px; page-break-after: auto;'} }
             .list-side { ${!isMany ? 'flex: 2.8; border-left: 1px solid #e2e8f0; padding-left: 16px; min-width: 0;' : 'border-top: 2px dashed #cbd5e1; padding-top: 24px;'} }
@@ -3418,7 +3469,7 @@
             .p-cell-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px; }
             .p-today-marker { background: #3b82f6 !important; color: #fff !important; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .p-holiday { font-size: 8px; color: #ef4444; font-weight: 700; text-align: right; margin-left: 4px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .p-holiday.p-leave-label { color: #d97706; }
+            .p-holiday.p-leave-label {       color: #d97706;
             .p-day-names { display: grid; grid-template-columns: repeat(7, 14.285%); text-align: center; font-size: 10px; font-weight: 800; opacity: 0.6; margin-bottom: 5px; }
 
             .p-chip { height: 16px; margin-top: 2px; font-size: 9px; color: #fff; padding: 0 6px; display: flex; align-items: center; white-space: nowrap; overflow: hidden; font-weight: 700; line-height: 1; box-sizing: border-box; }
@@ -3461,6 +3512,19 @@
       win.document.close();
     }
   </script>
+    <script>
+        function toggleTheme() {
+            var html = document.documentElement;
+            var current = html.getAttribute('data-theme') || 'light';
+            var next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+        }
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'SET_THEME') {
+                document.documentElement.setAttribute('data-theme', e.data.theme);
+            }
+        });
+    </script>
 </body>
 
 </html>

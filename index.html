@@ -4,575 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>REYNAHUB — Operating System Portal</title>
-    
-    <!-- Premium Fonts: Outfit untuk Heading, Inter untuk Body -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            /* --- LIGHT THEME VARIABLES --- */
-            --bg-primary: #f8fafc;
-            --bg-card: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --accent: #ff0000; /* Merah Khas Reynahub */
-            --accent-glow: rgba(255, 0, 0, 0.08);
-            --border: rgba(15, 23, 42, 0.06);
-            --sidebar-bg: #000000;
-            --sidebar-color: #ffffff;
-            --sidebar-width: 70px;
-            --radius-bento: 18px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        [data-theme="dark"] {
-            /* --- DARK THEME VARIABLES --- */
-            --bg-primary: #090d16;
-            --bg-card: #121826;
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
-            --accent: #ff3b3b;
-            --accent-glow: rgba(255, 59, 59, 0.15);
-            --border: rgba(255, 255, 255, 0.07);
-            --sidebar-bg: #060911;
-            --sidebar-color: #f1f5f9;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0; padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-main);
-            overflow: hidden;
-            height: 100dvh;
-            width: 100vw;
-            transition: background 0.3s ease, color 0.3s ease;
-        }
-
-        /* --- 1. MODERN MINIMALIST LANDING PAGE --- */
-        #landing-page {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            background: radial-gradient(circle at top right, var(--accent-glow), transparent 45%), var(--bg-primary);
-            z-index: 1000;
-            padding: 30px;
-            text-align: center;
-            transition: transform 0.6s cubic-bezier(0.85, 0, 0.15, 1), opacity 0.5s ease;
-        }
-
-        #landing-page.hide {
-            transform: translateY(-100vh);
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .hero-logo {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.6rem;
-            font-weight: 900;
-            letter-spacing: 3px;
-            color: var(--accent);
-            margin-bottom: 25px;
-            text-transform: uppercase;
-        }
-
-        .hero-title {
-            font-family: 'Outfit', sans-serif;
-            font-size: clamp(2.4rem, 6vw, 4rem);
-            font-weight: 900;
-            line-height: 1.1;
-            letter-spacing: -2px;
-            margin-bottom: 16px;
-        }
-
-        .hero-title span {
-            background: linear-gradient(to right, var(--accent), #ff7b7b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .hero-desc {
-            font-size: clamp(0.9rem, 2vw, 1.1rem);
-            color: var(--text-muted);
-            max-width: 600px;
-            margin-bottom: 40px;
-            line-height: 1.6;
-            font-weight: 300;
-        }
-
-        .btn-primary {
-            position: relative;
-            background: var(--text-main);
-            color: var(--bg-primary);
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 700;
-            padding: 16px 36px;
-            border-radius: 50px;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-            transition: var(--transition);
-            display: inline-flex; align-items: center; gap: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px var(--accent-glow);
-            background: var(--accent);
-            color: #ffffff;
-        }
-
-        .btn-primary svg {
-            transition: var(--transition);
-        }
-
-        .btn-primary:hover svg {
-            transform: translateX(4px);
-        }
-
-        /* --- 2. WORKSPACE APP INTERFACE --- */
-        #workspace {
-            display: flex;
-            height: 100dvh;
-            width: 100vw;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-
-        #workspace.active {
-            opacity: 1;
-        }
-
-        /* Sidebar Kustom Premium */
-        aside {
-            width: var(--sidebar-width);
-            background: var(--sidebar-bg);
-            display: flex; flex-direction: column;
-            align-items: center; padding: 25px 0;
-            z-index: 99;
-            transition: var(--transition);
-        }
-
-        .aside-logo {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 900;
-            font-size: 1.5rem;
-            color: var(--accent);
-            cursor: pointer;
-            margin-bottom: 35px;
-            text-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
-        }
-
-        .nav-list {
-            flex: 1; display: flex; flex-direction: column;
-            gap: 15px; width: 100%; align-items: center;
-        }
-
-        .nav-btn {
-            width: 44px; height: 44px;
-            border-radius: 12px;
-            background: transparent; border: none;
-            color: #666666; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            transition: var(--transition);
-        }
-
-        .nav-btn svg { width: 20px; height: 20px; fill: currentColor; }
-        
-        /* State Hover dan Active pada Sidebar */
-        .nav-btn:hover, .nav-btn.active {
-            color: #ffffff;
-            background: #1e1e1e;
-        }
-        
-        .nav-btn.active {
-            color: var(--accent);
-            background: #111111;
-            box-shadow: inset 0 0 6px rgba(0,0,0,0.8);
-        }
-
-        .nav-bottom {
-            margin-top: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            align-items: center;
-            width: 100%;
-        }
-
-        /* --- MAIN REGION --- */
-        main {
-            flex: 1; position: relative;
-            overflow: hidden; height: 100%;
-        }
-
-        /* Dashboard View Scrollable */
-        #dashboard-view {
-            padding: 40px;
-            height: 100%; overflow-y: auto;
-            scroll-behavior: smooth;
-        }
-
-        .dashboard-header {
-            margin-bottom: 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 25px;
-        }
-
-        .header-info h2 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 2.2rem;
-            font-weight: 800;
-            letter-spacing: -1px;
-            line-height: 1.1;
-        }
-
-        .header-info p {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-top: 6px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        /* Filter Kategori Tabs */
-        .search-and-filter {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-
-        .search-box {
-            position: relative;
-            flex: 1;
-            min-width: 250px;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 12px 16px 12px 42px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            background: var(--bg-card);
-            color: var(--text-main);
-            font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
-            outline: none;
-            transition: var(--transition);
-        }
-
-        .search-box input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-
-        .search-box svg {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            width: 18px;
-            height: 18px;
-            pointer-events: none;
-        }
-
-        .section-label {
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 800;
-            letter-spacing: 2.5px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            margin: 35px 0 15px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .section-label::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--border);
-        }
-
-        /* Bento Grid Layout Premium */
-        .bento-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 15px;
-        }
-
-        .bento-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-bento);
-            padding: 24px;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            min-height: 140px;
-            transition: var(--transition);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-        }
-
-        .bento-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 3px;
-            background: var(--accent);
-            opacity: 0; transition: var(--transition);
-        }
-
-        .bento-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px -10px var(--accent-glow);
-            border-color: var(--accent);
-        }
-
-        .bento-card:hover::before {
-            opacity: 1;
-        }
-
-        .card-top {
-            margin-bottom: 12px;
-        }
-
-        .bento-card h3 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            color: var(--text-main);
-        }
-
-        .bento-card p {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            line-height: 1.45;
-        }
-
-        .card-action {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            margin-top: 15px;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            font-weight: 600;
-            gap: 5px;
-            transition: var(--transition);
-        }
-
-        .bento-card:hover .card-action {
-            color: var(--accent);
-        }
-
-        .card-action svg {
-            width: 14px;
-            height: 14px;
-            transition: var(--transition);
-        }
-
-        .bento-card:hover .card-action svg {
-            transform: translateX(3px);
-        }
-
-        /* --- FRAME CONTAINER --- */
-        #frame-container {
-            display: none; position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: var(--bg-primary); z-index: 10;
-        }
-
-        iframe {
-            width: 100%; height: 100%; border: none; display: block;
-        }
-
-        /* --- 3. PREMIUM ABOUT MODAL --- */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(5px);
-            z-index: 2000;
-            display: none;
-            justify-content: center; align-items: center;
-            padding: 20px;
-        }
-
-        .modal-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-bento);
-            width: 100%;
-            max-width: 500px;
-            padding: 35px;
-            position: relative;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-            animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes modalFadeIn {
-            from { opacity: 0; transform: scale(0.95) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 20px; right: 20px;
-            background: transparent; border: none;
-            color: var(--text-muted); cursor: pointer;
-            width: 32px; height: 32px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 50%;
-            transition: var(--transition);
-        }
-
-        .modal-close:hover {
-            background: var(--border);
-            color: var(--text-main);
-        }
-
-        .modal-title {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.4rem;
-            font-weight: 800;
-            margin-bottom: 12px;
-            color: var(--text-main);
-        }
-
-        .modal-body {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            line-height: 1.6;
-        }
-
-        .modal-body p {
-            margin-bottom: 15px;
-        }
-
-        .modal-body ul {
-            list-style-type: none;
-            padding-left: 0;
-            margin-bottom: 15px;
-        }
-
-        .modal-body li {
-            position: relative;
-            padding-left: 18px;
-            margin-bottom: 8px;
-        }
-
-        .modal-body li::before {
-            content: "•";
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-            font-weight: bold;
-        }
-
-        /* --- 4. RESPONSIVE DESIGN --- */
-        @media (max-width: 768px) {
-            #workspace { flex-direction: column; }
-            
-            aside {
-                width: 100%; height: 56px;
-                flex-direction: row; padding: 0 15px;
-                border-top: 1px solid var(--border);
-                position: fixed; bottom: 0; left: 0;
-                background: var(--sidebar-bg);
-                height: calc(56px + env(safe-area-inset-bottom));
-                padding-bottom: env(safe-area-inset-bottom);
-            }
-            
-            .aside-logo { display: none; }
-            .nav-list { flex-direction: row; justify-content: space-around; width: 100%; }
-            .nav-bottom { margin-top: 0; flex-direction: row; gap: 15px; width: auto; }
-            
-            #dashboard-view {
-                padding: 24px;
-                padding-bottom: 100px;
-            }
-            
-            #frame-container {
-                bottom: calc(56px + env(safe-area-inset-bottom));
-            }
-
-            .dashboard-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="src/styles/tools.css">
+    <link rel="stylesheet" href="src/styles/design-system.css">
+    <link rel="stylesheet" href="src/styles/components.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23FF0000'/%3E%3Ctext x='16' y='22' font-family='Helvetica,Arial,sans-serif' font-size='16' font-weight='700' fill='white' text-anchor='middle'%3ER%3C/text%3E%3C/svg%3E">
 </head>
 <body>
 
-    <!-- 1. PREMIUM LANDING PAGE -->
+    <!-- LANDING PAGE -->
     <div id="landing-page">
         <div class="hero-logo">REYNAHUB</div>
         <h1 class="hero-title">Elevate Your <span>Workflow.</span></h1>
         <p class="hero-desc">Workspace Hub operasional terpadu yang merangkum seluruh instrumen pencatatan, pemetaan tugas tim, dan visualisasi data analisis real-time dalam satu ekosistem minimalis.</p>
-        <button class="btn-primary" onclick="enterWorkspace()">
+        <button class="hero-btn" id="enter-btn">
             Akses Workspace
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </button>
     </div>
 
-    <!-- 2. MAIN WORKSPACE ENVIRONMENT -->
+    <!-- WORKSPACE -->
     <div id="workspace">
-        <!-- Sidebar Navigation -->
         <aside>
-            <div class="aside-logo" onclick="goHome()">R.</div>
-            
+            <div class="aside-logo" id="aside-logo">R.</div>
             <div class="nav-list">
-                <button class="nav-btn active" id="nav-all" onclick="filterGroup('all', this)" title="Semua Modul">
+                <button class="nav-btn active" data-group="all" title="Semua Modul">
                     <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
                 </button>
-                <button class="nav-btn" id="nav-prod" onclick="filterGroup('prod', this)" title="Productive">
+                <button class="nav-btn" data-group="productive" title="Productive">
                     <svg viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
                 </button>
-                <button class="nav-btn" id="nav-util" onclick="filterGroup('util', this)" title="Universal Tools">
+                <button class="nav-btn" data-group="universal" title="Universal Tools">
                     <svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.5 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>
                 </button>
             </div>
-
             <div class="nav-bottom">
-                <!-- Theme Toggle Button -->
-                <button class="nav-btn" onclick="toggleTheme()" title="Ubah Tema">
+                <button class="nav-btn" id="theme-btn" title="Ubah Tema">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                 </button>
-                
-                <!-- About Modal Button -->
-                <button class="nav-btn" onclick="openAboutModal()" title="Tentang Sistem">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <button class="nav-btn" id="about-btn" title="Tentang Sistem">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                 </button>
             </div>
         </aside>
 
-        <!-- Main Workspace Area -->
         <main>
             <div id="dashboard-view">
                 <header class="dashboard-header">
@@ -582,130 +56,34 @@
                     </div>
                 </header>
 
-                <!-- Search and Filtering Area -->
                 <div class="search-and-filter">
                     <div class="search-box">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        <input type="text" id="toolSearch" oninput="searchTools()" placeholder="Cari modul operasional...">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" id="toolSearch" placeholder="Cari modul operasional...">
                     </div>
                 </div>
 
-                <!-- 01 / PRODUCTIVE -->
-                <div id="section-prod" class="group-section">
+                <div id="section-productive" class="group-section">
                     <span class="section-label">01 / Productive</span>
-                    <div class="bento-grid">
-                        <div class="bento-card" data-search="team planner manajemen tugas tim real-time" onclick="navigateTo('#productive/planner')">
-                            <div class="card-top">
-                                <h3>Team Planner</h3>
-                                <p>Manajemen perencanaan tugas tim dan sinkronisasi log harian secara real-time.</p>
-                            </div>
-                            <div class="card-action">
-                                Buka Modul
-                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </div>
-                        <div class="bento-card" data-search="analytic dashboard sales analytic simplify sas visualisasi data" onclick="navigateTo('#productive/analytic')">
-                            <div class="card-top">
-                                <h3>Analytic Dashboard</h3>
-                                <p>SAS Bento Edition. Grafik interaktif analisis penjualan dan visualisasi performa data.</p>
-                            </div>
-                            <div class="card-action">
-                                Buka Modul
-                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </div>
-                        <div class="bento-card" data-search="latch web link kumpulan link penting kegiatan" onclick="navigateTo('#productive/latch')">
-                            <div class="card-top">
-                                <h3>LATCH Web Link</h3>
-                                <p>Portal pengumpul dan manajemen tautan/link berkas penting kebutuhan operasional.</p>
-                            </div>
-                            <div class="card-action">
-                                Buka Modul
-                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="bento-grid" id="grid-productive"></div>
                 </div>
 
-                <!-- 02 / UNIVERSAL TOOLS -->
-                <div id="section-util" class="group-section">
+                <div id="section-universal" class="group-section">
                     <span class="section-label">02 / Universal Tools</span>
-                    <div class="bento-grid">
-                        <div class="bento-card" data-search="resi generator pembuatan resi operasional otomatis" onclick="navigateTo('#external/resi')">
-                            <div class="card-top">
-                                <h3>Resi Generator</h3>
-                                <p>Pembuatan resi logistik otomatis yang terintegrasi secara dinamis.</p>
-                            </div>
-                            <div class="card-action">
-                                Buka Modul
-                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </div>
-                        <div class="bento-card" data-search="pendataan paket sistem pencatatan masuk keluar scan" onclick="navigateTo('#utilities/outbond')">
-                            <div class="card-top">
-                                <h3>Pendataan Paket</h3>
-                                <p>Sistem logging dan scanning barcode untuk pencatatan paket masuk/keluar.</p>
-                            </div>
-                            <div class="card-action">
-                                Buka Modul
-                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </div>
-                        <div class="bento-card" data-search="activity tracker pencatatan aktivitas pekerjaan tim" onclick="navigateTo('#utilities/activity')">
-                            <div class="card-top">
-                                <h3>Activity Tracker</h3>
-                                <p>Pencatatan dan pemantauan performa progres kerja harian seluruh anggota tim.</p>
-                            </div>
-                            <div class="card-action">
-                                Buka Modul
-                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </div>
-                        <div class="bento-card" data-search="retur tracker pencatatan data barang retur" onclick="navigateTo('#utilities/retur')">
-                            <div class="card-top">
-                                <h3>Retur Tracker</h3>
-                                <p>Sistem pencatatan terpusat untuk pelacakan, status, dan riwayat barang retur.</p>
-                            </div>
-                            <div class="card-action">
-                                Buka Modul
-                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </div>
-                        <div class="bento-card" data-search="form pengajuan dak dana amanah karyawan pembuatan dokumen" onclick="navigateTo('#doc/dak')">
-                            <div class="card-top">
-                                <h3>Form Pengajuan DAK</h3>
-                                <p>Pembuatan dokumen pengajuan sistematis untuk program Dana Amanah Karyawan.</p>
-                            </div>
-                            <div class="card-action">
-                                Buka Modul
-                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </div>
-                        <div class="bento-card" data-search="pdfm merger satukan semua resi pdf gabung" onclick="navigateTo('#utilities/merger')">
-                            <div class="card-top">
-                                <h3>PDFM Merger</h3>
-                                <p>Penyatuan berkas resi terpisah menjadi satu dokumen PDF tanpa memburamkan barcode/QR.</p>
-                            </div>
-                            <div class="card-action">
-                                Buka Modul
-                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="bento-grid" id="grid-universal"></div>
                 </div>
             </div>
 
-            <!-- Frame Area for Active Tools -->
             <div id="frame-container">
                 <iframe id="main-frame" src=""></iframe>
             </div>
         </main>
     </div>
 
-    <!-- 3. ABOUT MODAL -->
-    <div id="aboutModal" class="modal-overlay" onclick="closeAboutModal(event)">
-        <div class="modal-card" onclick="event.stopPropagation()">
-            <button class="modal-close" onclick="closeAboutModal()">&times;</button>
+    <!-- ABOUT MODAL -->
+    <div id="aboutModal" class="modal-overlay">
+        <div class="modal-card">
+            <button class="modal-close" id="modal-close-btn">&times;</button>
             <div class="modal-title">Tentang REYNAHUB_SYS</div>
             <div class="modal-body">
                 <p><strong>REYNAHUB_SYS</strong> adalah sebuah konsol navigasi operasional minimalis yang didesain untuk mempercepat workflow kerja internal tim.</p>
@@ -717,201 +95,16 @@
                     <li><strong>Logistics Tools:</strong> Resi Generator, Pendataan Paket, Retur Tracker, & PDF Merger.</li>
                     <li><strong>Document Generator:</strong> Pembuatan form pengajuan DAK otomatis.</li>
                 </ul>
-                <p style="margin-bottom: 0; font-size: 0.75rem; color: var(--text-muted); text-align: center;">REYNAHUB Operating Shell • Versi 3.0 (Minimalist Edition)</p>
+                <p style="margin-bottom:0;font-size:0.75rem;text-align:center;">REYNAHUB Operating Shell &bull; Versi 3.0 (Minimalist Edition)</p>
             </div>
         </div>
     </div>
 
-    <!-- --- CORE INTERFACE SCRIPTS --- -->
-    <script>
-        const ui = {
-            landing: document.getElementById('landing-page'),
-            workspace: document.getElementById('workspace'),
-            dbView: document.getElementById('dashboard-view'),
-            frameCont: document.getElementById('frame-container'),
-            frame: document.getElementById('main-frame'),
-            navBtns: document.querySelectorAll('.nav-list .nav-btn'),
-            secProd: document.getElementById('section-prod'),
-            secUtil: document.getElementById('section-util'),
-            search: document.getElementById('toolSearch'),
-            about: document.getElementById('aboutModal')
-        };
-
-        // --- MAP ROUTING ---
-        const routes = {
-            '#dashboard': () => goHome(),
-            '#productive/planner': () => openTool('Productive/Task/taskschedule.html', 'nav-prod'),
-            '#productive/analytic': () => openTool('Productive/Analytic.html', 'nav-prod'),
-            '#productive/latch': () => openTool('Productive/latch/latch.html', 'nav-prod'),
-            '#utilities/outbond': () => openTool('Productive/Outbondtrack.html', 'nav-util'),
-            '#utilities/activity': () => openTool('Productive/tr/tracking.html', 'nav-util'),
-            '#utilities/retur': () => openTool('Productive/tr-retur/retur-track.html', 'nav-util'),
-            '#utilities/merger': () => openTool('Productive/PDF-Merger/PDFM_V2.html', 'nav-util'),
-            '#doc/dak': () => openTool('Doc/form-dak.html', 'nav-util'),
-            '#external/resi': () => openTool('https://script.google.com/macros/s/AKfycbwxfb_8qv9JEAhb_PqnD2ysFWkh_bjGq-SefVG0l6mwFjtFrbQeqek80o3auoewm5KLTg/exec', 'nav-util')
-        };
-
-        // --- CORE NAVIGATION ---
-        function enterWorkspace() {
-            ui.landing.classList.add('hide');
-            ui.workspace.classList.add('active');
-            localStorage.setItem('workspace_entered', 'true');
-            
-            // Trigger router untuk hash saat ini
-            setTimeout(handleRouting, 300);
-        }
-
-        function navigateTo(hash) {
-            window.location.hash = hash;
-        }
-
-        function openTool(url, navId) {
-            // Bypass landing page if tool is opened
-            if (!ui.landing.classList.contains('hide')) {
-                ui.landing.classList.add('hide');
-                ui.workspace.classList.add('active');
-            }
-            
-            ui.dbView.style.display = 'none';
-            ui.frameCont.style.display = 'block';
-            
-            // Muat URL hanya jika berbeda untuk mencegah refresh tidak penting
-            if (ui.frame.src !== url) {
-                ui.frame.src = url;
-            }
-
-            // Update status tombol navigasi sidebar
-            ui.navBtns.forEach(btn => btn.classList.remove('active'));
-            if (navId) {
-                const targetBtn = document.getElementById(navId);
-                if (targetBtn) targetBtn.classList.add('active');
-            }
-            
-            // Broadcast tema aktif ke iframe yang baru dimuat
-            ui.frame.onload = () => {
-                broadcastTheme(document.documentElement.getAttribute('data-theme') || 'light');
-            };
-        }
-
-        function goHome() {
-            ui.dbView.style.display = 'block';
-            ui.frameCont.style.display = 'none';
-            ui.frame.src = '';
-            ui.dbView.scrollTop = 0;
-            
-            ui.navBtns.forEach(btn => btn.classList.remove('active'));
-            document.getElementById('nav-all').classList.add('active');
-            
-            // Kembalikan visibilitas section
-            ui.secProd.style.display = 'block';
-            ui.secUtil.style.display = 'block';
-            if (ui.search) ui.search.value = '';
-            searchTools();
-        }
-
-        // --- HASH ROUTING CONTROLLER ---
-        function handleRouting() {
-            const hash = window.location.hash;
-            if (hash && routes[hash]) {
-                routes[hash]();
-            } else {
-                goHome();
-            }
-        }
-
-        // --- FILTER & CATEGORIZATION ---
-        function filterGroup(type, el) {
-            navigateTo('#dashboard');
-            ui.navBtns.forEach(btn => btn.classList.remove('active'));
-            el.classList.add('active');
-
-            if (type === 'all') {
-                ui.secProd.style.display = 'block';
-                ui.secUtil.style.display = 'block';
-            } else if (type === 'prod') {
-                ui.secProd.style.display = 'block';
-                ui.secUtil.style.display = 'none';
-            } else if (type === 'util') {
-                ui.secProd.style.display = 'none';
-                ui.secUtil.style.display = 'block';
-            }
-        }
-
-        // --- SEARCH BAR SYSTEM ---
-        function searchTools() {
-            const query = ui.search.value.toLowerCase().trim();
-            const cards = document.querySelectorAll('.bento-card');
-            
-            cards.forEach(card => {
-                const keywords = card.getAttribute('data-search') || '';
-                if (keywords.includes(query)) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-
-            // Sembunyikan Header Section jika tidak ada card yang cocok
-            ['prod', 'util'].forEach(sec => {
-                const section = document.getElementById(`section-${sec}`);
-                const visibleCards = section.querySelectorAll('.bento-card[style*="display: flex"], .bento-card:not([style*="display: none"])');
-                if (visibleCards.length === 0) {
-                    section.style.display = 'none';
-                } else {
-                    // Hanya tampilkan jika kategori navigasi tidak membatasinya
-                    const activeNav = document.querySelector('.nav-list .nav-btn.active').id;
-                    if (activeNav === 'nav-all' || (activeNav === 'nav-prod' && sec === 'prod') || (activeNav === 'nav-util' && sec === 'util')) {
-                        section.style.display = 'block';
-                    }
-                }
-            });
-        }
-
-        // --- THEME SWITCHER & POSTMESSAGE BROADCAST ---
-        function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-            const targetTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            document.documentElement.setAttribute('data-theme', targetTheme);
-            localStorage.setItem('theme', targetTheme);
-            
-            broadcastTheme(targetTheme);
-        }
-
-        function broadcastTheme(themeMode) {
-            if (ui.frame && ui.frame.contentWindow) {
-                ui.frame.contentWindow.postMessage({ type: 'SET_THEME', theme: themeMode }, '*');
-            }
-        }
-
-        // --- MODAL CONTROLLER ---
-        function openAboutModal() {
-            ui.about.style.display = 'flex';
-        }
-
-        function closeAboutModal(e) {
-            ui.about.style.display = 'none';
-        }
-
-        // --- PAGE INITIALIZATION ---
-        window.addEventListener('hashchange', handleRouting);
-
-        window.addEventListener('DOMContentLoaded', () => {
-            // 1. Sinkronisasi Tema Tersimpan
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-
-            // 2. Cek status pendaratan workspace sebelumnya (bypassing landing jika di-bookmark/refresh)
-            const entered = localStorage.getItem('workspace_entered');
-            const hasHash = window.location.hash !== '' && window.location.hash !== '#';
-            
-            if (entered === 'true' || hasHash) {
-                ui.landing.style.display = 'none'; // Sembunyikan instan tanpa animasi slide-up
-                ui.landing.classList.add('hide');
-                ui.workspace.classList.add('active');
-                handleRouting();
-            }
-        });
-    </script>
+    <!-- Scripts -->
+    <script src="src/core/router.js"></script>
+    <script src="src/core/theme-manager.js"></script>
+    <script src="src/core/iframe-communicator.js"></script>
+    <script src="src/components/tool-card.js"></script>
+    <script src="src/app.js"></script>
 </body>
 </html>

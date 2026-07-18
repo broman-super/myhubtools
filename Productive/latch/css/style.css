@@ -5,6 +5,9 @@
 
 /* ---------- 1. DESIGN TOKENS ---------- */
 :root{
+      --primary: #ff0000;
+      --primary-light: rgba(255, 0, 0, 0.08);
+
   --bg-base:#F5F5F7;
   --bg-alt:#FFFFFF;
   --text-primary:#000000;
@@ -40,8 +43,9 @@
   --space-5:20px; --space-6:24px; --space-7:28px; --space-8:32px;
   --space-9:36px; --space-10:40px; --space-11:44px; --space-12:48px;
 
-  --font-main:-apple-system, BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue',sans-serif;
-  --font-mono:'SF Mono', SFMono-Regular, monospace;
+  --font-main:'Plus Jakarta Sans';
+  --font-display:'Geomini', 'Plus Jakarta Sans';
+  --font-mono:'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
 
   --ease-smooth: cubic-bezier(0.4,0,0.2,1);
   --ease-bounce: cubic-bezier(0.68,-0.2,0.265,1.2);
@@ -54,7 +58,7 @@ html[data-theme="dark"]{
   --text-secondary:rgba(235,235,245,0.8);
   --text-tertiary:rgba(235,235,245,0.6);
   --text-quaternary:rgba(235,235,245,0.4);
-  --accent:#FF453A;
+  --accent:#ff3b3b;
   --accent-hover:#FF5E55;
   --accent-active:#E0352B;
   --shadow-dark:#161618;
@@ -63,24 +67,16 @@ html[data-theme="dark"]{
   --card-bg:#0d0d0f;
 }
 
-*{box-sizing:border-box; margin:0; padding:0;}
 html{-webkit-tap-highlight-color:transparent;}
 body{
+  margin:0;
   font-family:var(--font-main);
   background:var(--bg-base);
   color:var(--text-primary);
   font-size:15px;
   line-height:1.5;
-  transition:background .3s var(--ease-smooth), color .3s var(--ease-smooth);
-  min-height:100vh;
-  -webkit-font-smoothing:antialiased;
 }
-button, input, select, textarea{font-family:inherit; color:inherit;}
-button{cursor:pointer; border:none; background:none;}
-a{color:inherit; text-decoration:none;}
 img{max-width:100%; display:block;}
-::-webkit-scrollbar{height:6px; width:6px;}
-::-webkit-scrollbar-thumb{background:var(--text-quaternary); border-radius:10px;}
 
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{
@@ -433,6 +429,7 @@ img{max-width:100%; display:block;}
 .field input, .field select, .field textarea{
   width:100%; padding:var(--space-3) var(--space-4); border-radius:var(--radius-md);
   border:none; outline:none; font-size:14px; background:var(--bg-base);
+  box-sizing:border-box;
   box-shadow:inset 4px 4px 10px var(--shadow-dark), inset -4px -4px 10px var(--highlight-light);
 }
 .drawer-footer{

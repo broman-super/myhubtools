@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="id" data-theme="light">
 <head>
+    <link rel="stylesheet" href="../../src/styles/tools.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>LATCH — Link Attach</title>
@@ -236,5 +237,12 @@
 
 <script src="https://unpkg.com/feather-icons@4.29.2/dist/feather.min.js"></script>
 <script src="js/app.js"></script>
+    <script>
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'SET_THEME') {
+                document.documentElement.setAttribute('data-theme', e.data.theme);
+            }
+        });
+    </script>
 </body>
 </html>
