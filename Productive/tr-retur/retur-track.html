@@ -470,10 +470,22 @@
         r[fnName].apply(null, args);
       } else {
         if (!GAS_URL) { if (onFailure) onFailure(new Error("GAS_URL belum dikonfigurasi")); return; }
-        fetch(GAS_URL, { method: "POST", body: JSON.stringify({ function: fnName, args: args }) })
-          .then(function(r) { return r.json(); })
+        fetch(GAS_URL, {
+          method: "POST",
+          mode: "cors",
+          redirect: "follow",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ function: fnName, args: args })
+        })
+          .then(function(r) {
+            if (!r.ok && r.status !== 200) throw new Error("HTTP " + r.status);
+            return r.json();
+          })
           .then(function(res) { if (onSuccess) onSuccess(res); })
-          .catch(function(err) { if (onFailure) onFailure(err); });
+          .catch(function(err) {
+            console.error("[GAS] fetch gagal:", err);
+            if (onFailure) onFailure(err);
+          });
       }
     }
   };

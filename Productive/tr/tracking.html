@@ -2449,6 +2449,31 @@
   <script>
     var GAS_URL = window.GAS_URL;
 
+    // Helper GAS anti-CORS: text/plain + mode cors + redirect follow + timeout
+    function gasFetch(bodyObj, timeoutMs) {
+      timeoutMs = timeoutMs || 30000;
+      var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+      var tid = ctrl ? setTimeout(function () { ctrl.abort(); }, timeoutMs) : null;
+      return fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'cors',
+        redirect: 'follow',
+        signal: ctrl ? ctrl.signal : undefined,
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(bodyObj)
+      }).then(function (res) {
+        if (tid) clearTimeout(tid);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      }).catch(function (err) {
+        if (tid) clearTimeout(tid);
+        console.error('[GAS] fetch gagal:', err);
+        var msg = (err && err.name === 'AbortError') ? 'Timeout koneksi GAS' :
+                  (err && err.message) ? err.message : 'Gagal terhubung ke GAS';
+        throw new Error(msg);
+      });
+    }
+
     let sessionUser = {};
     window.sessionUser = sessionUser;
     window.__lastDashboardBundle = null;
@@ -2602,16 +2627,7 @@
       const select = document.getElementById('login-user');
       if (!select) return;
 
-      fetch(GAS_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
-        },
-        body: JSON.stringify({
-          action: 'getUsersList'
-        })
-      })
-        .then(res => res.json())
+      gasFetch({ action: 'getUsersList' })
         .then(response => {
           const users = response.data || [];
           select.innerHTML = '<option value="" disabled selected>-- Pilih Nama Anda --</option>';
@@ -2643,18 +2659,7 @@
 
       btn.innerHTML = 'Memverifikasi...';
       showProgress();
-      fetch(GAS_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
-        },
-        body: JSON.stringify({
-          action: 'checkLogin',
-          username: u,
-          password: p
-        })
-      })
-        .then(res => res.json())
+      gasFetch({ action: 'checkLogin', username: u, password: p })
         .then(res => {
           if (res.success) {
             completeProgress();
@@ -2827,11 +2832,8 @@
         if (forceRefresh) SuperSubApi.invalidateDashboardCache();
         return SuperSubApi.fetchDashboardBundle(startDate, end, !!forceRefresh);
       }
-      return fetch(GAS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'getDashboardBundle', startDate: startDate, endDate: end })
-      }).then(function (res) { return res.json(); }).then(function (response) {
+      return gasFetch({ action: 'getDashboardBundle', startDate: startDate, endDate: end })
+        .then(function (response) {
         if (!response.success) throw new Error(response.msg || 'Gagal memuat data.');
         return response.data;
       });
@@ -3010,12 +3012,7 @@
       btn.innerHTML = '⏳ Menganalisa...';
       btn.disabled = true;
 
-      fetch(GAS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: 'getSPVSummary', startDate: dateStr, endDate: endDateStr })
-      })
-        .then(function (res) { return res.json(); })
+      gasFetch({ action: 'getSPVSummary', startDate: dateStr, endDate: endDateStr })
         .then(function (response) {
           var data = (response.data || {}).activities || [];
           lastAuditData = data;
@@ -3147,17 +3144,7 @@
       btn.disabled = true;
       showProgress();
 
-      fetch(GAS_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
-        },
-        body: JSON.stringify({
-          action: 'submitActivity',
-          data: data
-        })
-      })
-        .then(res => res.json())
+      gasFetch({ action: 'submitActivity', data: data })
         .then(res => {
           completeProgress();
           if (res.success) {
@@ -3403,19 +3390,7 @@
       showProgress();
       container.innerHTML = '<div style="text-align: center; padding: 24px; color: var(--text-secondary); font-size: 13px;">Memuat riwayat aktivitas...</div>';
 
-      fetch(GAS_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
-        },
-        body: JSON.stringify({
-          action: 'getUserActivities',
-          username: sessionUser.name,
-          startDate: startDate,
-          endDate: endDate
-        })
-      })
-        .then(res => res.json())
+      gasFetch({ action: 'getUserActivities', username: sessionUser.name, startDate: startDate, endDate: endDate })
         .then(response => {
           container.innerHTML = '';
           const data = response.data || [];
@@ -3529,16 +3504,7 @@
       btn.disabled = true;
       showProgress();
 
-      fetch(GAS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          action: 'deleteActivity',
-          rowIndex: activeDeleteRowIndex,
-          username: sessionUser.name
-        })
-      })
-        .then(res => res.json())
+      gasFetch({ action: 'deleteActivity', rowIndex: activeDeleteRowIndex, username: sessionUser.name })
         .then(res => {
           completeProgress();
           btn.innerHTML = originalText;
@@ -3619,17 +3585,7 @@
         output: output
       };
 
-      fetch(GAS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          action: 'editActivity',
-          rowIndex: activeEditRowIndex,
-          username: sessionUser.name,
-          data: updatedData
-        })
-      })
-        .then(res => res.json())
+      gasFetch({ action: 'editActivity', rowIndex: activeEditRowIndex, username: sessionUser.name, data: updatedData })
         .then(res => {
           completeProgress();
           btn.innerHTML = originalText;
