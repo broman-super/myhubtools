@@ -612,12 +612,17 @@
 
       fetch(SCRIPT_URL, {
         method: 'POST',
+        mode: 'cors',
+        redirect: 'follow',
         headers: {
           'Content-Type': 'text/plain;charset=utf-8' // Trik menghindari CORS preflight
         },
         body: JSON.stringify({ action: action, payload: payload })
       })
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return res.json();
+        })
         .then(res => {
           if (res.success) {
             if (onSuccess) onSuccess(res.data);
@@ -627,9 +632,9 @@
           }
         })
         .catch(err => {
-          console.error(err);
+          console.error("[GAS] fetch gagal:", err);
           if (onError) onError(err.message);
-          else customAlert("Gagal terhubung ke server Apps Script.");
+          else customAlert("Gagal terhubung ke server Apps Script. Cek koneksi / deploy GAS (akses = Anyone).");
         });
     }
 
