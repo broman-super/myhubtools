@@ -43,7 +43,7 @@ class ReynaHubRouter {
       '#utilities/retur': 'Productive/tr-retur/retur-track.html',
       '#utilities/merger': 'Productive/PDF-Merger/PDFM_V2.html',
       '#doc/dak': 'Doc/form-dak.html',
-      '#external/resi': 'https://script.google.com/macros/s/AKfycbwxfb_8qv9JEAhb_PqnD2ysFWkh_bjGq-SefVG0l6mwFjtFrbQeqek80o3auoewm5KLTg/exec'
+      '#external/resi': 'Productive/Resi-Generator/Index.html'
     };
     return map[hash] || '';
   }
