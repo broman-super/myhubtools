@@ -93,7 +93,7 @@
             transition: 0.2s;
         }
         .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
-        .btn-outline { background: var(--bg); border: 1px solid var(--border); color: #f1f5f9; }
+        .btn-outline { background: var(--bg); border: 1px solid var(--border); color: var(--text, #1e293b); }
         .btn-outline:hover { background: #f1f1f1; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -119,7 +119,7 @@
         .data-table th, .data-table td {
             border: 1px solid var(--border); padding: 0.4rem 0.6rem; text-align: left;
         }
-        .data-table th { background: #f1f1f1; }
+        .data-table th { background: #f1f1f1; color: #1e293b; }
         .duplicate { background: #fff3cd !important; }
 
         @media (max-width: 600px) {
@@ -168,6 +168,19 @@
         }
         [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3 { color: #f1f5f9; }
         [data-theme="dark"] .dropzone { border-color: #475569; color: #94a3b8; }
+        [data-theme="dark"] .data-table th { background: #1e293b; color: #f1f5f9; }
+        [data-theme="dark"] .btn-outline { color: #f1f5f9; border-color: #475569; }
+        [data-theme="dark"] .btn-outline:hover { background: #1e293b; }
+        [data-theme="dark"] .btn-primary { background: var(--primary); color: #fff; }
+        [data-theme="dark"] #file-list li { background: #1e293b; border-color: #334155; color: #f1f5f9; }
+        [data-theme="dark"] .stat-card { background: #1e293b; border-color: #334155; color: #f1f5f9; }
+        [data-theme="dark"] .stat-card .label { color: #94a3b8; }
+        [data-theme="dark"] .stat-card .value { color: #f1f5f9; }
+        [data-theme="dark"] .subtitle { color: #94a3b8; }
+        [data-theme="dark"] .duplicate { background: #422006 !important; }
+        [data-theme="dark"] .empty-message { color: #64748b; }
+        [data-theme="dark"] #file-list li .name { color: #f1f5f9; }
+        [data-theme="dark"] #file-list li .handle { color: #64748b; }
     </style>
 </head>
 <body>
