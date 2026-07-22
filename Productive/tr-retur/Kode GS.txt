@@ -1,0 +1,574 @@
+// ============================================================
+// RETUR ORDER MANAGEMENT SYSTEM - Google Apps Script
+// ============================================================
+
+const SHEET_NAME = "Retur";
+const HEADERS = [
+  "ID Retur", "Tanggal Komplain", "Platform", "ID Pesanan",
+  "Nama Produk", "Jumlah", "Harga Satuan", "Total Nilai",
+  "Jenis Masalah", "Sub Masalah", "Deskripsi", "Foto Bukti (URL)",
+  "Status Penanganan", "Tindakan", "Catatan CS", "Penyelesaian",
+  "Tanggal Selesai", "Refund Amount", "Dicatat Oleh", "Terakhir Update"
+];
+
+// ============================================================
+// WEB APP ENTRY POINT
+// ============================================================
+function doGet() {
+  return HtmlService.createHtmlOutputFromFile("Index")
+    .setTitle("Retur Order Management")
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+// ============================================================
+// SHEET INITIALIZATION
+// ============================================================
+function initSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+  }
+
+  // Check if headers exist
+  const firstRow = sheet.getRange(1, 1, 1, HEADERS.length).getValues()[0];
+  if (firstRow[0] !== "ID Retur") {
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+
+    // Style header row
+    const headerRange = sheet.getRange(1, 1, 1, HEADERS.length);
+    headerRange.setBackground("#1a1a2e");
+    headerRange.setFontColor("#ffffff");
+    headerRange.setFontWeight("bold");
+    headerRange.setFontSize(10);
+
+    // Auto resize columns
+    sheet.setFrozenRows(1);
+    for (let i = 1; i <= HEADERS.length; i++) {
+      sheet.setColumnWidth(i, 150);
+    }
+  }
+
+  return { success: true, message: "Sheet initialized" };
+}
+
+// ============================================================
+// GENERATE UNIQUE ID
+// ============================================================
+function generateId() {
+  const now = new Date();
+  const year = now.getFullYear().toString().slice(-2);
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const random = Math.floor(Math.random() * 9000) + 1000;
+  return `RTR-${year}${month}${day}-${random}`;
+}
+
+// ============================================================
+// ADD NEW RETUR
+// ============================================================
+function addRetur(data) {
+  try {
+    initSheet();
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(SHEET_NAME);
+
+    const id = generateId();
+    const now = new Date();
+    const totalNilai = (parseFloat(data.jumlah) || 0) * (parseFloat(data.hargaSatuan) || 0);
+
+    const row = [
+      id,
+      data.tanggalKomplain || Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd"),
+      data.platform || "",
+      data.idPesanan || "",
+      data.namaProduk || "",
+      parseFloat(data.jumlah) || 0,
+      parseFloat(data.hargaSatuan) || 0,
+      totalNilai,
+      data.jenisMasalah || "",
+      data.subMasalah || "",
+      data.deskripsi || "",
+      data.fotoBukti || "",
+      data.statusPenanganan || "Baru",
+      data.tindakan || "",
+      data.catatanCS || "",
+      data.penyelesaian || "",
+      data.tanggalSelesai || "",
+      parseFloat(data.refundAmount) || 0,
+      data.dicatatOleh || "Admin",
+      Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss")
+    ];
+
+    sheet.appendRow(row);
+
+    // Color code by status
+    const lastRow = sheet.getLastRow();
+    colorRowByStatus(sheet, lastRow, data.statusPenanganan || "Baru");
+
+    return { success: true, id: id, message: "Retur berhasil ditambahkan" };
+  } catch (e) {
+    return { success: false, message: "Error: " + e.message };
+  }
+}
+
+// ============================================================
+// GET ALL RETUR DATA
+// ============================================================
+function getAllRetur() {
+  try {
+    initSheet();
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(SHEET_NAME);
+    const lastRow = sheet.getLastRow();
+
+    if (lastRow <= 1) return { success: true, data: [] };
+
+    const data = sheet.getRange(2, 1, lastRow - 1, HEADERS.length).getValues();
+    const tz = Session.getScriptTimeZone();
+
+    const result = data
+      .filter(row => row[0] !== "" && row[0] !== null && row[0] !== undefined)
+      .map(row => ({
+        idRetur:          String(row[0] || ""),
+        tanggalKomplain:  safeFormatDate(row[1], tz),
+        platform:         String(row[2] || ""),
+        idPesanan:        String(row[3] || ""),
+        namaProduk:       String(row[4] || ""),
+        jumlah:           Number(row[5]) || 0,
+        hargaSatuan:      Number(row[6]) || 0,
+        totalNilai:       Number(row[7]) || 0,
+        jenisMasalah:     String(row[8] || ""),
+        subMasalah:       String(row[9] || ""),
+        deskripsi:        String(row[10] || ""),
+        fotoBukti:        String(row[11] || ""),
+        statusPenanganan: String(row[12] || "Baru"),
+        tindakan:         String(row[13] || ""),
+        catatanCS:        String(row[14] || ""),
+        penyelesaian:     String(row[15] || ""),
+        tanggalSelesai:   safeFormatDate(row[16], tz),
+        refundAmount:     Number(row[17]) || 0,
+        dicatatOleh:      String(row[18] || ""),
+        lastUpdate:       String(row[19] || "")
+      }));
+
+    return { success: true, data: result };
+  } catch (e) {
+    return { success: false, message: "Error: " + e.message, data: [] };
+  }
+}
+
+// ============================================================
+// SAFE DATE FORMATTER — won't crash on empty/invalid values
+// ============================================================
+function safeFormatDate(val, tz) {
+  try {
+    if (!val || val === "" || val === null) return "";
+    const d = (val instanceof Date) ? val : new Date(val);
+    if (isNaN(d.getTime())) return String(val);
+    return Utilities.formatDate(d, tz, "yyyy-MM-dd");
+  } catch(e) {
+    return String(val || "");
+  }
+}
+
+// ============================================================
+// UPDATE RETUR
+// ============================================================
+function updateRetur(idRetur, data) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(SHEET_NAME);
+    const lastRow = sheet.getLastRow();
+
+    if (lastRow <= 1) return { success: false, message: "Data tidak ditemukan" };
+
+    const ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+    let targetRow = -1;
+
+    for (let i = 0; i < ids.length; i++) {
+      if (ids[i][0] === idRetur) {
+        targetRow = i + 2;
+        break;
+      }
+    }
+
+    if (targetRow === -1) return { success: false, message: "ID tidak ditemukan" };
+
+    const now = new Date();
+    const totalNilai = (parseFloat(data.jumlah) || 0) * (parseFloat(data.hargaSatuan) || 0);
+
+    const updatedRow = [
+      idRetur,
+      data.tanggalKomplain || "",
+      data.platform,
+      data.idPesanan,
+      data.namaProduk,
+      parseFloat(data.jumlah) || 0,
+      parseFloat(data.hargaSatuan) || 0,
+      totalNilai,
+      data.jenisMasalah,
+      data.subMasalah,
+      data.deskripsi,
+      data.fotoBukti || "",
+      data.statusPenanganan,
+      data.tindakan || "",
+      data.catatanCS || "",
+      data.penyelesaian || "",
+      data.tanggalSelesai || "",
+      parseFloat(data.refundAmount) || 0,
+      data.dicatatOleh || "Admin",
+      Utilities.formatDate(now, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm:ss")
+    ];
+
+    sheet.getRange(targetRow, 1, 1, HEADERS.length).setValues([updatedRow]);
+    colorRowByStatus(sheet, targetRow, data.statusPenanganan);
+
+    return { success: true, message: "Data berhasil diperbarui" };
+  } catch (e) {
+    return { success: false, message: "Error: " + e.message };
+  }
+}
+
+// ============================================================
+// DELETE RETUR
+// ============================================================
+function deleteRetur(idRetur) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(SHEET_NAME);
+    const lastRow = sheet.getLastRow();
+
+    if (lastRow <= 1) return { success: false, message: "Data tidak ditemukan" };
+
+    const ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+
+    for (let i = 0; i < ids.length; i++) {
+      if (ids[i][0] === idRetur) {
+        sheet.deleteRow(i + 2);
+        return { success: true, message: "Data berhasil dihapus" };
+      }
+    }
+
+    return { success: false, message: "ID tidak ditemukan" };
+  } catch (e) {
+    return { success: false, message: "Error: " + e.message };
+  }
+}
+
+// ============================================================
+// GET DASHBOARD STATISTICS
+// ============================================================
+function getDashboardStats() {
+  try {
+    const result = getAllRetur();
+    if (!result.success) return result;
+
+    const data = result.data;
+    const total = data.length;
+
+    // By status
+    const byStatus = {};
+    // By platform
+    const byPlatform = {};
+    // By jenis masalah
+    const byMasalah = {};
+    // By month
+    const byMonth = {};
+
+    let totalRefund = 0;
+    let totalNilai = 0;
+
+    data.forEach(row => {
+      // Status
+      const status = row.statusPenanganan || "Baru";
+      byStatus[status] = (byStatus[status] || 0) + 1;
+
+      // Platform
+      const platform = row.platform || "Lainnya";
+      byPlatform[platform] = (byPlatform[platform] || 0) + 1;
+
+      // Masalah
+      const masalah = row.jenisMasalah || "Lainnya";
+      byMasalah[masalah] = (byMasalah[masalah] || 0) + 1;
+
+      // Month
+      if (row.tanggalKomplain) {
+        const month = row.tanggalKomplain.substring(0, 7);
+        byMonth[month] = (byMonth[month] || 0) + 1;
+      }
+
+      // Financial
+      totalRefund += parseFloat(row.refundAmount) || 0;
+      totalNilai += parseFloat(row.totalNilai) || 0;
+    });
+
+    return {
+      success: true,
+      stats: {
+        total,
+        byStatus,
+        byPlatform,
+        byMasalah,
+        byMonth,
+        totalRefund,
+        totalNilai,
+        pending: (byStatus["Baru"] || 0) + (byStatus["Proses"] || 0),
+        selesai: byStatus["Selesai"] || 0
+      }
+    };
+  } catch (e) {
+    return { success: false, message: "Error: " + e.message };
+  }
+}
+
+// ============================================================
+// COLOR ROW BY STATUS
+// ============================================================
+function colorRowByStatus(sheet, rowNum, status) {
+  const range = sheet.getRange(rowNum, 1, 1, HEADERS.length);
+  const colors = {
+    "Baru": "#fff3cd",
+    "Proses": "#cce5ff",
+    "Menunggu Konfirmasi": "#e2d9f3",
+    "Selesai": "#d4edda",
+    "Ditolak": "#f8d7da",
+    "Refund Diproses": "#d1ecf1"
+  };
+  range.setBackground(colors[status] || "#ffffff");
+}
+
+// ============================================================
+// REST API — POST handler (for HTML hosted on GitHub)
+// ============================================================
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    const fnName = data.function;
+    const args = data.args || [];
+    const fn = this[fnName];
+    if (typeof fn !== "function") {
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: false, message: "Unknown function: " + fnName }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    const result = fn.apply(this, args);
+    return ContentService
+      .createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (e) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, message: e.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// ============================================================
+// EXPEDITION CONFIG (Regex patterns for auto-detect)
+// ============================================================
+function getExpeditionConfig() {
+  return [
+    { name: "JNE",            regex: "^(JNE|01[0-9]{4,})" },
+    { name: "SiCepat",        regex: "^(00[0-9]{4,})" },
+    { name: "Shopee Xpress",  regex: "^SPX" },
+    { name: "J&T",            regex: "^(JT|JP|MY|03)" },
+    { name: "POS Indonesia",  regex: "^(R[0-9]{6,}|04)" },
+    { name: "Ninja Xpress",   regex: "^(NINJA|NX|05)" },
+    { name: "AnterAja",       regex: "^(ANTER|AA|06)" },
+    { name: "Wahana",         regex: "^(WAHANA|WH|07)" },
+    { name: "Tiki",           regex: "^(TIKI|TK|08)" },
+    { name: "Lazada Express", regex: "^(LZD|LAZADA|LEX|09)" },
+    { name: "ID Express",     regex: "^(IDEXP|IDX|10)" }
+  ];
+}
+
+// ============================================================
+// SUBMIT BATCH SCAN DATA (dengan kolom Status)
+// ============================================================
+function submitBatchData(stagingData) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName("Tracking");
+    if (!sheet) {
+      sheet = ss.insertSheet("Tracking");
+      const headers = ["Nomor Resi", "Ekspedisi", "Waktu Scan", "Tanggal", "Status"];
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      const hr = sheet.getRange(1, 1, 1, headers.length);
+      hr.setBackground("#1a1a1a").setFontColor("#ffffff").setFontWeight("bold");
+      sheet.setFrozenRows(1);
+      for (let i = 1; i <= headers.length; i++) sheet.setColumnWidth(i, 180);
+    }
+
+    // Pastikan kolom Status ada (migration untuk sheet lama)
+    const lastCol = sheet.getLastColumn();
+    const lastHeader = sheet.getRange(1, lastCol).getValue();
+    if (lastHeader !== "Status") {
+      sheet.getRange(1, lastCol + 1).setValue("Status");
+      sheet.getRange(1, lastCol + 1).setBackground("#1a1a1a").setFontColor("#ffffff").setFontWeight("bold");
+      sheet.setColumnWidth(lastCol + 1, 120);
+    }
+
+    const now = new Date();
+    const tz = Session.getScriptTimeZone();
+    const dateStr = Utilities.formatDate(now, tz, "yyyy-MM-dd");
+
+    stagingData.forEach(item => {
+      const waktu = item.timestamp ? new Date(item.timestamp).toLocaleDateString("id-ID") : "";
+      sheet.appendRow([item.resi, item.ekspedisi, waktu, dateStr, "Pending"]);
+    });
+
+    return { success: true, message: stagingData.length + " paket berhasil disimpan" };
+  } catch (e) {
+    return { success: false, message: e.message };
+  }
+}
+
+// ============================================================
+// GET TRACKING HISTORY (grouped by date)
+// filter: "today", "7days", "30days", "all"
+// ============================================================
+function getTrackingHistory(filter) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName("Tracking");
+    if (!sheet) return { success: true, groups: [] };
+
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) return { success: true, groups: [] };
+
+    const tz = Session.getScriptTimeZone();
+    const now = new Date();
+    const todayStr = Utilities.formatDate(now, tz, "yyyy-MM-dd");
+
+    // Hitung batas tanggal
+    let cutoffDate = null;
+    if (filter === "today") {
+      cutoffDate = new Date(todayStr);
+    } else if (filter === "7days") {
+      cutoffDate = new Date(todayStr);
+      cutoffDate.setDate(cutoffDate.getDate() - 6);
+    } else if (filter === "30days") {
+      cutoffDate = new Date(todayStr);
+      cutoffDate.setDate(cutoffDate.getDate() - 29);
+    }
+
+    // Baca semua data
+    const groups = {};
+    const groupOrder = [];
+
+    for (let i = 1; i < data.length; i++) {
+      let cellVal = data[i][3];
+      let rowDate;
+      if (cellVal instanceof Date) {
+        rowDate = Utilities.formatDate(cellVal, tz, "yyyy-MM-dd");
+      } else {
+        rowDate = String(cellVal || "").substring(0, 10);
+      }
+      if (!rowDate || rowDate.length < 10) continue;
+
+      // Filter
+      if (cutoffDate) {
+        const d = new Date(rowDate);
+        if (d < cutoffDate) continue;
+      }
+
+      const status = String(data[i][4] || "Pending");
+
+      if (!groups[rowDate]) {
+        groups[rowDate] = { date: rowDate, summary: {}, total: 0, items: [] };
+        groupOrder.push(rowDate);
+      }
+
+      const exp = String(data[i][1] || "Lainnya");
+      groups[rowDate].summary[exp] = (groups[rowDate].summary[exp] || 0) + 1;
+      groups[rowDate].total++;
+      groups[rowDate].items.push({
+        row: i + 1,
+        resi: String(data[i][0] || ""),
+        ekspedisi: exp,
+        waktu: String(data[i][2] || ""),
+        status: status
+      });
+    }
+
+    // Sort tanggal terbaru dulu
+    groupOrder.sort().reverse();
+
+    // Format label
+    const hari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const bulan = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+
+    const result = groupOrder.map(key => {
+      const g = groups[key];
+      const parts = g.date.split("-");
+      const yyyy = parseInt(parts[0], 10);
+      const mm = parseInt(parts[1], 10) - 1;
+      const dd = parseInt(parts[2], 10);
+      const dayName = hari[new Date(yyyy, mm, dd).getDay()];
+      g.label = dayName + ", " + String(dd).padStart(2, "0") + " " + bulan[mm] + " " + yyyy;
+      return g;
+    });
+
+    return { success: true, groups: result };
+  } catch (e) {
+    return { success: false, message: e.message, groups: [] };
+  }
+}
+
+// ============================================================
+// LOOKUP EXPEDITION FROM EXISTING DATA
+// ============================================================
+function lookupExpedition(resi) {
+  if (!resi) return { ekspedisi: "UNKNOWN" };
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("Tracking");
+    if (!sheet || sheet.getLastRow() <= 1) return { ekspedisi: "UNKNOWN" };
+
+    const lastRow = sheet.getLastRow();
+    const resiCol = sheet.getRange(1, 1, lastRow, 1).getValues(); // kolom A
+    const expCol  = sheet.getRange(1, 2, lastRow, 1).getValues(); // kolom B
+
+    const target = String(resi).trim();
+    for (let i = 0; i < resiCol.length; i++) {
+      if (String(resiCol[i][0]).trim() === target) {
+        const exp = String(expCol[i][0] || "UNKNOWN").trim();
+        if (exp && exp !== "UNKNOWN" && exp !== "Lainnya") {
+          return { ekspedisi: exp };
+        }
+      }
+    }
+    return { ekspedisi: "UNKNOWN" };
+  } catch (e) {
+    return { ekspedisi: "UNKNOWN" };
+  }
+}
+
+// ============================================================
+// UPDATE TRACKING STATUS (Valid / Error / Pending)
+// ============================================================
+function updateTrackingStatus(rowNum, status) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("Tracking");
+    if (!sheet) return { success: false, message: "Sheet tidak ditemukan" };
+
+    const lastCol = sheet.getLastColumn();
+    // Cari kolom Status
+    const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    let statusCol = -1;
+    for (let i = 0; i < headers.length; i++) {
+      if (headers[i] === "Status") { statusCol = i + 1; break; }
+    }
+    if (statusCol === -1) {
+      statusCol = lastCol + 1;
+      sheet.getRange(1, statusCol).setValue("Status");
+    }
+
+    sheet.getRange(rowNum, statusCol).setValue(status);
+    return { success: true, message: "Status diupdate ke " + status };
+  } catch (e) {
+    return { success: false, message: e.message };
+  }
+}
