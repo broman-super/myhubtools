@@ -17,7 +17,7 @@ function doPost(e) {
     var result = this[fn].apply(this, args);
     return ContentService.createTextOutput(JSON.stringify({ result: result })).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ error: err.message })).setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({ error: String(err.message || err) })).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
@@ -92,9 +92,16 @@ function submitBatchData(stagingData) {
     var dateStr = Utilities.formatDate(now, tz, "yyyy-MM-dd");
     var timeStr = Utilities.formatDate(now, tz, "HH:mm:ss");
 
-    // Ensure headers exist (in case sheet was just created)
-    var existingHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    if (existingHeaders.join("").indexOf("Nomor Resi") === -1) {
+    // Ensure 5-column headers exist
+    var lastCol = sheet.getLastColumn();
+    var existingHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    if (existingHeaders.indexOf("Tanggal") === -1 && lastCol >= 3) {
+      var idxWkt = existingHeaders.indexOf("Waktu Scan");
+      if (idxWkt >= 0) {
+        sheet.insertColumnAfter(idxWkt + 1);
+        sheet.getRange(1, idxWkt + 2).setValue("Tanggal");
+      }
+    } else if (existingHeaders.join("").indexOf("Nomor Resi") === -1) {
       sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
     }
 
@@ -121,11 +128,11 @@ function getTrackingHistory(filter) {
     if (data.length <= 1) return { success: true, groups: [] };
 
     var colMap = getColumnMap_();
-    var idxResi = colMap && colMap["Nomor Resi"] != null ? colMap["Nomor Resi"] : 0;
-    var idxExp  = colMap && colMap["Ekspedisi"]   != null ? colMap["Ekspedisi"]   : 1;
-    var idxWkt  = colMap && colMap["Waktu Scan"]  != null ? colMap["Waktu Scan"]  : 2;
-    var idxTgl  = colMap && colMap["Tanggal"]     != null ? colMap["Tanggal"]     : 3;
-    var idxSts  = colMap && colMap["Status"]      != null ? colMap["Status"]      : 4;
+    var idxResi = colMap && colMap["Nomor Resi"] >= 0 ? colMap["Nomor Resi"] : 0;
+    var idxExp  = colMap && colMap["Ekspedisi"]   >= 0 ? colMap["Ekspedisi"]   : 1;
+    var idxWkt  = colMap && colMap["Waktu Scan"]  >= 0 ? colMap["Waktu Scan"]  : 2;
+    var idxTgl  = colMap && colMap["Tanggal"]     >= 0 ? colMap["Tanggal"]     : 3;
+    var idxSts  = colMap && colMap["Status"]      >= 0 ? colMap["Status"]      : 4;
 
     var tz = Session.getScriptTimeZone();
     var today = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd");
@@ -147,6 +154,10 @@ function getTrackingHistory(filter) {
       var status = idxSts < row.length ? String(row[idxSts] || "Pending") : "Pending";
 
       var rowDate = parseToStandardDate_(rawDate);
+      // Fallback: Tanggal kosong/gak ada → pakai hari ini
+      if (!rowDate && (!("Tanggal" in colMap) || !rawDate || String(rawDate).trim() === "")) {
+        rowDate = today;
+      }
       if (!rowDate) continue;
 
       // Apply filter
@@ -191,9 +202,21 @@ function getTrackingHistory(filter) {
       return g;
     });
 
-    return { success: true, groups: groups };
+    return { 
+      success: true, 
+      groups: groups,
+      debug: {
+        sheets: ss.getSheets().map(function(s) { return s.getName(); }),
+        rows: data.length,
+        headers: data[0],
+        colMap: colMap,
+        idxTgl: idxTgl,
+        idxSts: idxSts,
+        firstRow: data.length > 1 ? data[1] : null
+      }
+    };
   } catch (e) {
-    return { success: false, message: e.message, groups: [] };
+    return { success: false, message: String(e.message || e), groups: [] };
   }
 }
 
@@ -202,10 +225,10 @@ function updateTrackingStatus(rowNum, status) {
   try {
     var sheet = getOrCreateSheet_();
     var colMap = getColumnMap_();
-    var idxSts = colMap && colMap["Status"] != null ? colMap["Status"] : 4;
+    var idxSts = colMap && colMap["Status"] >= 0 ? colMap["Status"] : 4;
     sheet.getRange(rowNum, idxSts + 1).setValue(status);
     return { success: true };
   } catch (e) {
-    return { success: false, message: e.message };
+    return { success: false, message: String(e.message || e) };
   }
 }

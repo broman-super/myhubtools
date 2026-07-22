@@ -487,7 +487,7 @@
   // ============================================================
   // CONFIG & GAS BRIDGE
   // ============================================================
-  var GAS_URL = "https://script.google.com/macros/s/AKfycbzk1QAvWpfLF_rDKj3VFHt1WGlSl2Y63dr_JIQoxW0ZA-Y-enoCViXR_X_aYjDGYAKLVg/exec";
+  var GAS_URL = "https://script.google.com/macros/s/AKfycbzzXrlMtaZgYj-x9usWFD6rPKXNlIVFu3kSnVIOW9P7VWthg4csnV1eGcyIXul_Awme2g/exec";
 
   var GAS = {
     call: function(fnName, args, onSuccess, onFailure) {
@@ -731,10 +731,28 @@
     elHistory.innerHTML = '<div class="history-loading">Memuat riwayat...</div>';
 
     GAS.call("getTrackingHistory", [filter], function(res) {
-      if (!res.success || !res.groups || res.groups.length === 0) {
+      if (!res.success) {
         loadedHistory = [];
         updatePendingBadge();
-        elHistory.innerHTML = '<div class="history-empty">Belum ada riwayat scan</div>';
+        elHistory.innerHTML = '<div class="history-empty" style="color:var(--accent)">Error: ' + (res.message || "Gagal mengambil data") + '</div>';
+        return;
+      }
+      if (!res.groups || res.groups.length === 0) {
+        loadedHistory = [];
+        updatePendingBadge();
+        var debugHtml = "";
+        if (res.debug) {
+          debugHtml = '<div style="margin-top:12px; font-family:monospace; font-size:11px; text-align:left; background:rgba(0,0,0,0.05); padding:8px; border-radius:6px; max-width:100%; overflow-x:auto;">' +
+            '<strong>[Diagnostics]</strong><br>' +
+            '• Sheets: ' + JSON.stringify(res.debug.sheets) + '<br>' +
+            '• Rows found: ' + res.debug.rows + '<br>' +
+            '• Headers: ' + JSON.stringify(res.debug.headers) + '<br>' +
+            '• colMap: ' + JSON.stringify(res.debug.colMap) + '<br>' +
+            '• idxTgl: ' + res.debug.idxTgl + ', idxSts: ' + res.debug.idxSts + '<br>' +
+            '• First row: ' + JSON.stringify(res.debug.firstRow) +
+            '</div>';
+        }
+        elHistory.innerHTML = '<div class="history-empty">Belum ada riwayat scan' + debugHtml + '</div>';
         return;
       }
       loadedHistory = res.groups;
