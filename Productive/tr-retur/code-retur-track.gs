@@ -4,6 +4,23 @@
 var SHEET_NAME = "Tracking";
 var HEADERS = ["Nomor Resi", "Ekspedisi", "Waktu Scan", "Tanggal", "Status"];
 
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({ result: "ok" })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    var params = JSON.parse(e.postData.contents);
+    var fn = params.function;
+    var args = params.args || [];
+    if (typeof this[fn] !== "function") throw new Error("Function " + fn + " not found");
+    var result = this[fn].apply(this, args);
+    return ContentService.createTextOutput(JSON.stringify({ result: result })).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ error: err.message })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
 function getOrCreateSheet_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(SHEET_NAME);
