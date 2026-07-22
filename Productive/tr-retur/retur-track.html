@@ -383,6 +383,36 @@
         background: var(--surface); border-color: var(--border); color: var(--text);
     }
     [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3 { color: var(--text); }
+
+    /* status buttons */
+    [data-theme="dark"] .btn-done { color: var(--text-muted); }
+    [data-theme="dark"] .btn-done:hover { color: #4ade80; background: rgba(74,222,128,0.1); border-color: #4ade80; }
+    [data-theme="dark"] .btn-err { color: var(--text-muted); }
+    [data-theme="dark"] .btn-err:hover { color: var(--accent); background: rgba(255,59,59,0.1); border-color: var(--accent); }
+
+    /* copy button */
+    [data-theme="dark"] .btn-copy { color: var(--text-muted); }
+    [data-theme="dark"] .btn-copy:hover { color: var(--accent); background: rgba(255,59,59,0.08); }
+    [data-theme="dark"] .btn-copy.copied { color: #4ade80; }
+
+    /* delete button */
+    [data-theme="dark"] .btn-del { color: var(--text-muted); }
+    [data-theme="dark"] .btn-del:hover { color: var(--accent); background: rgba(255,59,59,0.08); border-color: rgba(255,59,59,0.15); }
+
+    /* filter buttons */
+    [data-theme="dark"] .filter-btn { color: var(--text-muted); background: var(--surface); border-color: var(--border); }
+    [data-theme="dark"] .filter-btn:hover { color: var(--text); }
+    [data-theme="dark"] .filter-btn.active { background: var(--text); color: var(--surface); border-color: var(--text); }
+
+    /* pending badge */
+    [data-theme="dark"] .pending-badge.zero { background: var(--border); color: var(--text-muted); }
+
+    /* ---- RESPONSIVE ---- */
+    @media (max-width: 768px) {
+      .container { flex-direction: column; }
+      .panel-left { width: 100%; height: 50vh; border-right: none; border-bottom: 1px solid var(--border); }
+      .panel-right { width: 100%; height: 50vh; overflow: hidden; }
+    }
   </style>
 </head>
 <body>
@@ -457,7 +487,7 @@
   // ============================================================
   // CONFIG & GAS BRIDGE
   // ============================================================
-  var GAS_URL = "https://script.google.com/macros/s/AKfycbzALHk0Pz3tIJnhSwg0k2_pSNP7oJ8QS3l6ct3mmuaxhJNnWuFa87mV0Bm-oUzezJObuw/exec";
+  var GAS_URL = "https://script.google.com/macros/s/AKfycbyhmNB284K4tv4VmsEYs9GDPhcLxmBtIlQlMAeTR-5665RdKg-jnG2s8wdWjcUhdqdvXw/exec";
 
   var GAS = {
     call: function(fnName, args, onSuccess, onFailure) {
@@ -540,14 +570,45 @@
     }
   });
 
+  var expeditionCache = {};
+
   function processScan(resi) {
     if (stagingData.some(function(d) { return d.resi === resi; })) return;
-    var exp = "UNKNOWN";
+    var exp = matchRegex(resi);
+    if (exp) { addStaging(resi, exp); return; }
+    // Cek cache lokal (resi yang sama pernah di-scan session ini)
+    if (expeditionCache[resi]) { addStaging(resi, expeditionCache[resi]); return; }
+    // Tanya backend → pasti akurat
+    addStaging(resi, "UNKNOWN");
+    renderTable();
+    GAS.call("lookupExpedition", [resi], function(result) {
+      if (result && result.ekspedisi && result.ekspedisi !== "UNKNOWN") {
+        expeditionCache[resi] = result.ekspedisi;
+        updateStagingExpedition(resi, result.ekspedisi);
+      }
+    });
+  }
+
+  function matchRegex(resi) {
     for (var i = 0; i < configEkspedisi.length; i++) {
-      if (new RegExp(configEkspedisi[i].regex, "i").test(resi)) { exp = configEkspedisi[i].name; break; }
+      if (new RegExp(configEkspedisi[i].regex, "i").test(resi)) return configEkspedisi[i].name;
     }
+    return null;
+  }
+
+  function addStaging(resi, exp) {
     stagingData.unshift({ resi: resi, ekspedisi: exp, timestamp: Date.now() });
     renderTable();
+  }
+
+  function updateStagingExpedition(resi, exp) {
+    for (var i = 0; i < stagingData.length; i++) {
+      if (stagingData[i].resi === resi && stagingData[i].ekspedisi === "UNKNOWN") {
+        stagingData[i].ekspedisi = exp;
+        renderTable();
+        break;
+      }
+    }
   }
 
   // ============================================================
