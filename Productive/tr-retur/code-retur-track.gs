@@ -65,8 +65,41 @@ function parseToStandardDate_(value) {
 }
 
 // === EXPEDITION CONFIG ===
+var EXP_SHEET = "Ekspedisi";
+
 function getExpeditionConfig() {
-  return ["JNE", "J&T", "Sicepat", "AnterAja", "Ninja", "Pos Indonesia", "Tiki", "Wahana", "Shopee Xpress", "Lion Parcel", "Paxel", "GoSend", "GrabExpress"];
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(EXP_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(EXP_SHEET);
+    sheet.getRange(1, 1, 1, 2).setValues([["Nama", "Regex"]]);
+    sheet.setFrozenRows(1);
+    var defaults = [
+      ["JNE", "JP|JNE"],
+      ["J&T", "JT|JD"],
+      ["Sicepat", "SP|SI"],
+      ["AnterAja", "AA"],
+      ["Ninja", "NV|NI|NINJA"],
+      ["Pos Indonesia", "RP|RO|RC|POS"],
+      ["Tiki", "TI"],
+      ["Wahana", "WH"],
+      ["Shopee Xpress", "SPX|SX"],
+      ["Lion Parcel", "LP"],
+      ["Paxel", "PX"],
+      ["GoSend", "GO"],
+      ["GrabExpress", "GR|GRAB"]
+    ];
+    sheet.getRange(2, 1, defaults.length, 2).setValues(defaults);
+    return defaults.map(function(r) { return { name: r[0], regex: r[1] }; });
+  }
+  var data = sheet.getDataRange().getValues();
+  var result = [];
+  for (var i = 1; i < data.length; i++) {
+    var name = String(data[i][0] || "").trim();
+    var regex = String(data[i][1] || "").trim();
+    if (name && regex) result.push({ name: name, regex: regex });
+  }
+  return result;
 }
 
 // === LOOKUP EXPEDITION ===
@@ -116,7 +149,7 @@ function submitBatchData(stagingData) {
     }
     return { success: true };
   } catch (e) {
-    return { success: false, message: e.message };
+    return { success: false, message: String(e.message || e) };
   }
 }
 
@@ -202,19 +235,7 @@ function getTrackingHistory(filter) {
       return g;
     });
 
-    return { 
-      success: true, 
-      groups: groups,
-      debug: {
-        sheets: ss.getSheets().map(function(s) { return s.getName(); }),
-        rows: data.length,
-        headers: data[0],
-        colMap: colMap,
-        idxTgl: idxTgl,
-        idxSts: idxSts,
-        firstRow: data.length > 1 ? data[1] : null
-      }
-    };
+    return { success: true, groups: groups };
   } catch (e) {
     return { success: false, message: String(e.message || e), groups: [] };
   }
