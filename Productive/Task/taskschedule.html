@@ -16,8 +16,8 @@
       --border: #e2e8f0;
       --radius: 16px;
       --radius-sm: 12px;
-      --primary: #ff0000;
-      --primary-light: rgba(255, 0, 0, 0.08);
+      --danger: #ff0000;
+      --danger-light: rgba(255, 0, 0, 0.08);
     }
 
     /* TOP LOADER (YouTube Style) */
@@ -832,6 +832,7 @@
       font-family: inherit;
       font-size: 14px;
       outline: none;
+      box-sizing: border-box;
     }
 
     .field-row {
@@ -872,62 +873,16 @@
 
     /* Utility */
     .btn-danger {
-      background: var(--primary-light);
-      color: var(--primary);
+      background: var(--danger-light);
+      color: var(--danger);
       border: 1px solid rgba(239, 68, 68, 0.2);
     }
 
     .btn-danger:hover {
-      background: var(--primary-light);
+      background: var(--danger-light);
     }
 
     /* Day-detail accordion dropdown */
-    .dd-item {
-      border-radius: 10px;
-      border-left: 4px solid;
-      margin-bottom: 7px;
-      overflow: hidden;
-      transition: 0.2s;
-      cursor: pointer;
-    }
-
-    .dd-head {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-    }
-
-    .dd-head:hover {
-      filter: brightness(0.97);
-    }
-
-    .dd-body {
-      display: none;
-      padding: 0 12px 10px 38px;
-      font-size: 13px;
-      color: var(--text-soft);
-      line-height: 1.6;
-      border-top: 1px dashed var(--border);
-    }
-
-    .dd-body.open {
-      display: block;
-    }
-
-    .dd-toggle {
-      margin-left: auto;
-      font-size: 12px;
-      opacity: 0.5;
-      transition: 0.2s;
-      flex-shrink: 0;
-    }
-
-    .dd-item.expanded .dd-toggle {
-      transform: rotate(180deg);
-      opacity: 0.8;
-    }
-
     /* ═══════════════════════════════════════
        RESPONSIVE BREAKPOINTS: [Desktop vs Mobile]
     ═══════════════════════════════════════ */
@@ -1146,13 +1101,13 @@
 
     .cal-cell.is-holiday,
     .week-col.is-holiday {
-      border-color: var(--primary);
-      background: var(--primary-light);
+      border-color: var(--danger);
+      background: var(--danger-light);
     }
 
     .cal-cell.is-holiday .cal-cell-num,
     .week-col.is-holiday .week-col-head {
-      color: var(--primary);
+      color: var(--danger);
     }
 
     .cal-cell.is-leave,
@@ -1179,7 +1134,7 @@
 
     .holiday-label {
       font-size: 8.5px;
-      color: var(--primary);
+      color: var(--danger);
       line-height: 1.1;
       font-weight: 700;
       text-align: right;
@@ -1330,7 +1285,7 @@
     }
 
     .tl-day-header.holiday {
-      color: var(--primary);
+      color: var(--danger);
     }
 
     .tl-day-header .holi-name {
@@ -1343,6 +1298,11 @@
     }
 
     /* Body rows */
+    .timeline-row {
+      display: grid;
+      grid-template-columns: var(--tl-label-w, 180px) 1fr;
+      min-height: 34px;
+    }
     .timeline-body-rows {
       position: relative;
       background: var(--bg);
@@ -1364,38 +1324,6 @@
       cursor: pointer;
       color: var(--text);
       background: var(--bg);
-    }
-
-    .timeline-row {
-      display: grid;
-      grid-template-columns: var(--tl-label-w, 180px) 1fr;
-      min-height: 34px;
-      border-bottom: 1px solid var(--border);
-      transition: 0.15s;
-    }
-
-    .timeline-row:hover {
-      background: rgba(0, 0, 0, 0.02);
-    }
-
-    .timeline-row.campaign-row {
-      background: rgba(99, 102, 241, 0.03);
-    }
-
-    .timeline-row-label .expand-toggle {
-      font-size: 9px;
-      cursor: pointer;
-      opacity: 0.5;
-      transition: 0.2s;
-      flex-shrink: 0;
-    }
-
-    .timeline-row-label .expand-toggle:hover {
-      opacity: 1;
-    }
-
-    .timeline-row-label .expand-toggle.expanded {
-      transform: rotate(90deg);
     }
 
     .timeline-row-track {
@@ -1436,6 +1364,21 @@
       border-left: 3px solid;
     }
 
+    .timeline-bar.event {
+      background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255,255,255,0.3) 4px, rgba(255,255,255,0.3) 8px);
+    }
+
+    .timeline-bar.reminder {
+      background-image: repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(255,255,255,0.25) 6px, rgba(255,255,255,0.25) 10px) !important;
+    }
+
+    .cal-chip-reminder {
+      font-size: 10px;
+      height: 16px;
+      line-height: 16px;
+      opacity: 0.8;
+    }
+
     .timeline-bar.single {
       border-radius: 13px;
     }
@@ -1470,27 +1413,6 @@
       opacity: 1;
     }
 
-    .timeline-children {
-      display: none;
-    }
-
-    .timeline-children.open {
-      display: block;
-    }
-
-    .timeline-child-row {
-      display: grid;
-      grid-template-columns: var(--tl-label-w, 180px) 1fr;
-      min-height: 28px;
-      background: rgba(0,0,0,0.02);
-    }
-
-    .timeline-child-row .timeline-row-label {
-      padding-left: 28px;
-      font-size: 11px;
-      opacity: 0.8;
-    }
-
     /* Grid lines */
     .tl-grid-line {
       position: absolute;
@@ -1503,6 +1425,7 @@
 
     .tl-grid-line.weekend {
       background: rgba(239, 68, 68, 0.1);
+      z-index: 3;
     }
 
     /* Filter chips */
@@ -1529,25 +1452,14 @@
       border-color: var(--accent);
     }
 
-    /* Tooltip on timeline bars */
-    .timeline-bar[data-tooltip]:hover::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      bottom: calc(100% + 6px);
-      left: 0;
-      background: var(--text);
-      color: #fff;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 11px;
-      font-weight: 400;
-      white-space: pre-line;
-      max-width: 280px;
-      z-index: 100;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      pointer-events: none;
-      line-height: 1.4;
+    /* Tooltip on timeline bars — JS-powered fixed-position, see timeline-scroll handlers */
+    #tl-tooltip {
+      position: fixed; display: none; pointer-events: none; z-index: 99999;
+      background: var(--text); color: #fff; padding: 8px 12px; border-radius: 8px;
+      font-size: 11px; font-weight: 400; white-space: pre-line; max-width: 320px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3); line-height: 1.4;
     }
+    #tl-tooltip.show { display: block; }
 
     /* View transition animation */
     .view {
@@ -1624,9 +1536,9 @@
       transition: all 0.25s ease;
     }
     .theme-toggle:hover {
-      background: var(--primary-light, rgba(255,0,0,0.08));
-      color: var(--primary, #ff0000);
-      border-color: var(--primary, #ff0000);
+      background: var(--danger-light, rgba(255,0,0,0.08));
+      color: var(--danger, #ff0000);
+      border-color: var(--danger, #ff0000);
     }
     .theme-toggle svg { width: 16px; height: 16px; }
 
@@ -1637,8 +1549,8 @@
         --text: #f1f5f9;
         --text-soft: #94a3b8;
         --border: #334155;
-        --primary: #ff3b3b;
-        --primary-light: rgba(255, 59, 59, 0.15);
+        --danger: #ff3b3b;
+        --danger-light: rgba(255, 59, 59, 0.15);
     }
     [data-theme="dark"] body {
         background-image: radial-gradient(circle at 20% 30%, rgba(129,140,248,0.06) 0%, transparent 50%),
@@ -1671,6 +1583,7 @@
     <div class="loader-text">Memuat Workspace...</div>
   </div>
 
+  <div id="tl-tooltip"></div>
   <div id="toast"
     style="position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(30px);background:var(--text);color:#fff;padding:12px 24px;border-radius:12px;z-index:9000;opacity:0;transition:0.3s;font-weight:600;font-size:14px;box-shadow:var(--shadow-lg);">
   </div>
@@ -1718,6 +1631,20 @@
                 <circle cx="10" cy="19" r="2" />
               </svg>
               <span>Timeline</span>
+            </div>
+            <div class="nav-item" onclick="switchView('event',this)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
+              </svg>
+              <span>Event</span>
+              <span class="nav-count" id="nav-count-event">0</span>
+            </div>
+            <div class="nav-item" onclick="switchView('reminder',this)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              <span>Reminder</span>
+              <span class="nav-count" id="nav-count-reminder">0</span>
             </div>
           </nav>
         </div>
@@ -1789,10 +1716,20 @@
             <button class="btn btn-ghost" onclick="goThisMonth()">Bulan Ini</button>
             <div style="margin-left:auto; display:flex; align-items:center; gap:16px;">
               <button class="btn btn-ghost" onclick="printMonthView()">🖨️ Cetak</button>
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer;">
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;">
                 <input type="checkbox" id="toggle-month-tasks" onchange="toggleMonthTasks(this)"
-                  style="width:18px;height:18px;">
-                <span>Tampilkan Task</span>
+                  style="width:16px;height:16px;">
+                <span>Task</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;color:#14b8a6;">
+                <input type="checkbox" id="toggle-month-events" onchange="toggleMonthEvents(this)"
+                  style="width:16px;height:16px;" checked>
+                <span>Event</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;color:#f59e0b;">
+                <input type="checkbox" id="toggle-month-reminders" onchange="toggleMonthReminders(this)"
+                  style="width:16px;height:16px;" checked>
+                <span>Reminder</span>
               </label>
             </div>
           </div>
@@ -1819,7 +1756,15 @@
             <div style="display:flex;align-items:center;gap:12px;margin-left:auto;">
               <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;">
                 <input type="checkbox" id="toggle-tl-tasks" onchange="renderTimeline()" style="width:16px;height:16px;">
-                <span>Tampilkan Task</span>
+                <span>Task</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;color:#14b8a6;">
+                <input type="checkbox" id="toggle-tl-events" onchange="renderTimeline()" style="width:16px;height:16px;" checked>
+                <span>Event</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;color:#f59e0b;">
+                <input type="checkbox" id="toggle-tl-reminders" onchange="renderTimeline()" style="width:16px;height:16px;" checked>
+                <span>Reminder</span>
               </label>
               <button class="btn btn-ghost" onclick="printTimelineView()" style="padding:6px 10px;font-size:11px;">🖨️ Cetak</button>
               <span id="tl-zoom-info"></span>
@@ -1832,6 +1777,38 @@
               <div class="timeline-body" id="timeline-body"></div>
             </div>
           </div>
+        </div>
+
+        <!-- Event View -->
+        <div id="view-event" class="view">
+          <div class="toolbar">
+            <div class="tab-group" id="event-filter-bar">
+              <div class="tab active" onclick="setEventFilter('all',this)">Semua</div>
+              <div class="tab" onclick="setEventFilter('upcoming',this)">Akan Datang</div>
+              <div class="tab" onclick="setEventFilter('past',this)">Terlewat</div>
+            </div>
+            <button class="btn btn-primary" onclick="openTaskModal(null)" style="margin-left:auto;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M12 5v14M5 12h14"/></svg>
+              Event Baru
+            </button>
+          </div>
+          <div class="task-list" id="event-list-el"></div>
+        </div>
+
+        <!-- Reminder View -->
+        <div id="view-reminder" class="view">
+          <div class="toolbar">
+            <div class="tab-group" id="reminder-filter-bar">
+              <div class="tab active" onclick="setReminderFilter('all',this)">Semua</div>
+              <div class="tab" onclick="setReminderFilter('pending',this)">Pending</div>
+              <div class="tab" onclick="setReminderFilter('done',this)">Selesai</div>
+            </div>
+            <button class="btn btn-primary" onclick="openTaskModal(null)" style="margin-left:auto;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M12 5v14M5 12h14"/></svg>
+              Reminder Baru
+            </button>
+          </div>
+          <div class="task-list" id="reminder-list-el"></div>
         </div>
       </div>
 
@@ -1855,14 +1832,26 @@
         <input type="text" id="f-title" placeholder="cth: Launching Produk Baru">
       </div>
 
-      <div class="field-row" style="margin-bottom:12px;">
-        <div class="field" style="margin-bottom:0;">
-          <label>Jenis</label>
-          <select id="f-type" onchange="toggleTypeFields()">
-            <option value="task">📝 Task</option>
-            <option value="campaign">📢 Campaign</option>
-          </select>
+      <div class="field" style="margin-bottom:12px;">
+        <label>Jenis</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">
+            <input type="radio" name="f-type-radio" value="task" checked onchange="toggleTypeFields()"> 📝 Task
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">
+            <input type="radio" name="f-type-radio" value="campaign" onchange="toggleTypeFields()"> 📢 Campaign
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;color:#14b8a6;">
+            <input type="radio" name="f-type-radio" value="event" onchange="toggleTypeFields()"> 📅 Event
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;color:#f59e0b;">
+            <input type="radio" name="f-type-radio" value="reminder" onchange="toggleTypeFields()"> 🔔 Reminder
+          </label>
         </div>
+        <input type="hidden" id="f-type" value="task">
+      </div>
+
+      <div class="field-row" style="margin-bottom:12px;">
         <div class="field" id="wrap-priority" style="margin-bottom:0;">
           <label>Prioritas</label>
           <select id="f-priority">
@@ -1871,6 +1860,7 @@
             <option value="low">🐌 Rendah</option>
           </select>
         </div>
+        <div class="field" style="margin-bottom:0;"></div>
       </div>
 
       <div class="field-row" style="margin-bottom:12px;">
@@ -1884,9 +1874,17 @@
         </div>
       </div>
 
+      <div class="field-row" style="margin-bottom:12px;display:none;" id="wrap-org">
+        <div class="field" style="margin-bottom:0;">
+          <label>Penyelenggara</label>
+          <input type="text" id="f-org" placeholder="Nama pihak / sponsor">
+        </div>
+        <div class="field" style="margin-bottom:0;"></div>
+      </div>
+
       <div class="field-row" style="margin-bottom:12px;">
         <div class="field" style="margin-bottom:0;" id="wrap-tag">
-          <label>Tag</label>
+          <label id="lbl-tag">Tag</label>
           <input type="text" id="f-tag" placeholder="cth: Marketing">
           <select id="f-channel" style="display:none;" onchange="onChannelChange()">
             <option value="">— Pilih Channel —</option>
@@ -1901,6 +1899,28 @@
         <div class="field" style="margin-bottom:0;" id="wrap-color">
           <label>Warna</label>
           <div class="color-row" id="color-swatches" style="display:flex;gap:8px;margin-top:4px;"></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:13px;font-weight:600;">
+          <input type="checkbox" id="f-repeat" onchange="toggleRepeatFields()" style="margin:0;"> 🔁 Ulangi
+        </div>
+        <div id="wrap-repeat" style="display:none;">
+          <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+            <div>
+              <label style="font-size:10px;opacity:0.6;display:block;margin-bottom:2px;">Setiap</label>
+              <input type="number" id="f-repeat-every" value="1" min="1" style="width:50px;height:32px;box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:10px;opacity:0.6;display:block;margin-bottom:2px;">Satuan</label>
+              <select id="f-repeat-unit" style="height:32px;box-sizing:border-box;">
+                <option value="day">Hari</option>
+                <option value="week" selected>Minggu</option>
+                <option value="month">Bulan</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1944,16 +1964,16 @@
   </div>
 
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbw4MGE3HRqbh-00pFUBJOD2a9BBe9pGteMHZneGewxBsR-mJMJIMZJURSYlJqnCJC2i/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbw5g41itUwrQndj04SQI1SHyHPKbkOI0BWXpcBVJCKFXxaEMuYMJToKhJbas8R-LjYB/exec";
 
     var S = {
-      tasks: [], view: 'list', filter: 'pending', q: '',
-      weekOffset: 0, showMonthTasks: false,
+      tasks: [], events: [], reminders: [], view: 'list', filter: 'pending', q: '',
+      weekOffset: 0, showMonthTasks: false, showMonthEvents: false, showMonthReminders: false,
       calYear: new Date().getFullYear(), calMonth: new Date().getMonth(),
       selectedId: null, dpTarget: null,
       dpYear: new Date().getFullYear(), dpMonth: new Date().getMonth(),
       timelineYear: new Date().getFullYear(), timelineMonth: new Date().getMonth(),
-      timelineSelectedDate: null, timelineZoom: 0, timelineExpanded: {}, timelineLabelWidth: 180,
+      timelineSelectedDate: null, timelineZoom: 0, timelineLabelWidth: 180,
       activeTags: [], activePriorities: [],
       listPage: 0, undoStack: [], redoStack: []
     };
@@ -2014,8 +2034,44 @@
             type: String(t.type || 'task').toLowerCase().trim() === 'campaign' ? 'campaign' : 'task',
             color: t.color || '#6366f1'
           }));
-          try { localStorage.setItem('ts_cache_data', JSON.stringify(S.tasks)); } catch(e){}
+          try { localStorage.setItem('ts_cache_data', JSON.stringify({ timestamp: Date.now(), data: S.tasks })); } catch(e){}
           return S.tasks;
+        }
+        if (action === 'getCalendarData') {
+          const r = await fetch(GAS_URL, {
+            method: 'POST', mode: 'cors', redirect: 'follow',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action, data })
+          });
+          const json = await r.json();
+          if (!json.success) throw new Error(json.message || 'Gagal load calendar');
+          S.tasks = [].concat(
+            (json.result.tasks || []).map(function(t) { return {
+              ...t, enddate: normDate(t.enddate || t.endDate || ''),
+              date: normDate(t.date),
+              type: 'task',
+              color: t.color || '#6366f1'
+            }; }),
+            (json.result.campaigns || []).map(function(c) { return {
+              ...c, enddate: normDate(c.enddate || c.endDate || c.selesai || ''),
+              date: normDate(c.date || c.mulai || ''),
+              type: 'campaign',
+              color: c.color || '#6366f1'
+            }; })
+          );
+          S.events = (json.result.events || []).map(function(e) { return {
+            id: e.id, title: e.nama || '', date: normDate(e.mulai || ''),
+            enddate: normDate(e.selesai || ''), description: e.deskripsi || '',
+            penyelenggara: e.penyelenggara || '', color: e.warna || '#14b8a6',
+            status: e.status || '', done: e.status === 'Selesai', type: 'event'
+          }; });
+          S.reminders = (json.result.reminders || []).map(function(r) { return {
+            id: r.id, title: r.nama || '', date: normDate(r.mulai || ''),
+            enddate: normDate(r.selesai || ''), description: r.deskripsi || '',
+            color: r.warna || '#f59e0b', status: r.status || '',
+            done: r.status === 'Selesai', type: 'reminder'
+          }; });
+          return json.result;
         }
         const resp = await fetch(GAS_URL, {
           method: 'POST',
@@ -2041,7 +2097,7 @@
       if (btn) btn.classList.add('spinning');
       if (btn2) btn2.disabled = true;
       try {
-        await api('getTasks');
+        await api('getCalendarData');
         renderAll();
         if (!silent) toast('✓ Data diperbarui');
       } catch (e) {
@@ -2081,7 +2137,23 @@
               renderAll(); // Re-render to show red highlight
             }
           })
-          .catch(e => console.warn('Failed to load holidays', e));
+          .catch(e => {
+            console.warn('Failed to load holidays', e);
+            // Fallback static holiday jika cache pun gak ada
+            if (Object.keys(holidaysCache).length === 0) {
+              var staticHolidays = [
+                "2026-01-01", "2026-01-27", "2026-03-29", "2026-03-30",
+                "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-03",
+                "2026-04-04", "2026-04-10", "2026-05-01", "2026-05-13",
+                "2026-05-14", "2026-06-01", "2026-07-17", "2026-08-17",
+                "2026-09-04", "2026-11-15", "2026-12-24", "2026-12-25"
+              ];
+              staticHolidays.forEach(function(d) {
+                holidaysCache[d] = { date: d, name: "Hari Libur" };
+              });
+              renderAll();
+            }
+          });
       } catch (e) { console.warn('Failed to load holidays cache', e); }
     }
 
@@ -2097,21 +2169,27 @@
       try {
         const cachedTasks = localStorage.getItem('ts_cache_data');
         if (cachedTasks) {
-          S.tasks = JSON.parse(cachedTasks);
-          renderAll();
-          hideLoading(); // Hide loading immediately if cache exists
+          var parsed = JSON.parse(cachedTasks);
+          // TTL 5 menit
+          if (parsed && parsed.timestamp && Date.now() - parsed.timestamp < 5 * 60 * 1000) {
+            S.tasks = parsed.data || [];
+            renderAll();
+            hideLoading();
+          }
         }
       } catch(e){}
 
-      api('getTasks')
-        .then(() => {
+      api('getCalendarData')
+        .then(function() {
           try { renderAll(); } catch (e) { console.warn('renderAll error', e); }
         })
-        .catch(err => {
-          console.warn('getTasks failed', err);
-          try { renderAll(); } catch (e) { }
+        .catch(function(err) {
+          console.warn('getCalendarData failed, fallback getTasks', err);
+          return api('getTasks').then(function() {
+            try { renderAll(); } catch (e) { }
+          }).catch(function() { });
         })
-        .finally(() => {
+        .finally(function() {
           clearTimeout(safetyTimer);
           hideLoading();
         });
@@ -2161,6 +2239,27 @@
       if (tlScroll) {
         tlScroll.addEventListener('wheel', handleTimelineWheel, { passive: false });
         tlScroll.addEventListener('dblclick', resetTimelineZoom);
+        // Fixed-position tooltip that respects viewport boundaries
+        var tlTip = document.getElementById('tl-tooltip');
+        tlScroll.addEventListener('mouseover', function(e) {
+          var bar = e.target.closest('[data-tooltip]');
+          if (!bar || !tlTip) return;
+          var rect = bar.getBoundingClientRect();
+          var text = bar.getAttribute('data-tooltip').replace(/\\n/g, '\n');
+          tlTip.textContent = text;
+          tlTip.style.display = 'block';
+          var tipRect = tlTip.getBoundingClientRect();
+          var top = rect.top - tipRect.height - 8;
+          var left = rect.left + (rect.width - tipRect.width) / 2;
+          if (top < 4) top = rect.bottom + 4;
+          if (left < 4) left = 4;
+          if (left + tipRect.width > window.innerWidth - 4) left = window.innerWidth - tipRect.width - 4;
+          tlTip.style.top = top + 'px';
+          tlTip.style.left = left + 'px';
+        });
+        tlScroll.addEventListener('mouseout', function(e) {
+          if (tlTip && (!e.relatedTarget || !e.relatedTarget.closest('[data-tooltip]'))) tlTip.style.display = 'none';
+        });
       }
 
       // Resize: re-render timeline for auto-fit recalculation
@@ -2179,6 +2278,8 @@
       if (S.view === 'weekly') renderWeekly();
       if (S.view === 'month') renderMonth();
       if (S.view === 'timeline') renderTimeline();
+      if (S.view === 'event') renderEvents();
+      if (S.view === 'reminder') renderReminders();
     }
 
     function setMeta() {
@@ -2199,6 +2300,10 @@
       document.getElementById('stat-campaign-val').textContent = cs.length;
       const nc = document.getElementById('nav-count-list');
       if (nc) nc.textContent = ts.length - done;
+      var ec = document.getElementById('nav-count-event');
+      if (ec) ec.textContent = S.events.length;
+      var rc = document.getElementById('nav-count-reminder');
+      if (rc) rc.textContent = S.reminders.length;
     }
 
     function switchView(v, el) {
@@ -2219,7 +2324,7 @@
       const tlScroll = document.getElementById('timeline-scroll');
       if (tlScroll) tlScroll.classList.toggle('zoom-active', v === 'timeline');
       const titleEl = document.getElementById('page-title');
-      if (titleEl) titleEl.textContent = v === 'list' ? 'Task List' : (v === 'weekly' ? 'Weekly Plan' : v === 'month' ? 'Month View' : 'Timeline');
+      if (titleEl) titleEl.textContent = v === 'list' ? 'Task List' : (v === 'weekly' ? 'Weekly Plan' : v === 'month' ? 'Month View' : v === 'timeline' ? 'Timeline' : v === 'event' ? 'Event' : 'Reminder');
       renderAll();
     }
 
@@ -2417,6 +2522,8 @@
     }
 
     // Month View
+    function toggleMonthEvents(el) { S.showMonthEvents = el.checked; renderMonth(); }
+    function toggleMonthReminders(el) { S.showMonthReminders = el.checked; renderMonth(); }
     function toggleMonthTasks(el) { S.showMonthTasks = el.checked; renderMonth(); }
     function changeMonth(d) { S.calMonth += d; if (S.calMonth > 11) { S.calMonth = 0; S.calYear++; } if (S.calMonth < 0) { S.calMonth = 11; S.calYear--; } renderMonth(); }
     function goThisMonth() { S.calYear = new Date().getFullYear(); S.calMonth = new Date().getMonth(); renderMonth(); }
@@ -2438,26 +2545,40 @@
 
       fetchHolidays(S.calYear);
 
-      const tasks = S.tasks.filter(t => {
+      // Collect all visible items from all layers
+      var allItems = [];
+      // Tasks + Campaigns
+      allItems = allItems.concat(S.tasks.filter(function(t) {
         if (!t.date) return false;
-        // Campaigns ALWAYS show regardless of Task visibility toggle
-        if (t.type === 'campaign') return true;
-        // Tasks show only if toggle is ON
         if (t.type === 'task' && !S.showMonthTasks) return false;
-
-        const s = t.date, e = t.enddate || t.date;
+        var s = t.date, e = t.enddate || t.date;
         return s <= days[41] && e >= days[0];
-      });
+      }));
+      // Events
+      if (S.showMonthEvents) {
+        allItems = allItems.concat(S.events.filter(function(e) {
+          if (!e.date) return false;
+          var s = e.date, en = e.enddate || e.date;
+          return s <= days[41] && en >= days[0];
+        }));
+      }
+      // Reminders
+      if (S.showMonthReminders) {
+        allItems = allItems.concat(S.reminders.filter(function(r) {
+          if (!r.date) return false;
+          return r.date <= days[41] && (r.enddate || r.date) >= days[0];
+        }));
+      }
 
-      tasks.forEach(t => {
-        const s = t.date, e = t.enddate || t.date;
-        let slot = 0, found = false;
+      allItems.forEach(function(t) {
+        var s = t.date, e = t.enddate || t.date;
+        var slot = 0, found = false;
         while (!found) {
-          let free = true;
-          for (let i = 0; i < 42; i++) { if (days[i] >= s && days[i] <= e && slots[days[i]][slot]) { free = false; break; } }
+          var free = true;
+          for (var i = 0; i < 42; i++) { if (days[i] >= s && days[i] <= e && slots[days[i]][slot]) { free = false; break; } }
           if (free) found = true; else slot++;
         }
-        for (let i = 0; i < 42; i++) { if (days[i] >= s && days[i] <= e) slots[days[i]][slot] = t; }
+        for (var i = 0; i < 42; i++) { if (days[i] >= s && days[i] <= e) slots[days[i]][slot] = t; }
       });
 
       const today = dateStr(new Date());
@@ -2469,16 +2590,21 @@
         const visibleSlots = daySlots.slice(0, MAX_SLOTS);
         const hasMore = daySlots.length > MAX_SLOTS;
 
-        const chips = visibleSlots.map(t => {
-          if (!t) return `<div class="cal-chip-spacer"></div>`;
-          const e = t.enddate || t.date;
-          let cls = 'single', text = true;
+        const chips = visibleSlots.map(function(t) {
+          if (!t) return '<div class="cal-chip-spacer"></div>';
+          var e = t.enddate || t.date;
+          var cls = 'single', text = true;
           if (t.date !== e) {
             if (ds === t.date) cls = 'start'; else if (ds === e) { cls = 'end'; text = false; } else { cls = 'mid'; text = false; }
             if (idx % 7 === 0) text = true;
           }
-          const isC = t.type === 'campaign';
-          return `<div class="cal-chip ${cls}" style="background:${isC ? t.color : hexAlpha(t.color || '#ccc', 0.1)};color:${isC ? '#fff' : '#000'};border-left:${isC ? 'none' : `2px solid ${t.color}`};${t.done ? 'opacity:0.55;text-decoration:line-through;' : ''}" onclick="event.stopPropagation();selectTask('${t.id}')"><span>${text ? esc(t.title) : '&nbsp;'}</span>${!isC ? '<span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\')" style="margin-left:auto;font-size:10px;opacity:0.6;cursor:pointer;flex-shrink:0;padding:0 2px;">' + (t.done ? '↩' : '✓') + '</span>' : ''}</div>`;
+          var isC = t.type === 'campaign', isE = t.type === 'event', isR = t.type === 'reminder';
+          var bg, border, txtColor, extraCls = '';
+          if (isC) { bg = t.color; border = 'none'; txtColor = '#fff'; }
+          else if (isE) { bg = hexAlpha(t.color || '#14b8a6', 0.08); border = '2px dashed ' + t.color; txtColor = '#0f172a'; }
+          else { bg = hexAlpha(t.color, 0.08); border = '2px solid ' + t.color; txtColor = '#0f172a'; }
+          var doneStyle = (t.done || t.status === 'Selesai') ? 'opacity:0.55;text-decoration:line-through;' : '';
+          return '<div class="cal-chip ' + cls + (isR ? ' cal-chip-reminder' : '') + '" style="background:' + bg + ';color:' + txtColor + ';border-left:' + border + ';' + doneStyle + '" onclick="event.stopPropagation();selectTask(\'' + t.id + '\')"><span>' + (text ? esc(t.title) : '&nbsp;') + '</span>' + (isC ? '' : '<span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\')" style="margin-left:auto;font-size:10px;opacity:0.6;cursor:pointer;flex-shrink:0;padding:0 2px;">' + (t.done ? '↩' : '✓') + '</span>') + '</div>';
         }).join('');
 
         // Dots for Mobile View
@@ -2519,14 +2645,33 @@
       const monthStart = S.timelineYear + '-' + pad(S.timelineMonth + 1) + '-01';
       const daysIn = new Date(S.timelineYear, S.timelineMonth + 1, 0).getDate();
       const monthEnd = S.timelineYear + '-' + pad(S.timelineMonth + 1) + '-' + pad(daysIn);
-      const showTasks = document.getElementById('toggle-tl-tasks') ? document.getElementById('toggle-tl-tasks').checked : false;
-      return S.tasks.filter(t => {
+      var showT = document.getElementById('toggle-tl-tasks') ? document.getElementById('toggle-tl-tasks').checked : false;
+      var showE = document.getElementById('toggle-tl-events') ? document.getElementById('toggle-tl-events').checked : false;
+      var showR = document.getElementById('toggle-tl-reminders') ? document.getElementById('toggle-tl-reminders').checked : false;
+      var items = [];
+      items = items.concat(S.tasks.filter(function(t) {
         if (!t.date) return false;
-        if (t.type === 'task' && !showTasks) return false;
-        const s = t.date, e = t.enddate || t.date;
+        if (t.type === 'task' && !showT) return false;
+        var s = t.date, e = t.enddate || t.date;
         return s <= monthEnd && e >= monthStart;
-      }).sort((a, b) => {
-        if (a.type !== b.type) return a.type === 'campaign' ? -1 : 1;
+      }));
+      if (showE) {
+        items = items.concat(S.events.filter(function(e) {
+          if (!e.date) return false;
+          var s = e.date, en = e.enddate || e.date;
+          return s <= monthEnd && en >= monthStart;
+        }));
+      }
+      if (showR) {
+        items = items.concat(S.reminders.filter(function(r) {
+          if (!r.date) return false;
+          return r.date <= monthEnd && (r.enddate || r.date) >= monthStart;
+        }));
+      }
+      return items.sort(function(a, b) {
+        var order = { campaign: 0, event: 1, task: 2, reminder: 3 };
+        var oa = order[a.type] || 4, ob = order[b.type] || 4;
+        if (oa !== ob) return oa - ob;
         return a.date.localeCompare(b.date);
       });
     }
@@ -2606,7 +2751,7 @@
       const z = getTimelineDayWidth();
 
       if (!items.length) {
-        document.getElementById('timeline-body').innerHTML = '<div style="text-align:center;padding:40px;opacity:0.4;">Tidak ada campaign atau task bulan ini</div>';
+        document.getElementById('timeline-body').innerHTML = '<div style="text-align:center;padding:40px;opacity:0.4;">Tidak ada data bulan ini</div>';
         return;
       }
 
@@ -2618,77 +2763,41 @@
         gridLinesHtml += '<div class="tl-grid-line' + (isSunday ? ' weekend' : '') + '" style="left:' + ((d - 1) * z) + 'px;' + extra + '"></div>';
       }
 
-      if (!S.timelineExpanded) S.timelineExpanded = {};
-
       let rowsHtml = '';
-      items.forEach((item) => {
-        const isCampaign = item.type === 'campaign';
-        const s = item.date < monthStart ? 1 : parseInt(item.date.split('-')[2], 10);
-        const endD = item.enddate || item.date;
-        const e = endD > monthEnd ? daysIn : parseInt(endD.split('-')[2], 10);
-        const leftPx = (s - 1) * z;
-        const widthPx = (e - s + 1) * z;
-        const bg = isCampaign ? item.color : 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.12)';
-        const color = '#1e293b';
-        let cls = 'timeline-bar';
+      items.forEach(function(item) {
+        var isCampaign = item.type === 'campaign';
+        var isEvent = item.type === 'event';
+        var isReminder = item.type === 'reminder';
+        var s = item.date < monthStart ? 1 : parseInt(item.date.split('-')[2], 10);
+        var endD = item.enddate || item.date;
+        var e = endD > monthEnd ? daysIn : parseInt(endD.split('-')[2], 10);
+        var leftPx = (s - 1) * z;
+        var widthPx = (e - s + 1) * z;
+        var bg, color, border;
+        if (isCampaign) { bg = item.color; color = '#1e293b'; border = 'none'; }
+        else if (isEvent) { bg = 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.15)'; color = '#1e293b'; border = '2px dashed ' + item.color; }
+        else if (isReminder) { bg = '#14b8a6'; color = '#1e293b'; border = '3px solid #0d9488'; }
+        else { bg = 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.12)'; color = '#1e293b'; border = '3px solid ' + item.color; }
+        var cls = 'timeline-bar';
         if (s === e) cls += ' single'; else if (s === parseInt(item.date.split('-')[2], 10) || item.date < monthStart) cls += ' start'; else if (e === daysIn || e === parseInt(endD.split('-')[2], 10)) cls += ' end'; else cls += ' mid';
-        if (isCampaign) cls += ' campaign'; else cls += ' task';
+        if (isCampaign) cls += ' campaign'; else if (isEvent) cls += ' event'; else if (isReminder) cls += ' reminder'; else cls += ' task';
         if (item.done) cls += ' done';
 
-        const tooltip = esc(item.title) + '\\n' + formatShortDate(item.date) + (item.enddate && item.enddate !== item.date ? ' → ' + formatShortDate(item.enddate) : '') + (item.tag ? '\\n#' + item.tag.replace(/,/g, ' #') : '') + (item.description ? '\\n' + esc(item.description.substring(0, 100)) : '');
+        var tagStr = item.tag ? '\\n#' + item.tag.replace(/,/g, ' #') : '';
+        var descStr = item.description ? '\\n' + esc(item.description.substring(0, 100)) : '';
+        var tooltip = esc(item.title) + '\\n' + formatShortDate(item.date) + (item.enddate && item.enddate !== item.date ? ' → ' + formatShortDate(item.enddate) : '') + tagStr + descStr;
 
-        const barHtml = '<div class="' + cls + '" style="left:' + leftPx + 'px;width:' + widthPx + 'px;background:' + bg + ';color:' + color + ';border-left:' + (isCampaign ? 'none' : '3px solid ' + item.color) + ';" onclick="selectTask(\'' + item.id + '\')" data-tooltip="' + tooltip + '">' + esc(item.title) + (!isCampaign ? '<span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + item.id + '\')">' + (item.done ? '↩' : '✓') + '</span>' : '') + '</div>';
+        var barHtml = '<div class="' + cls + '" style="left:' + leftPx + 'px;width:' + widthPx + 'px;background:' + bg + ';color:' + color + ';border-left:' + border + ';" onclick="selectTask(\'' + item.id + '\')" data-tooltip="' + tooltip + '">' + esc(item.title) + (isCampaign ? '' : '<span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + item.id + '\')">' + (item.done ? '↩' : '✓') + '</span>') + '</div>';
 
-        const labelIcon = isCampaign ? '📢' : (item.done ? '✅' : '📝');
+        var labelIcon = isCampaign ? '📢' : (isEvent ? '📅' : (item.done ? '✅' : '📝'));
 
-        let expandToggle = '';
-        const childTasks = getChildTasks(item);
-        if (isCampaign && childTasks.length) {
-          const expanded = S.timelineExpanded[item.id] || false;
-          expandToggle = '<span class="expand-toggle' + (expanded ? ' expanded' : '') + '" onclick="event.stopPropagation();toggleCampaignExpand(\'' + item.id + '\')">▶</span>';
-        }
-
-        rowsHtml += '<div class="timeline-row' + (isCampaign ? ' campaign-row' : '') + '">';
-        rowsHtml += '<div class="timeline-row-label' + (isCampaign ? ' campaign-label' : '') + '" onclick="selectTask(\'' + item.id + '\')">' + expandToggle + ' ' + labelIcon + ' ' + esc(item.title) + '</div>';
+        rowsHtml += '<div class="timeline-row">';
+        rowsHtml += '<div class="timeline-row-label" onclick="selectTask(\'' + item.id + '\')" data-tooltip="' + tooltip + '">' + labelIcon + ' ' + esc(item.title) + '</div>';
         rowsHtml += '<div class="timeline-row-track">' + barHtml + gridLinesHtml + '</div>';
         rowsHtml += '</div>';
-
-        if (isCampaign && childTasks.length && (S.timelineExpanded[item.id] || false)) {
-          childTasks.forEach(child => {
-            const childS = child.date < monthStart ? 1 : parseInt(child.date.split('-')[2], 10);
-            const childEndD = child.enddate || child.date;
-            const childE = childEndD > monthEnd ? daysIn : parseInt(childEndD.split('-')[2], 10);
-            const childLeftPx = (childS - 1) * z;
-            const childWidthPx = (childE - childS + 1) * z;
-            const childBg = 'rgba(' + hexToRgbArr(child.color).join(',') + ',0.12)';
-            const childCls = 'timeline-bar task' + (child.done ? ' done' : '');
-            const childTooltip = esc(child.title) + '\\n' + formatShortDate(child.date) + (child.enddate && child.enddate !== child.date ? ' → ' + formatShortDate(child.enddate) : '') + (child.description ? '\\n' + esc(child.description.substring(0, 100)) : '');
-
-            const childBar = '<div class="' + childCls + '" style="left:' + childLeftPx + 'px;width:' + childWidthPx + 'px;background:' + childBg + ';border-left:3px solid ' + child.color + ';" onclick="selectTask(\'' + child.id + '\')" data-tooltip="' + childTooltip + '">' + esc(child.title) + '<span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + child.id + '\')">' + (child.done ? '↩' : '✓') + '</span></div>';
-
-            rowsHtml += '<div class="timeline-child-row"><div class="timeline-row-label" style="padding-left:28px;font-size:11px;opacity:0.8;" onclick="selectTask(\'' + child.id + '\')">📝 ' + esc(child.title) + '</div>';
-            rowsHtml += '<div class="timeline-row-track">' + childBar + gridLinesHtml + '</div></div>';
-          });
-        }
       });
 
       document.getElementById('timeline-body').innerHTML = '<div class="timeline-body-rows">' + rowsHtml + '</div>';
-    }
-
-    function getChildTasks(campaign) {
-      if (campaign.type !== 'campaign' || !campaign.date) return [];
-      const cs = campaign.date, ce = campaign.enddate || campaign.date;
-      return S.tasks.filter(t => {
-        if (t.type !== 'task' || !t.date) return false;
-        const ts = t.date, te = t.enddate || t.date;
-        return ts >= cs && te <= ce;
-      });
-    }
-
-    function toggleCampaignExpand(id) {
-      if (!S.timelineExpanded) S.timelineExpanded = {};
-      S.timelineExpanded[id] = !S.timelineExpanded[id];
-      renderTimeline();
     }
 
     function hexToRgbArr(hex) {
@@ -2784,7 +2893,9 @@
       for (let d = 1; d <= daysIn; d++) {
         const dObj = new Date(y, m, d);
         if (dObj.getDay() === 0) {
-          sunMarkers += '<div class="p-sun" style="grid-column:' + d + ';"></div>';
+          const pctL = ((d - 1) / daysIn * 100).toFixed(4);
+          const pctW = (100 / daysIn).toFixed(4);
+          sunMarkers += '<div class="p-sun" style="left:' + pctL + '%;width:' + pctW + '%;"></div>';
         }
       }
 
@@ -2808,13 +2919,13 @@
       items.forEach(item => {
         const isC = item.type === 'campaign';
         const dr = item.enddate && item.enddate !== item.date ? formatShortDate(item.date) + ' → ' + formatShortDate(item.enddate) : formatShortDate(item.date);
-        const tags = item.tag ? ' #' + item.tag.replace(/,/g, ' #') : '';
+        const tags = item.tag && !isC ? ' &nbsp;#' + item.tag.replace(/,/g, ' #') : '';
         const prio = !isC && item.priority ? ' · ' + (item.priority === 'high' ? 'Tinggi' : item.priority === 'low' ? 'Rendah' : 'Sedang') : '';
         const st = !isC && item.done ? ' ✓ Selesai' : '';
-        leg += '<div class="tpi" style="border-left:4px solid ' + item.color + ';"><div class="tpit">' + (isC ? '📢' : '📝') + ' ' + esc(item.title) + '</div><div class="tpid">' + dr + tags + prio + st + '</div><div class="tpidesc">' + esc(item.description || '—') + '</div></div>';
+        leg += '<div class="tpi" style="border-left:4px solid ' + item.color + ';"><div class="tpit">' + (isC ? '📢' : '📝') + ' ' + esc(item.title) + '</div><div class="tpid"><strong>' + dr + '</strong>' + tags + prio + st + '</div><div class="tpidesc">' + esc(item.description || '—') + '</div></div>';
       });
 
-      const html = '<!DOCTYPE html><html><head><title>Cetak Timeline - ' + monthName + '</title><style>@page{size:landscape;margin:8mm;}*{box-sizing:border-box;}body{font-family:\'Plus Jakarta Sans\';margin:0;padding:0;font-size:12px;color:#1e293b;background:#fff;}.p-grid{display:grid;grid-template-columns:130px repeat(' + daysIn + ',1fr);gap:0;}.p-corner{padding:4px 8px;font-weight:800;font-size:11px;border-bottom:1px solid #e5e7eb;grid-column:1;color:#1e293b;}.p-label{grid-column:1;padding:3px 8px;font-size:9px;font-weight:600;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1e293b;background:#fff;}.p-track{grid-column:2/-1;display:grid;grid-template-columns:repeat(' + daysIn + ',1fr);border-bottom:1px solid rgba(0,0,0,0.05);min-height:22px;align-items:center;}.pdh{padding:3px 3px;text-align:center;font-size:8px;font-weight:700;border-bottom:1px solid rgba(0,0,0,0.07);border-right:1px solid rgba(0,0,0,0.04);color:#475569;}.pdh.today{background:#3b82f6;color:#fff;}.pdh.weekend{background:rgba(239,68,68,0.08);}.pdh.holiday{color:#ef4444;}.pdn{display:block;font-size:6px;font-weight:400;opacity:0.5;text-transform:uppercase;letter-spacing:0.5px;}.phn{font-size:6px;display:block;font-weight:400;}.tpb{height:16px;border-radius:3px;font-size:7px;display:flex;align-items:center;padding:0 5px;white-space:nowrap;overflow:visible;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,0.08);-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:1px 0;min-width:0;}.tpb.camp{color:#1e293b;}.tpb.task{border-left:2px solid;color:#1e293b;}.tpb-text{white-space:nowrap;overflow:visible;}.p-sun{align-self:stretch;background:rgba(239,68,68,0.08);}.p-leg{margin-top:16px;padding-top:12px;border-top:1.5px solid #cbd5e1;}.p-leg h2{margin:0 0 10px;font-size:14px;color:#1e293b;}.p-lst{column-count:2;column-gap:20px;}.tpi{break-inside:avoid;margin-bottom:8px;padding:6px 10px;background:#f8fafc;border-bottom:1px solid #e5e7eb;border-radius:4px;}.tpit{font-weight:700;font-size:10px;color:#1e293b;margin-bottom:2px;}.tpid{font-size:9px;color:#475569;}.tpidesc{font-size:9px;color:#334155;margin-top:2px;}@media print{.no-print{display:none!important;}}</style></head><body><div class="p-grid">' + hd + rows + '</div><div class="p-leg"><h2>Daftar Campaign & Tugas - ' + monthName + '</h2><div class="p-lst">' + leg + '</div></div></body></html>';
+      const html = '<!DOCTYPE html><html><head><title>Cetak Timeline - ' + monthName + '</title><style>@page{size:landscape;margin:8mm;}*{box-sizing:border-box;}body{font-family:\'Plus Jakarta Sans\',sans-serif;margin:0;padding:0;font-size:12px;color:#1e293b;background:#fff;}.p-grid{display:grid;grid-template-columns:130px repeat(' + daysIn + ',1fr);gap:0;}.p-corner{padding:4px 8px;font-weight:800;font-size:11px;border-bottom:1px solid #e5e7eb;grid-column:1;color:#1e293b;}.p-label{grid-column:1;padding:3px 8px;font-size:9px;font-weight:600;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1e293b;background:#fff;}.p-track{grid-column:2/-1;display:grid;grid-template-columns:repeat(' + daysIn + ',1fr);border-bottom:1px solid rgba(0,0,0,0.05);min-height:22px;align-items:center;position:relative;}.pdh{padding:3px 3px;text-align:center;font-size:8px;font-weight:700;border-bottom:1px solid rgba(0,0,0,0.07);border-right:1px solid rgba(0,0,0,0.04);color:#475569;}.pdh.today{background:#3b82f6;color:#fff;}.pdh.weekend{background:rgba(239,68,68,0.08);}.pdh.holiday{color:#ef4444;}.pdn{display:block;font-size:6px;font-weight:400;opacity:0.5;text-transform:uppercase;letter-spacing:0.5px;}.phn{font-size:6px;display:block;font-weight:400;}.tpb{height:16px;border-radius:3px;font-size:7px;display:flex;align-items:center;padding:0 5px;white-space:nowrap;overflow:visible;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,0.08);-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:1px 0;min-width:0;}.tpb.camp{color:#1e293b;}.tpb.task{border-left:2px solid;color:#1e293b;}.tpb-text{white-space:nowrap;overflow:visible;}.p-sun{position:absolute;top:0;bottom:0;z-index:3;background:rgba(239,68,68,0.08);}.p-leg{margin-top:16px;padding-top:12px;border-top:1.5px solid #cbd5e1;}.p-leg h2{margin:0 0 10px;font-size:14px;color:#1e293b;}.p-lst{column-count:2;column-gap:20px;}.tpi{break-inside:avoid;margin-bottom:10px;padding:8px 12px;background:#f8fafc;border-bottom:1px solid #e5e7eb;border-radius:6px;}.tpit{font-weight:700;font-size:10px;color:#1e293b;margin-bottom:2px;}.tpid{font-size:9px;color:#475569;line-height:1.6;}.tpidesc{font-size:9px;color:#334155;margin-top:3px;line-height:1.5;white-space:pre-wrap;}@media print{.no-print{display:none!important;}}</style></head><body><div class="p-grid">' + hd + rows + '</div><div class="p-leg"><h2>Daftar Campaign & Tugas - ' + monthName + '</h2><div class="p-lst">' + leg + '</div></div></body></html>';
       const win = window.open('', '_blank');
       win.document.write(html);
       win.document.close();
@@ -2871,9 +2982,22 @@
     async function deleteTask() {
       const id = document.getElementById('edit-id').value;
       if (!id || !confirm('Hapus agenda ini?')) return;
+      var type = document.getElementById('f-type').value;
+
+      if (type === 'event' || type === 'reminder') {
+        closeModal();
+        try {
+          await api('deleteCalendarItem', { id: id, type: type });
+          await api('getCalendarData');
+          renderAll();
+          toast('✓ ' + (type === 'event' ? 'Event' : 'Reminder') + ' dihapus');
+        } catch (e) { toast('Gagal menghapus!', true); }
+        return;
+      }
+
       pushUndo();
-      const deleted = S.tasks.find(x => x.id === id);
-      S.tasks = S.tasks.filter(x => x.id !== id);
+      const deleted = S.tasks.find(function(x) { return x.id === id; });
+      S.tasks = S.tasks.filter(function(x) { return x.id !== id; });
       closeModal();
       renderAll();
       renderDetail();
@@ -3081,32 +3205,41 @@
 
     // CRUD & Modals
     function openTaskModal(id, pre) {
-      const t = id ? S.tasks.find(x => x.id === id) : null;
+      var t = id ? S.tasks.find(function(x) { return x.id === id; }) : null;
+      if (!t) t = id ? S.events.find(function(x) { return x.id === id; }) : null;
+      if (!t) t = id ? S.reminders.find(function(x) { return x.id === id; }) : null;
       S.selectedId = id;
-      document.getElementById('modal-title-el').textContent = t ? 'Edit Agenda' : 'Agenda Baru';
+      var type = t ? t.type : 'task';
+      document.getElementById('modal-title-el').textContent = t ? ('Edit ' + (type === 'event' ? 'Event' : type === 'reminder' ? 'Reminder' : 'Agenda')) : 'Agenda Baru';
       document.getElementById('edit-id').value = t ? t.id : '';
       document.getElementById('f-title').value = t ? t.title : '';
-      document.getElementById('f-type').value = t ? (t.type || 'task') : 'task';
+      document.querySelectorAll('input[name="f-type-radio"]').forEach(function(el) {
+        el.checked = el.value === type;
+      });
+      document.getElementById('f-type').value = type;
       document.getElementById('f-desc').value = t ? (t.description || '') : '';
       document.getElementById('f-date').value = t ? t.date : (pre || '');
       document.getElementById('f-enddate').value = t ? t.enddate : (pre || '');
       document.getElementById('f-priority').value = t ? (t.priority || 'medium') : 'medium';
-      // Set tag or channel
-      const isC = t && t.type === 'campaign';
+      document.getElementById('f-org').value = t ? (t.penyelenggara || '') : '';
+      const isC = type === 'campaign';
       const channelEl = document.getElementById('f-channel');
       const tagEl = document.getElementById('f-tag');
       if (isC) {
-        // Match tag to channel by name (not prefix)
-        const match = Object.keys(CHANNELS).find(k => t.tag === k);
-        channelEl.value = match || '';
-        tagEl.value = '';
+        const match = Object.keys(CHANNELS).find(k => t && (t.tag === k || (t.title && t.title.startsWith(CHANNELS[k].prefix))));
+        if (channelEl) channelEl.value = match || (t ? t.tag || '' : '');
+        if (tagEl) tagEl.value = '';
       } else {
-        channelEl.value = '';
-        tagEl.value = t ? (t.tag || '') : '';
+        if (channelEl) channelEl.value = '';
+        if (tagEl) tagEl.value = t ? (t.tag || '') : '';
       }
       selectSwatch(t ? t.color : COLORS[0]);
       toggleTypeFields();
       document.getElementById('btn-delete').style.display = t ? 'block' : 'none';
+      document.getElementById('f-repeat').checked = false;
+      document.getElementById('wrap-repeat').style.display = 'none';
+      document.getElementById('f-repeat-every').value = '1';
+      document.getElementById('f-repeat-unit').value = 'week';
       document.getElementById('task-modal').classList.add('open');
     }
 
@@ -3136,16 +3269,48 @@
       selectSwatch(t.color || COLORS[0]);
       toggleTypeFields();
       document.getElementById('btn-delete').style.display = 'none';
+      document.getElementById('f-repeat').checked = false;
+      document.getElementById('wrap-repeat').style.display = 'none';
+      document.getElementById('f-repeat-every').value = '1';
+      document.getElementById('f-repeat-unit').value = 'week';
       document.getElementById('task-modal').classList.add('open');
     }
     function closeModal() { document.getElementById('task-modal').classList.remove('open'); }
     function toggleTypeFields() {
-      const isC = document.getElementById('f-type').value === 'campaign';
-      document.getElementById('wrap-priority').style.display = isC ? 'none' : 'block';
-      document.getElementById('wrap-tag').querySelector('label').textContent = isC ? 'Channel' : 'Tag';
-      document.getElementById('f-tag').style.display = isC ? 'none' : 'block';
-      document.getElementById('f-channel').style.display = isC ? 'block' : 'none';
-      document.getElementById('wrap-color').style.display = isC ? 'none' : 'block';
+      var radio = document.querySelector('input[name="f-type-radio"]:checked');
+      var val = radio ? radio.value : 'task';
+      document.getElementById('f-type').value = val;
+      var isC = val === 'campaign', isE = val === 'event', isR = val === 'reminder';
+      document.getElementById('wrap-priority').style.display = (isC || isE || isR) ? 'none' : 'block';
+
+      var wrapTag = document.getElementById('wrap-tag');
+      var lblTag = document.getElementById('lbl-tag');
+      var inputTag = document.getElementById('f-tag');
+      var selectChannel = document.getElementById('f-channel');
+
+      if (isC) {
+        if (wrapTag) wrapTag.style.display = 'block';
+        if (lblTag) lblTag.textContent = 'Platform / Channel';
+        if (inputTag) inputTag.style.display = 'none';
+        if (selectChannel) selectChannel.style.display = 'block';
+      } else if (val === 'task') {
+        if (wrapTag) wrapTag.style.display = 'block';
+        if (lblTag) lblTag.textContent = 'Tag';
+        if (inputTag) inputTag.style.display = 'block';
+        if (selectChannel) selectChannel.style.display = 'none';
+      } else {
+        if (wrapTag) wrapTag.style.display = 'none';
+      }
+
+      document.getElementById('wrap-org').style.display = isE ? '' : 'none';
+      document.getElementById('wrap-color').style.display = (isC || isE || isR) ? 'none' : 'block';
+      document.getElementById('modal-title-el').textContent = isE ? (document.getElementById('edit-id').value ? 'Edit Event' : 'Event Baru')
+        : isR ? (document.getElementById('edit-id').value ? 'Edit Reminder' : 'Reminder Baru')
+        : isC ? (document.getElementById('edit-id').value ? 'Edit Campaign' : 'Campaign Baru')
+        : (document.getElementById('edit-id').value ? 'Edit Agenda' : 'Agenda Baru');
+    }
+    function toggleRepeatFields() {
+      document.getElementById('wrap-repeat').style.display = document.getElementById('f-repeat').checked ? '' : 'none';
     }
     function onChannelChange() {
       const ch = document.getElementById('f-channel').value;
@@ -3185,33 +3350,44 @@
       const el = document.getElementById('detail-panel');
       el.classList.remove('empty');
 
-      const items = S.tasks.filter(t => {
+      var items = S.tasks.filter(function(t) {
         if (!t.date) return false;
-        const e = t.enddate || t.date;
+        var e = t.enddate || t.date;
         return t.date <= ds && e >= ds;
-      }).sort((a, b) => a.type !== b.type ? (a.type === 'campaign' ? -1 : 1) : a.date.localeCompare(b.date));
+      }).concat(S.events.filter(function(ev) {
+        if (!ev.date) return false;
+        var en = ev.enddate || ev.date;
+        return ev.date <= ds && en >= ds;
+      })).concat(S.reminders.filter(function(r) {
+        if (!r.date) return false;
+        var re = r.enddate || r.date;
+        return r.date <= ds && re >= ds;
+      })).sort(function(a, b) {
+        var order = { campaign: 0, event: 1, task: 2, reminder: 3 };
+        var oa = order[a.type] || 4, ob = order[b.type] || 4;
+        return oa !== ob ? oa - ob : a.date.localeCompare(b.date);
+      });
 
       const dObj = new Date(ds + 'T00:00:00');
       const dateFormatted = DAYS_ID[dObj.getDay()] + ', ' + dObj.getDate() + ' ' + MONTHS_ID[dObj.getMonth()] + ' ' + dObj.getFullYear();
 
-      const listHtml = items.length ? items.map((t, i) => {
-        const isC = t.type === 'campaign';
-        const span = (t.enddate && t.enddate !== t.date) ? ` → ${formatShortDate(t.enddate)}` : '';
-        const prioColor = t.priority === 'high' ? '#ef4444' : t.priority === 'low' ? '#10b981' : '#3b82f6';
-        const desc = esc(t.description) || '<em style="opacity:0.4">Tidak ada deskripsi.</em>';
-        return `
-          <div class="task-row" style="border-left:4px solid ${t.color || '#ccc'}; padding: 8px 10px; margin-bottom: 6px; flex-direction: column; align-items: flex-start;" onclick="selectTask('${t.id}')">
-            <div style="display:flex; width:100%; justify-content:space-between; align-items:flex-start;">
-              <div style="font-weight:700; font-size:13px;">${isC ? '📢' : '📝'} ${esc(t.title)}</div>
-              <button class="btn btn-ghost" style="padding:2px 6px; font-size:10px;" onclick="event.stopPropagation();openTaskModal('${t.id}')">Edit</button>
-            </div>
-            <div style="font-size:10px; color:var(--text-soft); margin-top:2px;">
-              ${formatShortDate(t.date)}${span} ${t.tag ? ' · ' + esc(t.tag) : ''}
-              ${!isC && t.priority ? ' · <span style="color:' + prioColor + '; font-weight:600">' + (t.priority === 'high' ? '🏁 Tinggi' : t.priority === 'low' ? '🐌 Rendah' : '🔵 Sedang') + '</span>' : ''}
-            </div>
-            <div style="font-size:11.5px; margin-top:4px; opacity:0.85; line-height:1.3;">${desc}</div>
-          </div>`;
-      }).join('') : `<div style="text-align:center;padding:24px;opacity:0.35;font-size:13px;">📭 Tidak ada agenda di tanggal ini</div>`;
+      const listHtml = items.length ? items.map(function(t, i) {
+        var isC = t.type === 'campaign', isE = t.type === 'event', isR = t.type === 'reminder';
+        var icon = isC ? '📢' : (isE ? '📅' : (isR ? '🔔' : '📝'));
+        var span = (t.enddate && t.enddate !== t.date) ? ' → ' + formatShortDate(t.enddate) : '';
+        var desc = esc(t.description) || '<em style="opacity:0.4">Tidak ada deskripsi.</em>';
+        var orgHtml = t.penyelenggara ? '<div style="font-size:10px;opacity:0.6;">Penyelenggara: ' + esc(t.penyelenggara) + '</div>' : '';
+        return '<div class="task-row" style="border-left:4px solid ' + (t.color || '#ccc') + '; padding: 8px 10px; margin-bottom: 6px; flex-direction: column; align-items: flex-start;" onclick="selectTask(\'' + t.id + '\')">' +
+          '<div style="display:flex; width:100%; justify-content:space-between; align-items:flex-start;">' +
+          '<div style="font-weight:700; font-size:13px;">' + icon + ' ' + esc(t.title) + '</div>' +
+          '<button class="btn btn-ghost" style="padding:2px 6px; font-size:10px;" onclick="event.stopPropagation();' + "openTaskModal('" + t.id + "')" + '">Edit</button>' +
+          '</div>' +
+          '<div style="font-size:10px; color:var(--text-soft); margin-top:2px;">' +
+          formatShortDate(t.date) + span + (t.tag ? ' · ' + esc(t.tag) : '') +
+          '</div>' + orgHtml +
+          '<div style="font-size:11.5px; margin-top:4px; opacity:0.85; line-height:1.3;">' + desc + '</div>' +
+          '</div>';
+      }).join('') : '<div style="text-align:center;padding:24px;opacity:0.35;font-size:13px;">📭 Tidak ada agenda di tanggal ini</div>';
 
       el.innerHTML = `
         <div class="detail-header" style="margin-bottom:12px;">
@@ -3225,7 +3401,9 @@
     }
 
     function renderDetail() {
-      const t = S.tasks.find(x => x.id === S.selectedId);
+      var t = S.tasks.find(function(x) { return x.id === S.selectedId; });
+      if (!t) t = S.events.find(function(x) { return x.id === S.selectedId; });
+      if (!t) t = S.reminders.find(function(x) { return x.id === S.selectedId; });
       const el = document.getElementById('detail-panel');
       if (!t) {
         el.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.4;">Klik agenda atau tanggal untuk melihat detail</div>';
@@ -3233,35 +3411,86 @@
         return;
       }
       el.classList.remove('empty');
-      const isC = t.type === 'campaign';
-      el.innerHTML = `
-        <div class="detail-header" style="margin-bottom:12px;">
-          <div style="display:flex;gap:8px;align-items:flex-start;flex:1;">
-            <div style="width:4px;border-radius:4px;background:${t.color || '#ccc'};align-self:stretch;flex-shrink:0;"></div>
-            <div>
-              <div class="detail-title" style="font-size:15px; line-height:1.2;">${esc(t.title)}</div>
-              <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
-                <span class="badge" style="padding:2px 6px;font-size:9.5px;background:${isC ? t.color : 'rgba(0,0,0,0.05)'};color:${isC ? '#fff' : 'inherit'}">${isC ? '📢 Campaign' : '📝 Task'}</span>
-                ${t.tag ? `<span class="badge" style="padding:2px 6px;font-size:9.5px;background:${hexAlpha(t.color, 0.1)};color:${t.color};border:1px solid ${t.color}">${esc(t.tag)}</span>` : ''}
-                ${!isC ? `<span class="badge" style="padding:2px 6px;font-size:9.5px;background:${t.priority === 'high' ? '#fef2f2' : t.priority === 'low' ? '#ecfdf5' : '#eff6ff'};color:${t.priority === 'high' ? '#ef4444' : t.priority === 'low' ? '#10b981' : '#3b82f6'}">${t.priority === 'high' ? '🏁 Tinggi' : t.priority === 'low' ? '🐌 Rendah' : '🔵 Sedang'}</span>` : ''}
-                ${!isC ? `<span class="badge" style="padding:2px 6px;font-size:9.5px;background:${t.done ? '#ecfdf5' : '#f1f5f9'};color:${t.done ? '#10b981' : '#94a3b8'}">${t.done ? '✓ Selesai' : '⏳ Pending'}</span>` : ''}
-              </div>
-            </div>
-          </div>
-          <div style="display:flex;gap:4px;flex-shrink:0;">
-            ${!isC ? `<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="toggleDone('${t.id}')">${t.done ? '↩ Buka' : '✓ Selesai'}</button>` : ''}
-            <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="duplicateTask('${t.id}')">Duplikat</button>
-            <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="openTaskModal('${t.id}')">Edit</button>
-          </div>
-        </div>
-        <div style="font-size:11.5px;font-weight:700;color:var(--accent);margin:8px 0 4px;">📅 ${formatShortDate(t.date)}${t.enddate && t.enddate !== t.date ? ` → ${formatShortDate(t.enddate)}` : ''}</div>
-        <div class="detail-desc" style="min-height:20px; font-size:12px; line-height:1.4;">${esc(t.description) || '<span style="opacity:0.4;font-style:italic;">Tanpa deskripsi.</span>'}</div>
-      `;
+      var isC = t.type === 'campaign', isE = t.type === 'event', isR = t.type === 'reminder';
+      var typeIcon = isC ? '📢' : (isE ? '📅' : (isR ? '🔔' : '📝'));
+      var typeLabel = isC ? 'Campaign' : (isE ? 'Event' : (isR ? 'Reminder' : 'Task'));
+      var badgeBg = isC ? t.color : (isE ? 'rgba(20,184,166,0.1)' : (isR ? 'rgba(245,158,11,0.1)' : 'rgba(0,0,0,0.05)'));
+      var badgeColor = isC ? '#fff' : (isE ? '#14b8a6' : (isR ? '#f59e0b' : 'inherit'));
+      var editFn = "openTaskModal('" + t.id + "')";
+      var orgHtml = t.penyelenggara ? '<div style="font-size:11px;margin:8px 0 4px;opacity:0.6;">Penyelenggara: ' + esc(t.penyelenggara) + '</div>' : '';
+      el.innerHTML = '<div class="detail-header" style="margin-bottom:12px;">' +
+        '<div style="display:flex;gap:8px;align-items:flex-start;flex:1;">' +
+        '<div style="width:4px;border-radius:4px;background:' + (t.color || '#ccc') + ';align-self:stretch;flex-shrink:0;"></div>' +
+        '<div><div class="detail-title" style="font-size:15px; line-height:1.2;">' + esc(t.title) + '</div>' +
+        '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">' +
+        '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + badgeBg + ';color:' + badgeColor + '">' + typeIcon + ' ' + typeLabel + '</span>' +
+        (t.tag ? '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + hexAlpha(t.color, 0.1) + ';color:' + t.color + ';border:1px solid ' + t.color + '">' + esc(t.tag) + '</span>' : '') +
+        (!isC ? '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + (t.done ? '#ecfdf5' : '#f1f5f9') + ';color:' + (t.done ? '#10b981' : '#94a3b8') + '">' + (t.done ? '✓ Selesai' : '⏳ Pending') + '</span>' : '') +
+        '</div></div></div>' +
+        '<div style="display:flex;gap:4px;flex-shrink:0;">' +
+        (!isC ? '<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="toggleDone(\'' + t.id + '\')">' + (t.done ? '↩ Buka' : '✓ Selesai') + '</button>' : '') +
+        '<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="' + editFn + '">Edit</button>' +
+        '<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="duplicateTask(\'' + t.id + '\')">Duplikat</button>' +
+        '</div></div>' + orgHtml +
+        '<div style="font-size:11.5px;font-weight:700;color:var(--accent);margin:8px 0 4px;">📅 ' + formatShortDate(t.date) + (t.enddate && t.enddate !== t.date ? ' → ' + formatShortDate(t.enddate) : '') + '</div>' +
+        '<div class="detail-desc" style="min-height:20px; font-size:12px; line-height:1.4;">' + (esc(t.description) || '<span style="opacity:0.4;font-style:italic;">Tanpa deskripsi.</span>') + '</div>';
     }
 
     async function submitTask() {
-      const isC = document.getElementById('f-type').value === 'campaign';
-      const editId = document.getElementById('edit-id').value;
+      var type = document.getElementById('f-type').value;
+      var editId = document.getElementById('edit-id').value;
+
+      if (type === 'event') {
+        var ed = {
+          id: editId || undefined,
+          nama: document.getElementById('f-title').value.trim(),
+          mulai: document.getElementById('f-date').value,
+          selesai: document.getElementById('f-enddate').value,
+          deskripsi: document.getElementById('f-desc').value.trim(),
+          penyelenggara: document.getElementById('f-org').value.trim(),
+          warna: S.tempColor || '#14b8a6',
+          type: 'event',
+          status: ''
+        };
+        if (!ed.nama || !ed.mulai) { toast('Isi nama & tanggal!', true); return; }
+        try {
+          await api('saveCalendarItem', ed);
+          // Handle repeat
+          if (document.getElementById('f-repeat').checked && !editId) repeatCalendarItem_(ed);
+          closeModal();
+          await api('getCalendarData');
+          renderAll();
+          toast('✓ Event tersimpan');
+        } catch (e) { toast('Gagal simpan event', true); }
+        return;
+      }
+
+      if (type === 'reminder') {
+        var rd = {
+          id: editId || undefined,
+          nama: document.getElementById('f-title').value.trim(),
+          mulai: document.getElementById('f-date').value,
+          selesai: document.getElementById('f-enddate').value,
+          deskripsi: document.getElementById('f-desc').value.trim(),
+          warna: S.tempColor || '#f59e0b',
+          type: 'reminder',
+          status: ''
+        };
+        if (!rd.nama || !rd.mulai) { toast('Isi nama & tanggal!', true); return; }
+        try {
+          await api('saveCalendarItem', rd);
+          // Handle repeat
+          if (document.getElementById('f-repeat').checked && !editId) repeatCalendarItem_(rd);
+          closeModal();
+          await api('getCalendarData');
+          renderAll();
+          toast('✓ Reminder tersimpan');
+        } catch (e) { toast('Gagal simpan reminder', true); }
+        return;
+      }
+
+      // Task / Campaign
+      const isC = type === 'campaign';
       const channel = document.getElementById('f-channel').value;
       const chData = CHANNELS[channel];
       let title = document.getElementById('f-title').value;
@@ -3276,21 +3505,26 @@
       const task = {
         id: editId || 'T' + Date.now(),
         title: title,
-        type: document.getElementById('f-type').value,
+        type: type,
         description: document.getElementById('f-desc').value,
         date: document.getElementById('f-date').value,
         enddate: document.getElementById('f-enddate').value,
         priority: isC ? 'medium' : document.getElementById('f-priority').value,
         tag: isC ? (channel || (oldTask ? oldTask.tag : '')) : document.getElementById('f-tag').value,
         color: isC && chData ? chData.color : (S.tempColor || COLORS[0]),
-        done: oldTask ? oldTask.done : false
+        done: oldTask ? oldTask.done : false,
+        nama: title,
+        mulai: document.getElementById('f-date').value,
+        selesai: document.getElementById('f-enddate').value,
+        deskripsi: document.getElementById('f-desc').value,
+        warna: isC && chData ? chData.color : (S.tempColor || COLORS[0]),
+        tipe: type
       };
       if (!task.title || !task.date) return toast('Isi judul & tanggal!', true);
 
       const exIdx = S.tasks.findIndex(x => x.id === task.id);
       if (exIdx > -1) S.tasks[exIdx] = task; else S.tasks.unshift(task);
 
-      // Show saving indicator
       const saveBtn = document.querySelector('#task-modal .btn-primary');
       const origText = saveBtn.textContent;
       saveBtn.textContent = 'Menyimpan...';
@@ -3300,6 +3534,35 @@
 
       try {
         await api('saveTask', task);
+        // Handle repeat
+        if (document.getElementById('f-repeat').checked && !editId) {
+          var repEvery = parseInt(document.getElementById('f-repeat-every').value) || 1;
+          var repUnit = document.getElementById('f-repeat-unit').value;
+          var repUntil = document.getElementById('f-enddate').value || (new Date().getFullYear() + '-12-31');
+          var cur = new Date(task.date);
+          var origEnd = task.enddate ? new Date(task.enddate) : null;
+          var diffDays = origEnd ? Math.round((origEnd - cur) / 86400000) : 0;
+          var endD = new Date(repUntil);
+          var count = 0;
+          while (cur < endD) {
+            if (repUnit === 'day') cur.setDate(cur.getDate() + repEvery);
+            else if (repUnit === 'week') cur.setDate(cur.getDate() + repEvery * 7);
+            else cur.setMonth(cur.getMonth() + repEvery);
+            if (cur > endD) break;
+            var ds = cur.getFullYear() + '-' + pad(cur.getMonth() + 1) + '-' + pad(cur.getDate());
+            var rep = JSON.parse(JSON.stringify(task));
+            rep.id = 'T' + Date.now() + count;
+            rep.date = ds;
+            if (diffDays > 0) {
+              var ed = new Date(cur); ed.setDate(ed.getDate() + diffDays);
+              rep.enddate = ed.getFullYear() + '-' + pad(ed.getMonth() + 1) + '-' + pad(ed.getDate());
+            }
+            S.tasks.unshift(rep);
+            await api('saveTask', rep);
+            count++;
+          }
+          if (count) toast('✓ Tersimpan + ' + count + ' ulangan');
+        }
         toast('✓ Berhasil disimpan');
         await refreshData(true);
       } catch (err) {
@@ -3310,15 +3573,51 @@
       }
     }
 
+    async function repeatCalendarItem_(tmpl) {
+      var repEvery = parseInt(document.getElementById('f-repeat-every').value) || 1;
+      var repUnit = document.getElementById('f-repeat-unit').value;
+      var repUntil = document.getElementById('f-enddate').value || (new Date().getFullYear() + '-12-31');
+      var cur = new Date(tmpl.mulai);
+      var origEnd = tmpl.selesai ? new Date(tmpl.selesai) : null;
+      var diffDays = origEnd ? Math.round((origEnd - cur) / 86400000) : 0;
+      var endD = new Date(repUntil);
+      var count = 0;
+      while (cur < endD) {
+        if (repUnit === 'day') cur.setDate(cur.getDate() + repEvery);
+        else if (repUnit === 'week') cur.setDate(cur.getDate() + repEvery * 7);
+        else cur.setMonth(cur.getMonth() + repEvery);
+        if (cur > endD) break;
+        var ds = cur.getFullYear() + '-' + pad(cur.getMonth() + 1) + '-' + pad(cur.getDate());
+        var rep = JSON.parse(JSON.stringify(tmpl));
+        rep.id = undefined;
+        rep.mulai = ds;
+        if (diffDays > 0) {
+          var ed = new Date(cur); ed.setDate(ed.getDate() + diffDays);
+          rep.selesai = ed.getFullYear() + '-' + pad(ed.getMonth() + 1) + '-' + pad(ed.getDate());
+        }
+        await api('saveCalendarItem', rep);
+        count++;
+      }
+      if (count) toast('✓ + ' + count + ' ulangan tersimpan');
+    }
+
     async function toggleDone(id) {
-      const t = S.tasks.find(x => x.id === id);
+      var t = S.tasks.find(function(x) { return x.id === id; });
+      var source = 'task', isEvent = false, isReminder = false;
+      if (!t) { t = S.events.find(function(x) { return x.id === id; }); source = 'event'; isEvent = true; }
+      if (!t) { t = S.reminders.find(function(x) { return x.id === id; }); source = 'reminder'; isReminder = true; }
       if (!t) return;
-      t.done = !t.done; renderAll();
-      try {
-        await api('saveTask', t);
-        await refreshData(true);
-      } catch (e) {
-        toast('Gagal mengupdate status!', true);
+      if (source === 'task') {
+        t.done = !t.done; renderAll();
+        try { await api('saveTask', t); await refreshData(true); } catch (e) { toast('Gagal mengupdate status!', true); }
+      } else {
+        t.done = !t.done; t.status = t.done ? 'Selesai' : ''; renderAll();
+        try {
+          var d = { id: t.id, status: t.status, type: source };
+          if (isEvent) { d.nama = t.title; d.mulai = t.date; d.selesai = t.enddate; d.warna = t.color; d.deskripsi = t.description; }
+          else { d.nama = t.title; d.mulai = t.date; d.selesai = t.enddate; d.warna = t.color; d.deskripsi = t.description; }
+          await api('saveCalendarItem', d);
+        } catch (e) { toast('Gagal mengupdate status!', true); }
       }
     }
 
@@ -3444,7 +3743,7 @@
 <head>
           <title>Print - ${title}</title>
           <style>
-            body { font-family: 'Plus Jakarta Sans'; margin: 0; padding: 15px; color: #1e293b; background: #fff; width: 100%; box-sizing: border-box; }
+            body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 15px; color: #1e293b; background: #fff; width: 100%; box-sizing: border-box; }
             .container { ${isMany ? 'display: block;' : 'display: flex; gap: 24px; width: 100%;'} }
             .cal-side { ${!isMany ? 'flex: 7.2; min-width: 0;' : 'margin-bottom: 24px; page-break-after: auto;'} }
             .list-side { ${!isMany ? 'flex: 2.8; border-left: 1px solid #e2e8f0; padding-left: 16px; min-width: 0;' : 'border-top: 2px dashed #cbd5e1; padding-top: 24px;'} }
@@ -3473,7 +3772,7 @@
             .p-cell-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px; }
             .p-today-marker { background: #3b82f6 !important; color: #fff !important; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .p-holiday { font-size: 8px; color: #ef4444; font-weight: 700; text-align: right; margin-left: 4px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .p-holiday.p-leave-label {       color: #d97706;
+            .p-holiday.p-leave-label { color: #d97706; }
             .p-day-names { display: grid; grid-template-columns: repeat(7, 14.285%); text-align: center; font-size: 10px; font-weight: 800; opacity: 0.6; margin-bottom: 5px; }
 
             .p-chip { height: 16px; margin-top: 2px; font-size: 9px; color: #fff; padding: 0 6px; display: flex; align-items: center; white-space: nowrap; overflow: hidden; font-weight: 700; line-height: 1; box-sizing: border-box; }
@@ -3484,7 +3783,7 @@
 
             .p-item { page-break-inside: avoid; break-inside: avoid-column; }
             @media print {
-              body { padding: 0; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              body { padding: 0; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
               @page { size: A4 landscape; margin: 15mm !important; }
               .p-grid { border-width: 1.5px; }
               .p-cell { border-width: 1.5px; min-height: 80px; }
@@ -3515,6 +3814,76 @@
 `);
       win.document.close();
     }
+
+    // ── Event & Reminder ──
+    var S_eventFilter = 'all', S_reminderFilter = 'all';
+
+    function setEventFilter(f, el) {
+      S_eventFilter = f;
+      el.parentNode.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); });
+      el.classList.add('active');
+      renderEvents();
+    }
+    function setReminderFilter(f, el) {
+      S_reminderFilter = f;
+      el.parentNode.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); });
+      el.classList.add('active');
+      renderReminders();
+    }
+
+    function renderEvents() {
+      var el = document.getElementById('event-list-el');
+      if (!el) return;
+      var list = S.events.filter(function(e) {
+        if (S_eventFilter === 'upcoming') return e.date && e.date >= todayStr();
+        if (S_eventFilter === 'past') return !e.date || e.date < todayStr();
+        return true;
+      });
+      if (!list.length) {
+        el.innerHTML = '<div class="empty-state"><div style="font-size:32px;margin-bottom:8px;">📅</div><div>Belum ada event</div></div>';
+        return;
+      }
+      el.innerHTML = list.map(function(e) {
+        return '<div class="task-row" onclick="selectTask(\'' + e.id + '\')" style="border-left:3px solid ' + (e.color || '#14b8a6') + '">' +
+          '<div class="task-main"><div class="task-name">' + esc(e.title || 'Event') + '</div>' +
+          '<div class="task-sub"><span>📅 ' + (e.date || '—') + '</span>' +
+          (e.enddate && e.enddate !== e.date ? ' → ' + e.enddate : '') +
+          (e.penyelenggara ? '<span style="opacity:0.5"> · ' + esc(e.penyelenggara) + '</span>' : '') +
+          '<span class="badge" style="background:rgba(20,184,166,0.1);color:#14b8a6;">📅 Event</span>' +
+          '</div></div></div>';
+      }).join('');
+    }
+
+    function renderReminders() {
+      var el = document.getElementById('reminder-list-el');
+      if (!el) return;
+      var list = S.reminders.filter(function(r) {
+        if (S_reminderFilter === 'pending') return !r.status || r.status !== 'Selesai';
+        if (S_reminderFilter === 'done') return r.status === 'Selesai';
+        return true;
+      });
+      if (!list.length) {
+        el.innerHTML = '<div class="empty-state"><div style="font-size:32px;margin-bottom:8px;">🔔</div><div>Belum ada reminder</div></div>';
+        return;
+      }
+      el.innerHTML = list.map(function(r) {
+        var done = r.status === 'Selesai' || r.done;
+        return '<div class="task-row ' + (done ? 'done' : '') + '" onclick="selectTask(\'' + r.id + '\')" style="border-left:3px solid ' + (r.color || '#f59e0b') + '">' +
+          '<div class="task-check ' + (done ? 'checked' : '') + '" onclick="event.stopPropagation();toggleDone(\'' + r.id + '\')"></div>' +
+          '<div class="task-main"><div class="task-name">' + esc(r.title || 'Reminder') + '</div>' +
+          '<div class="task-sub"><span>📅 ' + (r.date || '—') + '</span>' +
+          (r.enddate && r.enddate !== r.date ? ' → ' + r.enddate : '') +
+          '<span class="badge" style="background:' + (done ? '#ecfdf5' : '#f1f5f9') + ';color:' + (done ? '#10b981' : '#94a3b8') + ';">' + (done ? '✓ Selesai' : '⏳ Pending') + '</span>' +
+          '</div></div></div>';
+      }).join('');
+    }
+
+    function todayStr() {
+      var d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    // Modal Event
   </script>
     <script>
         function toggleTheme() {
