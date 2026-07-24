@@ -2048,13 +2048,13 @@
           if (!json.success) throw new Error(json.message || 'Gagal load calendar');
           S.tasks = [].concat(
             (json.result.tasks || []).map(function(t) { return {
-              ...t, enddate: normDate(t.enddate || t.endDate || t.selesai || ''),
+              ...t, title: t.title || t.nama || '', enddate: normDate(t.enddate || t.endDate || t.selesai || ''),
               date: normDate(t.date || t.mulai || ''),
               type: 'task',
               color: t.color || t.warna || '#6366f1'
             }; }),
             (json.result.campaigns || []).map(function(c) { return {
-              ...c, enddate: normDate(c.enddate || c.endDate || c.selesai || ''),
+              ...c, title: c.title || c.nama || '', enddate: normDate(c.enddate || c.endDate || c.selesai || ''),
               date: normDate(c.date || c.mulai || ''),
               type: 'campaign',
               color: c.color || c.warna || '#6366f1'
@@ -2915,18 +2915,36 @@
         rows += '<div class="p-label">' + esc(item.title) + '</div><div class="p-track">' + sunMarkers + bar + '</div>';
       });
 
-      // Legend
-      let leg = '';
+      // Legend — group campaigns by title+description
+      const campGroups = {};
+      const nonCamps = [];
       items.forEach(item => {
-        const isC = item.type === 'campaign';
+        if (item.type === 'campaign') {
+          const key = item.title.trim().toLowerCase() + '|||' + (item.description || '').trim().toLowerCase();
+          if (!campGroups[key]) campGroups[key] = { title: item.title, color: item.color, description: item.description, dates: [] };
+          campGroups[key].dates.push({ start: item.date, end: item.enddate || item.date });
+        } else {
+          nonCamps.push(item);
+        }
+      });
+      let leg = '';
+      Object.values(campGroups).forEach(g => {
+        g.dates.sort((a, b) => a.start.localeCompare(b.start));
+        const datesHtml = g.dates.map(d => {
+          const dr = d.start !== d.end ? formatShortDate(d.start) + ' → ' + formatShortDate(d.end) : formatShortDate(d.start);
+          return '<span style="background:#f1f5f9;padding:2px 4px;border-radius:3px;margin-right:4px;display:inline-block;margin-bottom:2px;border:1px solid #e2e8f0;color:#475569;">📅 ' + dr + '</span>';
+        }).join('');
+        leg += '<div class="tpi" style="border-left:4px solid ' + g.color + ';"><div class="tpit">📢 ' + esc(g.title) + '</div><div class="tpid">' + datesHtml + '</div><div class="tpidesc">' + esc(g.description || '—') + '</div></div>';
+      });
+      nonCamps.forEach(item => {
         const dr = item.enddate && item.enddate !== item.date ? formatShortDate(item.date) + ' → ' + formatShortDate(item.enddate) : formatShortDate(item.date);
-        const tags = item.tag && !isC ? ' &nbsp;#' + item.tag.replace(/,/g, ' #') : '';
-        const prio = !isC && item.priority ? ' · ' + (item.priority === 'high' ? 'Tinggi' : item.priority === 'low' ? 'Rendah' : 'Sedang') : '';
-        const st = !isC && item.done ? ' ✓ Selesai' : '';
-        leg += '<div class="tpi" style="border-left:4px solid ' + item.color + ';"><div class="tpit">' + (isC ? '📢' : '📝') + ' ' + esc(item.title) + '</div><div class="tpid"><strong>' + dr + '</strong>' + tags + prio + st + '</div><div class="tpidesc">' + esc(item.description || '—') + '</div></div>';
+        const tags = item.tag ? ' &nbsp;#' + item.tag.replace(/,/g, ' #') : '';
+        const prio = item.priority ? ' · ' + (item.priority === 'high' ? 'Tinggi' : item.priority === 'low' ? 'Rendah' : 'Sedang') : '';
+        const st = item.done ? ' ✓ Selesai' : '';
+        leg += '<div class="tpi" style="border-left:4px solid ' + item.color + ';"><div class="tpit">📝 ' + esc(item.title) + '</div><div class="tpid"><strong>' + dr + '</strong>' + tags + prio + st + '</div><div class="tpidesc">' + esc(item.description || '—') + '</div></div>';
       });
 
-      const html = '<!DOCTYPE html><html><head><title>Cetak Timeline - ' + monthName + '</title><style>@page{size:landscape;margin:8mm;}*{box-sizing:border-box;}body{font-family:\'Plus Jakarta Sans\',sans-serif;margin:0;padding:0;font-size:12px;color:#1e293b;background:#fff;}.p-grid{display:grid;grid-template-columns:130px repeat(' + daysIn + ',1fr);gap:0;}.p-corner{padding:4px 8px;font-weight:800;font-size:11px;border-bottom:1px solid #e5e7eb;grid-column:1;color:#1e293b;}.p-label{grid-column:1;padding:3px 8px;font-size:9px;font-weight:600;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1e293b;background:#fff;}.p-track{grid-column:2/-1;display:grid;grid-template-columns:repeat(' + daysIn + ',1fr);border-bottom:1px solid rgba(0,0,0,0.05);min-height:22px;align-items:center;position:relative;}.pdh{padding:3px 3px;text-align:center;font-size:8px;font-weight:700;border-bottom:1px solid rgba(0,0,0,0.07);border-right:1px solid rgba(0,0,0,0.04);color:#475569;}.pdh.today{background:#3b82f6;color:#fff;}.pdh.weekend{background:rgba(239,68,68,0.08);}.pdh.holiday{color:#ef4444;}.pdn{display:block;font-size:6px;font-weight:400;opacity:0.5;text-transform:uppercase;letter-spacing:0.5px;}.phn{font-size:6px;display:block;font-weight:400;}.tpb{height:16px;border-radius:3px;font-size:7px;display:flex;align-items:center;padding:0 5px;white-space:nowrap;overflow:visible;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,0.08);-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:1px 0;min-width:0;}.tpb.camp{color:#1e293b;}.tpb.task{border-left:2px solid;color:#1e293b;}.tpb-text{white-space:nowrap;overflow:visible;}.p-sun{position:absolute;top:0;bottom:0;z-index:3;background:rgba(239,68,68,0.08);}.p-leg{margin-top:16px;padding-top:12px;border-top:1.5px solid #cbd5e1;}.p-leg h2{margin:0 0 10px;font-size:14px;color:#1e293b;}.p-lst{column-count:2;column-gap:20px;}.tpi{break-inside:avoid;margin-bottom:10px;padding:8px 12px;background:#f8fafc;border-bottom:1px solid #e5e7eb;border-radius:6px;}.tpit{font-weight:700;font-size:10px;color:#1e293b;margin-bottom:2px;}.tpid{font-size:9px;color:#475569;line-height:1.6;}.tpidesc{font-size:9px;color:#334155;margin-top:3px;line-height:1.5;white-space:pre-wrap;}@media print{.no-print{display:none!important;}}</style></head><body><div class="p-grid">' + hd + rows + '</div><div class="p-leg"><h2>Daftar Campaign & Tugas - ' + monthName + '</h2><div class="p-lst">' + leg + '</div></div></body></html>';
+      const html = '<!DOCTYPE html><html><head><title>Cetak Timeline - ' + monthName + '</title><style>@page{size:landscape;margin:8mm;}*{box-sizing:border-box;}body{font-family:\'Plus Jakarta Sans\',sans-serif;margin:0;padding:0;font-size:12px;color:#1e293b;background:#fff;}.p-grid{display:grid;grid-template-columns:130px repeat(' + daysIn + ',1fr);gap:0;}.p-corner{padding:4px 8px;font-weight:800;font-size:11px;border-bottom:1px solid #e5e7eb;grid-column:1;color:#1e293b;}.p-label{grid-column:1;padding:3px 8px;font-size:9px;font-weight:600;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1e293b;background:#fff;}.p-track{grid-column:2/-1;display:grid;grid-template-columns:repeat(' + daysIn + ',1fr);border-bottom:1px solid rgba(0,0,0,0.05);min-height:22px;align-items:center;position:relative;}.pdh{padding:3px 3px;text-align:center;font-size:8px;font-weight:700;border-bottom:1px solid rgba(0,0,0,0.07);border-right:1px solid rgba(0,0,0,0.04);color:#475569;}.pdh.today{background:#3b82f6;color:#fff;}.pdh.weekend{background:rgba(239,68,68,0.08);}.pdh.holiday{color:#ef4444;}.pdn{display:block;font-size:6px;font-weight:400;opacity:0.5;text-transform:uppercase;letter-spacing:0.5px;}.phn{font-size:6px;display:block;font-weight:400;}.tpb{height:16px;border-radius:3px;font-size:7px;display:flex;align-items:center;padding:0 5px;white-space:nowrap;overflow:visible;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,0.08);-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:1px 0;min-width:0;}.tpb.camp{color:#1e293b;}.tpb.task{border-left:2px solid;color:#1e293b;}.tpb-text{white-space:nowrap;overflow:visible;}.p-sun{position:absolute;top:0;bottom:0;z-index:3;background:rgba(239,68,68,0.08);}.p-leg{margin-top:16px;padding-top:12px;border-top:1.5px solid #cbd5e1;page-break-before:always;}.p-leg h2{margin:0 0 10px;font-size:14px;color:#1e293b;}.p-lst{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}.tpi{break-inside:avoid;margin-bottom:0;padding:8px 12px;background:#f8fafc;border-bottom:1px solid #e5e7eb;border-radius:6px;}.tpit{font-weight:700;font-size:10px;color:#1e293b;margin-bottom:2px;}.tpid{font-size:9px;color:#475569;line-height:1.6;}.tpidesc{font-size:9px;color:#334155;margin-top:3px;line-height:1.5;white-space:pre-wrap;}@media print{.no-print{display:none!important;}}</style></head><body><div class="p-grid">' + hd + rows + '</div><div class="p-leg"><h2>Daftar Campaign & Tugas - ' + monthName + '</h2><div class="p-lst">' + leg + '</div></div></body></html>';
       const win = window.open('', '_blank');
       win.document.write(html);
       win.document.close();
@@ -3655,6 +3673,7 @@
       while (cells.length < 42) { let n = cells.length - daysIn - first + 1; cells.push({ d: n, m: m + 1, y: m === 11 ? y + 1 : y, other: true }); }
       const days = cells.map(c => c.y + '-' + pad(c.m + 1) + '-' + pad(c.d));
 
+      const SHAPES = ['●', '■', '◆', '★'];
       const slots = {}; days.forEach(ds => slots[ds] = []);
       const monthStart = `${y}-${pad(m + 1)}-01`;
       const monthEnd = `${y}-${pad(m + 1)}-${pad(daysIn)}`;
@@ -3675,19 +3694,45 @@
         for (let i = 0; i < 42; i++) { if (days[i] >= s && days[i] <= e) slots[days[i]][slot] = t; }
       });
 
+      // Group campaigns by title + description
+      const groupedCampaigns = {};
+      visibleCampaigns.forEach(t => {
+        const key = (t.title || '').trim().toLowerCase() + '|||' + (t.description || '').trim().toLowerCase();
+        if (!groupedCampaigns[key]) {
+          groupedCampaigns[key] = { title: t.title || '', color: t.color || '#6366f1', description: t.description || '', dates: [] };
+        }
+        groupedCampaigns[key].dates.push({ start: t.date, end: t.enddate || t.date });
+      });
+      const uniqueCampaigns = Object.values(groupedCampaigns).map((g, i) => {
+        g.shapeIdx = i;
+        g.shape = SHAPES[i % SHAPES.length];
+        g.dates.sort((a, b) => a.start.localeCompare(b.start));
+        g.dateLabels = g.dates.map(d => {
+          const d1 = parseInt(d.start.split('-')[2], 10);
+          const d2 = d.end !== d.start ? parseInt(d.end.split('-')[2], 10) : null;
+          return d2 ? `${d1} → ${d2}` : `${d1}`;
+        });
+        return g;
+      });
+      const shapeMap = {};
+      uniqueCampaigns.forEach(g => {
+        const key = (g.title || '').trim().toLowerCase() + '|||' + (g.description || '').trim().toLowerCase();
+        shapeMap[key] = g.shapeIdx;
+      });
+
       const gridHtml = cells.map((c, idx) => {
         const ds = days[idx];
-        const daySlots = slots[ds] || [];
-        const chips = daySlots.slice(0, 4).map(t => {
-          if (!t) return `<div style="height:18px;"></div>`; // Fixed height spacer
-          const e = t.enddate || t.date;
-          let cls = '', text = (ds === t.date || idx % 7 === 0);
-          if (t.date === e) cls = 'single';
-          else if (ds === t.date) cls = 'start';
-          else if (ds === e) cls = 'end';
-          else cls = 'mid';
-          return `<div class="p-chip ${cls}" style="background:${t.color};">${text ? esc(t.title) : '&nbsp;'}</div>`;
+        const daySlots = (slots[ds] || []).filter(Boolean);
+        const maxDots = 4;
+        const shown = daySlots.slice(0, maxDots);
+        const moreCount = daySlots.length - maxDots;
+        const dots = shown.map(t => {
+          const key = (t.title || '').trim().toLowerCase() + '|||' + (t.description || '').trim().toLowerCase();
+          const si = shapeMap[key] || 0;
+          const num = si + 1;
+          return `<span class="p-dot" style="background:${t.color || '#6366f1'};color:#fff;" title="${esc(t.title || '')}">${SHAPES[si]}${num}</span>`;
         }).join('');
+        const moreHtml = moreCount > 0 ? `<span class="p-more">+${moreCount}</span>` : '';
 
         const holi = holidaysCache[ds];
         const isHoliCls = holi ? (holi.type === 'leave' ? ' is-leave' : ' is-holiday') : '';
@@ -3697,49 +3742,20 @@
         const todayStr = dateStr(new Date());
         const dateHtml = ds === todayStr ? `<span class="p-today-marker">${c.d}</span>` : c.d;
 
-        return `<div class="p-cell ${c.other ? 'other' : ''}${isHoliCls}"><div class="p-cell-head">${dateHtml}${holiHtml}</div>${chips}</div>`;
+        return `<div class="p-cell ${c.other ? 'other' : ''}${isHoliCls}"><div class="p-cell-head">${dateHtml}${holiHtml}</div><div class="p-dots">${dots}${moreHtml}</div></div>`;
       }).join('');
 
-      // Group similar campaigns by title to avoid repetition
-      const groupedCampaigns = {};
-      visibleCampaigns.forEach(t => {
-        const titleKey = t.title.trim().toLowerCase();
-        if (!groupedCampaigns[titleKey]) {
-          groupedCampaigns[titleKey] = {
-            title: t.title,
-            color: t.color,
-            description: t.description,
-            dates: []
-          };
-        }
-        const d1 = parseInt(t.date.split('-')[2], 10);
-        const d2 = t.enddate && t.enddate !== t.date ? parseInt(t.enddate.split('-')[2], 10) : null;
-        groupedCampaigns[titleKey].dates.push(d2 ? `${d1} → ${d2}` : `${d1}`);
-      });
-      const uniqueCampaigns = Object.values(groupedCampaigns);
-
-      // Dynamic Scaling & Layout for Print List
-      const isMany = uniqueCampaigns.length > 6;
-      let campaignTitleSize = 10;
-      let dateSize = 8.5;
-      let descSize = 9;
-      let itemGap = 10;
-
-      if (isMany && uniqueCampaigns.length > 10) {
-        itemGap = 8;
-        descSize = 8.5;
-      }
-
       const listHtml = uniqueCampaigns.map(g => {
-        const datesHtml = g.dates.map(d => `<span style="background:#f1f5f9; padding:2px 4px; border-radius:3px; margin-right:4px; display:inline-block; margin-bottom:2px; border: 1px solid #e2e8f0; color:#475569;">📅 ${d}</span>`).join('');
+        const datesHtml = g.dateLabels.map(d => `<span style="background:#e0e7ff; padding:1px 5px; border-radius:3px; margin-right:3px; display:inline-block; margin-bottom:2px; font-size:8px; font-weight:700; color:#3730a3;">${d}</span>`).join('');
+        const num = g.shapeIdx + 1;
         return `
-        <div class="p-item" style="margin-bottom:${itemGap}px; display:flex; gap:6px; align-items:flex-start;">
-          <div style="width:6px; height:10px; border-radius:2px; background:${g.color}; margin-top:2px; flex-shrink:0; -webkit-print-color-adjust:exact; print-color-adjust:exact;"></div>
-          <div style="flex:1;">
-            <div style="font-size:${campaignTitleSize}px; font-weight:800; color:#0f172a; line-height:1.2; margin-bottom:3px;">${esc(g.title)}</div>
-            <div style="font-size:${dateSize}px; font-weight:700; color:#64748b; margin-bottom:3px;">${datesHtml}</div>
-            <div style="font-size:${descSize}px; color:#475569; line-height:1.25; margin:0; white-space: pre-wrap;">${esc(g.description) || '—'}</div>
+        <div class="p-item" style="--item-color:${g.color};">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+            <span style="background:${g.color};color:#fff;width:22px;height:22px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;">${g.shape}${num}</span>
+            <div style="font-size:11px;font-weight:800;color:#0f172a;line-height:1.2;">${esc(g.title)}</div>
           </div>
+          <div style="margin-bottom:2px;">${datesHtml}</div>
+          <div style="font-size:9px;color:#475569;line-height:1.25;margin:0;white-space:pre-wrap;">${esc(g.description || '') || '—'}</div>
         </div>
       `}).join('');
 
@@ -3750,10 +3766,10 @@
           <title>Print - ${title}</title>
           <style>
             body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 15px; color: #1e293b; background: #fff; width: 100%; box-sizing: border-box; }
-            .container { ${isMany ? 'display: block;' : 'display: flex; gap: 24px; width: 100%;'} }
-            .cal-side { ${!isMany ? 'flex: 7.2; min-width: 0;' : 'margin-bottom: 24px; page-break-after: auto;'} }
-            .list-side { ${!isMany ? 'flex: 2.8; border-left: 1px solid #e2e8f0; padding-left: 16px; min-width: 0;' : 'border-top: 2px dashed #cbd5e1; padding-top: 24px;'} }
-            .list-grid { ${isMany ? 'column-count: 2; column-gap: 24px;' : 'display: block;'} }
+            .container { display: flex; flex-direction: column; gap: 0; width: 100%; }
+            .cal-side { page-break-after: always; padding-bottom: 12px; }
+            .list-side { padding-top: 0; }
+            .list-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
             
             h1 { font-size: 18px; margin: 0 0 12px; font-weight: 800; }
             .p-grid { 
@@ -3781,19 +3797,18 @@
             .p-holiday.p-leave-label { color: #d97706; }
             .p-day-names { display: grid; grid-template-columns: repeat(7, 14.285%); text-align: center; font-size: 10px; font-weight: 800; opacity: 0.6; margin-bottom: 5px; }
 
-            .p-chip { height: 16px; margin-top: 2px; font-size: 9px; color: #fff; padding: 0 6px; display: flex; align-items: center; white-space: nowrap; overflow: hidden; font-weight: 700; line-height: 1; box-sizing: border-box; }
-            .p-chip.single { border-radius: 4px; }
-            .p-chip.start { border-radius: 3px 0 0 3px; margin-right: -5px; position:relative; z-index:1; }
-            .p-chip.mid { border-radius: 0; margin-left: -5px; margin-right: -5px; position:relative; z-index:1; }
-            .p-chip.end { border-radius: 0 3px 3px 0; margin-left: -5px; position:relative; z-index:1; }
+            .p-dots { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+            .p-dot { min-width: 22px; height: 18px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; line-height: 1; padding: 0 2px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .p-more { font-size: 7px; font-weight: 700; color: #94a3b8; display: inline-flex; align-items: center; }
 
-            .p-item { page-break-inside: avoid; break-inside: avoid-column; }
+            .p-item { page-break-inside: avoid; break-inside: avoid; border-left: 4px solid var(--item-color, #6366f1); padding: 6px 10px; background: #f8fafc; border-radius: 6px; }
             @media print {
               body { padding: 0; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
               @page { size: A4 landscape; margin: 15mm !important; }
               .p-grid { border-width: 1.5px; }
               .p-cell { border-width: 1.5px; min-height: 80px; }
-              .p-chip { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .p-dot { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .cal-side { page-break-after: always; }
             }
           </style>
         </head>
@@ -3807,7 +3822,7 @@
               <div class="p-grid">${gridHtml}</div>
             </div>
             <div class="list-side">
-              ${isMany ? '<h2 style="font-size:16px; margin-top:0; margin-bottom:16px;">Daftar Campaign</h2>' : ''}
+              <h2 style="font-size:16px; margin:0 0 14px; font-weight:800;">Daftar Campaign</h2>
               <div class="list-grid">
                 ${listHtml || '<p style="opacity:0.5">Tidak ada campaign bulan ini.</p>'}
               </div>
