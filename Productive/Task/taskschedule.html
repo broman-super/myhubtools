@@ -1928,7 +1928,8 @@
         <label>Deskripsi <span
             style="opacity:0.4;font-size:10px;text-transform:none;letter-spacing:0;">(opsional)</span></label>
         <textarea id="f-desc" placeholder="Keterangan tambahan..."
-          style="height:60px; min-height:60px; max-height:200px; resize:vertical;"></textarea>
+          style="height:60px; min-height:60px; max-height:200px; resize:vertical;"
+          oninput="this.style.height='60px';this.style.height=Math.min(this.scrollHeight,200)+'px'"></textarea>
       </div>
 
       <div class="modal-footer">
@@ -1964,7 +1965,7 @@
   </div>
 
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbw5g41itUwrQndj04SQI1SHyHPKbkOI0BWXpcBVJCKFXxaEMuYMJToKhJbas8R-LjYB/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbx8On9-9HY1k5VYp9AUy5Okq-1k1tDJf6ZaPuEpidRq7CPae7w43Al_YVPOyiEMs4Iz/exec";
 
     var S = {
       tasks: [], events: [], reminders: [], view: 'list', filter: 'pending', q: '',
@@ -2047,16 +2048,16 @@
           if (!json.success) throw new Error(json.message || 'Gagal load calendar');
           S.tasks = [].concat(
             (json.result.tasks || []).map(function(t) { return {
-              ...t, enddate: normDate(t.enddate || t.endDate || ''),
-              date: normDate(t.date),
+              ...t, enddate: normDate(t.enddate || t.endDate || t.selesai || ''),
+              date: normDate(t.date || t.mulai || ''),
               type: 'task',
-              color: t.color || '#6366f1'
+              color: t.color || t.warna || '#6366f1'
             }; }),
             (json.result.campaigns || []).map(function(c) { return {
               ...c, enddate: normDate(c.enddate || c.endDate || c.selesai || ''),
               date: normDate(c.date || c.mulai || ''),
               type: 'campaign',
-              color: c.color || '#6366f1'
+              color: c.color || c.warna || '#6366f1'
             }; })
           );
           S.events = (json.result.events || []).map(function(e) { return {
