@@ -1975,7 +1975,7 @@
       timelineYear: new Date().getFullYear(), timelineMonth: new Date().getMonth(),
       timelineSelectedDate: null, timelineZoom: 0, timelineLabelWidth: 180,
       activeTags: [], activePriorities: [],
-      listPage: 0, undoStack: [], redoStack: []
+      listPage: 0, undoStack: [], redoStack: [], saving: false
     };
 
     const MONTHS_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -3437,6 +3437,8 @@
     }
 
     async function submitTask() {
+      if (S.saving) return;
+      S.saving = true;
       var type = document.getElementById('f-type').value;
       var editId = document.getElementById('edit-id').value;
 
@@ -3452,7 +3454,7 @@
           type: 'event',
           status: ''
         };
-        if (!ed.nama || !ed.mulai) { toast('Isi nama & tanggal!', true); return; }
+        if (!ed.nama || !ed.mulai) { toast('Isi nama & tanggal!', true); S.saving = false; return; }
         try {
           await api('saveCalendarItem', ed);
           // Handle repeat
@@ -3462,6 +3464,7 @@
           renderAll();
           toast('✓ Event tersimpan');
         } catch (e) { toast('Gagal simpan event', true); }
+        S.saving = false;
         return;
       }
 
@@ -3476,7 +3479,7 @@
           type: 'reminder',
           status: ''
         };
-        if (!rd.nama || !rd.mulai) { toast('Isi nama & tanggal!', true); return; }
+        if (!rd.nama || !rd.mulai) { toast('Isi nama & tanggal!', true); S.saving = false; return; }
         try {
           await api('saveCalendarItem', rd);
           // Handle repeat
@@ -3486,6 +3489,7 @@
           renderAll();
           toast('✓ Reminder tersimpan');
         } catch (e) { toast('Gagal simpan reminder', true); }
+        S.saving = false;
         return;
       }
 
@@ -3520,7 +3524,7 @@
         warna: isC && chData ? chData.color : (S.tempColor || COLORS[0]),
         tipe: type
       };
-      if (!task.title || !task.date) return toast('Isi judul & tanggal!', true);
+      if (!task.title || !task.date) { S.saving = false; return toast('Isi judul & tanggal!', true); }
 
       const exIdx = S.tasks.findIndex(x => x.id === task.id);
       if (exIdx > -1) S.tasks[exIdx] = task; else S.tasks.unshift(task);
@@ -3570,6 +3574,7 @@
       } finally {
         saveBtn.textContent = origText;
         saveBtn.disabled = false;
+        S.saving = false;
       }
     }
 
