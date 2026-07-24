@@ -63,7 +63,7 @@ function saveCalendarItem_(data) {
     else throw new Error('Sheet ' + sheetName + ' tidak ditemukan');
   }
   var headers = sheet.getDataRange().getValues()[0].map(String);
-  var idCol = headers.indexOf('ID');
+  var idCol = headers.map(function(h) { return h.toLowerCase(); }).indexOf('id');
   var rows = sheet.getDataRange().getValues();
 
   if (data.id) {
