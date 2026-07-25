@@ -9,7 +9,7 @@
  *    deploy (lihat DEPLOY_GUIDE.md). Kosongkan untuk mode demo (localStorage).
  * ---------------------------------------------------------------------- */
 const CONFIG = {
-  API_URL: "https://script.google.com/macros/s/AKfycbwekDk4m_F4qSiu15VcwOwrYUOMcNwaZr7Ri32xn7FwiiJip5CXHf_SXKJit-atdTO4/exec", // contoh: "https://script.google.com/macros/s/XXXXXXXX/exec"
+  API_URL: "https://script.google.com/macros/s/AKfycbwHxK9RHMPXuqlOmucA0GyHwzc33A6WsGeUAD0iwtaGVBSihAQaUeyg_Q7UUn7cULnp/exec",
   BATCH_SIZE: 24,
   LOAD_TIMEOUT_MS: 15000,
   APP_NAME: "LATCH"

@@ -1986,7 +1986,7 @@
     const CHANNELS = {
       'Instagram': { color: '#a855f7', prefix: 'IG |' },
       'Whatsapp':  { color: '#22c55e', prefix: 'WA |' },
-      'Tiktok':    { color: '#9ca3af', prefix: 'TT |' },
+      'Tiktok':    { color: '#a1a1a1', prefix: 'TT |' },
       'Shopee':    { color: '#f97316', prefix: 'SP |' },
       'Web':       { color: '#3b82f6', prefix: 'WB |' },
       'Event':     { color: '#14b8a6', prefix: 'EV |' }
@@ -2011,8 +2011,9 @@
     function esc(t) { return (t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
     function pad(n) { return n < 10 ? '0' + n : n; }
     function dateStr(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
-    function formatShortDate(d) {
-      const p = d.split('-');
+     function formatShortDate(d) {
+       if (!d) return '';
+       const p = d.split('-');
       return parseInt(p[2], 10) + ' ' + MONTHS_ID[parseInt(p[1], 10) - 1].slice(0, 3);
     }
     function hexAlpha(hex, a) {
@@ -2053,12 +2054,12 @@
               type: 'task',
               color: t.color || t.warna || '#6366f1'
             }; }),
-            (json.result.campaigns || []).map(function(c) { return {
-              ...c, title: c.title || c.nama || '', enddate: normDate(c.enddate || c.endDate || c.selesai || ''),
-              date: normDate(c.date || c.mulai || ''),
-              type: 'campaign',
-              color: c.color || c.warna || '#6366f1'
-            }; })
+             (json.result.campaigns || []).map(function(c) { return {
+               ...c, title: c.title || c.nama || '', enddate: normDate(c.enddate || c.endDate || c.selesai || ''),
+               date: normDate(c.date || c.mulai || ''), description: c.deskripsi || c.description || '',
+               type: 'campaign',
+               color: c.color || c.warna || '#6366f1'
+             }; })
           );
           S.events = (json.result.events || []).map(function(e) { return {
             id: e.id, title: e.nama || '', date: normDate(e.mulai || ''),
@@ -2529,9 +2530,16 @@
     function changeMonth(d) { S.calMonth += d; if (S.calMonth > 11) { S.calMonth = 0; S.calYear++; } if (S.calMonth < 0) { S.calMonth = 11; S.calYear--; } renderMonth(); }
     function goThisMonth() { S.calYear = new Date().getFullYear(); S.calMonth = new Date().getMonth(); renderMonth(); }
 
-    function renderMonth() {
-      const y = S.calYear, m = S.calMonth;
-      document.getElementById('cal-month-label').textContent = MONTHS_ID[m] + ' ' + y;
+      function renderMonth() {
+        const y = S.calYear, m = S.calMonth;
+        if (!S.tasks) S.tasks = [];
+        if (!S.events) S.events = [];
+        if (!S.reminders) S.reminders = [];
+        S.tasks.forEach(function(t) { t.title = t.title || t.nama || ''; t.description = t.description || t.deskripsi || ''; t.color = t.color || t.warna || '#6366f1'; t.date = t.date || t.mulai || ''; t.enddate = t.enddate || t.endDate || t.selesai || t.date || ''; });
+        S.events.forEach(function(e) { e.title = e.title || e.nama || ''; e.description = e.description || e.deskripsi || ''; });
+        S.reminders.forEach(function(r) { r.title = r.title || r.nama || ''; });
+
+       document.getElementById('cal-month-label').textContent = MONTHS_ID[m] + ' ' + y;
 
       const first = (new Date(y, m, 1).getDay() || 7) - 1;
       const daysIn = new Date(y, m + 1, 0).getDate();
@@ -2591,22 +2599,22 @@
         const visibleSlots = daySlots.slice(0, MAX_SLOTS);
         const hasMore = daySlots.length > MAX_SLOTS;
 
-        const chips = visibleSlots.map(function(t) {
-          if (!t) return '<div class="cal-chip-spacer"></div>';
-          var e = t.enddate || t.date;
-          var cls = 'single', text = true;
-          if (t.date !== e) {
-            if (ds === t.date) cls = 'start'; else if (ds === e) { cls = 'end'; text = false; } else { cls = 'mid'; text = false; }
-            if (idx % 7 === 0) text = true;
-          }
-          var isC = t.type === 'campaign', isE = t.type === 'event', isR = t.type === 'reminder';
-          var bg, border, txtColor, extraCls = '';
-          if (isC) { bg = t.color; border = 'none'; txtColor = '#fff'; }
-          else if (isE) { bg = hexAlpha(t.color || '#14b8a6', 0.08); border = '2px dashed ' + t.color; txtColor = '#0f172a'; }
-          else { bg = hexAlpha(t.color, 0.08); border = '2px solid ' + t.color; txtColor = '#0f172a'; }
-          var doneStyle = (t.done || t.status === 'Selesai') ? 'opacity:0.55;text-decoration:line-through;' : '';
-          return '<div class="cal-chip ' + cls + (isR ? ' cal-chip-reminder' : '') + '" style="background:' + bg + ';color:' + txtColor + ';border-left:' + border + ';' + doneStyle + '" onclick="event.stopPropagation();selectTask(\'' + t.id + '\')"><span>' + (text ? esc(t.title) : '&nbsp;') + '</span>' + (isC ? '' : '<span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\')" style="margin-left:auto;font-size:10px;opacity:0.6;cursor:pointer;flex-shrink:0;padding:0 2px;">' + (t.done ? '↩' : '✓') + '</span>') + '</div>';
-        }).join('');
+         const chips = visibleSlots.map(function(t) {
+           if (!t) return '<div class="cal-chip-spacer"></div>';
+           var e = t.enddate || t.date;
+           var cls = 'single', text = true;
+           if (t.date !== e) {
+             if (ds === t.date) cls = 'start'; else if (ds === e) { cls = 'end'; text = false; } else { cls = 'mid'; text = false; }
+             if (idx % 7 === 0) text = true;
+           }
+           var isC = t.type === 'campaign', isE = t.type === 'event', isR = t.type === 'reminder';
+           var bg, border, txtColor, extraCls = '';
+           if (isC) { bg = t.color || '#6366f1'; border = 'none'; txtColor = '#fff'; }
+           else if (isE) { bg = hexAlpha(t.color || '#14b8a6', 0.08); border = '2px dashed ' + (t.color || '#14b8a6'); txtColor = '#0f172a'; }
+           else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.color || '#6366f1'); txtColor = '#0f172a'; }
+           var doneStyle = (t.done || t.status === 'Selesai') ? 'opacity:0.55;text-decoration:line-through;' : '';
+           return '<div class="cal-chip ' + cls + (isR ? ' cal-chip-reminder' : '') + '" style="background:' + bg + ';color:' + txtColor + ';border-left:' + border + ';' + doneStyle + '" onclick="event.stopPropagation();selectTask(\'' + (t.id || '') + '\')"><span>' + (text ? esc(t.title || t.nama || 'Tanpa Judul') : '&nbsp;') + '</span>' + (isC ? '' : '<span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + (t.id || '') + '\')" style="margin-left:auto;font-size:10px;opacity:0.6;cursor:pointer;flex-shrink:0;padding:0 2px;">' + (t.done ? '↩' : '✓') + '</span>') + '</div>';
+         }).join('');
 
         // Dots for Mobile View
         const dots = daySlots.map(t => `<div class="dot" style="background:${t.color || '#ccc'}"></div>`).join('');
@@ -2918,11 +2926,11 @@
       // Legend — group campaigns by title+description
       const campGroups = {};
       const nonCamps = [];
-      items.forEach(item => {
-        if (item.type === 'campaign') {
-          const key = item.title.trim().toLowerCase() + '|||' + (item.description || '').trim().toLowerCase();
-          if (!campGroups[key]) campGroups[key] = { title: item.title, color: item.color, description: item.description, dates: [] };
-          campGroups[key].dates.push({ start: item.date, end: item.enddate || item.date });
+       items.forEach(item => {
+         if (item.type === 'campaign') {
+           const key = (item.title || '').trim().toLowerCase() + '|||' + (item.description || '').trim().toLowerCase();
+           if (!campGroups[key]) campGroups[key] = { title: item.title || '', color: item.color || '#6366f1', description: item.description || '', dates: [] };
+           campGroups[key].dates.push({ start: item.date || '', end: item.enddate || item.date || '' });
         } else {
           nonCamps.push(item);
         }
@@ -2936,13 +2944,13 @@
         }).join('');
         leg += '<div class="tpi" style="border-left:4px solid ' + g.color + ';"><div class="tpit">📢 ' + esc(g.title) + '</div><div class="tpid">' + datesHtml + '</div><div class="tpidesc">' + esc(g.description || '—') + '</div></div>';
       });
-      nonCamps.forEach(item => {
-        const dr = item.enddate && item.enddate !== item.date ? formatShortDate(item.date) + ' → ' + formatShortDate(item.enddate) : formatShortDate(item.date);
-        const tags = item.tag ? ' &nbsp;#' + item.tag.replace(/,/g, ' #') : '';
-        const prio = item.priority ? ' · ' + (item.priority === 'high' ? 'Tinggi' : item.priority === 'low' ? 'Rendah' : 'Sedang') : '';
-        const st = item.done ? ' ✓ Selesai' : '';
-        leg += '<div class="tpi" style="border-left:4px solid ' + item.color + ';"><div class="tpit">📝 ' + esc(item.title) + '</div><div class="tpid"><strong>' + dr + '</strong>' + tags + prio + st + '</div><div class="tpidesc">' + esc(item.description || '—') + '</div></div>';
-      });
+       nonCamps.forEach(item => {
+         const dr = item.enddate && item.enddate !== item.date ? formatShortDate(item.date) + ' → ' + formatShortDate(item.enddate) : formatShortDate(item.date);
+         const tags = item.tag ? ' &nbsp;#' + esc(item.tag).replace(/,/g, ' #') : '';
+         const prio = item.priority ? ' · ' + (item.priority === 'high' ? 'Tinggi' : item.priority === 'low' ? 'Rendah' : 'Sedang') : '';
+         const st = item.done ? ' ✓ Selesai' : '';
+         leg += '<div class="tpi" style="border-left:4px solid ' + (item.color || '#6366f1') + ';"><div class="tpit">📝 ' + esc(item.title || item.nama || 'Tanpa Judul') + '</div><div class="tpid"><strong>' + dr + '</strong>' + tags + prio + st + '</div><div class="tpidesc">' + esc(item.description || '—') + '</div></div>';
+       });
 
       const html = '<!DOCTYPE html><html><head><title>Cetak Timeline - ' + monthName + '</title><style>@page{size:landscape;margin:8mm;}*{box-sizing:border-box;}body{font-family:\'Plus Jakarta Sans\',sans-serif;margin:0;padding:0;font-size:12px;color:#1e293b;background:#fff;}.p-grid{display:grid;grid-template-columns:130px repeat(' + daysIn + ',1fr);gap:0;}.p-corner{padding:4px 8px;font-weight:800;font-size:11px;border-bottom:1px solid #e5e7eb;grid-column:1;color:#1e293b;}.p-label{grid-column:1;padding:3px 8px;font-size:9px;font-weight:600;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1e293b;background:#fff;}.p-track{grid-column:2/-1;display:grid;grid-template-columns:repeat(' + daysIn + ',1fr);border-bottom:1px solid rgba(0,0,0,0.05);min-height:22px;align-items:center;position:relative;}.pdh{padding:3px 3px;text-align:center;font-size:8px;font-weight:700;border-bottom:1px solid rgba(0,0,0,0.07);border-right:1px solid rgba(0,0,0,0.04);color:#475569;}.pdh.today{background:#3b82f6;color:#fff;}.pdh.weekend{background:rgba(239,68,68,0.08);}.pdh.holiday{color:#ef4444;}.pdn{display:block;font-size:6px;font-weight:400;opacity:0.5;text-transform:uppercase;letter-spacing:0.5px;}.phn{font-size:6px;display:block;font-weight:400;}.tpb{height:16px;border-radius:3px;font-size:7px;display:flex;align-items:center;padding:0 5px;white-space:nowrap;overflow:visible;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,0.08);-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:1px 0;min-width:0;}.tpb.camp{color:#1e293b;}.tpb.task{border-left:2px solid;color:#1e293b;}.tpb-text{white-space:nowrap;overflow:visible;}.p-sun{position:absolute;top:0;bottom:0;z-index:3;background:rgba(239,68,68,0.08);}.p-leg{margin-top:16px;padding-top:12px;border-top:1.5px solid #cbd5e1;page-break-before:always;}.p-leg h2{margin:0 0 10px;font-size:14px;color:#1e293b;}.p-lst{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}.tpi{break-inside:avoid;margin-bottom:0;padding:8px 12px;background:#f8fafc;border-bottom:1px solid #e5e7eb;border-radius:6px;}.tpit{font-weight:700;font-size:10px;color:#1e293b;margin-bottom:2px;}.tpid{font-size:9px;color:#475569;line-height:1.6;}.tpidesc{font-size:9px;color:#334155;margin-top:3px;line-height:1.5;white-space:pre-wrap;}@media print{.no-print{display:none!important;}}</style></head><body><div class="p-grid">' + hd + rows + '</div><div class="p-leg"><h2>Daftar Campaign & Tugas - ' + monthName + '</h2><div class="p-lst">' + leg + '</div></div></body></html>';
       const win = window.open('', '_blank');
@@ -3364,10 +3372,16 @@
     function selectTask(id) { S.selectedId = id; renderAll(); renderDetail(); }
 
     // Show all items on a specific date as accordion-dropdown list in detail panel
-    function showDayDetail(ds) {
-      S.selectedId = null;
-      const el = document.getElementById('detail-panel');
-      el.classList.remove('empty');
+     function showDayDetail(ds) {
+       S.selectedId = null;
+       const el = document.getElementById('detail-panel');
+       el.classList.remove('empty');
+       if (!S.tasks) S.tasks = [];
+       if (!S.events) S.events = [];
+       if (!S.reminders) S.reminders = [];
+       S.tasks.forEach(function(t) { t.title = t.title || t.nama || ''; t.description = t.description || t.deskripsi || ''; t.color = t.color || t.warna || '#6366f1'; t.date = t.date || t.mulai || ''; t.enddate = t.enddate || t.endDate || t.selesai || t.date || ''; });
+       S.events.forEach(function(e) { e.title = e.title || e.nama || ''; e.description = e.description || e.deskripsi || ''; });
+       S.reminders.forEach(function(r) { r.title = r.title || r.nama || ''; });
 
       var items = S.tasks.filter(function(t) {
         if (!t.date) return false;
@@ -3433,26 +3447,26 @@
       var isC = t.type === 'campaign', isE = t.type === 'event', isR = t.type === 'reminder';
       var typeIcon = isC ? '📢' : (isE ? '📅' : (isR ? '🔔' : '📝'));
       var typeLabel = isC ? 'Campaign' : (isE ? 'Event' : (isR ? 'Reminder' : 'Task'));
-      var badgeBg = isC ? t.color : (isE ? 'rgba(20,184,166,0.1)' : (isR ? 'rgba(245,158,11,0.1)' : 'rgba(0,0,0,0.05)'));
-      var badgeColor = isC ? '#fff' : (isE ? '#14b8a6' : (isR ? '#f59e0b' : 'inherit'));
-      var editFn = "openTaskModal('" + t.id + "')";
-      var orgHtml = t.penyelenggara ? '<div style="font-size:11px;margin:8px 0 4px;opacity:0.6;">Penyelenggara: ' + esc(t.penyelenggara) + '</div>' : '';
-      el.innerHTML = '<div class="detail-header" style="margin-bottom:12px;">' +
-        '<div style="display:flex;gap:8px;align-items:flex-start;flex:1;">' +
-        '<div style="width:4px;border-radius:4px;background:' + (t.color || '#ccc') + ';align-self:stretch;flex-shrink:0;"></div>' +
-        '<div><div class="detail-title" style="font-size:15px; line-height:1.2;">' + esc(t.title) + '</div>' +
-        '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">' +
-        '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + badgeBg + ';color:' + badgeColor + '">' + typeIcon + ' ' + typeLabel + '</span>' +
-        (t.tag ? '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + hexAlpha(t.color, 0.1) + ';color:' + t.color + ';border:1px solid ' + t.color + '">' + esc(t.tag) + '</span>' : '') +
-        (!isC ? '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + (t.done ? '#ecfdf5' : '#f1f5f9') + ';color:' + (t.done ? '#10b981' : '#94a3b8') + '">' + (t.done ? '✓ Selesai' : '⏳ Pending') + '</span>' : '') +
-        '</div></div></div>' +
-        '<div style="display:flex;gap:4px;flex-shrink:0;">' +
-        (!isC ? '<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="toggleDone(\'' + t.id + '\')">' + (t.done ? '↩ Buka' : '✓ Selesai') + '</button>' : '') +
-        '<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="' + editFn + '">Edit</button>' +
-        '<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="duplicateTask(\'' + t.id + '\')">Duplikat</button>' +
-        '</div></div>' + orgHtml +
-        '<div style="font-size:11.5px;font-weight:700;color:var(--accent);margin:8px 0 4px;">📅 ' + formatShortDate(t.date) + (t.enddate && t.enddate !== t.date ? ' → ' + formatShortDate(t.enddate) : '') + '</div>' +
-        '<div class="detail-desc" style="min-height:20px; font-size:12px; line-height:1.4;">' + (esc(t.description) || '<span style="opacity:0.4;font-style:italic;">Tanpa deskripsi.</span>') + '</div>';
+       var badgeBg = isC ? (t.color || '#6366f1') : (isE ? 'rgba(20,184,166,0.1)' : (isR ? 'rgba(245,158,11,0.1)' : 'rgba(0,0,0,0.05)'));
+       var badgeColor = isC ? '#fff' : (isE ? '#14b8a6' : (isR ? '#f59e0b' : 'inherit'));
+       var editFn = "openTaskModal('" + (t.id || '') + "')";
+       var orgHtml = t.penyelenggara ? '<div style="font-size:11px;margin:8px 0 4px;opacity:0.6;">Penyelenggara: ' + esc(t.penyelenggara) + '</div>' : '';
+       el.innerHTML = '<div class="detail-header" style="margin-bottom:12px;">' +
+         '<div style="display:flex;gap:8px;align-items:flex-start;flex:1;">' +
+         '<div style="width:4px;border-radius:4px;background:' + (t.color || '#6366f1') + ';align-self:stretch;flex-shrink:0;"></div>' +
+         '<div><div class="detail-title" style="font-size:15px; line-height:1.2;">' + esc(t.title || t.nama || 'Tanpa Judul') + '</div>' +
+         '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">' +
+         '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + badgeBg + ';color:' + badgeColor + '">' + typeIcon + ' ' + typeLabel + '</span>' +
+         (t.tag ? '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + hexAlpha(t.color || '#6366f1', 0.1) + ';color:' + (t.color || '#6366f1') + ';border:1px solid ' + (t.color || '#6366f1') + '">' + esc(t.tag) + '</span>' : '') +
+         (!isC ? '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + (t.done ? '#ecfdf5' : '#f1f5f9') + ';color:' + (t.done ? '#10b981' : '#94a3b8') + '">' + (t.done ? '✓ Selesai' : '⏳ Pending') + '</span>' : '') +
+         '</div></div></div>' +
+         '<div style="display:flex;gap:4px;flex-shrink:0;">' +
+         (!isC ? '<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="toggleDone(\'' + (t.id || '') + '\')">' + (t.done ? '↩ Buka' : '✓ Selesai') + '</button>' : '') +
+         '<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="' + editFn + '">Edit</button>' +
+         '<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="duplicateTask(\'' + (t.id || '') + '\')">Duplikat</button>' +
+         '</div></div>' + orgHtml +
+         '<div style="font-size:11.5px;font-weight:700;color:var(--accent);margin:8px 0 4px;">📅 ' + formatShortDate(t.date) + (t.enddate && t.enddate !== t.date ? ' → ' + formatShortDate(t.enddate) : '') + '</div>' +
+         '<div class="detail-desc" style="min-height:20px; font-size:12px; line-height:1.4;">' + (esc(t.description) || '<span style="opacity:0.4;font-style:italic;">Tanpa deskripsi.</span>') + '</div>';
     }
 
     async function submitTask() {
@@ -3660,20 +3674,21 @@
       }, 3000);
     }
 
-    function printMonthView() {
-      const y = S.calYear, m = S.calMonth;
-      const title = MONTHS_ID[m] + ' ' + y;
+     function printMonthView() {
+       const y = S.calYear, m = S.calMonth;
+       const title = MONTHS_ID[m] + ' ' + y;
+       S.tasks.forEach(function(t) { t.title = t.title || t.nama || ''; t.description = t.description || t.deskripsi || ''; t.color = t.color || t.warna || '#6366f1'; t.date = t.date || t.mulai || ''; t.enddate = t.enddate || t.endDate || t.selesai || t.date || ''; });
+       S.events.forEach(function(e) { e.title = e.title || e.nama || ''; e.description = e.description || e.deskripsi || ''; });
+       S.reminders.forEach(function(r) { r.title = r.title || r.nama || ''; });
 
-      const first = (new Date(y, m, 1).getDay() || 7) - 1;
+       const first = (new Date(y, m, 1).getDay() || 7) - 1;
       const daysIn = new Date(y, m + 1, 0).getDate();
       const cells = [];
       const prevDays = new Date(y, m, 0).getDate();
       for (let i = first - 1; i >= 0; i--) cells.push({ d: prevDays - i, m: m - 1, y: m === 0 ? y - 1 : y, other: true });
       for (let d = 1; d <= daysIn; d++) cells.push({ d, m, y, other: false });
       while (cells.length < 42) { let n = cells.length - daysIn - first + 1; cells.push({ d: n, m: m + 1, y: m === 11 ? y + 1 : y, other: true }); }
-      const days = cells.map(c => c.y + '-' + pad(c.m + 1) + '-' + pad(c.d));
-
-      const SHAPES = ['●', '■', '◆', '★'];
+       const days = cells.map(c => c.y + '-' + pad(c.m + 1) + '-' + pad(c.d));
       const slots = {}; days.forEach(ds => slots[ds] = []);
       const monthStart = `${y}-${pad(m + 1)}-01`;
       const monthEnd = `${y}-${pad(m + 1)}-${pad(daysIn)}`;
@@ -3703,61 +3718,74 @@
         }
         groupedCampaigns[key].dates.push({ start: t.date, end: t.enddate || t.date });
       });
-      const uniqueCampaigns = Object.values(groupedCampaigns).map((g, i) => {
-        g.shapeIdx = i;
-        g.shape = SHAPES[i % SHAPES.length];
+       const uniqueCampaigns = Object.values(groupedCampaigns).map(g => {
         g.dates.sort((a, b) => a.start.localeCompare(b.start));
         g.dateLabels = g.dates.map(d => {
           const d1 = parseInt(d.start.split('-')[2], 10);
           const d2 = d.end !== d.start ? parseInt(d.end.split('-')[2], 10) : null;
           return d2 ? `${d1} → ${d2}` : `${d1}`;
         });
-        return g;
-      });
-      const shapeMap = {};
-      uniqueCampaigns.forEach(g => {
-        const key = (g.title || '').trim().toLowerCase() + '|||' + (g.description || '').trim().toLowerCase();
-        shapeMap[key] = g.shapeIdx;
-      });
+       return g;
+        });
+        // Number campaigns by color group for grid + list consistency
+        const colorGroups = {};
+        uniqueCampaigns.forEach(g => {
+          const c = g.color || '#6366f1';
+          if (!colorGroups[c]) colorGroups[c] = [];
+          colorGroups[c].push(g);
+        });
+        Object.entries(colorGroups).forEach(([color, group]) => {
+          group.forEach((g, i) => {
+            g.colorNum = i + 1;
+            g.colorTotal = group.length;
+          });
+        });
+        const shapeKeyMap = {};
+        uniqueCampaigns.forEach(g => {
+          const key = (g.title || '').trim().toLowerCase() + '|||' + (g.description || '').trim().toLowerCase();
+          shapeKeyMap[key] = g;
+        });
+        visibleCampaigns.forEach(ct => {
+          const key = ((ct.title || ct.nama) || '').trim().toLowerCase() + '|||' + ((ct.description) || '').trim().toLowerCase();
+          const match = shapeKeyMap[key];
+          if (match) {
+            ct.colorNum = match.colorNum;
+            ct.colorTotal = match.colorTotal;
+          }
+        });
+        const gridHtml = cells.map(function(c, idx) {
+          var ds = days[idx];
+          var daySlots = (slots[ds] || []).filter(Boolean);
+           var dots = daySlots.map(function(t) {
+            var dotTitle = esc(((t.title || t.nama) || '').trim() || 'Agenda');
+            var dotColor = t.color || t.warna || '#6366f1';
+            var showNum = t.colorTotal > 1;
+            var dotContent = showNum ? '<span style="color:#fff;font-size:8px;font-weight:900;line-height:1;">' + t.colorNum + '</span>' : '';
+            return '<span class="p-dot" style="background:' + dotColor + ';" title="' + dotTitle + '">' + dotContent + '</span>';
+          }).join('');
 
-      const gridHtml = cells.map((c, idx) => {
-        const ds = days[idx];
-        const daySlots = (slots[ds] || []).filter(Boolean);
-        const maxDots = 4;
-        const shown = daySlots.slice(0, maxDots);
-        const moreCount = daySlots.length - maxDots;
-        const dots = shown.map(t => {
-          const key = (t.title || '').trim().toLowerCase() + '|||' + (t.description || '').trim().toLowerCase();
-          const si = shapeMap[key] || 0;
-          const num = si + 1;
-          return `<span class="p-dot" style="background:${t.color || '#6366f1'};color:#fff;" title="${esc(t.title || '')}">${SHAPES[si]}${num}</span>`;
-        }).join('');
-        const moreHtml = moreCount > 0 ? `<span class="p-more">+${moreCount}</span>` : '';
+         var holi = holidaysCache[ds];
+         var isHoliCls = holi ? (holi.type === 'leave' ? ' is-leave' : ' is-holiday') : '';
+         var holiLabel = holi ? (holi.name || '') : '';
+         var holiHtml = holi ? '<div class="p-holiday ' + (holi.type === 'leave' ? 'p-leave-label' : '') + '">' + esc(holiLabel) + '</div>' : '';
 
-        const holi = holidaysCache[ds];
-        const isHoliCls = holi ? (holi.type === 'leave' ? ' is-leave' : ' is-holiday') : '';
-        const holiHtml = holi ? `<div class="p-holiday ${holi.type === 'leave' ? 'p-leave-label' : ''}">${esc(holi.name)}</div>` : '';
+         var todayStr = dateStr(new Date());
+         var dateHtml = ds === todayStr ? '<span class="p-today-marker">' + c.d + '</span>' : c.d;
 
-        // Find today
-        const todayStr = dateStr(new Date());
-        const dateHtml = ds === todayStr ? `<span class="p-today-marker">${c.d}</span>` : c.d;
+          return '<div class="p-cell ' + (c.other ? 'other' : '') + isHoliCls + '"><div class="p-cell-head">' + dateHtml + holiHtml + '</div><div class="p-dots">' + dots + '</div></div>';
+       }).join('');
 
-        return `<div class="p-cell ${c.other ? 'other' : ''}${isHoliCls}"><div class="p-cell-head">${dateHtml}${holiHtml}</div><div class="p-dots">${dots}${moreHtml}</div></div>`;
-      }).join('');
-
-      const listHtml = uniqueCampaigns.map(g => {
-        const datesHtml = g.dateLabels.map(d => `<span style="background:#e0e7ff; padding:1px 5px; border-radius:3px; margin-right:3px; display:inline-block; margin-bottom:2px; font-size:8px; font-weight:700; color:#3730a3;">${d}</span>`).join('');
-        const num = g.shapeIdx + 1;
-        return `
-        <div class="p-item" style="--item-color:${g.color};">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
-            <span style="background:${g.color};color:#fff;width:22px;height:22px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex-shrink:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;">${g.shape}${num}</span>
-            <div style="font-size:11px;font-weight:800;color:#0f172a;line-height:1.2;">${esc(g.title)}</div>
-          </div>
-          <div style="margin-bottom:2px;">${datesHtml}</div>
-          <div style="font-size:9px;color:#475569;line-height:1.25;margin:0;white-space:pre-wrap;">${esc(g.description || '') || '—'}</div>
-        </div>
-      `}).join('');
+        var listHtml = uniqueCampaigns.map(function(g) {
+          var datesHtml = g.dateLabels.map(function(d) { return '<span style="background:#e0e7ff; padding:1px 5px; border-radius:3px; margin-right:3px; display:inline-block; margin-bottom:2px; font-size:8px; font-weight:700; color:#3730a3;">' + d + '</span>'; }).join('');
+           return '<div class="p-item" style="--item-color:' + g.color + ';">' +
+             '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">' +
+               '<span style="background:' + g.color + ';color:#fff;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;flex-shrink:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;" title="' + esc(g.title) + '">' + (g.colorTotal > 1 ? g.colorNum : '') + '</span>' +
+               '<div style="font-size:11px;font-weight:800;color:#0f172a;line-height:1.2;">' + esc(g.title) + '</div>' +
+             '</div>' +
+           '<div style="margin-bottom:2px;">' + datesHtml + '</div>' +
+                                '<div style="font-size:9px;color:#475569;line-height:1.4;margin-top:6px;margin-bottom:6px;padding:4px 8px;background:#f1f5f9;border-radius:4px;white-space:pre-wrap;">' + (esc(g.description || '') || '\u2014') + '</div>' +
+         '</div>';
+       }).join('');
 
       const win = window.open('', '_blank');
       win.document.write(`
@@ -3797,17 +3825,18 @@
             .p-holiday.p-leave-label { color: #d97706; }
             .p-day-names { display: grid; grid-template-columns: repeat(7, 14.285%); text-align: center; font-size: 10px; font-weight: 800; opacity: 0.6; margin-bottom: 5px; }
 
-            .p-dots { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
-            .p-dot { min-width: 22px; height: 18px; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; line-height: 1; padding: 0 2px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .p-more { font-size: 7px; font-weight: 700; color: #94a3b8; display: inline-flex; align-items: center; }
+             .p-dots { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+             .p-dot { width: 16px; height: 16px; border-radius: 50%; display: inline-block; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .p-more { font-size: 8px; font-weight: 700; color: #94a3b8; display: inline-flex; align-items: center; }
 
-            .p-item { page-break-inside: avoid; break-inside: avoid; border-left: 4px solid var(--item-color, #6366f1); padding: 6px 10px; background: #f8fafc; border-radius: 6px; }
+            .p-item { page-break-inside: avoid; break-inside: avoid; border-left: 4px solid var(--item-color, #6366f1); padding: 8px 12px; background: #f8fafc; border-radius: 6px; }
             @media print {
               body { padding: 0; margin: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
               @page { size: A4 landscape; margin: 15mm !important; }
               .p-grid { border-width: 1.5px; }
-              .p-cell { border-width: 1.5px; min-height: 80px; }
+              .p-cell { border-width: 1.5px; min-height: 90px; padding: 5px; }
               .p-dot { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .p-dots { gap: 5px; margin-top: 5px; }
               .cal-side { page-break-after: always; }
             }
           </style>
