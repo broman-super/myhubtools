@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expense Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --font: 'Plus Jakarta Sans', sans-serif; --bg: #0f172a; --surface: #1e293b; --surface2: #334155; --text: #f1f5f9; --text2: #94a3b8; --border: #334155; --primary: #3b82f6; --primary-hover: #2563eb; --danger: #ef4444; --success: #22c55e; --warning: #f59e0b; --radius: 8px; --radius-sm: 6px; --shadow: 0 2px 8px rgba(0,0,0,0.3); }
+[data-theme="light"] { --bg: #f8fafc; --surface: #ffffff; --surface2: #f1f5f9; --text: #0f172a; --text2: #64748b; --border: #e2e8f0; --shadow: 0 2px 8px rgba(0,0,0,0.08); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; padding: 16px; }
+.app { max-width: 1100px; margin: 0 auto; }
+/* Header */
+.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 8px; }
+.header h1 { font-size: 22px; font-weight: 700; }
+.user-badge { display: flex; align-items: center; gap: 8px; background: var(--surface); padding: 6px 14px; border-radius: 20px; font-size: 13px; border: 1px solid var(--border); }
+.user-badge input { background: transparent; border: none; color: var(--text); font-family: var(--font); font-size: 13px; outline: none; width: 100px; }
+.user-badge input::placeholder { color: var(--text2); }
+/* Tabs */
+.tabs { display: flex; gap: 4px; background: var(--surface); border-radius: var(--radius); padding: 4px; margin-bottom: 20px; overflow-x: auto; }
+.tab-btn { padding: 8px 18px; border: none; background: transparent; color: var(--text2); font-family: var(--font); font-size: 14px; font-weight: 500; cursor: pointer; border-radius: var(--radius-sm); white-space: nowrap; transition: all .2s; }
+.tab-btn:hover { color: var(--text); background: var(--surface2); }
+.tab-btn.active { background: var(--primary); color: white; }
+.tab-btn .badge { display: none; background: var(--danger); color: white; font-size: 11px; padding: 1px 7px; border-radius: 10px; margin-left: 5px; }
+.tab-btn .badge.show { display: inline-block; }
+/* Page sections */
+.page { display: none; }
+.page.active { display: block; }
+/* Card */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+.card h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+/* Form */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group label { font-size: 13px; font-weight: 500; color: var(--text2); }
+.form-group input, .form-group select, .form-group textarea { padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--font); font-size: 14px; outline: none; transition: border .2s; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
+.form-group textarea { min-height: 80px; resize: vertical; }
+.form-group input[type="file"] { padding: 8px; font-size: 13px; }
+.file-preview { margin-top: 8px; max-width: 200px; border-radius: var(--radius-sm); overflow: hidden; display: none; }
+.file-preview.show { display: block; }
+.file-preview img { width: 100%; height: auto; display: block; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.form-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.btn { padding: 10px 20px; border: none; border-radius: var(--radius-sm); font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 6px; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-success { background: var(--success); color: white; }
+.btn-success:hover { opacity: .9; }
+.btn-danger { background: var(--danger); color: white; }
+.btn-danger:hover { opacity: .9; }
+.btn-warning { background: var(--warning); color: #000; }
+.btn-warning:hover { opacity: .9; }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn-outline:hover { background: var(--surface2); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+/* Filter bar */
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+.filter-bar select, .filter-bar input { padding: 8px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--font); font-size: 13px; outline: none; }
+.filter-bar input[type="text"] { min-width: 160px; flex: 1; }
+.filter-bar .btn { padding: 8px 14px; font-size: 13px; }
+/* Table */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+th { font-weight: 600; color: var(--text2); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; }
+tr:hover td { background: var(--surface2); }
+td.amount { font-variant-numeric: tabular-nums; text-align: right; }
+td.actions { text-align: center; }
+td.actions .btn { padding: 4px 10px; font-size: 12px; }
+/* Badges */
+.badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-draft { background: #64748b33; color: #94a3b8; }
+.badge-pengajuan { background: #f59e0b33; color: #f59e0b; }
+.badge-disetujui { background: #3b82f633; color: #3b82f6; }
+.badge-ditolak { background: #ef444433; color: #ef4444; }
+.badge-realisasi { background: #8b5cf633; color: #a78bfa; }
+.badge-selesai { background: #22c55e33; color: #22c55e; }
+.badge-batal { background: #ef444433; color: #ef4444; }
+/* Pagination */
+.pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.pagination .btn { padding: 6px 12px; font-size: 13px; }
+.pagination span { font-size: 13px; color: var(--text2); }
+/* Dashboard */
+.dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; }
+.stat-card .label { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+.stat-card .value { font-size: 28px; font-weight: 700; margin-top: 4px; }
+.stat-card .value.green { color: var(--success); }
+.stat-card .value.blue { color: var(--primary); }
+.stat-card .value.yellow { color: var(--warning); }
+.stat-card .value.purple { color: #a78bfa; }
+.stat-card .value.red { color: var(--danger); }
+.category-chart { display: flex; flex-direction: column; gap: 10px; }
+.category-row { display: flex; align-items: center; gap: 10px; }
+.category-row .cat-label { width: 100px; font-size: 13px; font-weight: 500; flex-shrink: 0; }
+.category-row .cat-bar-wrap { flex: 1; height: 24px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.category-row .cat-bar { height: 100%; border-radius: 4px; transition: width .6s ease; display: flex; align-items: center; padding-left: 8px; font-size: 11px; font-weight: 600; color: #000; min-width: fit-content; }
+.category-row .cat-total { width: 100px; text-align: right; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+/* Trend chart */
+.trend-chart { display: flex; align-items: flex-end; gap: 12px; padding: 10px 0; min-height: 140px; }
+.trend-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.trend-bar { width: 100%; max-width: 60px; border-radius: 4px 4px 0 0; min-height: 4px; transition: height .6s ease; position: relative; }
+.trend-bar .val { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 600; white-space: nowrap; }
+.trend-bar-wrap .label { font-size: 11px; color: var(--text2); }
+/* Modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--surface); border-radius: var(--radius); width: 100%; max-width: 580px; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative; }
+.modal h2 { font-size: 18px; margin-bottom: 16px; }
+.modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text2); font-size: 22px; cursor: pointer; }
+.modal-close:hover { color: var(--text); }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.detail-item label { font-size: 12px; color: var(--text2); display: block; }
+.detail-item span { font-size: 14px; font-weight: 500; word-break: break-all; }
+.detail-item.full { grid-column: 1 / -1; }
+.detail-item img { max-width: 100%; border-radius: var(--radius-sm); margin-top: 4px; border: 1px solid var(--border); }
+.detail-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+/* Timeline */
+.timeline { margin: 16px 0; padding: 0; list-style: none; }
+.timeline li { position: relative; padding: 0 0 16px 24px; border-left: 2px solid var(--border); }
+.timeline li:last-child { border-left-color: transparent; padding-bottom: 0; }
+.timeline li::before { content: ''; position: absolute; left: -5px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+.timeline li .time { font-size: 12px; color: var(--text2); }
+.timeline li .desc { font-size: 13px; }
+/* Toast */
+.toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
+.toast { padding: 12px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; animation: slideIn .3s ease; max-width: 360px; box-shadow: var(--shadow); }
+.toast-success { background: #166534; color: #bbf7d0; }
+.toast-error { background: #991b1b; color: #fecaca; }
+.toast-info { background: #1e3a5f; color: #bfdbfe; }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+/* Confirm Dialog */
+.confirm-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1500; align-items: center; justify-content: center; padding: 20px; }
+.confirm-overlay.show { display: flex; }
+.confirm-box { background: var(--surface); border-radius: var(--radius); padding: 24px; max-width: 400px; width: 100%; text-align: center; }
+.confirm-box h3 { margin-bottom: 8px; font-size: 16px; }
+.confirm-box p { font-size: 14px; color: var(--text2); margin-bottom: 16px; }
+.confirm-box .btn-group { display: flex; gap: 10px; justify-content: center; }
+/* Loading */
+.loading { display: none; text-align: center; padding: 40px; color: var(--text2); }
+.loading.show { display: block; }
+.spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .6s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+/* Empty state */
+.empty-state { text-align: center; padding: 40px 20px; color: var(--text2); }
+.empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state h3 { font-size: 16px; margin-bottom: 4px; color: var(--text); }
+/* Responsive */
+@media (max-width: 640px) {
+  body { padding: 12px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .dashboard-grid { grid-template-columns: 1fr 1fr; }
+  .filter-bar input[type="text"] { min-width: 120px; }
+  .detail-grid { grid-template-columns: 1fr; }
+  table { font-size: 12px; }
+  th, td { padding: 8px 6px; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="header">
+    <h1>Expense Tracker</h1>
+    <div class="user-badge">
+      <span>👤</span>
+      <input type="text" id="userInput" placeholder="Nama pengaju" value="">
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab-btn active" data-tab="form">+ Tambah</button>
+    <button class="tab-btn" data-tab="list">Daftar <span class="badge" id="pendingBadge">0</span></button>
+    <button class="tab-btn" data-tab="dashboard">Dashboard</button>
+  </div>
+
+  <!-- Form Page -->
+  <div class="page active" id="pageForm">
+    <div class="card">
+      <h2>Pengajuan Expense Baru</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Tanggal</label>
+          <input type="date" id="fTanggal">
+        </div>
+        <div class="form-group">
+          <label>Kategori</label>
+          <select id="fKategori">
+            <option value="">-- Pilih --</option>
+            <option value="transport">Transport</option>
+            <option value="makan">Makan</option>
+            <option value="komunikasi">Komunikasi</option>
+            <option value="ppn">PPN</option>
+            <option value="hotel">Hotel</option>
+            <option value="lainnya">Lainnya</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Deskripsi <span style="color:var(--danger)">*</span></label>
+          <textarea id="fDeskripsi" placeholder="Jelaskan pengeluaran..." maxlength="500"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Jumlah (Rp) <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="fJumlah" placeholder="0" inputmode="numeric">
+        </div>
+        <div class="form-group">
+          <label>Bukti Kuitansi (opsional)</label>
+          <input type="file" id="fFile" accept="image/*,application/pdf">
+          <div class="file-preview" id="filePreview">
+            <img id="previewImg" alt="Preview">
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-outline" id="btnDraft">Simpan Draft</button>
+        <button class="btn btn-primary" id="btnSubmit">Kirim Pengajuan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- List Page -->
+  <div class="page" id="pageList">
+    <div class="card">
+      <h2>Daftar Pengajuan</h2>
+      <div class="filter-bar">
+        <select id="filterStatus">
+          <option value="">Semua Status</option>
+          <option value="draft">Draft</option>
+          <option value="pengajuan">Pengajuan</option>
+          <option value="disetujui">Disetujui</option>
+          <option value="ditolak">Ditolak</option>
+          <option value="realisasi">Realisasi</option>
+          <option value="selesai">Selesai</option>
+          <option value="batal">Batal</option>
+        </select>
+        <select id="filterKategori">
+          <option value="">Semua Kategori</option>
+          <option value="transport">Transport</option>
+          <option value="makan">Makan</option>
+          <option value="komunikasi">Komunikasi</option>
+          <option value="ppn">PPN</option>
+          <option value="hotel">Hotel</option>
+          <option value="lainnya">Lainnya</option>
+        </select>
+        <input type="date" id="filterFrom" title="Dari tanggal">
+        <input type="date" id="filterTo" title="Sampai tanggal">
+        <input type="text" id="filterSearch" placeholder="Cari deskripsi...">
+        <button class="btn btn-outline" id="btnFilterCari">Cari</button>
+        <button class="btn btn-outline" id="btnFilterReset">Reset</button>
+      </div>
+      <div class="loading" id="listLoading"><div class="spinner"></div>Memuat data...</div>
+      <div class="table-wrap" id="listTableWrap">
+        <table>
+          <thead><tr>
+            <th>Tanggal</th><th>Kategori</th><th>Deskripsi</th><th>Jumlah</th><th>Status</th><th>Aksi</th>
+          </tr></thead>
+          <tbody id="listBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="listEmpty">
+        <div class="icon">📋</div>
+        <h3>Belum ada pengajuan</h3>
+        <p>Tambahkan pengajuan baru melalui tab + Tambah</p>
+      </div>
+      <div class="pagination" id="listPagination"></div>
+    </div>
+  </div>
+
+  <!-- Dashboard Page -->
+  <div class="page" id="pageDashboard">
+    <div class="card">
+      <h2>Ringkasan Bulan Ini</h2>
+      <div class="loading" id="dashLoading"><div class="spinner"></div>Memuat dashboard...</div>
+      <div class="dashboard-grid" id="statGrid"></div>
+    </div>
+    <div class="card">
+      <h2>Per Kategori</h2>
+      <div class="category-chart" id="categoryChart"></div>
+    </div>
+    <div class="card">
+      <h2>Tren 6 Bulan</h2>
+      <div id="trendChart" class="trend-chart"></div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal">
+      <button class="modal-close" id="modalClose">&times;</button>
+      <h2>Detail Pengajuan</h2>
+      <div class="detail-grid" id="detailGrid"></div>
+      <h3 style="font-size:14px;margin:12px 0 8px;">Riwayat Status</h3>
+      <ul class="timeline" id="detailTimeline"></ul>
+      <div class="detail-actions" id="detailActions"></div>
+    </div>
+  </div>
+
+  <!-- Confirm Dialog -->
+  <div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-box">
+      <h3 id="confirmTitle">Konfirmasi</h3>
+      <p id="confirmMsg">Yakin ingin melanjutkan?</p>
+      <div class="btn-group">
+        <button class="btn btn-outline" id="confirmNo">Batal</button>
+        <button class="btn btn-primary" id="confirmYes">Ya</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+</div>
+
+<script>
+(function() {
+  var GAS_URL = 'https://script.google.com/macros/s/AKfycbw9iBZCPDohANTqxt4aP38qTk3_HxqYADn5yj4u3IFysnow3BMhUrhIS5dKMgMrNHEtDg/exec';
+  var CAT_COLORS = { transport: '#3b82f6', makan: '#22c55e', komunikasi: '#f59e0b', ppn: '#ef4444', hotel: '#a78bfa', lainnya: '#94a3b8' };
+
+  var App = {
+    user: localStorage.getItem('expense_user') || '',
+    currentTab: 'form',
+    expenses: [],
+    totalPages: 1,
+    currentPage: 1,
+    filters: { status: '', kategori: '', from: '', to: '', search: '' },
+    selectedId: null,
+    confirmCallback: null,
+    fileData: null,
+
+    init: function() {
+      var self = this;
+      document.getElementById('userInput').value = this.user;
+      document.getElementById('fTanggal').value = new Date().toISOString().slice(0,10);
+
+      document.getElementById('userInput').addEventListener('change', function(e) {
+        self.user = e.target.value.trim();
+        localStorage.setItem('expense_user', self.user);
+      });
+
+      document.querySelectorAll('.tab-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          self.switchTab(this.dataset.tab);
+        });
+      });
+
+      document.getElementById('btnDraft').addEventListener('click', function() { self.submitForm('draft'); });
+      document.getElementById('btnSubmit').addEventListener('click', function() { self.submitForm('pengajuan'); });
+      document.getElementById('fFile').addEventListener('change', function(e) { self.handleFile(e); });
+      document.getElementById('fJumlah').addEventListener('input', function() { self.formatRupiahInput(this); });
+
+      document.getElementById('btnFilterCari').addEventListener('click', function() { self.applyFilters(); });
+      document.getElementById('btnFilterReset').addEventListener('click', function() { self.resetFilters(); });
+
+      document.getElementById('modalClose').addEventListener('click', function() { self.closeDetail(); });
+      document.getElementById('detailModal').addEventListener('click', function(e) { if (e.target === this) self.closeDetail(); });
+
+      document.getElementById('confirmNo').addEventListener('click', function() { self.closeConfirm(); });
+      document.getElementById('confirmYes').addEventListener('click', function() { self.confirmCallback && self.confirmCallback(); self.closeConfirm(); });
+
+      this.loadExpenses();
+      this.loadDashboard();
+      this.loadPendingCount();
+      setTimeout(function() { self.notifyLoaded(); }, 100);
+    },
+
+    notifyLoaded: function() {
+      if (window.parent !== window) {
+        try { window.parent.postMessage({ type: 'tool:loaded', source: 'expense-tracker', data: {} }, '*'); } catch(e) {}
+      }
+    },
+
+    switchTab: function(tab) {
+      this.currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
+      document.querySelectorAll('.page').forEach(function(p) { p.classList.toggle('active', p.id === 'page' + tab.charAt(0).toUpperCase() + tab.slice(1)); });
+      if (tab === 'list') this.applyFilters();
+      if (tab === 'dashboard') this.loadDashboard();
+    },
+
+    // ──── FILE ────
+    handleFile: function(e) {
+      var file = e.target.files[0];
+      if (!file) { this.fileData = null; document.getElementById('filePreview').classList.remove('show'); return; }
+      var reader = new FileReader();
+      var self = this;
+      reader.onload = function(ev) {
+        self.fileData = { name: file.name, mime: file.type, data: ev.target.result.split(',')[1] };
+        if (file.type.startsWith('image/')) {
+          document.getElementById('previewImg').src = ev.target.result;
+          document.getElementById('filePreview').classList.add('show');
+        }
+      };
+      reader.readAsDataURL(file);
+    },
+
+    // ──── RUPIAH FORMAT ────
+    formatRupiahInput: function(el) {
+      var val = el.value.replace(/[^\d]/g, '');
+      if (val) el.value = parseInt(val).toLocaleString('id-ID');
+      else el.value = '';
+    },
+
+    parseRupiah: function(str) {
+      return parseInt(str.replace(/[^\d]/g, '')) || 0;
+    },
+
+    formatRupiah: function(n) {
+      return 'Rp' + parseInt(n).toLocaleString('id-ID');
+    },
+
+    // ──── GAS FETCH ────
+    fetchGAS: function(action, data, callback) {
+      var opts = { method: 'POST', mode: 'cors', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: action, data: data }) };
+      fetch(GAS_URL, opts).then(function(r) { return r.text(); }).then(function(text) {
+        try { var j = JSON.parse(text); callback(j); }
+        catch(e) { callback({ success: false, message: 'Invalid response: ' + text.slice(0,100) }); }
+      }).catch(function(err) {
+        callback({ success: false, message: 'Network error: ' + err.message });
+      });
+    },
+
+    // ──── TOAST ────
+    showToast: function(msg, type) {
+      type = type || 'info';
+      var el = document.createElement('div');
+      el.className = 'toast toast-' + type;
+      el.textContent = msg;
+      document.getElementById('toastContainer').appendChild(el);
+      setTimeout(function() { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(function() { el.remove(); }, 300); }, 3000);
+    },
+
+    // ──── CONFIRM ────
+    confirm: function(title, msg, cb) {
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmMsg').textContent = msg;
+      this.confirmCallback = cb;
+      document.getElementById('confirmOverlay').classList.add('show');
+    },
+
+    closeConfirm: function() {
+      document.getElementById('confirmOverlay').classList.remove('show');
+      this.confirmCallback = null;
+    },
+
+    // ──── SUBMIT FORM ────
+    submitForm: function(status) {
+      var tanggal = document.getElementById('fTanggal').value;
+      var kategori = document.getElementById('fKategori').value;
+      var deskripsi = document.getElementById('fDeskripsi').value.trim();
+      var jumlah = this.parseRupiah(document.getElementById('fJumlah').value);
+
+      if (!deskripsi || !jumlah) { this.showToast('Deskripsi dan Jumlah wajib diisi', 'error'); return; }
+      if (!kategori) { this.showToast('Pilih kategori', 'error'); return; }
+      if (!this.user) { this.showToast('Isi nama pengaju', 'error'); return; }
+
+      var data = {
+        tanggal: tanggal || new Date().toISOString().slice(0,10),
+        kategori: kategori,
+        deskripsi: deskripsi,
+        jumlah: jumlah,
+        pengaju: this.user,
+        status: status,
+        file: this.fileData
+      };
+
+      this.fetchGAS('submitExpense', data, function(res) {
+        if (res.success || res.result) {
+          App.showToast('Pengajuan ' + (status === 'draft' ? 'disimpan sebagai draft' : 'dikirim'), 'success');
+          App.clearForm();
+          App.loadExpenses();
+          App.loadPendingCount();
+          App.loadDashboard();
+        } else {
+          App.showToast('Gagal: ' + (res.message || 'unknown'), 'error');
+        }
+      });
+    },
+
+    clearForm: function() {
+      document.getElementById('fDeskripsi').value = '';
+      document.getElementById('fJumlah').value = '';
+      document.getElementById('fKategori').value = '';
+      document.getElementById('fFile').value = '';
+      document.getElementById('filePreview').classList.remove('show');
+      this.fileData = null;
+    },
+
+    // ──── LIST ────
+    loadExpenses: function() {
+      this.fetchGAS('getExpenses', this.filters, function(res) {
+        if (res.result) {
+          App.expenses = res.result.rows || [];
+          App.totalPages = res.result.totalPages || 1;
+          App.currentPage = res.result.page || 1;
+        } else {
+          App.expenses = [];
+          App.totalPages = 1;
+        }
+        App.renderList();
+      });
+    },
+
+    applyFilters: function() {
+      this.filters.status = document.getElementById('filterStatus').value;
+      this.filters.kategori = document.getElementById('filterKategori').value;
+      this.filters.from = document.getElementById('filterFrom').value;
+      this.filters.to = document.getElementById('filterTo').value;
+      this.filters.search = document.getElementById('filterSearch').value.trim();
+      this.filters.page = 1;
+      this.loadExpenses();
+    },
+
+    resetFilters: function() {
+      document.getElementById('filterStatus').value = '';
+      document.getElementById('filterKategori').value = '';
+      document.getElementById('filterFrom').value = '';
+      document.getElementById('filterTo').value = '';
+      document.getElementById('filterSearch').value = '';
+      this.filters = { status: '', kategori: '', from: '', to: '', search: '' };
+      this.filters.page = 1;
+      this.loadExpenses();
+    },
+
+    goToPage: function(page) {
+      this.filters.page = page;
+      this.loadExpenses();
+    },
+
+    renderList: function() {
+      var tbody = document.getElementById('listBody');
+      var empty = document.getElementById('listEmpty');
+      var pagination = document.getElementById('listPagination');
+
+      tbody.innerHTML = '';
+      empty.style.display = 'none';
+      pagination.innerHTML = '';
+
+      if (!this.expenses.length) { empty.style.display = 'block'; return; }
+
+      var self = this;
+      this.expenses.forEach(function(ex) {
+        var tr = document.createElement('tr');
+        var statusClass = 'badge-' + (ex.status === 'realisasi' ? 'realisasi' : ex.status);
+        var statusLabel = ex.status.charAt(0).toUpperCase() + ex.status.slice(1);
+        tr.innerHTML =
+          '<td>' + ex.tanggal + '</td>' +
+          '<td><span class="badge" style="background:' + (CAT_COLORS[ex.kategori] || '#94a3b8') + '33;color:' + (CAT_COLORS[ex.kategori] || '#94a3b8') + '">' + ex.kategori + '</span></td>' +
+          '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">' + ex.deskripsi + '</td>' +
+          '<td class="amount">' + self.formatRupiah(ex.jumlah) + '</td>' +
+          '<td><span class="badge ' + statusClass + '">' + statusLabel + '</span></td>' +
+          '<td class="actions"><button class="btn btn-outline" data-id="' + ex.id + '">Detail</button></td>';
+        tr.querySelector('.btn').addEventListener('click', function() { self.showDetail(this.dataset.id); });
+        tbody.appendChild(tr);
+      });
+
+      if (this.totalPages > 1) {
+        var p = pagination;
+        if (this.currentPage > 1) {
+          var prev = document.createElement('button');
+          prev.className = 'btn btn-outline'; prev.textContent = '← Prev';
+          prev.addEventListener('click', function() { self.goToPage(self.currentPage - 1); });
+          p.appendChild(prev);
+        }
+        var span = document.createElement('span');
+        span.textContent = 'Halaman ' + this.currentPage + ' / ' + this.totalPages;
+        p.appendChild(span);
+        if (this.currentPage < this.totalPages) {
+          var next = document.createElement('button');
+          next.className = 'btn btn-outline'; next.textContent = 'Next →';
+          next.addEventListener('click', function() { self.goToPage(self.currentPage + 1); });
+          p.appendChild(next);
+        }
+      }
+    },
+
+    // ──── DETAIL ────
+    showDetail: function(id) {
+      var self = this;
+      this.fetchGAS('getExpenseById', { id: id }, function(res) {
+        if (!res.result) { self.showToast('Data tidak ditemukan', 'error'); return; }
+        var ex = res.result;
+        self.selectedId = ex.id;
+        var grid = document.getElementById('detailGrid');
+        grid.innerHTML =
+          '<div class="detail-item"><label>ID</label><span>' + (ex.id || '-') + '</span></div>' +
+          '<div class="detail-item"><label>Tanggal</label><span>' + (ex.tanggal || '-') + '</span></div>' +
+          '<div class="detail-item"><label>Kategori</label><span>' + (ex.kategori || '-') + '</span></div>' +
+          '<div class="detail-item"><label>Jumlah</label><span>' + self.formatRupiah(ex.jumlah) + '</span></div>' +
+          '<div class="detail-item"><label>Status</label><span class="badge badge-' + (ex.status === 'realisasi' ? 'realisasi' : ex.status) + '">' + (ex.status || '-') + '</span></div>' +
+          '<div class="detail-item"><label>Pengaju</label><span>' + (ex.pengaju || '-') + '</span></div>' +
+          '<div class="detail-item full"><label>Deskripsi</label><span>' + (ex.deskripsi || '-') + '</span></div>' +
+          (ex.buktiUrl && ex.buktiUrl !== '-' ? '<div class="detail-item full"><label>Bukti</label>' + (ex.buktiUrl.match(/\.(jpg|jpeg|png|gif|webp)/i) ? '<img src="' + ex.buktiUrl + '" alt="Bukti">' : '<a href="' + ex.buktiUrl + '" target="_blank" style="color:var(--primary)">' + (ex.buktiNama || 'Download') + '</a>') + '</div>' : '') +
+          (ex.approvedBy ? '<div class="detail-item"><label>Disetujui oleh</label><span>' + ex.approvedBy + '</span></div>' : '') +
+          (ex.tanggalApproved ? '<div class="detail-item"><label>Tgl. Approve</label><span>' + ex.tanggalApproved + '</span></div>' : '') +
+          (ex.statusRealisasi && ex.statusRealisasi !== '-' ? '<div class="detail-item"><label>Realisasi</label><span>' + ex.statusRealisasi + '</span></div>' : '') +
+          '<div class="detail-item"><label>Update</label><span>' + (ex.tanggalUpdate || '-') + '</span></div>';
+
+        var timelineEl = document.getElementById('detailTimeline');
+        timelineEl.innerHTML = '';
+        var timelineData = ex.timeline;
+        if (Array.isArray(timelineData) && timelineData.length) {
+          for (var ti = 0; ti < timelineData.length; ti++) {
+            var entry = timelineData[ti];
+            var li = document.createElement('li');
+            li.innerHTML = '<div class="time">' + (entry.at || '-') + '</div><div class="desc">' + (entry.status || '-') + (entry.by ? ' oleh ' + entry.by : '') + '</div>';
+            timelineEl.appendChild(li);
+          }
+        } else {
+          timelineEl.innerHTML = '<li><div class="desc">Belum ada riwayat</div></li>';
+        }
+
+        var actions = document.getElementById('detailActions');
+        actions.innerHTML = '';
+        var st = ex.status;
+        var addBtn = function(label, cls, cb) {
+          var btn = document.createElement('button');
+          btn.className = 'btn ' + cls;
+          btn.textContent = label;
+          btn.addEventListener('click', cb);
+          actions.appendChild(btn);
+        };
+        if (st === 'draft' || st === 'pengajuan') {
+          addBtn('✅ Setujui', 'btn-success', function() { self.approveExpense(ex.id); });
+          addBtn('❌ Tolak', 'btn-danger', function() { self.rejectExpense(ex.id); });
+        }
+        if (st === 'pengajuan' || st === 'disetujui') {
+          addBtn('📋 Realisasi', 'btn-warning', function() { self.markRealisasi(ex.id); });
+        }
+        if (st === 'realisasi') {
+          addBtn('💰 Reimburse', 'btn-success', function() { self.markReimburse(ex.id); });
+        }
+        if (st === 'draft' || st === 'pengajuan') {
+          addBtn('🚫 Batal', 'btn-danger', function() { self.cancelExpense(ex.id); });
+        }
+        if (st === 'draft') {
+          addBtn('🗑 Hapus', 'btn-danger', function() { self.deleteExpense(ex.id); });
+        }
+
+        document.getElementById('detailModal').classList.add('show');
+      });
+    },
+
+    closeDetail: function() {
+      document.getElementById('detailModal').classList.remove('show');
+      this.selectedId = null;
+    },
+
+    // ──── ACTIONS ────
+    approveExpense: function(id) {
+      var self = this;
+      this.confirm('Setujui Pengajuan', 'Setujui pengajuan ini?', function() {
+        self.fetchGAS('approveExpense', { id: id, approver: self.user }, function(res) {
+          if (res.success || res.result) { self.showToast('Pengajuan disetujui', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); self.loadPendingCount(); }
+          else { self.showToast('Gagal: ' + (res.message || ''), 'error'); }
+        });
+      });
+    },
+
+    rejectExpense: function(id) {
+      var self = this;
+      var reason = prompt('Alasan penolakan (opsional):');
+      this.confirm('Tolak Pengajuan', 'Tolak pengajuan ini?', function() {
+        self.fetchGAS('rejectExpense', { id: id, reason: reason || '' }, function(res) {
+          if (res.success || res.result) { self.showToast('Pengajuan ditolak', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); self.loadPendingCount(); }
+          else { self.showToast('Gagal: ' + (res.message || ''), 'error'); }
+        });
+      });
+    },
+
+    markRealisasi: function(id) {
+      var self = this;
+      this.confirm('Input Realisasi', 'Tandai pengajuan ini sudah direalisasikan?', function() {
+        self.fetchGAS('markRealisasi', { id: id, lunas: true }, function(res) {
+          if (res.success || res.result) { self.showToast('Status realisasi diperbarui', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); self.loadPendingCount(); }
+          else { self.showToast('Gagal: ' + (res.message || ''), 'error'); }
+        });
+      });
+    },
+
+    markReimburse: function(id) {
+      var self = this;
+      this.confirm('Proses Reimburse', 'Tandai pengajuan ini sudah direimburse (selesai)?', function() {
+        self.fetchGAS('markReimburse', { id: id }, function(res) {
+          if (res.success || res.result) { self.showToast('Reimburse selesai', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); self.loadPendingCount(); }
+          else { self.showToast('Gagal: ' + (res.message || ''), 'error'); }
+        });
+      });
+    },
+
+    cancelExpense: function(id) {
+      var self = this;
+      this.confirm('Batalkan Pengajuan', 'Yakin ingin membatalkan pengajuan ini?', function() {
+        self.fetchGAS('cancelExpense', { id: id }, function(res) {
+          if (res.success || res.result) { self.showToast('Pengajuan dibatalkan', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); self.loadPendingCount(); }
+          else { self.showToast('Gagal: ' + (res.message || ''), 'error'); }
+        });
+      });
+    },
+
+    deleteExpense: function(id) {
+      var self = this;
+      this.confirm('Hapus Draft', 'Hapus draft ini secara permanen?', function() {
+        self.fetchGAS('deleteExpense', { id: id }, function(res) {
+          if (res.success || res.result) { self.showToast('Draft dihapus', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); }
+          else { self.showToast('Gagal: ' + (res.message || ''), 'error'); }
+        });
+      });
+    },
+
+    // ──── DASHBOARD ────
+    loadDashboard: function() {
+      var self = this;
+      this.fetchGAS('getExpenseSummary', { periode: 'this_month' }, function(res) {
+        if (res.result) {
+          self.renderDashboard(res.result);
+        }
+      });
+      this.loadTrend();
+    },
+
+    loadTrend: function() {
+      var self = this;
+      this.fetchGAS('getExpenseTrend', {}, function(res) {
+        if (res.result) self.renderTrend(res.result);
+      });
+    },
+
+    renderTrend: function(data) {
+      var chart = document.getElementById('trendChart');
+      chart.innerHTML = '';
+      if (!data || !data.length) { chart.innerHTML = '<div class="empty-state"><h3>Belum ada data</h3></div>'; return; }
+      var maxVal = 0;
+      for (var i = 0; i < data.length; i++) { if (data[i].total > maxVal) maxVal = data[i].total; }
+      if (maxVal === 0) { chart.innerHTML = '<div class="empty-state"><h3>Belum ada data</h3></div>'; return; }
+      for (var i = 0; i < data.length; i++) {
+        var wrap = document.createElement('div');
+        wrap.className = 'trend-bar-wrap';
+        var pct = Math.max(4, (data[i].total / maxVal * 100));
+        var bar = document.createElement('div');
+        bar.className = 'trend-bar';
+        bar.style.height = pct + '%';
+        bar.style.background = 'var(--primary)';
+        if (data[i].total > 0) {
+          var val = document.createElement('div');
+          val.className = 'val';
+          val.textContent = this.formatRupiah(data[i].total);
+          bar.appendChild(val);
+        }
+        wrap.appendChild(bar);
+        var lbl = document.createElement('div');
+        lbl.className = 'label';
+        var parts = data[i].month.split('-');
+        var MONTHS = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        lbl.textContent = MONTHS[parseInt(parts[1]) - 1] || data[i].month;
+        wrap.appendChild(lbl);
+        chart.appendChild(wrap);
+      }
+    },
+
+    renderDashboard: function(sum) {
+      var grid = document.getElementById('statGrid');
+      grid.innerHTML =
+        '<div class="stat-card"><div class="label">Total Pengajuan</div><div class="value blue">' + this.formatRupiah(sum.totalPengajuan) + '</div></div>' +
+        '<div class="stat-card"><div class="label">Disetujui</div><div class="value green">' + this.formatRupiah(sum.totalDisetujui) + '</div></div>' +
+        '<div class="stat-card"><div class="label">Realisasi</div><div class="value purple">' + this.formatRupiah(sum.totalRealisasi) + '</div></div>' +
+        '<div class="stat-card"><div class="label">Reimburse</div><div class="value green">' + this.formatRupiah(sum.totalReimburse) + '</div></div>';
+
+      var chart = document.getElementById('categoryChart');
+      chart.innerHTML = '';
+      var cats = sum.perKategori || {};
+      var maxTotal = 0;
+      for (var k in cats) { if (cats[k].total > maxTotal) maxTotal = cats[k].total; }
+      if (maxTotal === 0) { chart.innerHTML = '<div class="empty-state"><h3>Belum ada data</h3></div>'; return; }
+      for (var cat in cats) {
+        var row = document.createElement('div');
+        row.className = 'category-row';
+        var pct = (cats[cat].total / maxTotal * 100);
+        row.innerHTML =
+          '<span class="cat-label">' + cat + '</span>' +
+          '<div class="cat-bar-wrap"><div class="cat-bar" style="width:' + pct + '%;background:' + (CAT_COLORS[cat] || '#94a3b8') + '">' + cats[cat].count + 'x</div></div>' +
+          '<span class="cat-total">' + this.formatRupiah(cats[cat].total) + '</span>';
+        chart.appendChild(row);
+      }
+    },
+
+    loadPendingCount: function() {
+      var self = this;
+      this.fetchGAS('getExpenseCountByStatus', { periode: 'this_month' }, function(res) {
+        if (res.result) {
+          var count = (res.result.pengajuan || 0) + (res.result.draft || 0);
+          var badge = document.getElementById('pendingBadge');
+          badge.textContent = count;
+          badge.classList.toggle('show', count > 0);
+        }
+      });
+    }
+  };
+
+  App.init();
+})();
+</script>
+<script>
+(function() {
+  var html = document.documentElement;
+  var current = html.getAttribute('data-theme') || 'dark';
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'SET_THEME') {
+      html.setAttribute('data-theme', e.data.theme);
+    }
+  });
+  if (window.parent !== window) {
+    try { window.parent.postMessage({ type: 'request-theme', source: 'expense-tracker' }, '*'); } catch(e) {}
+  } else {
+    var stored = localStorage.getItem('reynahub-theme');
+    if (stored === 'light' || stored === 'dark') html.setAttribute('data-theme', stored);
+  }
+})();
+</script>
+</body>
+</html>

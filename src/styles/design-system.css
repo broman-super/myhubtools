@@ -13,6 +13,30 @@
     --sidebar-width: 70px;
     --radius-bento: 18px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Platform colors — centralized, shared by all tools */
+    --platform-ig:   #a855f7;
+    --platform-wa:   #22c55e;
+    --platform-tt:   #a1a1a1;
+    --platform-sp:   #f97316;
+    --platform-wb:   #3b82f6;
+    --platform-evt:  #06b6d4;
+    --platform-other:#64748b;
+    /* Auto-generated backgrounds: var(--platform-X-bg) = 12% opacity of color */
+    --platform-ig-bg:   rgba(168, 85, 247, 0.12);
+    --platform-wa-bg:   rgba(34, 197, 94, 0.12);
+    --platform-tt-bg:   rgba(161, 161, 161, 0.12);
+    --platform-sp-bg:   rgba(249, 115, 22, 0.12);
+    --platform-wb-bg:   rgba(59, 130, 246, 0.12);
+    --platform-evt-bg:  rgba(6, 182, 212, 0.12);
+    --platform-other-bg:rgba(100, 116, 139, 0.12);
+    /* Text colors that always contrast with the platform bg */
+    --platform-ig-txt:  #ffffff;
+    --platform-wa-txt:  #ffffff;
+    --platform-tt-txt:  #ffffff;
+    --platform-sp-txt:  #ffffff;
+    --platform-wb-txt:  #ffffff;
+    --platform-evt-txt: #ffffff;
+    --platform-other-txt:#ffffff;
 }
 
 [data-theme="dark"] {
@@ -25,6 +49,21 @@
     --border: rgba(255, 255, 255, 0.07);
     --sidebar-bg: #060911;
     --sidebar-color: #f1f5f9;
+    /* Platform colors stay the same — they are self-contained */
+    --platform-ig:   #a855f7;
+    --platform-wa:   #22c55e;
+    --platform-tt:   #a1a1a1;
+    --platform-sp:   #f97316;
+    --platform-wb:   #3b82f6;
+    --platform-evt:  #06b6d4;
+    --platform-other:#64748b;
+    --platform-ig-bg:   rgba(168, 85, 247, 0.18);
+    --platform-wa-bg:   rgba(34, 197, 94, 0.18);
+    --platform-tt-bg:   rgba(161, 161, 161, 0.18);
+    --platform-sp-bg:   rgba(249, 115, 22, 0.18);
+    --platform-wb-bg:   rgba(59, 130, 246, 0.18);
+    --platform-evt-bg:  rgba(6, 182, 212, 0.18);
+    --platform-other-bg:rgba(100, 116, 139, 0.18);
 }
 
 *, *::before, *::after {

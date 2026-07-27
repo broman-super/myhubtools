@@ -9,7 +9,7 @@
   <style>
     :root {
       --accent: #6366f1;
-      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, var(--platform-ig) 100%);
       --bg: #f8fafc;
       --text: #1e293b;
       --text-soft: #64748b;
@@ -18,6 +18,30 @@
       --radius-sm: 12px;
       --danger: #ff0000;
       --danger-light: rgba(255, 0, 0, 0.08);
+      /* Platform colors — centralized, shared across tools */
+      --platform-ig:   var(--platform-ig);
+      --platform-wa:   #22c55e;
+      --platform-tt:   #a1a1a1;
+      --platform-sp:   #f97316;
+      --platform-wb:   #3b82f6;
+      --platform-evt:  #06b6d4;
+      --platform-other:#64748b;
+      /* Auto-generated backgrounds */
+      --platform-ig-bg:   rgba(168, 85, 247, 0.12);
+      --platform-wa-bg:   rgba(34, 197, 94, 0.12);
+      --platform-tt-bg:   rgba(161, 161, 161, 0.12);
+      --platform-sp-bg:   rgba(249, 115, 22, 0.12);
+      --platform-wb-bg:   rgba(59, 130, 246, 0.12);
+      --platform-evt-bg:  rgba(6, 182, 212, 0.12);
+      --platform-other-bg:rgba(100, 116, 139, 0.12);
+      /* Text colors that contrast with platform bg */
+      --platform-ig-txt:  #ffffff;
+      --platform-wa-txt:  #ffffff;
+      --platform-tt-txt:  #ffffff;
+      --platform-sp-txt:  #ffffff;
+      --platform-wb-txt:  #ffffff;
+      --platform-evt-txt: #ffffff;
+      --platform-other-txt:#ffffff;
     }
 
     /* TOP LOADER (YouTube Style) */
@@ -1984,7 +2008,7 @@
     const DAYS_SHORT = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
     const COLORS = ['#212121', '#ffffff', '#f97316', '#06b6d4', '#10b981', '#ef4444', '#6366f1'];
     const CHANNELS = {
-      'Instagram': { color: '#a855f7', prefix: 'IG |' },
+      'Instagram': { color: 'var(--platform-ig)', prefix: 'IG |' },
       'Whatsapp':  { color: '#22c55e', prefix: 'WA |' },
       'Tiktok':    { color: '#a1a1a1', prefix: 'TT |' },
       'Shopee':    { color: '#f97316', prefix: 'SP |' },
