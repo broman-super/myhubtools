@@ -23,6 +23,13 @@ var ToolCard = {
       desc: 'Portal pengumpul dan manajemen tautan/link berkas penting kebutuhan operasional.',
       search: 'latch web link kumpulan link penting kegiatan'
     },
+    {
+      group: 'productive',
+      hash: '#productive/expense',
+      title: 'Expense Tracker',
+      desc: 'Pengajuan, approval, realisasi & reimburse expense operasional tim.',
+      search: 'expense tracker pengajuan realisasi reimburse approval'
+    },
     // Universal
     {
       group: 'universal',
