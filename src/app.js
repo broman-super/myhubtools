@@ -2,6 +2,7 @@
 (function() {
   var ui = {};
   var router = null;
+  var themeManager = null;
 
   function init() {
     ui = {
@@ -31,10 +32,16 @@
     // Render cards
     ToolCard.renderAll();
 
+    // Theme — use ThemeManager singleton, migrate old key
+    if (localStorage.getItem('theme') && !localStorage.getItem('reynahub-theme')) {
+      localStorage.setItem('reynahub-theme', localStorage.getItem('theme'));
+    }
+    themeManager = new ThemeManager();
+
     // Event listeners
     ui.enterBtn.addEventListener('click', enterWorkspace);
     ui.asideLogo.addEventListener('click', goHome);
-    ui.themeBtn.addEventListener('click', toggleTheme);
+    ui.themeBtn.addEventListener('click', function() { themeManager.toggle(); });
     ui.aboutBtn.addEventListener('click', function() { ui.about.classList.add('open'); });
     ui.modalClose.addEventListener('click', function() { ui.about.classList.remove('open'); });
     ui.about.addEventListener('click', function(e) { if (e.target === ui.about) ui.about.classList.remove('open'); });
@@ -67,8 +74,19 @@
       }
     });
 
-    // Init
-    restoreTheme();
+    // Theme broadcast on change
+    window.addEventListener('theme-changed', function() {
+      broadcastCurrentTheme();
+    });
+
+    // Respond to theme requests from child iframes
+    window.addEventListener('message', function(e) {
+      if (e.data && e.data.type === 'request-theme') {
+        var theme = themeManager && themeManager.getEffectiveTheme() ? 'dark' : 'light';
+        if (e.source) e.source.postMessage({ type: 'SET_THEME', theme: theme }, '*');
+      }
+    });
+
     restoreLanding();
   }
 
@@ -90,13 +108,13 @@
 
     // Set onload BEFORE changing src to avoid race condition
     ui.frame.onload = function() {
-      broadcastTheme(document.documentElement.getAttribute('data-theme') || 'light');
+      broadcastCurrentTheme();
     };
 
     if (ui.frame.src !== path) {
       ui.frame.src = path;
     } else {
-      broadcastTheme(document.documentElement.getAttribute('data-theme') || 'light');
+      broadcastCurrentTheme();
     }
 
     // Highlight correct sidebar nav
@@ -167,23 +185,12 @@
     }
   }
 
-  function toggleTheme() {
-    var current = document.documentElement.getAttribute('data-theme') || 'light';
-    var next = current === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('theme', next);
-    broadcastTheme(next);
-  }
-
-  function broadcastTheme(theme) {
+  function broadcastCurrentTheme() {
+    var isDark = themeManager ? themeManager.getEffectiveTheme() : false;
+    var theme = isDark ? 'dark' : 'light';
     if (ui.frame && ui.frame.contentWindow) {
       ui.frame.contentWindow.postMessage({ type: 'SET_THEME', theme: theme }, '*');
     }
-  }
-
-  function restoreTheme() {
-    var saved = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', saved);
   }
 
   function restoreLanding() {

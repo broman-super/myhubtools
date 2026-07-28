@@ -1,12 +1,10 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="dark">
+<html lang="id" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Expense Tracker</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../src/styles/tools.css">
 <style>
 :root { --font: 'Plus Jakarta Sans', sans-serif; --bg: #0f172a; --surface: #1e293b; --surface2: #334155; --text: #f1f5f9; --text2: #94a3b8; --border: #334155; --primary: #3b82f6; --primary-hover: #2563eb; --danger: #ef4444; --success: #22c55e; --warning: #f59e0b; --radius: 8px; --radius-sm: 6px; --shadow: 0 2px 8px rgba(0,0,0,0.3); }
 [data-theme="light"] { --bg: #f8fafc; --surface: #ffffff; --surface2: #f1f5f9; --text: #0f172a; --text2: #64748b; --border: #e2e8f0; --shadow: 0 2px 8px rgba(0,0,0,0.08); }
@@ -20,7 +18,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .user-badge input { background: transparent; border: none; color: var(--text); font-family: var(--font); font-size: 13px; outline: none; width: 100px; }
 .user-badge input::placeholder { color: var(--text2); }
 /* Tabs */
-.tabs { display: flex; gap: 4px; background: var(--surface); border-radius: var(--radius); padding: 4px; margin-bottom: 20px; overflow-x: auto; }
+.tabs { display: flex; gap: 4px; background: var(--surface); border-radius: var(--radius); padding: 4px; margin-bottom: 20px; overflow-x: auto; position: sticky; top: 0; z-index: 100; }
 .tab-btn { padding: 8px 18px; border: none; background: transparent; color: var(--text2); font-family: var(--font); font-size: 14px; font-weight: 500; cursor: pointer; border-radius: var(--radius-sm); white-space: nowrap; transition: all .2s; }
 .tab-btn:hover { color: var(--text); background: var(--surface2); }
 .tab-btn.active { background: var(--primary); color: white; }
@@ -62,6 +60,12 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .filter-bar select, .filter-bar input { padding: 8px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: var(--font); font-size: 13px; outline: none; }
 .filter-bar input[type="text"] { min-width: 160px; flex: 1; }
 .filter-bar .btn { padding: 8px 14px; font-size: 13px; }
+/* Inline validation */
+.form-group.error input, .form-group.error select, .form-group.error textarea { border-color: var(--danger); }
+.form-group .error-msg { display: none; font-size: 12px; color: var(--danger); margin-top: 2px; }
+.form-group.error .error-msg { display: block; }
+/* List summary */
+.list-summary { font-size: 13px; color: var(--text2); margin-bottom: 10px; }
 /* Table */
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -80,6 +84,14 @@ td.actions .btn { padding: 4px 10px; font-size: 12px; }
 .badge-realisasi { background: #8b5cf633; color: #a78bfa; }
 .badge-selesai { background: #22c55e33; color: #22c55e; }
 .badge-batal { background: #ef444433; color: #ef4444; }
+/* Status row colors */
+tr.status-draft { border-left: 4px solid #94a3b8; }
+tr.status-pengajuan { border-left: 4px solid #f59e0b; }
+tr.status-disetujui { border-left: 4px solid #3b82f6; }
+tr.status-ditolak { border-left: 4px solid #ef4444; }
+tr.status-realisasi { border-left: 4px solid #a78bfa; }
+tr.status-selesai { border-left: 4px solid #22c55e; }
+tr.status-batal { border-left: 4px solid #ef4444; }
 /* Pagination */
 .pagination { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
 .pagination .btn { padding: 6px 12px; font-size: 13px; }
@@ -182,12 +194,13 @@ td.actions .btn { padding: 4px 10px; font-size: 12px; }
     <div class="card">
       <h2>Pengajuan Expense Baru</h2>
       <div class="form-grid">
-        <div class="form-group">
+        <div class="form-group" id="fgTanggal">
           <label>Tanggal</label>
           <input type="date" id="fTanggal">
+          <div class="error-msg"></div>
         </div>
-        <div class="form-group">
-          <label>Kategori</label>
+        <div class="form-group" id="fgKategori">
+          <label>Kategori <span style="color:var(--danger)">*</span></label>
           <select id="fKategori">
             <option value="">-- Pilih --</option>
             <option value="transport">Transport</option>
@@ -197,16 +210,19 @@ td.actions .btn { padding: 4px 10px; font-size: 12px; }
             <option value="hotel">Hotel</option>
             <option value="lainnya">Lainnya</option>
           </select>
+          <div class="error-msg"></div>
         </div>
-        <div class="form-group full">
+        <div class="form-group full" id="fgDeskripsi">
           <label>Deskripsi <span style="color:var(--danger)">*</span></label>
           <textarea id="fDeskripsi" placeholder="Jelaskan pengeluaran..." maxlength="500"></textarea>
+          <div class="error-msg"></div>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="fgJumlah">
           <label>Jumlah (Rp) <span style="color:var(--danger)">*</span></label>
           <input type="text" id="fJumlah" placeholder="0" inputmode="numeric">
+          <div class="error-msg"></div>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="fgFile">
           <label>Bukti Kuitansi (opsional)</label>
           <input type="file" id="fFile" accept="image/*,application/pdf">
           <div class="file-preview" id="filePreview">
@@ -247,10 +263,10 @@ td.actions .btn { padding: 4px 10px; font-size: 12px; }
         </select>
         <input type="date" id="filterFrom" title="Dari tanggal">
         <input type="date" id="filterTo" title="Sampai tanggal">
-        <input type="text" id="filterSearch" placeholder="Cari deskripsi...">
-        <button class="btn btn-outline" id="btnFilterCari">Cari</button>
+        <input type="text" id="filterSearch" placeholder="Cari deskripsi..." autocomplete="off">
         <button class="btn btn-outline" id="btnFilterReset">Reset</button>
       </div>
+      <div class="list-summary" id="listSummary"></div>
       <div class="loading" id="listLoading"><div class="spinner"></div>Memuat data...</div>
       <div class="table-wrap" id="listTableWrap">
         <table>
@@ -349,9 +365,21 @@ td.actions .btn { padding: 4px 10px; font-size: 12px; }
       document.getElementById('btnDraft').addEventListener('click', function() { self.submitForm('draft'); });
       document.getElementById('btnSubmit').addEventListener('click', function() { self.submitForm('pengajuan'); });
       document.getElementById('fFile').addEventListener('change', function(e) { self.handleFile(e); });
-      document.getElementById('fJumlah').addEventListener('input', function() { self.formatRupiahInput(this); });
+      document.getElementById('fJumlah').addEventListener('input', function() { self.formatRupiahInput(this); self.saveDraft(); });
+      document.getElementById('fDeskripsi').addEventListener('input', function() { self.saveDraft(); });
+      document.getElementById('fKategori').addEventListener('change', function() { self.saveDraft(); });
+      document.getElementById('fTanggal').addEventListener('change', function() { self.saveDraft(); });
+      this.restoreDraft();
 
-      document.getElementById('btnFilterCari').addEventListener('click', function() { self.applyFilters(); });
+      var searchTimer;
+      document.getElementById('filterSearch').addEventListener('input', function() {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function() { self.applyFilters(); }, 300);
+      });
+      document.getElementById('filterStatus').addEventListener('change', function() { self.applyFilters(); });
+      document.getElementById('filterKategori').addEventListener('change', function() { self.applyFilters(); });
+      document.getElementById('filterFrom').addEventListener('change', function() { self.applyFilters(); });
+      document.getElementById('filterTo').addEventListener('change', function() { self.applyFilters(); });
       document.getElementById('btnFilterReset').addEventListener('click', function() { self.resetFilters(); });
 
       document.getElementById('modalClose').addEventListener('click', function() { self.closeDetail(); });
@@ -445,16 +473,57 @@ td.actions .btn { padding: 4px 10px; font-size: 12px; }
       this.confirmCallback = null;
     },
 
+    // ──── INLINE VALIDATION ────
+    clearErrors: function() {
+      document.querySelectorAll('.form-group.error').forEach(function(el) { el.classList.remove('error'); });
+    },
+
+    showFieldError: function(fieldId, msg) {
+      var el = document.getElementById(fieldId);
+      if (!el) return;
+      el.classList.add('error');
+      var msgEl = el.querySelector('.error-msg');
+      if (msgEl) msgEl.textContent = msg;
+    },
+
+    // ──── AUTO-SAVE DRAFT ────
+    saveDraft: function() {
+      var draft = {
+        tanggal: document.getElementById('fTanggal').value,
+        kategori: document.getElementById('fKategori').value,
+        deskripsi: document.getElementById('fDeskripsi').value,
+        jumlah: document.getElementById('fJumlah').value,
+        fileNama: this.fileData ? this.fileData.name : ''
+      };
+      localStorage.setItem('expense_draft', JSON.stringify(draft));
+    },
+
+    restoreDraft: function() {
+      try {
+        var raw = localStorage.getItem('expense_draft');
+        if (!raw) return;
+        var draft = JSON.parse(raw);
+        if (draft.tanggal) document.getElementById('fTanggal').value = draft.tanggal;
+        if (draft.kategori) document.getElementById('fKategori').value = draft.kategori;
+        if (draft.deskripsi) document.getElementById('fDeskripsi').value = draft.deskripsi;
+        if (draft.jumlah) { document.getElementById('fJumlah').value = draft.jumlah; this.formatRupiahInput(document.getElementById('fJumlah')); }
+      } catch(e) {}
+    },
+
     // ──── SUBMIT FORM ────
     submitForm: function(status) {
       var tanggal = document.getElementById('fTanggal').value;
       var kategori = document.getElementById('fKategori').value;
       var deskripsi = document.getElementById('fDeskripsi').value.trim();
       var jumlah = this.parseRupiah(document.getElementById('fJumlah').value);
+      var hasErr = false;
 
-      if (!deskripsi || !jumlah) { this.showToast('Deskripsi dan Jumlah wajib diisi', 'error'); return; }
-      if (!kategori) { this.showToast('Pilih kategori', 'error'); return; }
-      if (!this.user) { this.showToast('Isi nama pengaju', 'error'); return; }
+      this.clearErrors();
+      if (!this.user.trim()) { hasErr = true; this.showToast('Isi nama pengaju di header', 'error'); return; }
+      if (!kategori) { this.showFieldError('fgKategori', 'Pilih kategori'); hasErr = true; }
+      if (!deskripsi) { this.showFieldError('fgDeskripsi', 'Deskripsi wajib diisi'); hasErr = true; }
+      if (!jumlah) { this.showFieldError('fgJumlah', 'Jumlah wajib diisi'); hasErr = true; }
+      if (hasErr) { return; }
 
       var data = {
         tanggal: tanggal || new Date().toISOString().slice(0,10),
@@ -486,6 +555,8 @@ td.actions .btn { padding: 4px 10px; font-size: 12px; }
       document.getElementById('fFile').value = '';
       document.getElementById('filePreview').classList.remove('show');
       this.fileData = null;
+      this.clearErrors();
+      localStorage.removeItem('expense_draft');
     },
 
     // ──── LIST ────
@@ -533,18 +604,28 @@ td.actions .btn { padding: 4px 10px; font-size: 12px; }
       var tbody = document.getElementById('listBody');
       var empty = document.getElementById('listEmpty');
       var pagination = document.getElementById('listPagination');
+      var summary = document.getElementById('listSummary');
 
       tbody.innerHTML = '';
       empty.style.display = 'none';
       pagination.innerHTML = '';
 
-      if (!this.expenses.length) { empty.style.display = 'block'; return; }
+      if (!this.expenses.length) {
+        summary.textContent = 'Tidak ada data';
+        empty.style.display = 'block'; return;
+      }
+
+      var totalData = ((this.currentPage - 1) * 20) + this.expenses.length;
+      var totalAll = '?';
+      summary.textContent = 'Menampilkan ' + totalData + ' pengajuan' + (this.filters.search ? ' (filter: "' + this.filters.search + '")' : '') + (this.totalPages > 1 ? ' — Halaman ' + this.currentPage + '/' + this.totalPages : '');
 
       var self = this;
       this.expenses.forEach(function(ex) {
         var tr = document.createElement('tr');
-        var statusClass = 'badge-' + (ex.status === 'realisasi' ? 'realisasi' : ex.status);
+        var statusKey = ex.status === 'realisasi' ? 'realisasi' : ex.status;
+        var statusClass = 'badge-' + statusKey;
         var statusLabel = ex.status.charAt(0).toUpperCase() + ex.status.slice(1);
+        tr.className = 'status-' + statusKey;
         tr.innerHTML =
           '<td>' + ex.tanggal + '</td>' +
           '<td><span class="badge" style="background:' + (CAT_COLORS[ex.kategori] || '#94a3b8') + '33;color:' + (CAT_COLORS[ex.kategori] || '#94a3b8') + '">' + ex.kategori + '</span></td>' +
@@ -663,7 +744,7 @@ td.actions .btn { padding: 4px 10px; font-size: 12px; }
       var self = this;
       var reason = prompt('Alasan penolakan (opsional):');
       this.confirm('Tolak Pengajuan', 'Tolak pengajuan ini?', function() {
-        self.fetchGAS('rejectExpense', { id: id, reason: reason || '' }, function(res) {
+        self.fetchGAS('rejectExpense', { id: id, reason: reason || '', pengaju: self.user }, function(res) {
           if (res.success || res.result) { self.showToast('Pengajuan ditolak', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); self.loadPendingCount(); }
           else { self.showToast('Gagal: ' + (res.message || ''), 'error'); }
         });

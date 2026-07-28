@@ -908,7 +908,13 @@
             document.getElementById('lampiranSection').classList.add('empty');
         }
     </script>
-
+    <script>
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'SET_THEME') {
+                document.documentElement.setAttribute('data-theme', e.data.theme);
+            }
+        });
+    </script>
 </body>
 
 </html>

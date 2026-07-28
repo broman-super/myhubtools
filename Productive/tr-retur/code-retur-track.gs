@@ -8,13 +8,21 @@ function doGet(e) {
   return ContentService.createTextOutput(JSON.stringify({ result: "ok" })).setMimeType(ContentService.MimeType.JSON);
 }
 
+var FN_MAP = {
+  submitBatchData: submitBatchData,
+  getTrackingHistory: getTrackingHistory,
+  updateTrackingStatus: updateTrackingStatus,
+  getExpeditionConfig: getExpeditionConfig,
+  lookupExpedition: lookupExpedition
+};
+
 function doPost(e) {
   try {
     var params = JSON.parse(e.postData.contents);
     var fn = params.function;
     var args = params.args || [];
-    if (typeof this[fn] !== "function") throw new Error("Function " + fn + " not found");
-    var result = this[fn].apply(this, args);
+    if (typeof FN_MAP[fn] !== "function") throw new Error("Function " + fn + " not found");
+    var result = FN_MAP[fn].apply(null, args);
     return ContentService.createTextOutput(JSON.stringify({ result: result })).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ error: String(err.message || err) })).setMimeType(ContentService.MimeType.JSON);
@@ -41,6 +49,7 @@ function getColumnMap_() {
   for (var i = 0; i < HEADERS.length; i++) {
     var idx = headers.indexOf(HEADERS[i]);
     if (idx !== -1) map[HEADERS[i]] = idx;
+    else Logger.log('getColumnMap_: header "' + HEADERS[i] + '" not found, using index ' + i);
   }
   return map;
 }
@@ -50,6 +59,7 @@ function parseToStandardDate_(value) {
     return Utilities.formatDate(value, Session.getScriptTimeZone(), "yyyy-MM-dd");
   }
   var str = String(value).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
   var match = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (match) {
     var d = match[1].padStart(2, '0');
@@ -112,7 +122,7 @@ function lookupExpedition(resi) {
         return String(data[i][1] || "");
       }
     }
-  } catch (e) {}
+  } catch (e) { Logger.log('lookupExpedition error: ' + String(e)); }
   return "";
 }
 
@@ -122,8 +132,6 @@ function submitBatchData(stagingData) {
     var sheet = getOrCreateSheet_();
     var tz = Session.getScriptTimeZone();
     var now = new Date();
-    var dateStr = Utilities.formatDate(now, tz, "yyyy-MM-dd");
-    var timeStr = Utilities.formatDate(now, tz, "HH:mm:ss");
 
     // Ensure 5-column headers exist
     var lastCol = sheet.getLastColumn();
@@ -138,14 +146,25 @@ function submitBatchData(stagingData) {
       sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
     }
 
+    var colMap = getColumnMap_();
+    if (!colMap) throw new Error('Column mapping failed');
     var rows = [];
     for (var i = 0; i < stagingData.length; i++) {
       var d = stagingData[i];
-      rows.push([d.resi || "", d.ekspedisi || "", timeStr, dateStr, "Pending"]);
+      var ts = d.timestamp ? new Date(Number(d.timestamp)) : now;
+      var ds = Utilities.formatDate(ts, tz, "yyyy-MM-dd");
+      var ws = Utilities.formatDate(ts, tz, "HH:mm:ss");
+      var rowArr = new Array(HEADERS.length).fill('');
+      rowArr[colMap['Nomor Resi']] = d.resi || '';
+      rowArr[colMap['Ekspedisi']] = d.ekspedisi || '';
+      rowArr[colMap['Waktu Scan']] = ws;
+      rowArr[colMap['Tanggal']] = ds;
+      rowArr[colMap['Status']] = 'Pending';
+      rows.push(rowArr);
     }
     if (rows.length > 0) {
       var startRow = sheet.getLastRow() + 1;
-      sheet.getRange(startRow, 1, rows.length, 5).setValues(rows);
+      sheet.getRange(startRow, 1, rows.length, HEADERS.length).setValues(rows);
     }
     return { success: true };
   } catch (e) {
@@ -191,7 +210,7 @@ function getTrackingHistory(filter) {
       if (!rowDate && (!("Tanggal" in colMap) || !rawDate || String(rawDate).trim() === "")) {
         rowDate = today;
       }
-      if (!rowDate) continue;
+      if (!rowDate) { Logger.log('getTrackingHistory: skip row ' + i + ' unparseable date "' + rawDate + '"'); continue; }
 
       // Apply filter
       if (filter === "today" && rowDate !== today) continue;

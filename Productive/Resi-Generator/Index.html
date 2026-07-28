@@ -556,6 +556,8 @@ function loadProductDatabase() {
     })
     .then(function(data) {
       if (data && data.length) productDatabase = data;
+    }).catch(function() {
+      console.warn('products.json tidak ditemukan, pakai EMBEDDED_PRODUCTS');
     })
     .catch(function() {
       /* silent: sudah pakai embedded fallback */
@@ -981,23 +983,8 @@ function doPreview() {
   }
 }
 
-// ── Generate PDF ──────────────────────────────────────────────────
-function doGenerate() {
-  var d = collectData();
-  if (!validate(d)) return;
-  saveFormState();
-  try {
-    var html = buildResiHTML(d);
-    var w = window.open('', '_blank');
-    if (!w) { showToast('Popup diblokir browser. Izinkan popup untuk tab ini.', 'error'); return; }
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
-    setTimeout(function(){ stampPages(w); w.print(); }, 350);
-  } catch(e) {
-    showToast('Error: ' + e.message, 'error');
-  }
-}
+// ── Generate PDF (sama seperti preview, browser handle print-to-PDF) ──
+function doGenerate() { doPreview(); }
 
 // Tempel 1 footer fixed (diulang otomatis tiap halaman saat print oleh browser).
 // Fixed = keluar dari flow, tidak merusak tata letak produk.
