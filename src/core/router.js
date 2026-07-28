@@ -34,6 +34,7 @@ class ReynaHubRouter {
   }
 
   getToolPath(hash) {
+    var clean = hash.split('?')[0];
     var map = {
       '#productive/planner': 'Productive/Task/taskschedule.html',
       '#productive/analytic': 'Productive/Analytic.html',
@@ -46,7 +47,7 @@ class ReynaHubRouter {
       '#doc/dak': 'Doc/form-dak.html',
       '#external/resi': 'Productive/Resi-Generator/Index.html'
     };
-    return map[hash] || '';
+    return map[clean] || '';
   }
 }
 

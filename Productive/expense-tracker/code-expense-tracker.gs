@@ -3,21 +3,23 @@ function doPost(e) {
   try {
     var params = JSON.parse(e.postData.contents);
     var action = params.action;
+    var d = params.data || {};
     if (action === 'initSpreadsheet') { res.result = initSpreadsheet_(); }
-    else if (action === 'submitExpense') { res.result = submitExpense_(params.data); }
-    else if (action === 'getExpenses') { res.result = getExpenses_(params.data); }
-    else if (action === 'getExpenseById') { res.result = getExpenseById_(params.id); }
-    else if (action === 'approveExpense') { res.result = approveExpense_(params.id, params.approver); }
-    else if (action === 'rejectExpense') { res.result = rejectExpense_(params.id, params.reason); }
-    else if (action === 'markRealisasi') { res.result = markRealisasi_(params.id, params.lunas); }
-    else if (action === 'markReimburse') { res.result = markReimburse_(params.id); }
-    else if (action === 'cancelExpense') { res.result = cancelExpense_(params.id); }
-    else if (action === 'deleteExpense') { res.result = deleteExpense_(params.id); }
-    else if (action === 'getExpenseSummary') { res.result = getExpenseSummary_(params.periode); }
-    else if (action === 'getExpenseCountByStatus') { res.result = getExpenseCountByStatus_(params.periode); }
+    else if (action === 'submitExpense') { res.result = submitExpense_(d); }
+    else if (action === 'getExpenses') { res.result = getExpenses_(d); }
+    else if (action === 'getExpenseById') { res.result = getExpenseById_(d.id); }
+    else if (action === 'approveExpense') { res.result = approveExpense_(d.id, d.approver); }
+    else if (action === 'rejectExpense') { res.result = rejectExpense_(d.id, d.reason, d.pengaju); }
+    else if (action === 'markRealisasi') { res.result = markRealisasi_(d.id, d.lunas); }
+    else if (action === 'markReimburse') { res.result = markReimburse_(d.id); }
+    else if (action === 'cancelExpense') { res.result = cancelExpense_(d.id); }
+    else if (action === 'deleteExpense') { res.result = deleteExpense_(d.id); }
+    else if (action === 'getExpenseSummary') { res.result = getExpenseSummary_(d.periode); }
+    else if (action === 'getExpenseCountByStatus') { res.result = getExpenseCountByStatus_(d.periode); }
     else if (action === 'getExpenseTrend') { res.result = getExpenseTrend_(); }
     else { res.message = 'Unknown action: ' + action; return ContentService.createTextOutput(JSON.stringify(res)).setMimeType(ContentService.MimeType.JSON); }
     res.success = true;
+    if (res.result && res.result.success === false) { res.success = false; res.message = res.result.message || ''; }
   } catch (e) { res.message = String(e.message || e); }
   return ContentService.createTextOutput(JSON.stringify(res)).setMimeType(ContentService.MimeType.JSON);
 }
@@ -109,9 +111,9 @@ function submitExpense_(data) {
 function getExpenses_(filter) {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sheet = ss.getSheetByName('Expenses');
-  if (!sheet) return [];
+  if (!sheet) return { total: 0, page: 1, limit: 20, totalPages: 0, rows: [] };
   var rows = sheet.getDataRange().getValues();
-  if (rows.length < 2) return [];
+  if (rows.length < 2) return { total: 0, page: 1, limit: 20, totalPages: 0, rows: [] };
   var headers = rows[0];
   var idCol = headers.indexOf('id');
   var tanggalCol = headers.indexOf('tanggal');
@@ -137,8 +139,9 @@ function getExpenses_(filter) {
     if (filter.status && filter.status !== 'semua' && row.status !== filter.status) continue;
     if (filter.kategori && filter.kategori !== 'semua' && row.kategori !== filter.kategori) continue;
     if (filter.search && row.deskripsi.toLowerCase().indexOf(filter.search.toLowerCase()) === -1) continue;
-    if (filter.from && row.tanggal < filter.from) continue;
-    if (filter.to && row.tanggal > filter.to) continue;
+    var tgl = String(row.tanggal || '');
+    if (filter.from && tgl < filter.from) continue;
+    if (filter.to && tgl > filter.to) continue;
     result.push(row);
   }
   result.sort(function(a, b) { return b.tanggalUpdate.localeCompare(a.tanggalUpdate); });
@@ -178,20 +181,25 @@ function updateExpenseStatus_(id, newStatus, optFields) {
   var idCol = headers.indexOf('id');
   var statusCol = headers.indexOf('status');
   var tanggalUpdateCol = headers.indexOf('tanggalUpdate');
+  var lastRow = sheet.getLastRow();
   var now = new Date().toISOString();
-  for (var i = 1; i <= sheet.getLastRow(); i++) {
-    if (String(sheet.getRange(i + 1, idCol + 1).getValue()) === String(id)) {
-      var rowIdx = i + 1;
-      sheet.getRange(rowIdx, statusCol + 1).setValue(newStatus);
-      sheet.getRange(rowIdx, tanggalUpdateCol + 1).setValue(now);
+  for (var i = 2; i <= lastRow; i++) {
+    if (String(sheet.getRange(i, idCol + 1).getValue()) === String(id)) {
+      sheet.getRange(i, statusCol + 1).setValue(newStatus);
+      sheet.getRange(i, tanggalUpdateCol + 1).setValue(now);
       if (optFields) {
         for (var col in optFields) {
           var ci = headers.indexOf(col);
-          if (ci >= 0) sheet.getRange(rowIdx, ci + 1).setValue(optFields[col]);
+          if (ci >= 0) sheet.getRange(i, ci + 1).setValue(optFields[col]);
         }
       }
-      var pengaju = sheet.getRange(rowIdx, headers.indexOf('pengaju') + 1).getValue() || '';
-      appendTimeline_(sheet, rowIdx, newStatus, optFields && optFields.approvedBy ? optFields.approvedBy : pengaju);
+      var pengaju = sheet.getRange(i, headers.indexOf('pengaju') + 1).getValue() || '';
+      var changedBy = pengaju;
+      if (optFields) {
+        if (optFields.approvedBy) changedBy = optFields.approvedBy;
+        else if (optFields.rejectedBy) changedBy = optFields.rejectedBy;
+      }
+      appendTimeline_(sheet, i, newStatus, changedBy);
       return { success: true, id: id };
     }
   }
@@ -202,8 +210,8 @@ function approveExpense_(id, approver) {
   return updateExpenseStatus_(id, 'disetujui', { approvedBy: approver || '', tanggalApproved: new Date().toISOString() });
 }
 
-function rejectExpense_(id, reason) {
-  return updateExpenseStatus_(id, 'ditolak');
+function rejectExpense_(id, reason, pengaju) {
+  return updateExpenseStatus_(id, 'ditolak', { rejectedBy: pengaju || '' });
 }
 
 function markRealisasi_(id, lunas) {
@@ -224,11 +232,13 @@ function deleteExpense_(id) {
   if (!sheet) throw new Error('Sheet Expenses tidak ditemukan');
   var headers = sheet.getDataRange().getValues()[0];
   var idCol = headers.indexOf('id');
-  for (var i = 1; i <= sheet.getLastRow(); i++) {
-    if (String(sheet.getRange(i + 1, idCol + 1).getValue()) === String(id)) {
-      var rowStatus = sheet.getRange(i + 1, headers.indexOf('status') + 1).getValue();
+  var statusCol = headers.indexOf('status');
+  var lastRow = sheet.getLastRow();
+  for (var i = 2; i <= lastRow; i++) {
+    if (String(sheet.getRange(i, idCol + 1).getValue()) === String(id)) {
+      var rowStatus = sheet.getRange(i, statusCol + 1).getValue();
       if (rowStatus !== 'draft') return { success: false, message: 'Hanya draft yang bisa dihapus' };
-      sheet.deleteRow(i + 1);
+      sheet.deleteRow(i);
       return { success: true, id: id };
     }
   }
@@ -308,12 +318,12 @@ function getExpenseTrend_() {
 function getExpenseCountByStatus_(periode) {
   var summary = getExpenseSummary_(periode);
   return {
-    draft: summary.totalDraf,
-    pengajuan: summary.pengajuanCount,
-    disetujui: summary.disetujuiCount,
-    ditolak: summary.ditolakCount,
-    realisasi: summary.realisasiCount,
-    selesai: summary.selesaiCount,
-    batal: summary.batalCount
+    draft: summary.draftCount || 0,
+    pengajuan: summary.pengajuanCount || 0,
+    disetujui: summary.disetujuiCount || 0,
+    ditolak: summary.ditolakCount || 0,
+    realisasi: summary.realisasiCount || 0,
+    selesai: summary.selesaiCount || 0,
+    batal: summary.batalCount || 0
   };
 }

@@ -7,6 +7,7 @@
 function doPost(e) {
   var res = { success: false, message: '' };
   try {
+    if (!e.postData || !e.postData.contents) throw new Error('Request body kosong');
     var params = JSON.parse(e.postData.contents);
     var action = params.action;
     if (action === 'getCalendarData') {
@@ -29,8 +30,8 @@ function doPost(e) {
 function getCalendarData_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var tasks = getSheetData_(ss, 'Tasks');
-  var campaigns = tasks.filter(function(r) { return (r.type || '').toLowerCase() === 'campaign'; });
-  var plainTasks = tasks.filter(function(r) { return (r.type || '').toLowerCase() !== 'campaign'; });
+  var campaigns = tasks.filter(function(r) { return (r.tipe || '').toLowerCase() === 'campaign'; });
+  var plainTasks = tasks.filter(function(r) { return (r.tipe || '').toLowerCase() !== 'campaign'; });
   var events = getSheetData_(ss, 'Events');
   var reminders = getSheetData_(ss, 'Reminders');
   return { tasks: plainTasks, campaigns: campaigns, events: events, reminders: reminders };
@@ -71,10 +72,11 @@ function saveCalendarItem_(data) {
     for (var i = 1; i < rows.length; i++) {
       if (String(rows[i][idCol]) === String(data.id)) {
         var rowNum = i + 1;
-        headers.forEach(function(h, j) {
+        var updatedRow = headers.map(function(h, j) {
           var key = h.toLowerCase();
-          if (data[key] !== undefined) sheet.getRange(rowNum, j + 1).setValue(data[key]);
+          return data[key] !== undefined ? data[key] : rows[i][j];
         });
+        sheet.getRange(rowNum, 1, 1, updatedRow.length).setValues([updatedRow]);
         return { id: data.id, updated: true };
       }
     }
@@ -95,9 +97,12 @@ function deleteCalendarItem_(id, type) {
   var sheetName = mapTypeToSheet_(type || 'task');
   var sheet = ss.getSheetByName(sheetName);
   if (!sheet) return false;
+  var headers = sheet.getDataRange().getValues()[0].map(String);
+  var idCol = headers.map(function(h) { return h.toLowerCase(); }).indexOf('id');
+  if (idCol < 0) return false;
   var rows = sheet.getDataRange().getValues();
   for (var i = 1; i < rows.length; i++) {
-    if (String(rows[i][0]) === String(id)) {
+    if (String(rows[i][idCol]) === String(id)) {
       sheet.deleteRow(i + 1);
       return true;
     }
@@ -106,8 +111,10 @@ function deleteCalendarItem_(id, type) {
 }
 
 function mapTypeToSheet_(type) {
+  var key = (type || '').toLowerCase();
+  if (key.endsWith('s')) key = key.slice(0, -1);
   var map = { task: 'Tasks', campaign: 'Tasks', event: 'Events', reminder: 'Reminders' };
-  return map[type] || 'Tasks';
+  return map[key] || 'Tasks';
 }
 
 function createEventsSheet_(ss) {

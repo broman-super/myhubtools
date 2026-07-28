@@ -19,7 +19,7 @@
       --danger: #ff0000;
       --danger-light: rgba(255, 0, 0, 0.08);
       /* Platform colors — centralized, shared across tools */
-      --platform-ig:   var(--platform-ig);
+      --platform-ig:   #a855f7;
       --platform-wa:   #22c55e;
       --platform-tt:   #a1a1a1;
       --platform-sp:   #f97316;
@@ -67,22 +67,42 @@
       box-shadow: 0 0 10px var(--accent);
       animation: indeterminate 1.5s infinite linear;
     }
-
     @keyframes indeterminate {
-      0% {
-        left: -40%;
-        width: 10%;
-      }
-
-      50% {
-        width: 40%;
-      }
-
-      100% {
-        left: 100%;
-        width: 10%;
-      }
+      0% { left: -40%; width: 10%; }
+      50% { width: 40%; }
+      100% { left: 100%; width: 10%; }
     }
+    /* Skeleton Loading */
+    #loading-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--bg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 16px; transition: opacity .3s ease;
+    }
+    .skeleton-grid {
+      width: 100%; max-width: 500px;
+      display: flex; flex-direction: column; gap: 12px; padding: 0 20px;
+    }
+    .skeleton-card {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px 18px; border-radius: 12px;
+      background: color-mix(in srgb, var(--bg) 85%, var(--text) 15%);
+    }
+    .skeleton-box {
+      border-radius: 8px; animation: shimmer 1.4s ease-in-out infinite;
+      background: color-mix(in srgb, var(--bg) 55%, var(--text) 45%);
+    }
+    @keyframes shimmer { 0%,100%{ opacity:0.6; } 50%{ opacity:1; } }
+    .sk-badge { width: 4px; height: 40px; border-radius: 2px; flex-shrink: 0;
+      background: color-mix(in srgb, var(--bg) 55%, var(--text) 45%); }
+    .sk-icon { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      background: color-mix(in srgb, var(--bg) 55%, var(--text) 45%); }
+    .sk-lines { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .sk-line { height: 10px; border-radius: 6px;
+      background: color-mix(in srgb, var(--bg) 55%, var(--text) 45%); }
+    .sk-line.wide { width: 90%; }
+    .sk-line.med { width: 60%; }
+    .sk-line.short { width: 30%; }
 
     /* +N MORE INDICATOR */
     .more-indicator {
@@ -1389,7 +1409,7 @@
     }
 
     .timeline-bar.event {
-      background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255,255,255,0.3) 4px, rgba(255,255,255,0.3) 8px);
+      background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255,255,255,0.3) 4px, rgba(255,255,255,0.3) 8px) !important;
     }
 
     .timeline-bar.reminder {
@@ -1449,7 +1469,6 @@
 
     .tl-grid-line.weekend {
       background: rgba(239, 68, 68, 0.1);
-      z-index: 3;
     }
 
     /* Filter chips */
@@ -1603,8 +1622,7 @@
 <body>
 
   <div id="loading-overlay">
-    <div class="loader-ring"></div>
-    <div class="loader-text">Memuat Workspace...</div>
+    <div class="skeleton-grid" id="skeletonGrid"></div>
   </div>
 
   <div id="tl-tooltip"></div>
@@ -1778,6 +1796,10 @@
             <button class="btn btn-ghost" onclick="changeTimelineMonth(1)" style="padding:6px 12px;">→</button>
             <button class="btn btn-ghost" onclick="goThisTimelineMonth()" style="padding:6px 12px;font-size:12px;">Bulan Ini</button>
             <div style="display:flex;align-items:center;gap:12px;margin-left:auto;">
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;color:#6366f1;">
+                <input type="checkbox" id="toggle-tl-campaigns" onchange="renderTimeline()" style="width:16px;height:16px;" checked>
+                <span>Campaign</span>
+              </label>
               <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;">
                 <input type="checkbox" id="toggle-tl-tasks" onchange="renderTimeline()" style="width:16px;height:16px;">
                 <span>Task</span>
@@ -2074,26 +2096,26 @@
           S.tasks = [].concat(
             (json.result.tasks || []).map(function(t) { return {
               ...t, title: t.title || t.nama || '', enddate: normDate(t.enddate || t.endDate || t.selesai || ''),
-              date: normDate(t.date || t.mulai || ''),
+              date: normDate(t.date || t.mulai || ''), description: String(t.deskripsi || t.description || ''),
               type: 'task',
               color: t.color || t.warna || '#6366f1'
             }; }),
-             (json.result.campaigns || []).map(function(c) { return {
-               ...c, title: c.title || c.nama || '', enddate: normDate(c.enddate || c.endDate || c.selesai || ''),
-               date: normDate(c.date || c.mulai || ''), description: c.deskripsi || c.description || '',
-               type: 'campaign',
-               color: c.color || c.warna || '#6366f1'
+            (json.result.campaigns || []).map(function(c) { return {
+                ...c, title: c.title || c.nama || '', enddate: normDate(c.enddate || c.endDate || c.selesai || ''),
+                date: normDate(c.date || c.mulai || c.tanggal || ''), description: String(c.deskripsi || c.description || ''),
+                type: 'campaign',
+                color: c.color || c.warna || '#6366f1'
              }; })
           );
           S.events = (json.result.events || []).map(function(e) { return {
             id: e.id, title: e.nama || '', date: normDate(e.mulai || ''),
-            enddate: normDate(e.selesai || ''), description: e.deskripsi || '',
+            enddate: normDate(e.selesai || ''), description: String(e.deskripsi || ''),
             penyelenggara: e.penyelenggara || '', color: e.warna || '#14b8a6',
             status: e.status || '', done: e.status === 'Selesai', type: 'event'
           }; });
           S.reminders = (json.result.reminders || []).map(function(r) { return {
             id: r.id, title: r.nama || '', date: normDate(r.mulai || ''),
-            enddate: normDate(r.selesai || ''), description: r.deskripsi || '',
+            enddate: normDate(r.selesai || ''), description: String(r.deskripsi || ''),
             color: r.warna || '#f59e0b', status: r.status || '',
             done: r.status === 'Selesai', type: 'reminder'
           }; });
@@ -2131,6 +2153,25 @@
       } finally {
         if (btn) btn.classList.remove('spinning');
         if (btn2) btn2.disabled = false;
+      }
+    }
+
+    function renderSkeletonGrid(count = 6) {
+      const container = document.getElementById('skeletonGrid');
+      if (!container) return;
+      container.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        const card = document.createElement('div');
+        card.className = 'skeleton-card';
+        card.innerHTML =
+          '<div class="sk-badge"></div>' +
+          '<div class="sk-icon skeleton-box"></div>' +
+          '<div class="sk-lines">' +
+            '<div class="sk-line wide skeleton-box"></div>' +
+            '<div class="sk-line med skeleton-box"></div>' +
+            '<div class="sk-line short skeleton-box"></div>' +
+          '</div>';
+        container.appendChild(card);
       }
     }
 
@@ -2184,6 +2225,7 @@
     }
 
     window.onload = () => {
+      renderSkeletonGrid(6);
       // Safety net: always hide loading after 12s no matter what
       const safetyTimer = setTimeout(hideLoading, 12000);
 
@@ -2365,7 +2407,6 @@
 
     function renderList() {
       const filtered = S.tasks.filter(t => {
-        if (t.type === 'campaign') return false;
         if (S.filter === 'pending' && t.done) return false;
         if (S.filter === 'done' && !t.done) return false;
         if (S.q && !t.title.toLowerCase().includes(S.q) && !(t.description || '').toLowerCase().includes(S.q)) return false;
@@ -2525,7 +2566,7 @@
           const bg = isC ? t.color : hexAlpha(t.color || '#ccc', 0.1);
           const co = isC ? '#fff' : '#000';
           const br = isC ? 'none' : `3px solid ${t.color || '#ccc'}`;
-          return `<div class="week-chip ${cls}" style="background:${bg};color:${co};border-left:${br};${t.done ? 'opacity:0.55;text-decoration:line-through;' : ''}" draggable="true" ondragstart="dragStart(event,'${t.id}')" onclick="event.stopPropagation();selectTask('${t.id}')">${showText ? esc(t.title) : '&nbsp;'}${!isC ? '<span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\')" style="margin-left:auto;font-size:10px;opacity:0.6;cursor:pointer;flex-shrink:0;padding:0 2px;">' + (t.done ? '↩' : '✓') + '</span>' : ''}</div>`;
+          return `<div class="week-chip ${cls}" style="background:${bg};color:${co};border-left:${br};${t.done ? 'opacity:0.55;text-decoration:line-through;' : ''}" draggable="true" ondragstart="dragStart(event,'${t.id}')" onclick="event.stopPropagation();selectTask('${t.id}')">${showText ? esc(t.title) : '&nbsp;'}<span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\')" style="margin-left:auto;font-size:10px;opacity:0.6;cursor:pointer;flex-shrink:0;padding:0 2px;">${t.done ? '↩' : '✓'}</span></div>`;
         }).join('');
 
         const holi = holidaysCache[ds];
@@ -2559,9 +2600,9 @@
         if (!S.tasks) S.tasks = [];
         if (!S.events) S.events = [];
         if (!S.reminders) S.reminders = [];
-        S.tasks.forEach(function(t) { t.title = t.title || t.nama || ''; t.description = t.description || t.deskripsi || ''; t.color = t.color || t.warna || '#6366f1'; t.date = t.date || t.mulai || ''; t.enddate = t.enddate || t.endDate || t.selesai || t.date || ''; });
-        S.events.forEach(function(e) { e.title = e.title || e.nama || ''; e.description = e.description || e.deskripsi || ''; });
-        S.reminders.forEach(function(r) { r.title = r.title || r.nama || ''; });
+        S.tasks.forEach(function(t) { t.title = t.title || t.nama || ''; t.description = String(t.description || t.deskripsi || ''); t.color = t.color || t.warna || '#6366f1'; t.date = t.date || t.mulai || t.tanggal || ''; t.enddate = t.enddate || t.endDate || t.selesai || t.date || ''; });
+        S.events.forEach(function(e) { e.title = e.title || e.nama || ''; e.description = String(e.description || e.deskripsi || ''); e.date = e.date || e.mulai || ''; e.enddate = e.enddate || e.selesai || ''; });
+        S.reminders.forEach(function(r) { r.title = r.title || r.nama || ''; r.description = String(r.description || r.deskripsi || ''); r.date = r.date || r.mulai || ''; r.enddate = r.enddate || r.selesai || ''; });
 
        document.getElementById('cal-month-label').textContent = MONTHS_ID[m] + ' ' + y;
 
@@ -2637,7 +2678,7 @@
            else if (isE) { bg = hexAlpha(t.color || '#14b8a6', 0.08); border = '2px dashed ' + (t.color || '#14b8a6'); txtColor = '#0f172a'; }
            else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.color || '#6366f1'); txtColor = '#0f172a'; }
            var doneStyle = (t.done || t.status === 'Selesai') ? 'opacity:0.55;text-decoration:line-through;' : '';
-           return '<div class="cal-chip ' + cls + (isR ? ' cal-chip-reminder' : '') + '" style="background:' + bg + ';color:' + txtColor + ';border-left:' + border + ';' + doneStyle + '" onclick="event.stopPropagation();selectTask(\'' + (t.id || '') + '\')"><span>' + (text ? esc(t.title || t.nama || 'Tanpa Judul') : '&nbsp;') + '</span>' + (isC ? '' : '<span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + (t.id || '') + '\')" style="margin-left:auto;font-size:10px;opacity:0.6;cursor:pointer;flex-shrink:0;padding:0 2px;">' + (t.done ? '↩' : '✓') + '</span>') + '</div>';
+           return '<div class="cal-chip ' + cls + (isR ? ' cal-chip-reminder' : '') + '" style="background:' + bg + ';color:' + txtColor + ';border-left:' + border + ';' + doneStyle + '" onclick="event.stopPropagation();selectTask(\'' + (t.id || '') + '\')"><span>' + (text ? esc(t.title || t.nama || 'Tanpa Judul') : '&nbsp;') + '</span><span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + (t.id || '') + '\')" style="margin-left:auto;font-size:10px;opacity:0.6;cursor:pointer;flex-shrink:0;padding:0 2px;">' + (t.done ? '↩' : '✓') + '</span></div>';
          }).join('');
 
         // Dots for Mobile View
@@ -2678,12 +2719,14 @@
       const monthStart = S.timelineYear + '-' + pad(S.timelineMonth + 1) + '-01';
       const daysIn = new Date(S.timelineYear, S.timelineMonth + 1, 0).getDate();
       const monthEnd = S.timelineYear + '-' + pad(S.timelineMonth + 1) + '-' + pad(daysIn);
+      var showC = document.getElementById('toggle-tl-campaigns') ? document.getElementById('toggle-tl-campaigns').checked : true;
       var showT = document.getElementById('toggle-tl-tasks') ? document.getElementById('toggle-tl-tasks').checked : false;
       var showE = document.getElementById('toggle-tl-events') ? document.getElementById('toggle-tl-events').checked : false;
       var showR = document.getElementById('toggle-tl-reminders') ? document.getElementById('toggle-tl-reminders').checked : false;
       var items = [];
       items = items.concat(S.tasks.filter(function(t) {
         if (!t.date) return false;
+        if (t.type === 'campaign' && !showC) return false;
         if (t.type === 'task' && !showT) return false;
         var s = t.date, e = t.enddate || t.date;
         return s <= monthEnd && e >= monthStart;
@@ -2809,7 +2852,7 @@
         var bg, color, border;
         if (isCampaign) { bg = item.color; color = '#1e293b'; border = 'none'; }
         else if (isEvent) { bg = 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.15)'; color = '#1e293b'; border = '2px dashed ' + item.color; }
-        else if (isReminder) { bg = '#14b8a6'; color = '#1e293b'; border = '3px solid #0d9488'; }
+        else if (isReminder) { bg = '#f59e0b'; color = '#1e293b'; border = '3px solid #d97706'; }
         else { bg = 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.12)'; color = '#1e293b'; border = '3px solid ' + item.color; }
         var cls = 'timeline-bar';
         if (s === e) cls += ' single'; else if (s === parseInt(item.date.split('-')[2], 10) || item.date < monthStart) cls += ' start'; else if (e === daysIn || e === parseInt(endD.split('-')[2], 10)) cls += ' end'; else cls += ' mid';
@@ -2820,9 +2863,9 @@
         var descStr = item.description ? '\\n' + esc(item.description.substring(0, 100)) : '';
         var tooltip = esc(item.title) + '\\n' + formatShortDate(item.date) + (item.enddate && item.enddate !== item.date ? ' → ' + formatShortDate(item.enddate) : '') + tagStr + descStr;
 
-        var barHtml = '<div class="' + cls + '" style="left:' + leftPx + 'px;width:' + widthPx + 'px;background:' + bg + ';color:' + color + ';border-left:' + border + ';" onclick="selectTask(\'' + item.id + '\')" data-tooltip="' + tooltip + '">' + esc(item.title) + (isCampaign ? '' : '<span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + item.id + '\')">' + (item.done ? '↩' : '✓') + '</span>') + '</div>';
+        var barHtml = '<div class="' + cls + '" style="left:' + leftPx + 'px;width:' + widthPx + 'px;background:' + bg + ';color:' + color + ';border-left:' + border + ';" onclick="selectTask(\'' + item.id + '\')" data-tooltip="' + tooltip + '">' + esc(item.title) + '<span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + item.id + '\')">' + (item.done ? '↩' : '✓') + '</span></div>';
 
-        var labelIcon = isCampaign ? '📢' : (isEvent ? '📅' : (item.done ? '✅' : '📝'));
+        var labelIcon = isCampaign ? '📢' : (isEvent ? '📅' : (isReminder ? '🔔' : (item.done ? '✅' : '📝')));
 
         rowsHtml += '<div class="timeline-row">';
         rowsHtml += '<div class="timeline-row-label" onclick="selectTask(\'' + item.id + '\')" data-tooltip="' + tooltip + '">' + labelIcon + ' ' + esc(item.title) + '</div>';
@@ -2852,10 +2895,9 @@
     }
 
     function handleTimelineWheel(e) {
+      if (!(e.ctrlKey || e.metaKey)) return;
       const el = document.getElementById('timeline-scroll');
       if (!el || !el.contains(e.target)) return;
-      // Only zoom when Ctrl/Meta is held, OR if we detect pinch-like trackpad
-      // We'll use deltaY to adjust visible day count
       const labelW = S.timelineLabelWidth || 180;
       const avail = el.clientWidth - labelW;
       if (avail <= 0) return;
@@ -3295,7 +3337,9 @@
     }
 
     function duplicateTask(id) {
-      const t = S.tasks.find(x => x.id === id);
+      let t = S.tasks.find(x => x.id === id);
+      if (!t) t = S.events.find(x => x.id === id);
+      if (!t) t = S.reminders.find(x => x.id === id);
       if (!t) return;
       S.selectedId = null;
       document.getElementById('modal-title-el').textContent = 'Duplikat Agenda';
@@ -3306,6 +3350,7 @@
       document.getElementById('f-date').value = t.date || '';
       document.getElementById('f-enddate').value = t.enddate || '';
       document.getElementById('f-priority').value = t.priority || 'medium';
+      document.getElementById('f-org').value = t.penyelenggara || '';
       const isC = t.type === 'campaign';
       const channelEl = document.getElementById('f-channel');
       const tagEl = document.getElementById('f-tag');
@@ -3352,6 +3397,7 @@
       } else {
         if (wrapTag) wrapTag.style.display = 'none';
       }
+      if (isE || isR) S.tempColor = '';
 
       document.getElementById('wrap-org').style.display = isE ? '' : 'none';
       document.getElementById('wrap-color').style.display = (isC || isE || isR) ? 'none' : 'block';
@@ -3403,13 +3449,13 @@
        if (!S.tasks) S.tasks = [];
        if (!S.events) S.events = [];
        if (!S.reminders) S.reminders = [];
-       S.tasks.forEach(function(t) { t.title = t.title || t.nama || ''; t.description = t.description || t.deskripsi || ''; t.color = t.color || t.warna || '#6366f1'; t.date = t.date || t.mulai || ''; t.enddate = t.enddate || t.endDate || t.selesai || t.date || ''; });
-       S.events.forEach(function(e) { e.title = e.title || e.nama || ''; e.description = e.description || e.deskripsi || ''; });
-       S.reminders.forEach(function(r) { r.title = r.title || r.nama || ''; });
+        S.tasks.forEach(function(t) { t.title = t.title || t.nama || ''; t.description = String(t.description || t.deskripsi || ''); t.color = t.color || t.warna || '#6366f1'; t.date = t.date || t.mulai || t.tanggal || ''; t.enddate = t.enddate || t.endDate || t.selesai || t.date || ''; });
+        S.events.forEach(function(e) { e.title = e.title || e.nama || ''; e.description = String(e.description || e.deskripsi || ''); e.date = e.date || e.mulai || ''; e.enddate = e.enddate || e.selesai || ''; });
+        S.reminders.forEach(function(r) { r.title = r.title || r.nama || ''; r.description = String(r.description || r.deskripsi || ''); r.date = r.date || r.mulai || ''; r.enddate = r.enddate || r.selesai || ''; });
 
-      var items = S.tasks.filter(function(t) {
-        if (!t.date) return false;
-        var e = t.enddate || t.date;
+       var items = S.tasks.filter(function(t) {
+         if (!t.date) return false;
+         var e = t.enddate || t.date;
         return t.date <= ds && e >= ds;
       }).concat(S.events.filter(function(ev) {
         if (!ev.date) return false;
@@ -3482,10 +3528,10 @@
          '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">' +
          '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + badgeBg + ';color:' + badgeColor + '">' + typeIcon + ' ' + typeLabel + '</span>' +
          (t.tag ? '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + hexAlpha(t.color || '#6366f1', 0.1) + ';color:' + (t.color || '#6366f1') + ';border:1px solid ' + (t.color || '#6366f1') + '">' + esc(t.tag) + '</span>' : '') +
-         (!isC ? '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + (t.done ? '#ecfdf5' : '#f1f5f9') + ';color:' + (t.done ? '#10b981' : '#94a3b8') + '">' + (t.done ? '✓ Selesai' : '⏳ Pending') + '</span>' : '') +
-         '</div></div></div>' +
-         '<div style="display:flex;gap:4px;flex-shrink:0;">' +
-         (!isC ? '<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="toggleDone(\'' + (t.id || '') + '\')">' + (t.done ? '↩ Buka' : '✓ Selesai') + '</button>' : '') +
+          '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + (t.done ? '#ecfdf5' : '#f1f5f9') + ';color:' + (t.done ? '#10b981' : '#94a3b8') + '">' + (t.done ? '✓ Selesai' : '⏳ Pending') + '</span>' +
+          '</div></div></div>' +
+          '<div style="display:flex;gap:4px;flex-shrink:0;">' +
+          '<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="toggleDone(\'' + (t.id || '') + '\')">' + (t.done ? '↩ Buka' : '✓ Selesai') + '</button>' +
          '<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="' + editFn + '">Edit</button>' +
          '<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="duplicateTask(\'' + (t.id || '') + '\')">Duplikat</button>' +
          '</div></div>' + orgHtml +
@@ -3499,6 +3545,11 @@
       var type = document.getElementById('f-type').value;
       var editId = document.getElementById('edit-id').value;
 
+      var saveBtn = document.querySelector('#task-modal .btn-primary');
+      var origText = saveBtn.textContent;
+      saveBtn.textContent = 'Menyimpan...';
+      saveBtn.disabled = true;
+
       if (type === 'event') {
         var ed = {
           id: editId || undefined,
@@ -3509,19 +3560,23 @@
           penyelenggara: document.getElementById('f-org').value.trim(),
           warna: S.tempColor || '#14b8a6',
           type: 'event',
+          tipe: 'event',
           status: ''
         };
-        if (!ed.nama || !ed.mulai) { toast('Isi nama & tanggal!', true); S.saving = false; return; }
+        if (!ed.nama || !ed.mulai) { toast('Isi nama & tanggal!', true); S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return; }
         try {
           await api('saveCalendarItem', ed);
-          // Handle repeat
-          if (document.getElementById('f-repeat').checked && !editId) repeatCalendarItem_(ed);
-          closeModal();
+        } catch (e) { toast('Gagal simpan event', true); S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return; }
+        try {
+          if (document.getElementById('f-repeat').checked && !editId) await repeatCalendarItem_(ed);
+        } catch (e) { /* repeat gagal bukan bencana */ }
+        closeModal();
+        try {
           await api('getCalendarData');
           renderAll();
           toast('✓ Event tersimpan');
-        } catch (e) { toast('Gagal simpan event', true); }
-        S.saving = false;
+        } catch (e) { toast('✓ Tersimpan, gagal refresh', true); }
+        S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText;
         return;
       }
 
@@ -3534,19 +3589,23 @@
           deskripsi: document.getElementById('f-desc').value.trim(),
           warna: S.tempColor || '#f59e0b',
           type: 'reminder',
+          tipe: 'reminder',
           status: ''
         };
-        if (!rd.nama || !rd.mulai) { toast('Isi nama & tanggal!', true); S.saving = false; return; }
+        if (!rd.nama || !rd.mulai) { toast('Isi nama & tanggal!', true); S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return; }
         try {
           await api('saveCalendarItem', rd);
-          // Handle repeat
-          if (document.getElementById('f-repeat').checked && !editId) repeatCalendarItem_(rd);
-          closeModal();
+        } catch (e) { toast('Gagal simpan reminder', true); S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return; }
+        try {
+          if (document.getElementById('f-repeat').checked && !editId) await repeatCalendarItem_(rd);
+        } catch (e) { /* repeat gagal bukan bencana */ }
+        closeModal();
+        try {
           await api('getCalendarData');
           renderAll();
           toast('✓ Reminder tersimpan');
-        } catch (e) { toast('Gagal simpan reminder', true); }
-        S.saving = false;
+        } catch (e) { toast('✓ Tersimpan, gagal refresh', true); }
+        S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText;
         return;
       }
 
@@ -3581,15 +3640,11 @@
         warna: isC && chData ? chData.color : (S.tempColor || COLORS[0]),
         tipe: type
       };
-      if (!task.title || !task.date) { S.saving = false; return toast('Isi judul & tanggal!', true); }
+      if (!task.title || !task.date) { S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return toast('Isi judul & tanggal!', true); }
 
       const exIdx = S.tasks.findIndex(x => x.id === task.id);
+      var oldBackup = exIdx > -1 ? S.tasks[exIdx] : null;
       if (exIdx > -1) S.tasks[exIdx] = task; else S.tasks.unshift(task);
-
-      const saveBtn = document.querySelector('#task-modal .btn-primary');
-      const origText = saveBtn.textContent;
-      saveBtn.textContent = 'Menyimpan...';
-      saveBtn.disabled = true;
 
       closeModal(); renderAll();
 
@@ -3627,12 +3682,17 @@
         toast('✓ Berhasil disimpan');
         await refreshData(true);
       } catch (err) {
+        // Rollback optimistic update
+        if (oldBackup) { var ri = S.tasks.findIndex(x => x.id === task.id); if (ri > -1) S.tasks[ri] = oldBackup; }
+        else { var ri2 = S.tasks.indexOf(task); if (ri2 > -1) S.tasks.splice(ri2, 1); }
+        renderAll();
         toast('Gagal menyimpan!', true);
       } finally {
         saveBtn.textContent = origText;
         saveBtn.disabled = false;
         S.saving = false;
       }
+      return;
     }
 
     async function repeatCalendarItem_(tmpl) {
@@ -3701,11 +3761,11 @@
      function printMonthView() {
        const y = S.calYear, m = S.calMonth;
        const title = MONTHS_ID[m] + ' ' + y;
-       S.tasks.forEach(function(t) { t.title = t.title || t.nama || ''; t.description = t.description || t.deskripsi || ''; t.color = t.color || t.warna || '#6366f1'; t.date = t.date || t.mulai || ''; t.enddate = t.enddate || t.endDate || t.selesai || t.date || ''; });
-       S.events.forEach(function(e) { e.title = e.title || e.nama || ''; e.description = e.description || e.deskripsi || ''; });
-       S.reminders.forEach(function(r) { r.title = r.title || r.nama || ''; });
+        S.tasks.forEach(function(t) { t.title = t.title || t.nama || ''; t.description = String(t.description || t.deskripsi || ''); t.color = t.color || t.warna || '#6366f1'; t.date = t.date || t.mulai || t.tanggal || ''; t.enddate = t.enddate || t.endDate || t.selesai || t.date || ''; });
+        S.events.forEach(function(e) { e.title = e.title || e.nama || ''; e.description = String(e.description || e.deskripsi || ''); e.date = e.date || e.mulai || ''; e.enddate = e.enddate || e.selesai || ''; });
+        S.reminders.forEach(function(r) { r.title = r.title || r.nama || ''; r.description = String(r.description || r.deskripsi || ''); r.date = r.date || r.mulai || ''; r.enddate = r.enddate || r.selesai || ''; });
 
-       const first = (new Date(y, m, 1).getDay() || 7) - 1;
+        const first = (new Date(y, m, 1).getDay() || 7) - 1;
       const daysIn = new Date(y, m + 1, 0).getDate();
       const cells = [];
       const prevDays = new Date(y, m, 0).getDate();

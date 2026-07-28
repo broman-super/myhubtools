@@ -106,5 +106,10 @@
     <script src="src/core/iframe-communicator.js"></script>
     <script src="src/components/tool-card.js"></script>
     <script src="src/app.js"></script>
+    <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('src/sw.js');
+    }
+    </script>
 </body>
 </html>

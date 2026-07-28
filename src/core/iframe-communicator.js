@@ -41,7 +41,7 @@ class IframeCommunicator {
   }
 
   sendToParent(type, data) {
-    window.parent.postMessage({ type: type, data: data, source: 'reynahub-shell' }, window.location.origin);
+    window.parent.postMessage({ type: type, data: data, source: 'reynahub-child' }, window.location.origin);
   }
 }
 
