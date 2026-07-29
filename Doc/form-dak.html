@@ -6,6 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formulir Dana Amanah PT EKT</title>
     <style>
+        :root {
+          --dak-bg: #ffffff;
+          --dak-text: #0f172a;
+          --dak-border: #e2e8f0;
+          --dak-card: #f8fafc;
+          --dak-accent: #1e3a8a;
+        }
+        [data-theme="dark"] {
+          --dak-bg: #090d16;
+          --dak-text: #f1f5f9;
+          --dak-border: rgba(255,255,255,0.1);
+          --dak-card: #121826;
+          --dak-accent: #60a5fa;
+        }
         /* Setup Kertas A4 & Layout Dokumen */
         @page {
             size: A4;
@@ -16,17 +30,17 @@
             font-family: 'Plus Jakarta Sans';
             font-size: 11pt;
             line-height: 1.5;
-            background: #e2e8f0;
+            background: var(--dak-border);
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
             margin: 0;
-            color: #000;
+            color: var(--dak-text);
         }
 
         .document-page {
-            background: white;
+            background: var(--dak-bg);
             width: 21cm;
             min-height: 29.7cm;
             padding: 2cm;
@@ -74,8 +88,8 @@
 
         .action-btn {
             padding: 8px 16px;
-            background: #1e3a8a;
-            color: white;
+            background: var(--dak-accent);
+            color: var(--dak-bg);
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -86,7 +100,7 @@
         }
 
         .action-btn:hover {
-            background: #1e40af;
+            background: color-mix(in srgb, var(--dak-accent) 80%, #000);
         }
 
         /* Format Tabel Dokumen */
@@ -97,7 +111,7 @@
         }
 
         td {
-            border: 1px solid black;
+            border: 1px solid var(--dak-text);
             padding: 4px 8px;
             vertical-align: middle;
         }
@@ -134,8 +148,8 @@
             input[type="number"]:not(:disabled),
             input[type="date"]:not(:disabled),
             textarea:not(:disabled) {
-                background: #f0f4f8 !important;
-                border-bottom: 1px dashed #94a3b8 !important;
+                background: var(--dak-card) !important;
+                border-bottom: 1px dashed var(--dak-border) !important;
                 padding: 4px 6px;
                 border-radius: 4px;
                 box-sizing: border-box;
@@ -146,15 +160,15 @@
             input[type="number"]:not(:disabled):hover,
             input[type="date"]:not(:disabled):hover,
             textarea:not(:disabled):hover {
-                background: #e2e8f0 !important;
+                background: var(--dak-border) !important;
             }
 
             input[type="text"]:not(:disabled):not(#ttdNama):focus,
             input[type="number"]:not(:disabled):focus,
             input[type="date"]:not(:disabled):focus,
             textarea:not(:disabled):focus {
-                background: #e2e8f0 !important;
-                border-bottom: 1px solid #1e3a8a !important;
+                background: var(--dak-border) !important;
+                border-bottom: 1px solid var(--dak-accent) !important;
                 outline: none;
             }
         }
@@ -193,14 +207,14 @@
             appearance: none;
             width: 14px;
             height: 14px;
-            border: 1px solid #000;
+            border: 1px solid var(--dak-text);
             border-radius: 2px;
             outline: none;
             display: inline-block;
             vertical-align: middle;
             position: relative;
             margin-right: 6px;
-            background: #fff;
+            background: var(--dak-bg);
             cursor: pointer;
         }
 
@@ -211,37 +225,37 @@
             top: 1px;
             width: 4px;
             height: 7px;
-            border: solid #000;
+            border: solid var(--dak-text);
             border-width: 0 2px 2px 0;
             transform: rotate(45deg);
         }
 
         input[type="radio"]:disabled {
-            background: #f1f5f9;
-            border-color: #94a3b8;
+            background: var(--dak-card);
+            border-color: var(--dak-border);
             cursor: not-allowed;
         }
 
         input[type="radio"]:disabled:checked::after {
-            border-color: #94a3b8;
+            border-color: var(--dak-border);
         }
 
         /* Disabled input & textarea */
         input:disabled,
         textarea:disabled {
-            color: #64748b;
+            color: var(--dak-border);
             background: transparent;
             cursor: not-allowed;
         }
 
         /* Lampiran Box Styling */
         .lampiran-box {
-            border: 2px dashed #cbd5e1;
+            border: 2px dashed var(--dak-border);
             border-radius: 6px;
             padding: 15px;
             text-align: center;
             cursor: pointer;
-            background: #f8fafc;
+            background: var(--dak-card);
             margin-top: 10px;
             min-height: 150px;
             display: flex;
@@ -252,12 +266,12 @@
         }
 
         .lampiran-box:hover {
-            border-color: #94a3b8;
-            background: #f1f5f9;
+            border-color: var(--dak-text);
+            background: var(--dak-border);
         }
 
         .lampiran-placeholder {
-            color: #64748b;
+            color: var(--dak-text);
             font-size: 10.5pt;
         }
 
@@ -326,7 +340,7 @@
             }
 
             .no-border-table input[type="text"] {
-                border-bottom: 1px solid #000 !important;
+                border-bottom: 1px solid var(--dak-text) !important;
             }
 
             .no-border-table #ttdNama {
@@ -390,7 +404,7 @@
         @media screen and (max-width: 840px) {
             body {
                 padding: 12px;
-                background: #f1f5f9;
+                background: var(--dak-card);
             }
             .document-page {
                 width: 100% !important;
@@ -407,6 +421,7 @@
         }
 
         @media screen and (max-width: 600px) {
+            body { background: var(--dak-card); }
             .document-page {
                 padding: 24px 16px !important;
             }
@@ -423,9 +438,9 @@
             
             table:not(.no-border-table) tr {
                 margin-bottom: 16px;
-                border: 1px solid #cbd5e1;
+                border: 1px solid var(--dak-border);
                 border-radius: 8px;
-                background: #f8fafc;
+                background: var(--dak-card);
                 overflow: hidden;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
             }
@@ -438,11 +453,11 @@
             /* Judul Baris / Label Input */
             table:not(.no-border-table) td:first-child {
                 font-weight: bold;
-                color: #1e3a8a;
-                background: #f1f5f9;
+                color: var(--dak-accent);
+                background: var(--dak-card);
                 padding-top: 10px !important;
                 padding-bottom: 6px !important;
-                border-bottom: 1px solid #e2e8f0 !important;
+                border-bottom: 1px solid var(--dak-border) !important;
             }
             
             /* Area Input */
@@ -499,7 +514,8 @@
 
 <body>
 
-    <div class="print-actions">
+    <div class="print-actions" style="gap:8px;display:flex;">
+        <button class="action-btn" onclick="toggleTheme()" style="background:transparent;border:2px solid var(--dak-accent);color:var(--dak-accent);box-shadow:none;">🌓</button>
         <button class="action-btn" onclick="validateAndPrint()">Cetak / Save as PDF</button>
     </div>
 
@@ -568,7 +584,7 @@
                     <td>
                         <div style="display:flex;"><input type="number" id="tenorQardh" min="1" max="3"
                                 style="width:40px; text-align:center;" oninput="calcQardh()"> Bulan &nbsp;<span
-                                style="font-size:9pt; color:#64748b; align-self:center;">(Maks 3 Bulan)</span></div>
+                                style="font-size:9pt; color:var(--dak-text); opacity:0.6; align-self:center;">(Maks 3 Bulan)</span></div>
                     </td>
                 </tr>
                 <tr>
@@ -623,7 +639,7 @@
                     <td>
                         <div style="display:flex;"><input type="number" id="tenorBarang" min="1" max="6"
                                 style="width:40px; text-align:center;" oninput="calcMurabahah()"> Bulan &nbsp;<span
-                                style="font-size:9pt; color:#64748b; align-self:center;">(Maks 6 Bulan)</span></div>
+                                style="font-size:9pt; color:var(--dak-text); opacity:0.6; align-self:center;">(Maks 6 Bulan)</span></div>
                     </td>
                 </tr>
                 <tr>
@@ -669,7 +685,7 @@
             </tr>
             <tr>
                 <td>Catatan</td>
-                <td><textarea rows="2" style="width:100%; border-bottom:1px dotted #000;"></textarea></td>
+                <td><textarea rows="2" style="width:100%; border-bottom:1px dotted var(--dak-text);"></textarea></td>
             </tr>
         </table>
 
@@ -682,19 +698,19 @@
                 <td width="33%" style="vertical-align: top;">
                     <div>Pemohon,</div>
                     <div style="height: 60px;"></div>
-                    <div>( <input type="text" id="ttdNama" style="width:80%; text-align:center; border-bottom:1px solid #000; text-transform: uppercase;" placeholder="......................"> )</div>
+                    <div>( <input type="text" id="ttdNama" style="width:80%; text-align:center; border-bottom:1px solid var(--dak-text); text-transform: uppercase;" placeholder="......................"> )</div>
                     <div style="font-size: 9pt;">&nbsp;</div>
                 </td>
                 <td width="33%" style="vertical-align: top;">
                     <div>Mengetahui,</div>
                     <div style="height: 60px;"></div>
-                    <div>( <input type="text" style="width:80%; text-align:center; border-bottom:1px solid #000; text-transform: uppercase;" placeholder="......................" value="R.M TAQWA"> )</div>
+                    <div>( <input type="text" style="width:80%; text-align:center; border-bottom:1px solid var(--dak-text); text-transform: uppercase;" placeholder="......................" value="R.M TAQWA"> )</div>
                     <div style="font-size: 9pt;">HR - GA</div>
                 </td>
                 <td width="33%" style="vertical-align: top;">
                     <div>Menyetujui,</div>
                     <div style="height: 60px;"></div>
-                    <div>( <input type="text" style="width:80%; text-align:center; border-bottom:1px solid #000; text-transform: uppercase;" placeholder="......................" value="SALSA MEIDA H.P"> )</div>
+                    <div>( <input type="text" style="width:80%; text-align:center; border-bottom:1px solid var(--dak-text); text-transform: uppercase;" placeholder="......................" value="SALSA MEIDA H.P"> )</div>
                     <div style="font-size: 9pt;">Accounting</div>
                 </td>
             </tr>
@@ -909,11 +925,26 @@
         }
     </script>
     <script>
-        window.addEventListener('message', function(e) {
-            if (e.data && e.data.type === 'SET_THEME') {
-                document.documentElement.setAttribute('data-theme', e.data.theme);
+        function toggleTheme() {
+            var html = document.documentElement;
+            var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('reynahub-theme', next);
+        }
+        (function() {
+            var saved = localStorage.getItem('reynahub-theme');
+            if (saved === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
             }
-        });
+            window.addEventListener('message', function(e) {
+                var msg = e.data || {};
+                var theme = msg.theme || (msg.data && msg.data.theme);
+                if (theme === 'dark' || theme === 'light') {
+                    document.documentElement.setAttribute('data-theme', theme);
+                    localStorage.setItem('reynahub-theme', theme);
+                }
+            });
+        })();
     </script>
 </body>
 

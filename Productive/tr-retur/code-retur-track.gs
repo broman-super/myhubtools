@@ -2,7 +2,7 @@
 // Sheet: "Tracking" — Kolom: Nomor Resi | Ekspedisi | Waktu Scan | Tanggal | Status
 
 var SHEET_NAME = "Tracking";
-var HEADERS = ["Nomor Resi", "Ekspedisi", "Waktu Scan", "Tanggal", "Status"];
+var HEADERS = ["Nomor Resi", "Ekspedisi", "Waktu Scan", "Tanggal", "Operator", "Status"];
 
 function doGet(e) {
   return ContentService.createTextOutput(JSON.stringify({ result: "ok" })).setMimeType(ContentService.MimeType.JSON);
@@ -36,6 +36,10 @@ function getOrCreateSheet_() {
     sheet = ss.insertSheet(SHEET_NAME);
     sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
     sheet.setFrozenRows(1);
+  }
+  var existingHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  if (existingHeaders.join("").indexOf("Nomor Resi") === -1) {
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
   }
   return sheet;
 }
@@ -154,11 +158,13 @@ function submitBatchData(stagingData) {
       var ts = d.timestamp ? new Date(Number(d.timestamp)) : now;
       var ds = Utilities.formatDate(ts, tz, "yyyy-MM-dd");
       var ws = Utilities.formatDate(ts, tz, "HH:mm:ss");
+      var operator = d.operator || '';
       var rowArr = new Array(HEADERS.length).fill('');
       rowArr[colMap['Nomor Resi']] = d.resi || '';
       rowArr[colMap['Ekspedisi']] = d.ekspedisi || '';
       rowArr[colMap['Waktu Scan']] = ws;
       rowArr[colMap['Tanggal']] = ds;
+      rowArr[colMap['Operator']] = operator;
       rowArr[colMap['Status']] = 'Pending';
       rows.push(rowArr);
     }
@@ -184,7 +190,8 @@ function getTrackingHistory(filter) {
     var idxExp  = colMap && colMap["Ekspedisi"]   >= 0 ? colMap["Ekspedisi"]   : 1;
     var idxWkt  = colMap && colMap["Waktu Scan"]  >= 0 ? colMap["Waktu Scan"]  : 2;
     var idxTgl  = colMap && colMap["Tanggal"]     >= 0 ? colMap["Tanggal"]     : 3;
-    var idxSts  = colMap && colMap["Status"]      >= 0 ? colMap["Status"]      : 4;
+    var idxOp   = colMap && colMap["Operator"]    >= 0 ? colMap["Operator"]    : 4;
+    var idxSts  = colMap && colMap["Status"]      >= 0 ? colMap["Status"]      : 5;
 
     var tz = Session.getScriptTimeZone();
     var today = Utilities.formatDate(new Date(), tz, "yyyy-MM-dd");
@@ -203,6 +210,7 @@ function getTrackingHistory(filter) {
       var ekspedisi = String(row[idxExp] || "").trim();
       var waktu = String(row[idxWkt] || "").trim();
       var rawDate = row[idxTgl];
+      var operator = row[idxOp] || "";
       var status = idxSts < row.length ? String(row[idxSts] || "Pending") : "Pending";
 
       var rowDate = parseToStandardDate_(rawDate);
@@ -230,6 +238,7 @@ function getTrackingHistory(filter) {
         ekspedisi: ekspedisi,
         tanggal: rowDate,
         waktu: waktu,
+        operator: operator,
         status: status
       });
     }

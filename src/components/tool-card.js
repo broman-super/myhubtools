@@ -80,6 +80,11 @@ var ToolCard = {
     card.className = 'bento-card';
     card.setAttribute('data-search', config.search);
     card.setAttribute('data-hash', config.hash);
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('role', 'button');
+    card.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+    });
     card.innerHTML =
       '<div class="card-top">' +
         '<h3>' + config.title + '</h3>' +
