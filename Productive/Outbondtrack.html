@@ -817,8 +817,7 @@
     }
 
     function hapusResi(kurir, resi) {
-      // Gua pake default confirm aja di sini biar lu bisa hapus resi cepet
-      if (confirm(`Yakin ingin menghapus resi ${resi}?`)) {
+      customConfirm('Yakin ingin menghapus resi ' + resi + '?', function() {
         dataPengiriman[kurir] = dataPengiriman[kurir].filter(r => r !== resi);
         semuaResi.delete(resi);
         updateTampilan();
@@ -828,7 +827,7 @@
           kurirSedangDilihat = "";
         }
         document.getElementById('inputResi').focus();
-      }
+      });
     }
 
     function bukaModalPrint() {

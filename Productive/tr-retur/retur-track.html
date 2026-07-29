@@ -61,6 +61,15 @@
     #inputResi::placeholder { color: var(--text-muted); font-weight: 400; font-size: 14px; letter-spacing: 2px; }
     #inputResi:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(218,0,55,0.08); }
 
+    #inputOperator {
+      width: 100%; padding: 8px 14px; font-size: 13px;
+      color: var(--text); background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; outline: none; margin-bottom: 8px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    #inputOperator::placeholder { color: var(--text-muted); font-weight: 400; }
+    #inputOperator:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(218,0,55,0.08); }
+
     /* ---- TABLE ---- */
     .table-wrap {
       flex-grow: 1; overflow: hidden; background: var(--surface);
@@ -291,12 +300,14 @@
       min-width: 0; flex-shrink: 0;
     }
 
-    .item-exp {
-      font-size: 12px; color: var(--text-muted); white-space: nowrap;
+    .item-tanggal {
+      font-size: 11px; color: var(--text-muted); white-space: nowrap;
+      font-weight: 500;
     }
 
-    .item-waktu {
-      font-size: 11px; color: var(--text-muted); margin-left: auto; white-space: nowrap;
+    .item-operator {
+      font-size: 12px; color: var(--text); white-space: nowrap;
+      font-weight: 500; background: var(--surface); padding: 2px 8px; border-radius: 4px;
     }
 
     .item-actions {
@@ -428,23 +439,21 @@
       <input type="text" id="inputResi" placeholder="SCAN BARCODE RESI..." autofocus autocomplete="off">
     </div>
 
+    <input type="text" id="inputOperator" placeholder="NAMA OPERATOR (Opsional)..." autocomplete="off">
+
     <div class="table-wrap">
       <div class="table-scroll">
         <table id="stagingTable">
           <thead>
             <tr>
-              <th style="width:32%">Nomor Resi</th>
-              <th style="width:33%">Ekspedisi</th>
-              <th style="width:20%">Waktu</th>
-              <th style="width:15%"></th>
+              <th style="width:30%">Tanggal</th>
+              <th style="width:30%">Operator</th>
+              <th style="width:30%">Nomor Resi</th>
+              <th style="width:10%"></th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
         </table>
-        <div class="table-empty" id="tableEmpty">
-          <div class="table-empty-icon">+</div>
-          <div class="table-empty-text">Mulai scan resi untuk menambah data</div>
-        </div>
       </div>
     </div>
 
@@ -487,7 +496,7 @@
   // ============================================================
   // CONFIG & GAS BRIDGE
   // ============================================================
-  var GAS_URL = "https://script.google.com/macros/s/AKfycbw3D2PsBZPIxkJ_B95YlAWU83IHBpOXbtBcjk_VdaRSar_ZczXzPNN3lZACHAO8kSuiyA/exec";
+  var GAS_URL = "https://script.google.com/macros/s/AKfycbwgnRWIknW1tjauamr9taXeGc-zEiOXjP-XbG6nLVNZKAwMDAbg_Bx7oCo_CF2fCGMZgg/exec";
 
   var GAS = {
     call: function(fnName, args, onSuccess, onFailure) {
@@ -529,6 +538,7 @@
   // ============================================================
   var configEkspedisi = [];
   var stagingData = [];
+  var currentOperator = '';
   var currentFilter = "all";
   var loadedHistory = [];
   var elInput = document.getElementById("inputResi");
@@ -574,6 +584,16 @@
     }
   });
 
+  var elOperator = document.getElementById("inputOperator");
+  elOperator.addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      currentOperator = this.value.trim();
+      this.value = "";
+      focusInput();
+    }
+  });
+
   var expeditionCache = {};
 
   function processScan(resi) {
@@ -601,7 +621,8 @@
   }
 
   function addStaging(resi, exp) {
-    stagingData.unshift({ resi: resi, ekspedisi: exp, timestamp: Date.now() });
+    var operator = document.getElementById('inputOperator') ? document.getElementById('inputOperator').value.trim() : '';
+    stagingData.unshift({ resi: resi, ekspedisi: exp, operator: operator, timestamp: Date.now() });
     renderTable();
   }
 
@@ -640,7 +661,7 @@
       var opts = '<option value="UNKNOWN">-- Pilih Manual --</option>';
       configEkspedisi.forEach(function(c) { opts += '<option value="' + c.name + '">' + c.name + "</option>"; });
 
-      filtered.forEach(function(d) {
+filtered.forEach(function(d) {
         var i = stagingData.indexOf(d);
         var tr = document.createElement("tr");
         if (d.ekspedisi === "UNKNOWN") tr.className = "unknown";
@@ -652,10 +673,13 @@
           expCell += '<input class="manual-exp-input" type="text" placeholder="Tulis manual..." value="' + (d.manualExp || "") + '" oninput="updateRowManual(' + i + ',this.value)">';
         }
 
+        var tanggal = new Date(d.timestamp).toLocaleDateString("id-ID");
+    var operator = d.operator || d.ekspedisi || '';
+
         tr.innerHTML =
+          '<td style="color:#999;font-size:13px">' + tanggal + '</td>' +
+          '<td>' + operator + '</td>' +
           '<td><span style="font-family:monospace;font-size:14px">' + d.resi + '</span><button class="btn-copy" onclick="copyResi(this,\'' + d.resi + '\')">' + COPY_ICON_SVG + '</button></td>' +
-          '<td>' + expCell + '</td>' +
-          '<td style="color:#999;font-size:13px">' + new Date(d.timestamp).toLocaleDateString("id-ID") + "</td>" +
           '<td><button class="btn-del" onclick="deleteRow(' + i + ')">&#215;</button></td>';
         elTableBody.appendChild(tr);
       });
@@ -788,7 +812,8 @@
     return groups.map(function(g) {
       var filtered = g.items.filter(function(item) {
         return item.resi.toLowerCase().indexOf(q) !== -1 ||
-               item.ekspedisi.toLowerCase().indexOf(q) !== -1;
+               item.ekspedisi.toLowerCase().indexOf(q) !== -1 ||
+               (item.operator || '').toLowerCase().indexOf(q) !== -1;
       });
       return { label: g.label, summary: g.summary, total: g.total, items: filtered };
     }).filter(function(g) { return g.items.length > 0; });
@@ -840,10 +865,10 @@
         var div = document.createElement("div");
         div.className = "history-item" + statusClass;
         div.innerHTML =
+          '<span class="item-tanggal">' + item.tanggal + '</span>' +
+          '<span class="item-operator">' + (item.operator || item.ekspedisi) + '</span>' +
           '<span class="item-resi">' + item.resi + '</span>' +
           '<button class="btn-copy" onclick="copyResi(this,\'' + item.resi + '\')">' + COPY_ICON_SVG + '</button>' +
-          '<span class="item-exp">' + item.ekspedisi + '</span>' +
-          '<span class="item-waktu">' + item.waktu + '</span>' +
           '<div class="item-actions">' +
             '<button class="btn-status btn-done' + doneActive + '" onclick="markStatus(' + item.row + ',\'Valid\',this)" title="Valid">&#10003;</button>' +
             '<button class="btn-status btn-err' + errActive + '" onclick="markStatus(' + item.row + ',\'Error\',this)" title="Error">&#10007;</button>' +

@@ -280,12 +280,16 @@
         window.addEventListener('message', (event) => {
             if (event.origin !== window.location.origin) return;
             
-            const { type, data } = event.data || {};
+            const msg = event.data || {};
+            const type = msg.type;
+            const data = msg.data || msg;
             
             switch (type) {
                 case 'theme-changed':
-                    if (data?.theme) {
-                        applyTheme(data.theme);
+                case 'SET_THEME':
+                    var theme = data.theme || data;
+                    if (theme === 'dark' || theme === 'light') {
+                        applyTheme(theme);
                     }
                     break;
                 case 'navigation':

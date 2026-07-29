@@ -45,7 +45,11 @@
     ui.aboutBtn.addEventListener('click', function() { ui.about.classList.add('open'); });
     ui.modalClose.addEventListener('click', function() { ui.about.classList.remove('open'); });
     ui.about.addEventListener('click', function(e) { if (e.target === ui.about) ui.about.classList.remove('open'); });
-    ui.search.addEventListener('input', searchTools);
+    var searchTimer;
+    ui.search.addEventListener('input', function(e) {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function() { searchTools(); }, 300);
+    });
 
     // Sidebar nav
     for (var i = 0; i < ui.navBtns.length; i++) {
@@ -103,19 +107,7 @@
       ui.workspace.classList.add('active');
     }
 
-    ui.dbView.style.display = 'none';
-    ui.frameCont.style.display = 'block';
-
-    // Set onload BEFORE changing src to avoid race condition
-    ui.frame.onload = function() {
-      broadcastCurrentTheme();
-    };
-
-    if (ui.frame.src !== path) {
-      ui.frame.src = path;
-    } else {
-      broadcastCurrentTheme();
-    }
+    showFrame(path);
 
     // Highlight correct sidebar nav
     for (var i = 0; i < ui.navBtns.length; i++) ui.navBtns[i].classList.remove('active');
@@ -127,11 +119,44 @@
     }
   }
 
+  function showFrame(toolPath) {
+    var db = ui.dbView;
+    var frame = ui.frameCont;
+    db.style.opacity = '0';
+    setTimeout(function() {
+      db.style.display = 'none';
+      frame.style.display = 'block';
+      frame.classList.add('loading');
+      ui.frame.src = toolPath;
+      ui.frame.onload = function() {
+        frame.classList.remove('loading');
+        broadcastCurrentTheme();
+      };
+      ui.frame.onerror = function() {
+        frame.classList.remove('loading');
+        frame.style.opacity = '1';
+        ui.frame.style.display = 'none';
+        var errEl = document.createElement('div');
+        errEl.style.cssText = 'text-align:center;padding:40px;opacity:0.5;';
+        errEl.textContent = '⚠️ Gagal memuat modul';
+        frame.appendChild(errEl);
+      };
+      frame.style.opacity = '0';
+      setTimeout(function() { frame.style.opacity = '1'; }, 50);
+    }, 300);
+  }
+
   function goHome() {
-    ui.dbView.style.display = 'block';
-    ui.frameCont.style.display = 'none';
+    ui.frameCont.style.opacity = '0';
     ui.frame.src = '';
-    ui.dbView.scrollTop = 0;
+    ui.frame.onload = null;
+    ui.frame.onerror = null;
+    setTimeout(function() {
+      ui.frameCont.style.display = 'none';
+      ui.dbView.style.display = 'block';
+      ui.dbView.style.opacity = '1';
+      ui.dbView.scrollTop = 0;
+    }, 300);
 
     for (var i = 0; i < ui.navBtns.length; i++) ui.navBtns[i].classList.remove('active');
     document.querySelector('.nav-btn[data-group="all"]').classList.add('active');
@@ -166,13 +191,13 @@
 
     for (var i = 0; i < cards.length; i++) {
       var keywords = cards[i].getAttribute('data-search') || '';
-      cards[i].style.display = keywords.indexOf(query) !== -1 ? 'flex' : 'none';
+      cards[i].classList.toggle('hidden-card', keywords.indexOf(query) === -1);
     }
 
     // Hide sections with no visible cards
     var sections = [ui.secProd, ui.secUtil];
     for (var s = 0; s < sections.length; s++) {
-      var visible = sections[s].querySelectorAll('.bento-card:not([style*="display: none"])');
+      var visible = sections[s].querySelectorAll('.bento-card:not(.hidden-card)');
       if (visible.length === 0) {
         sections[s].classList.add('hidden');
       } else {
@@ -183,6 +208,10 @@
         }
       }
     }
+
+    var totalVisible = document.querySelectorAll('.bento-card:not(.hidden-card)').length;
+    var emptyEl = document.getElementById('search-empty');
+    if (emptyEl) emptyEl.style.display = totalVisible === 0 ? 'block' : 'none';
   }
 
   function broadcastCurrentTheme() {
