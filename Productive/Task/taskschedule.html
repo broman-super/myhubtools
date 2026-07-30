@@ -2170,8 +2170,18 @@
     }
 
     function updateStats() {
-      const ts = S.tasks.filter(t => (t.type || 'task') === 'task');
-      const cs = S.tasks.filter(t => t.type === 'campaign');
+      var ts, cs;
+      if (S.view === 'month') {
+        const y = S.calYear, m = S.calMonth;
+        const ms = y + '-' + pad(m + 1) + '-01';
+        const me = y + '-' + pad(m + 1) + '-' + new Date(y, m + 1, 0).getDate();
+        var monthTasks = S.tasks.filter(t => t.date && t.date <= me && (t.enddate || t.date) >= ms);
+        ts = monthTasks.filter(t => (t.type || 'task') === 'task');
+        cs = monthTasks.filter(t => t.type === 'campaign');
+      } else {
+        ts = S.tasks.filter(t => (t.type || 'task') === 'task');
+        cs = S.tasks.filter(t => t.type === 'campaign');
+      }
       const done = ts.filter(t => t.done).length;
       const prog = ts.length ? Math.round((done / ts.length) * 100) : 0;
 
@@ -2220,6 +2230,7 @@
 
     function renderList() {
       const filtered = S.tasks.filter(t => {
+        if (t.type === 'campaign') return false;
         if (S.filter === 'pending' && t.done) return false;
         if (S.filter === 'done' && !t.done) return false;
         if (S.q && !t.title.toLowerCase().includes(S.q) && !(t.description || '').toLowerCase().includes(S.q)) return false;
@@ -2268,7 +2279,7 @@
     }
 
     function buildTagFilters() {
-      const tags = [...new Set(S.tasks.filter(t => t.tag).flatMap(t => t.tag.split(',').map(x => x.trim())).filter(Boolean))];
+      const tags = [...new Set(S.tasks.filter(t => t.tag && t.type !== 'campaign').flatMap(t => t.tag.split(',').map(x => x.trim())).filter(Boolean))];
       const el = document.getElementById('tag-filters');
       if (!el) return;
       if (!tags.length) { el.innerHTML = ''; return; }

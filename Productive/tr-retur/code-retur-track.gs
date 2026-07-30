@@ -1,5 +1,5 @@
 // code-retur-track.gs — GAS Backend for Retur Track Tool
-// Sheet: "Tracking" — Kolom: Nomor Resi | Ekspedisi | Waktu Scan | Tanggal | Status
+// Sheet: "Tracking" — Kolom: Nomor Resi | Ekspedisi | Waktu Scan | Tanggal | Operator | Status
 
 var SHEET_NAME = "Tracking";
 var HEADERS = ["Nomor Resi", "Ekspedisi", "Waktu Scan", "Tanggal", "Operator", "Status"];
@@ -19,13 +19,13 @@ var FN_MAP = {
 function doPost(e) {
   try {
     var params = JSON.parse(e.postData.contents);
-    var fn = params.function;
-    var args = params.args || [];
+    var fn = params.function || params.action;
+    var args = params.args || params.data || [];
     if (typeof FN_MAP[fn] !== "function") throw new Error("Function " + fn + " not found");
     var result = FN_MAP[fn].apply(null, args);
-    return ContentService.createTextOutput(JSON.stringify({ result: result })).setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({ success: true, result: result })).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ error: String(err.message || err) })).setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({ success: false, message: String(err.message || err) })).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
@@ -37,8 +37,9 @@ function getOrCreateSheet_() {
     sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
     sheet.setFrozenRows(1);
   }
-  var existingHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-  if (existingHeaders.join("").indexOf("Nomor Resi") === -1) {
+  var lastCol = sheet.getLastColumn();
+  var existingHeaders = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+  if (existingHeaders.length < HEADERS.length || existingHeaders.join(",") !== HEADERS.join(",")) {
     sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
   }
   return sheet;
@@ -137,18 +138,15 @@ function submitBatchData(stagingData) {
     var tz = Session.getScriptTimeZone();
     var now = new Date();
 
-    // Ensure 5-column headers exist
-    var lastCol = sheet.getLastColumn();
-    var existingHeaders = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
-    if (existingHeaders.indexOf("Tanggal") === -1 && lastCol >= 3) {
-      var idxWkt = existingHeaders.indexOf("Waktu Scan");
-      if (idxWkt >= 0) {
-        sheet.insertColumnAfter(idxWkt + 1);
-        sheet.getRange(1, idxWkt + 2).setValue("Tanggal");
+    // Ensure all columns exist in HEADERS order
+    var existingHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    for (var hi = 0; hi < HEADERS.length; hi++) {
+      if (existingHeaders.indexOf(HEADERS[hi]) === -1) {
+        sheet.getRange(1, sheet.getLastColumn() + 1).setValue(HEADERS[hi]);
       }
-    } else if (existingHeaders.join("").indexOf("Nomor Resi") === -1) {
-      sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
     }
+    // Rewrite header row to guarantee correct order
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
 
     var colMap = getColumnMap_();
     if (!colMap) throw new Error('Column mapping failed');
@@ -190,7 +188,7 @@ function getTrackingHistory(filter) {
     var idxExp  = colMap && colMap["Ekspedisi"]   >= 0 ? colMap["Ekspedisi"]   : 1;
     var idxWkt  = colMap && colMap["Waktu Scan"]  >= 0 ? colMap["Waktu Scan"]  : 2;
     var idxTgl  = colMap && colMap["Tanggal"]     >= 0 ? colMap["Tanggal"]     : 3;
-    var idxOp   = colMap && colMap["Operator"]    >= 0 ? colMap["Operator"]    : 4;
+    var idxOp   = colMap && colMap["Operator"]    >= 0 ? colMap["Operator"]    : -1;
     var idxSts  = colMap && colMap["Status"]      >= 0 ? colMap["Status"]      : 5;
 
     var tz = Session.getScriptTimeZone();
@@ -210,14 +208,10 @@ function getTrackingHistory(filter) {
       var ekspedisi = String(row[idxExp] || "").trim();
       var waktu = String(row[idxWkt] || "").trim();
       var rawDate = row[idxTgl];
-      var operator = row[idxOp] || "";
+      var operator = idxOp >= 0 ? String(row[idxOp] || "").trim() : "";
       var status = idxSts < row.length ? String(row[idxSts] || "Pending") : "Pending";
 
       var rowDate = parseToStandardDate_(rawDate);
-      // Fallback: Tanggal kosong/gak ada → pakai hari ini
-      if (!rowDate && (!("Tanggal" in colMap) || !rawDate || String(rawDate).trim() === "")) {
-        rowDate = today;
-      }
       if (!rowDate) { Logger.log('getTrackingHistory: skip row ' + i + ' unparseable date "' + rawDate + '"'); continue; }
 
       // Apply filter
