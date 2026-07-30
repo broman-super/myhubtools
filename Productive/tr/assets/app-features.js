@@ -201,7 +201,7 @@
     }
     var html =
       '<div style="font-size:10px;font-weight:800;color:#B45309;text-transform:uppercase;margin-bottom:8px;">' +
-      '⚡ ' + overlapData.count + ' overlap lintas user (indikator beban menumpuk)</div>';
+      '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> ' + overlapData.count + ' overlap lintas user (indikator beban menumpuk)</div>';
     overlapData.items.slice(0, 8).forEach(function (o) {
       html +=
         '<div style="font-size:10px;padding:8px 10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;margin-bottom:6px;line-height:1.5;">' +

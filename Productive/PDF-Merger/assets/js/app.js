@@ -97,10 +97,10 @@
             const blob = new Blob([bytes], { type: 'application/pdf' });
             const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0,19);
             downloadBlob(blob, `label-gabungan-${ts}.pdf`);
-            setStatus('✅ Berhasil diunduh', 'success');
+            setStatus('<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M20 6L9 17l-5-5"/></svg> Berhasil diunduh', 'success');
         } catch(e) {
             console.error(e);
-            setStatus('❌ Gagal menggabungkan', 'error');
+            setStatus('<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Gagal menggabungkan', 'error');
         }
         mergeBtn.disabled = false;
     });
@@ -138,7 +138,7 @@
         mergePerKurirBtn.classList.remove('hidden');
         downloadCsvBtn.classList.remove('hidden');
         analyzeBtn.disabled = false;
-        setStatus(`✅ Analisis selesai. ${parsedData.length} label diproses.`, 'success');
+        setStatus('<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M20 6L9 17l-5-5"/></svg> Analisis selesai. ' + parsedData.length + ' label diproses.', 'success');
     });
 
     // Fungsi normalisasi teks: perbaiki spasi berlebihan antar karakter
@@ -233,10 +233,10 @@
                 const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0,19);
                 downloadBlob(blob, `${key}-${ts}.pdf`);
             }
-            setStatus('✅ File per kurir diunduh', 'success');
+            setStatus('<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M20 6L9 17l-5-5"/></svg> File per kurir diunduh', 'success');
         } catch(e) {
             console.error(e);
-            setStatus('❌ Gagal', 'error');
+            setStatus('<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Gagal', 'error');
         }
     });
 

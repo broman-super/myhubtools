@@ -8,16 +8,24 @@
   <title>Premium Team Planner</title>
   <style>
     :root {
-      --accent: #6366f1;
-      --accent-gradient: linear-gradient(135deg, #6366f1 0%, var(--platform-ig) 100%);
-      --bg: #f8fafc;
-      --text: #1e293b;
-      --text-soft: #64748b;
-      --border: #e2e8f0;
+      --accent: #003DA5;
+      --accent-hover: #002D7A;
+      --accent-light: rgba(0,61,165,0.08);
+      --secondary: #8C8C8C;
+      --secondary-hover: #6E6E6E;
+      --secondary-light: rgba(140,140,140,0.08);
+      --bg: #F2F2F2;
+      --surface: #FFFFFF;
+      --surface-alt: #F2F2F2;
+      --text: #1E1E1E;
+      --text-soft: #666666;
+      --border: #D4D4D4;
       --radius: 16px;
       --radius-sm: 12px;
-      --danger: #ff0000;
-      --danger-light: rgba(255, 0, 0, 0.08);
+      --danger: #D70000;
+      --danger-light: rgba(215,0,0,0.08);
+      --warning: #B87700;
+      --warning-light: rgba(184,119,0,0.12);
       /* Platform colors — centralized, shared across tools */
       --platform-ig:   #a855f7;
       --platform-wa:   #22c55e;
@@ -26,7 +34,6 @@
       --platform-wb:   #3b82f6;
       --platform-evt:  #06b6d4;
       --platform-other:#64748b;
-      /* Auto-generated backgrounds */
       --platform-ig-bg:   rgba(168, 85, 247, 0.12);
       --platform-wa-bg:   rgba(34, 197, 94, 0.12);
       --platform-tt-bg:   rgba(161, 161, 161, 0.12);
@@ -34,7 +41,6 @@
       --platform-wb-bg:   rgba(59, 130, 246, 0.12);
       --platform-evt-bg:  rgba(6, 182, 212, 0.12);
       --platform-other-bg:rgba(100, 116, 139, 0.12);
-      /* Text colors that contrast with platform bg */
       --platform-ig-txt:  #ffffff;
       --platform-wa-txt:  #ffffff;
       --platform-tt-txt:  #ffffff;
@@ -61,7 +67,7 @@
     .top-loader-bar {
       width: 40%;
       height: 100%;
-      background: var(--accent-gradient);
+      background: var(--accent);
       position: absolute;
       left: -40%;
       box-shadow: 0 0 10px var(--accent);
@@ -127,7 +133,7 @@
       margin: 0;
       padding: 0;
       font-family: 'Plus Jakarta Sans';
-      background-image: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
+      background: var(--bg);
     }
 
     /* ═══════════════════════════════════════
@@ -147,8 +153,7 @@
       align-items: center;
       position: sticky;
       top: 0;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
+      background: var(--surface);
       z-index: 500;
       border-bottom: 1px solid var(--border);
       gap: 20px;
@@ -212,7 +217,7 @@
     .logo-mark {
       width: 32px;
       height: 32px;
-      background: var(--accent-gradient);
+      background: var(--accent);
       border-radius: 8px;
       display: grid;
       place-items: center;
@@ -293,7 +298,7 @@
 
     .stat-bar-fill {
       height: 100%;
-      background: var(--accent-gradient);
+      background: var(--accent);
       transition: 0.5s;
     }
 
@@ -312,14 +317,15 @@
     }
 
     .btn-primary {
-      background: var(--accent-gradient);
+      background: var(--accent);
       color: #fff;
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 61, 165, 0.2);
     }
 
     .btn-primary:hover {
+      background: var(--accent-hover);
       transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+      box-shadow: 0 6px 20px rgba(0, 61, 165, 0.3);
     }
 
     .btn-ghost {
@@ -967,8 +973,8 @@
 
     .cal-cell.is-leave,
     .week-col.is-leave {
-      border-color: #f59e0b;
-      background: #fffbeb;
+      border-color: var(--warning);
+      background: var(--warning-light);
     }
 
     .cal-cell.is-leave .cal-cell-num,
@@ -1166,6 +1172,15 @@
       color: var(--text);
       background: var(--bg);
     }
+    .timeline-row-label svg {
+      width: 14px; height: 14px;
+      flex-shrink: 0;
+      display: block;
+    }
+    .timeline-row-label .quick-toggle {
+      margin-left: auto;
+      flex-shrink: 0;
+    }
 
     .timeline-row-track {
       position: relative;
@@ -1206,11 +1221,11 @@
     }
 
     .timeline-bar.event {
-      background-image: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(255,255,255,0.3) 4px, rgba(255,255,255,0.3) 8px) !important;
+      border-left: 3px solid var(--secondary) !important;
     }
 
     .timeline-bar.reminder {
-      background-image: repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(255,255,255,0.25) 6px, rgba(255,255,255,0.25) 10px) !important;
+      border-left: 3px dashed var(--warning) !important;
     }
 
     .cal-chip-reminder {
@@ -1376,49 +1391,38 @@
       transition: all 0.25s ease;
     }
     .theme-toggle:hover {
-      background: var(--danger-light, rgba(255,0,0,0.08));
-      color: var(--danger, #ff0000);
-      border-color: var(--danger, #ff0000);
+      background: var(--accent-light);
+      color: var(--accent);
+      border-color: var(--accent);
     }
     .theme-toggle svg { width: 16px; height: 16px; }
 
     [data-theme="dark"] {
-        --accent: #818cf8;
-        --accent-gradient: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
-        --bg: #0f172a;
-        --text: #f1f5f9;
-        --text-soft: #94a3b8;
-        --border: #334155;
-        --danger: #ff3b3b;
-        --danger-light: rgba(255, 59, 59, 0.15);
+        --accent: #4A80D4;
+        --accent-hover: #6B9AE0;
+        --accent-light: rgba(74,128,212,0.2);
+        --secondary: #8C8C8C;
+        --secondary-hover: #A0A0A0;
+        --secondary-light: rgba(140,140,140,0.15);
+        --bg: #1A1A1A;
+        --surface: #2A2A2A;
+        --surface-alt: #333333;
+        --text: #F0F0F0;
+        --text-soft: #8C8C8C;
+        --border: #3A3A3A;
+        --danger: #FF4444;
+        --danger-light: rgba(255,68,68,0.15);
+        --warning: #D4A000;
+        --warning-light: rgba(212,160,0,0.15);
     }
-    [data-theme="dark"] body {
-        background-image: radial-gradient(circle at 20% 30%, rgba(129,140,248,0.06) 0%, transparent 50%),
-                          radial-gradient(circle at 80% 70%, rgba(192,132,252,0.06) 0%, transparent 50%);
-    }
-    [data-theme="dark"] .topbar,
-    [data-theme="dark"] .sidebar,
-    [data-theme="dark"] .main-content,
-    [data-theme="dark"] .card,
-    [data-theme="dark"] .modal-content,
-    [data-theme="dark"] .timeline-item,
-    [data-theme="dark"] .stat-card,
-    [data-theme="dark"] .form-section,
-    [data-theme="dark"] input,
-    [data-theme="dark"] select,
-    [data-theme="dark"] textarea {
-        background: #1e293b;
-        border-color: #334155;
-        color: #f1f5f9;
-    }
-    [data-theme="dark"] .stat-card { background: #1e293b; }
-    [data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7); }
+    [data-theme="dark"] body { background: var(--bg); }
+    [data-theme="dark"] .topbar { background: var(--surface); border-color: var(--border); }
   </style>
 </head>
 
 <body>
 
-  <div id="offline-banner" style="display:none;background:#dc2626;color:#fff;text-align:center;padding:6px 12px;font-size:12px;font-weight:600;position:sticky;top:0;z-index:9999;">📡 Tidak ada koneksi internet. Data mungkin tidak tersimpan.</div>
+  <div id="offline-banner" style="display:none;background:#dc2626;color:#fff;text-align:center;padding:6px 12px;font-size:12px;font-weight:600;position:sticky;top:0;z-index:9999;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:6px;"><path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><path d="M12 20h.01"/></svg>Tidak ada koneksi internet. Data mungkin tidak tersimpan.</div>
 
   <div id="loading-overlay">
     <div class="skeleton-grid" id="skeletonGrid"></div>
@@ -1438,7 +1442,7 @@
       <header class="topbar">
         <div class="topbar-left">
           <div style="display:flex; align-items:center; gap:10px;">
-            <div class="logo-mark">📊</div>
+            <div class="logo-mark"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></div>
             <div style="font-weight:800; font-size:16px; letter-spacing:-0.5px;">TaskSpace</div>
           </div>
 
@@ -1511,11 +1515,11 @@
       <div class="stats-bar">
         <div class="stat-pill">Progres <b id="stat-progress-val">0%</b>
           <div style="width:50px;height:4px;background:#f1f5f9;border-radius:4px;overflow:hidden;margin-left:4px;">
-            <div id="stat-progress-bar" style="width:0%;height:100%;background:var(--accent-gradient);transition:0.5s;">
+            <div id="stat-progress-bar" style="width:0%;height:100%;background:var(--accent);transition:0.5s;">
             </div>
           </div>
         </div>
-        <div class="stat-pill">Pending <b id="stat-pending-val" style="color:#f59e0b">0</b></div>
+        <div class="stat-pill">Pending <b id="stat-pending-val" style="color:var(--warning)">0</b></div>
         <div class="stat-pill">Campaign <b id="stat-campaign-val" style="color:#6366f1">0</b></div>
       </div>
 
@@ -1556,7 +1560,7 @@
             <button class="btn btn-ghost" onclick="changeMonth(1)">→</button>
             <button class="btn btn-ghost" onclick="goThisMonth()">Bulan Ini</button>
             <div style="margin-left:auto; display:flex; align-items:center; gap:16px;">
-              <button class="btn btn-ghost" onclick="printMonthView()">🖨️ Cetak</button>
+              <button class="btn btn-ghost" onclick="printMonthView()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>Cetak</button>
               <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;">
                 <input type="checkbox" id="toggle-month-tasks" onchange="toggleMonthTasks(this)"
                   style="width:16px;height:16px;">
@@ -1567,7 +1571,7 @@
                   style="width:16px;height:16px;" checked>
                 <span>Event</span>
               </label>
-              <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;color:#f59e0b;">
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;color:var(--warning);">
                 <input type="checkbox" id="toggle-month-reminders" onchange="toggleMonthReminders(this)"
                   style="width:16px;height:16px;" checked>
                 <span>Reminder</span>
@@ -1607,11 +1611,11 @@
                 <input type="checkbox" id="toggle-tl-events" onchange="renderTimeline()" style="width:16px;height:16px;" checked>
                 <span>Event</span>
               </label>
-              <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;color:#f59e0b;">
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;color:var(--warning);">
                 <input type="checkbox" id="toggle-tl-reminders" onchange="renderTimeline()" style="width:16px;height:16px;" checked>
                 <span>Reminder</span>
               </label>
-              <button class="btn btn-ghost" onclick="printTimelineView()" style="padding:6px 10px;font-size:11px;">🖨️ Cetak</button>
+              <button class="btn btn-ghost" onclick="printTimelineView()" style="padding:6px 10px;font-size:11px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>Cetak</button>
               <span id="tl-zoom-info"></span>
             </div>
           </div>
@@ -1659,7 +1663,7 @@
 
       <div class="detail-panel empty" id="detail-panel">
         <div style="text-align:center; opacity:0.4; padding:20px;">
-          <div style="font-size:32px;margin-bottom:8px;">🛋️</div>
+          <div style="margin-bottom:8px;"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2"/><path d="M3 11v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"/><path d="M7 11V9"/><path d="M17 11V9"/></svg></div>
           <div style="font-size:13px; font-weight:600;">Klik agenda untuk melihat detail</div>
         </div>
       </div>
@@ -1681,16 +1685,16 @@
         <label>Jenis</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <label style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">
-            <input type="radio" name="f-type-radio" value="task" checked onchange="toggleTypeFields()"> 📝 Task
+            <input type="radio" name="f-type-radio" value="task" checked onchange="toggleTypeFields()"> <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Task
           </label>
           <label style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">
-            <input type="radio" name="f-type-radio" value="campaign" onchange="toggleTypeFields()"> 📢 Campaign
+            <input type="radio" name="f-type-radio" value="campaign" onchange="toggleTypeFields()"> <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/></svg> Campaign
           </label>
           <label style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;color:#14b8a6;">
-            <input type="radio" name="f-type-radio" value="event" onchange="toggleTypeFields()"> 📅 Event
+            <input type="radio" name="f-type-radio" value="event" onchange="toggleTypeFields()"> <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> Event
           </label>
           <label style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;color:#f59e0b;">
-            <input type="radio" name="f-type-radio" value="reminder" onchange="toggleTypeFields()"> 🔔 Reminder
+            <input type="radio" name="f-type-radio" value="reminder" onchange="toggleTypeFields()"> <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Reminder
           </label>
         </div>
         <input type="hidden" id="f-type" value="task">
@@ -1700,9 +1704,9 @@
         <div class="field" id="wrap-priority" style="margin-bottom:0;">
           <label>Prioritas</label>
           <select id="f-priority">
-            <option value="high">🏁 Tinggi</option>
-            <option value="medium" selected>🔵 Sedang</option>
-            <option value="low">🐌 Rendah</option>
+            <option value="high"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><path d="M4 21V3l16 6-16 6"/></svg> Tinggi</option>
+            <option value="medium" selected><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><circle cx="12" cy="12" r="6"/></svg> Sedang</option>
+            <option value="low"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><circle cx="12" cy="12" r="2"/></svg> Rendah</option>
           </select>
         </div>
         <div class="field" style="margin-bottom:0;"></div>
@@ -1734,13 +1738,14 @@
           <label id="lbl-tag">Tag</label>
           <input type="text" id="f-tag" placeholder="cth: Marketing">
           <select id="f-channel" style="display:none;" onchange="onChannelChange()">
+            <!-- ponytail: <option> elements only support plain text, SVG doesn't render -->
             <option value="">— Pilih Channel —</option>
             <option value="Instagram">📸 Instagram</option>
             <option value="Whatsapp">💬 Whatsapp</option>
             <option value="Tiktok">🎵 Tiktok</option>
             <option value="Shopee">🛒 Shopee</option>
             <option value="Web">🌐 Web</option>
-            <option value="Event">📅 Event</option>
+            <option value="Event"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/></svg> Event</option>
           </select>
         </div>
         <div class="field" style="margin-bottom:0;" id="wrap-color">
@@ -1751,7 +1756,7 @@
 
       <div style="margin-bottom:8px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:13px;font-weight:600;">
-          <input type="checkbox" id="f-repeat" onchange="toggleRepeatFields()" style="margin:0;"> 🔁 Ulangi
+          <input type="checkbox" id="f-repeat" onchange="toggleRepeatFields()" style="margin:0;"> <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Ulangi
         </div>
         <div id="wrap-repeat" style="display:none;">
           <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
@@ -1826,6 +1831,31 @@
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbx8On9-9HY1k5VYp9AUy5Okq-1k1tDJf6ZaPuEpidRq7CPae7w43Al_YVPOyiEMs4Iz/exec";
 
+    var ICONS = {
+      task: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+      campaign: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 17V5l7 3-7 3"/><path d="M9 17a3 3 0 0 1 0-6"/><path d="M5 17a5 5 0 0 1 0-10"/></svg>',
+      event: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/></svg>',
+      reminder: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+      high: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V3l16 6-16 6"/></svg>',
+      medium: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6"/></svg>',
+      low: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg>',
+      print: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>',
+      chart: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>',
+      calendar: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/></svg>',
+      check: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
+      search: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>',
+      inbox: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>',
+      camera: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+      messageCircle: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
+      music: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+      shoppingCart: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>',
+      globe: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+      repeat: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>',
+      trash: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+      clock: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+      flag: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',
+    };
+
     var S = {
       tasks: [], events: [], reminders: [], view: 'list', filter: 'pending', q: '',
       weekOffset: 0, showMonthTasks: false, showMonthEvents: false, showMonthReminders: false,
@@ -1867,7 +1897,7 @@
     }
 
     // Utils
-    function esc(t) { return (t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+    function esc(t) { return (t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
     function pad(n) { return n < 10 ? '0' + n : n; }
     function dateStr(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
      function formatShortDate(d) {
@@ -1929,7 +1959,7 @@
           S.reminders = (json.result.reminders || []).map(function(r) { return {
             id: r.id, title: r.nama || '', date: normDate(r.mulai || ''),
             enddate: normDate(r.selesai || ''), description: String(r.deskripsi || ''),
-            color: r.warna || '#f59e0b', status: r.status || '',
+            color: r.warna || '#FFC300', status: r.status || '',
             done: r.status === 'Selesai', type: 'reminder'
           }; });
           return json.result;
@@ -2244,7 +2274,7 @@
 
       const el = document.getElementById('task-list-el');
       if (!filtered.length) {
-        var msg = S.q ? '🔍 Tidak ada hasil untuk "' + esc(S.q) + '"' : 'Tidak ada task ditemukan 📭';
+        var msg = S.q ? ICONS.search + ' Tidak ada hasil untuk "' + esc(S.q) + '"' : ICONS.inbox + ' Tidak ada task ditemukan';
         el.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.4;">' + msg + '</div>';
         buildTagFilters();
         buildPriorityFilters();
@@ -2262,9 +2292,9 @@
           <div class="task-main">
             <div class="task-name">${esc(t.title)}</div>
             <div class="task-sub">
-              <span>📅 ${t.date || 'No Date'}</span>
+              <span>${ICONS.calendar} ${t.date || 'No Date'}</span>
               ${t.tag ? `<span># ${esc(t.tag)}</span>` : ''}
-              <span class="badge" style="background:${t.priority === 'high' ? '#fef2f2' : '#eff6ff'};color:${t.priority === 'high' ? '#ef4444' : '#3b82f6'};">${t.priority === 'high' ? '🏁 Tinggi' : t.priority === 'low' ? '🐌 Rendah' : '🔵 Sedang'}</span>
+              <span class="badge" style="background:${t.priority === 'high' ? '#fef2f2' : '#eff6ff'};color:${t.priority === 'high' ? '#ef4444' : '#3b82f6'};">${t.priority === 'high' ? ICONS.high + ' Tinggi' : t.priority === 'low' ? ICONS.low + ' Rendah' : ICONS.medium + ' Sedang'}</span>
             </div>
           </div>
         </div>
@@ -2300,14 +2330,12 @@
     function buildPriorityFilters() {
       const el = document.getElementById('priority-filters');
       if (!el) return;
-      const priorities = [
-        { key: 'high', label: '🏁 Tinggi' },
-        { key: 'medium', label: '🔵 Sedang' },
-        { key: 'low', label: '🐌 Rendah' }
-      ];
-      el.innerHTML = priorities.map(p => {
-        const active = S.activePriorities.includes(p.key) ? ' active' : '';
-        return `<span class="filter-chip${active}" onclick="togglePriorityFilter('${p.key}')">${p.label}</span>`;
+      var icons = { high: ICONS.high, medium: ICONS.medium, low: ICONS.low };
+      var labels = { high: 'Tinggi', medium: 'Sedang', low: 'Rendah' };
+      const priorities = ['high', 'medium', 'low'];
+      el.innerHTML = priorities.map(function(k) {
+        var active = S.activePriorities.includes(k) ? ' active' : '';
+        return '<span class="filter-chip' + active + '" onclick="togglePriorityFilter(\'' + k + '\')">' + (icons[k] || '') + ' ' + labels[k] + '</span>';
       }).join('');
     }
 
@@ -2612,11 +2640,11 @@
       const infoEl = document.getElementById('tl-zoom-info');
       if (infoEl) {
         if (S.timelineZoom <= 0) {
-          infoEl.textContent = '🔍 Auto';
+          infoEl.innerHTML = ICONS.search + ' Auto';
         } else {
           const avail = scrollEl.clientWidth - labelW;
           const vis = Math.round(avail / S.timelineZoom);
-          infoEl.textContent = '🔍 ' + vis + ' hr';
+          infoEl.innerHTML = vis + ' hr';
         }
       }
 
@@ -2632,7 +2660,7 @@
     function renderTimelineHeader(year, month, daysIn) {
       const DAY_SHORT = ['MIN', 'SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB'];
       const todayStr = dateStr(new Date());
-      let html = '<div class="timeline-header-row"><div class="tl-corner">📅 ' + MONTHS_ID[month].slice(0, 3) + '</div>';
+      let html = '<div class="timeline-header-row"><div class="tl-corner">' + ICONS.calendar + ' ' + MONTHS_ID[month].slice(0, 3) + '</div>';
       for (let d = 1; d <= daysIn; d++) {
         const ds = year + '-' + pad(month + 1) + '-' + pad(d);
         const isToday = ds === todayStr;
@@ -2656,7 +2684,7 @@
       const z = getTimelineDayWidth();
 
       if (!items.length) {
-        document.getElementById('timeline-body').innerHTML = '<div style="text-align:center;padding:40px;opacity:0.4;">📭 Tidak ada agenda di bulan ini</div>';
+        document.getElementById('timeline-body').innerHTML = '<div style="text-align:center;padding:40px;opacity:0.4;">' + ICONS.event + ' Tidak ada agenda di bulan ini</div>';
         return;
       }
 
@@ -2681,7 +2709,7 @@
         var bg, color, border;
         if (isCampaign) { bg = item.color; color = '#1e293b'; border = 'none'; }
         else if (isEvent) { bg = 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.15)'; color = '#1e293b'; border = '2px dashed ' + item.color; }
-        else if (isReminder) { bg = '#f59e0b'; color = '#1e293b'; border = '3px solid #d97706'; }
+        else if (isReminder) { bg = 'var(--warning)'; color = '#1e293b'; border = '3px solid #b87700'; }
         else { bg = 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.12)'; color = '#1e293b'; border = '3px solid ' + item.color; }
         var cls = 'timeline-bar';
         if (s === e) cls += ' single'; else if (s === parseInt(item.date.split('-')[2], 10) || item.date < monthStart) cls += ' start'; else if (e === daysIn || e === parseInt(endD.split('-')[2], 10)) cls += ' end'; else cls += ' mid';
@@ -2694,7 +2722,7 @@
 
         var barHtml = '<div class="' + cls + '" style="left:' + leftPx + 'px;width:' + widthPx + 'px;background:' + bg + ';color:' + color + ';border-left:' + border + ';" onclick="selectTask(\'' + item.id + '\')" data-tooltip="' + tooltip + '">' + esc(item.title) + '<span class="quick-toggle" onclick="event.stopPropagation();toggleDone(\'' + item.id + '\')">' + (item.done ? '↩' : '✓') + '</span></div>';
 
-        var labelIcon = isCampaign ? '📢' : (isEvent ? '📅' : (isReminder ? '🔔' : (item.done ? '✅' : '📝')));
+        var labelIcon = isCampaign ? ICONS.calendar : (isEvent ? ICONS.flag : (isReminder ? ICONS.reminder : (item.done ? ICONS.check : ICONS.task)));
 
         rowsHtml += '<div class="timeline-row">';
         rowsHtml += '<div class="timeline-row-label" onclick="selectTask(\'' + item.id + '\')" data-tooltip="' + tooltip + '">' + labelIcon + ' ' + esc(item.title) + '</div>';
@@ -2779,7 +2807,7 @@
       const DAY_SHORT = ['MIN', 'SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB'];
 
       // Build header row with day names
-      let hd = '<div class="p-corner">📅</div>';
+      let hd = '<div class="p-corner">' + ICONS.calendar + '</div>';
       for (let d = 1; d <= daysIn; d++) {
         const ds = y + '-' + pad(m + 1) + '-' + pad(d);
         const isToday = ds === todayStr;
@@ -2835,16 +2863,16 @@
         g.dates.sort((a, b) => a.start.localeCompare(b.start));
         const datesHtml = g.dates.map(d => {
           const dr = d.start !== d.end ? formatShortDate(d.start) + ' → ' + formatShortDate(d.end) : formatShortDate(d.start);
-          return '<span style="background:#f1f5f9;padding:2px 4px;border-radius:3px;margin-right:4px;display:inline-block;margin-bottom:2px;border:1px solid #e2e8f0;color:#475569;">📅 ' + dr + '</span>';
+          return '<span style="background:#f1f5f9;padding:2px 4px;border-radius:3px;margin-right:4px;display:inline-block;margin-bottom:2px;border:1px solid #e2e8f0;color:#475569;">' + ICONS.calendar + ' ' + dr + '</span>';
         }).join('');
-        leg += '<div class="tpi" style="border-left:4px solid ' + g.color + ';"><div class="tpit">📢 ' + esc(g.title) + '</div><div class="tpid">' + datesHtml + '</div><div class="tpidesc">' + esc(g.description || '—') + '</div></div>';
+        leg += '<div class="tpi" style="border-left:4px solid ' + g.color + ';"><div class="tpit">' + ICONS.calendar + ' ' + esc(g.title) + '</div><div class="tpid">' + datesHtml + '</div><div class="tpidesc">' + esc(g.description || '—') + '</div></div>';
       });
        nonCamps.forEach(item => {
          const dr = item.enddate && item.enddate !== item.date ? formatShortDate(item.date) + ' → ' + formatShortDate(item.enddate) : formatShortDate(item.date);
          const tags = item.tag ? ' &nbsp;#' + esc(item.tag).replace(/,/g, ' #') : '';
          const prio = item.priority ? ' · ' + (item.priority === 'high' ? 'Tinggi' : item.priority === 'low' ? 'Rendah' : 'Sedang') : '';
          const st = item.done ? ' ✓ Selesai' : '';
-         leg += '<div class="tpi" style="border-left:4px solid ' + (item.color || '#6366f1') + ';"><div class="tpit">📝 ' + esc(item.title || item.nama || 'Tanpa Judul') + '</div><div class="tpid"><strong>' + dr + '</strong>' + tags + prio + st + '</div><div class="tpidesc">' + esc(item.description || '—') + '</div></div>';
+         leg += '<div class="tpi" style="border-left:4px solid ' + (item.color || '#6366f1') + ';"><div class="tpit">' + ICONS.task + ' ' + esc(item.title || item.nama || 'Tanpa Judul') + '</div><div class="tpid"><strong>' + dr + '</strong>' + tags + prio + st + '</div><div class="tpidesc">' + esc(item.description || '—') + '</div></div>';
        });
 
       const html = '<!DOCTYPE html><html><head><title>Cetak Timeline - ' + monthName + '</title><style>@page{size:landscape;margin:8mm;}*{box-sizing:border-box;}body{font-family:\'Plus Jakarta Sans\',sans-serif;margin:0;padding:0;font-size:12px;color:#1e293b;background:#fff;}.p-grid{display:grid;grid-template-columns:130px repeat(' + daysIn + ',1fr);gap:0;}.p-corner{padding:4px 8px;font-weight:800;font-size:11px;border-bottom:1px solid #e5e7eb;grid-column:1;color:#1e293b;}.p-label{grid-column:1;padding:3px 8px;font-size:9px;font-weight:600;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1e293b;background:#fff;}.p-track{grid-column:2/-1;display:grid;grid-template-columns:repeat(' + daysIn + ',1fr);border-bottom:1px solid rgba(0,0,0,0.05);min-height:22px;align-items:center;position:relative;}.pdh{padding:3px 3px;text-align:center;font-size:8px;font-weight:700;border-bottom:1px solid rgba(0,0,0,0.07);border-right:1px solid rgba(0,0,0,0.04);color:#475569;}.pdh.today{background:#3b82f6;color:#fff;}.pdh.weekend{background:rgba(239,68,68,0.08);}.pdh.holiday{color:#ef4444;}.pdn{display:block;font-size:6px;font-weight:400;opacity:0.5;text-transform:uppercase;letter-spacing:0.5px;}.phn{font-size:6px;display:block;font-weight:400;}.tpb{height:16px;border-radius:3px;font-size:7px;display:flex;align-items:center;padding:0 5px;white-space:nowrap;overflow:visible;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,0.08);-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:1px 0;min-width:0;}.tpb.camp{color:#1e293b;}.tpb.task{border-left:2px solid;color:#1e293b;}.tpb-text{white-space:nowrap;overflow:visible;}.p-sun{position:absolute;top:0;bottom:0;z-index:3;background:rgba(239,68,68,0.08);}.p-leg{margin-top:16px;padding-top:12px;border-top:1.5px solid #cbd5e1;page-break-before:always;}.p-leg h2{margin:0 0 10px;font-size:14px;color:#1e293b;}.p-lst{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}.tpi{break-inside:avoid;margin-bottom:0;padding:8px 12px;background:#f8fafc;border-bottom:1px solid #e5e7eb;border-radius:6px;}.tpit{font-weight:700;font-size:10px;color:#1e293b;margin-bottom:2px;}.tpid{font-size:9px;color:#475569;line-height:1.6;}.tpidesc{font-size:9px;color:#334155;margin-top:3px;line-height:1.5;white-space:pre-wrap;}@media print{.no-print{display:none!important;}}</style></head><body><div class="p-grid">' + hd + rows + '</div><div class="p-leg"><h2>Daftar Campaign & Tugas - ' + monthName + '</h2><div class="p-lst">' + leg + '</div></div></body></html>';
@@ -2925,7 +2953,7 @@
       renderDetail();
       try {
         await api('deleteTask', id);
-        showUndoSnackbar('🗑 Agenda dihapus', 'undo()');
+        showUndoSnackbar(ICONS.trash + ' Agenda dihapus', 'undo()');
         await refreshData(true);
       } catch (e) {
         toast('Gagal menghapus!', true);
@@ -3314,7 +3342,7 @@
 
       const listHtml = items.length ? items.map(function(t, i) {
         var isC = t.type === 'campaign', isE = t.type === 'event', isR = t.type === 'reminder';
-        var icon = isC ? '📢' : (isE ? '📅' : (isR ? '🔔' : '📝'));
+        var icon = isC ? ICONS.calendar : (isE ? ICONS.flag : (isR ? ICONS.reminder : ICONS.task));
         var span = (t.enddate && t.enddate !== t.date) ? ' → ' + formatShortDate(t.enddate) : '';
         var desc = esc(t.description) || '<em style="opacity:0.4">Tidak ada deskripsi.</em>';
         var orgHtml = t.penyelenggara ? '<div style="font-size:10px;opacity:0.6;">Penyelenggara: ' + esc(t.penyelenggara) + '</div>' : '';
@@ -3328,12 +3356,12 @@
           '</div>' + orgHtml +
           '<div style="font-size:11.5px; margin-top:4px; opacity:0.85; line-height:1.3;">' + desc + '</div>' +
           '</div>';
-      }).join('') : '<div style="text-align:center;padding:24px;opacity:0.35;font-size:13px;">📭 Tidak ada agenda di tanggal ini</div>';
+      }).join('') : '<div style="text-align:center;padding:24px;opacity:0.35;font-size:13px;">' + ICONS.event + ' Tidak ada agenda di tanggal ini</div>';
 
       el.innerHTML = `
         <div class="detail-header" style="margin-bottom:12px;">
           <div>
-            <div style="font-size:14px;font-weight:800;">📅 ${dateFormatted}</div>
+            <div style="font-size:14px;font-weight:800;">${ICONS.calendar} ${dateFormatted}</div>
             <div style="font-size:11.5px;color:var(--text-soft);margin-top:2px;">${items.length} agenda aktif</div>
           </div>
           <button class="btn btn-primary" style="padding:6px 10px;font-size:11.5px;" onclick="openTaskModal(null, '${ds}')">+ Tambah</button>
@@ -3353,10 +3381,10 @@
       }
       el.classList.remove('empty');
       var isC = t.type === 'campaign', isE = t.type === 'event', isR = t.type === 'reminder';
-      var typeIcon = isC ? '📢' : (isE ? '📅' : (isR ? '🔔' : '📝'));
+      var typeIcon = isC ? ICONS.calendar : (isE ? ICONS.flag : (isR ? ICONS.reminder : ICONS.task));
       var typeLabel = isC ? 'Campaign' : (isE ? 'Event' : (isR ? 'Reminder' : 'Task'));
        var badgeBg = isC ? (t.color || '#6366f1') : (isE ? 'rgba(20,184,166,0.1)' : (isR ? 'rgba(245,158,11,0.1)' : 'rgba(0,0,0,0.05)'));
-       var badgeColor = isC ? '#fff' : (isE ? '#14b8a6' : (isR ? '#f59e0b' : 'inherit'));
+        var badgeColor = isC ? '#fff' : (isE ? '#14b8a6' : (isR ? 'var(--warning)' : 'inherit'));
        var editFn = "openTaskModal('" + (t.id || '') + "')";
        var orgHtml = t.penyelenggara ? '<div style="font-size:11px;margin:8px 0 4px;opacity:0.6;">Penyelenggara: ' + esc(t.penyelenggara) + '</div>' : '';
        el.innerHTML = '<div class="detail-header" style="margin-bottom:12px;">' +
@@ -3366,14 +3394,14 @@
          '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">' +
          '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + badgeBg + ';color:' + badgeColor + '">' + typeIcon + ' ' + typeLabel + '</span>' +
          (t.tag ? '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + hexAlpha(t.color || '#6366f1', 0.1) + ';color:' + (t.color || '#6366f1') + ';border:1px solid ' + (t.color || '#6366f1') + '">' + esc(t.tag) + '</span>' : '') +
-          '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + (t.done ? '#ecfdf5' : '#f1f5f9') + ';color:' + (t.done ? '#10b981' : '#94a3b8') + '">' + (t.done ? '✓ Selesai' : '⏳ Pending') + '</span>' +
+          '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + (t.done ? '#ecfdf5' : '#f1f5f9') + ';color:' + (t.done ? '#10b981' : '#94a3b8') + '">' + (t.done ? '✓ Selesai' : ICONS.clock + ' Pending') + '</span>' +
           '</div></div></div>' +
           '<div style="display:flex;gap:4px;flex-shrink:0;">' +
           '<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="toggleDone(\'' + (t.id || '') + '\')">' + (t.done ? '↩ Buka' : '✓ Selesai') + '</button>' +
          '<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="' + editFn + '">Edit</button>' +
          '<button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;" onclick="duplicateTask(\'' + (t.id || '') + '\')">Duplikat</button>' +
          '</div></div>' + orgHtml +
-         '<div style="font-size:11.5px;font-weight:700;color:var(--accent);margin:8px 0 4px;">📅 ' + formatShortDate(t.date) + (t.enddate && t.enddate !== t.date ? ' → ' + formatShortDate(t.enddate) : '') + '</div>' +
+         '<div style="font-size:11.5px;font-weight:700;color:var(--accent);margin:8px 0 4px;">' + ICONS.calendar + ' ' + formatShortDate(t.date) + (t.enddate && t.enddate !== t.date ? ' → ' + formatShortDate(t.enddate) : '') + '</div>' +
          '<div class="detail-desc" style="min-height:20px; font-size:12px; line-height:1.4;">' + (esc(t.description) || '<span style="opacity:0.4;font-style:italic;">Tanpa deskripsi.</span>') + '</div>';
     }
 
@@ -3425,7 +3453,7 @@
           mulai: (document.getElementById('f-date').value + 'T' + (document.getElementById('modal-time').value || '00:00')),
           selesai: document.getElementById('f-enddate').value,
           deskripsi: document.getElementById('f-desc').value.trim(),
-          warna: S.tempColor || '#f59e0b',
+          warna: S.tempColor || '#FFC300',
           type: 'reminder',
           tipe: 'reminder',
           status: ''
@@ -3755,7 +3783,7 @@
             }
             .p-cell.other { background: #f8fafc; color: #cbd5e1; opacity: 0.4; }
             .p-cell.is-holiday { background-color: #fef2f2 !important; border-color: #ef4444 !important; color: #ef4444 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .p-cell.is-leave { background-color: #fffbeb !important; border-color: #f59e0b !important; color: #d97706 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .p-cell.is-leave { background-color: #fffbeb !important; border-color: #FFC300 !important; color: #d97706 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .p-cell-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2px; }
             .p-today-marker { background: #3b82f6 !important; color: #fff !important; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .p-holiday { font-size: 8px; color: #ef4444; font-weight: 700; text-align: right; margin-left: 4px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -3827,16 +3855,16 @@
         return true;
       });
       if (!list.length) {
-        el.innerHTML = '<div class="empty-state"><div style="font-size:32px;margin-bottom:8px;">📅</div><div>Belum ada event</div></div>';
+        el.innerHTML = '<div class="empty-state"><div style="font-size:32px;margin-bottom:8px;">' + ICONS.calendar + '</div><div>Belum ada event</div></div>';
         return;
       }
       el.innerHTML = list.map(function(e) {
         return '<div class="task-row" onclick="selectTask(\'' + e.id + '\')" style="border-left:3px solid ' + (e.color || '#14b8a6') + '">' +
           '<div class="task-main"><div class="task-name">' + esc(e.title || 'Event') + '</div>' +
-          '<div class="task-sub"><span>📅 ' + (e.date || '—') + '</span>' +
+          '<div class="task-sub"><span>' + ICONS.calendar + ' ' + (e.date || '—') + '</span>' +
           (e.enddate && e.enddate !== e.date ? ' → ' + e.enddate : '') +
           (e.penyelenggara ? '<span style="opacity:0.5"> · ' + esc(e.penyelenggara) + '</span>' : '') +
-          '<span class="badge" style="background:rgba(20,184,166,0.1);color:#14b8a6;">📅 Event</span>' +
+          '<span class="badge" style="background:rgba(20,184,166,0.1);color:#14b8a6;">' + ICONS.calendar + ' Event</span>' +
           '</div></div></div>';
       }).join('');
     }
@@ -3850,17 +3878,17 @@
         return true;
       });
       if (!list.length) {
-        el.innerHTML = '<div class="empty-state"><div style="font-size:32px;margin-bottom:8px;">🔔</div><div>Belum ada reminder</div></div>';
+        el.innerHTML = '<div class="empty-state"><div style="font-size:32px;margin-bottom:8px;">' + ICONS.reminder + '</div><div>Belum ada reminder</div></div>';
         return;
       }
       el.innerHTML = list.map(function(r) {
         var done = r.status === 'Selesai' || r.done;
-        return '<div class="task-row ' + (done ? 'done' : '') + '" onclick="selectTask(\'' + r.id + '\')" style="border-left:3px solid ' + (r.color || '#f59e0b') + '">' +
+        return '<div class="task-row ' + (done ? 'done' : '') + '" onclick="selectTask(\'' + r.id + '\')" style="border-left:3px solid ' + (r.color || 'var(--warning)') + '">' +
           '<div class="task-check ' + (done ? 'checked' : '') + '" onclick="event.stopPropagation();toggleDone(\'' + r.id + '\')"></div>' +
           '<div class="task-main"><div class="task-name">' + esc(r.title || 'Reminder') + '</div>' +
-          '<div class="task-sub"><span>📅 ' + (r.date || '—') + '</span>' +
+          '<div class="task-sub"><span>' + ICONS.calendar + ' ' + (r.date || '—') + '</span>' +
           (r.enddate && r.enddate !== r.date ? ' → ' + r.enddate : '') +
-          '<span class="badge" style="background:' + (done ? '#ecfdf5' : '#f1f5f9') + ';color:' + (done ? '#10b981' : '#94a3b8') + ';">' + (done ? '✓ Selesai' : '⏳ Pending') + '</span>' +
+          '<span class="badge" style="background:' + (done ? '#ecfdf5' : '#f1f5f9') + ';color:' + (done ? '#10b981' : '#94a3b8') + ';">' + (done ? '✓ Selesai' : ICONS.clock + ' Pending') + '</span>' +
           '</div></div></div>';
       }).join('');
     }

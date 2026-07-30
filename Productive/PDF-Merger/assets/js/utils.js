@@ -3,12 +3,11 @@
 function setStatus(msg, type = 'info') {
     const el = document.getElementById('status');
     if (!el) return;
-    el.textContent = msg;
+    el.innerHTML = msg;
     el.style.color = type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : '#333';
     if (type !== 'error') {
-        setTimeout(() => {
-            if (el.textContent === msg) el.textContent = '';
-        }, 5000);
+        clearTimeout(el._st);
+        el._st = setTimeout(function() { el.innerHTML = ''; }, 5000);
     }
 }
 
