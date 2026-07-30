@@ -1524,9 +1524,9 @@
             <!-- Left Month Panel -->
             <div class="calendar-month-panel" id="left-calendar-panel">
               <div class="calendar-header-nav">
-                <button class="cal-nav-btn" onclick="changeLeftMonth(-1)">◀</button>
+                <button class="cal-nav-btn" onclick="changeLeftMonth(-1)"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
                 <div class="month-title" id="left-month-title">Februari 2026</div>
-                <button class="cal-nav-btn" onclick="changeLeftMonth(1)">▶</button>
+                <button class="cal-nav-btn" onclick="changeLeftMonth(1)"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
               </div>
               <div class="calendar-grid">
                 <div class="calendar-day-header">Mo</div>
@@ -1538,13 +1538,13 @@
                 <div class="calendar-day-header">Su</div>
               </div>
             </div>
-            
+
             <!-- Right Month Panel -->
             <div class="calendar-month-panel" id="right-calendar-panel">
               <div class="calendar-header-nav">
-                <button class="cal-nav-btn" onclick="changeRightMonth(-1)">◀</button>
+                <button class="cal-nav-btn" onclick="changeRightMonth(-1)"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
                 <div class="month-title" id="right-month-title">Maret 2026</div>
-                <button class="cal-nav-btn" onclick="changeRightMonth(1)">▶</button>
+                <button class="cal-nav-btn" onclick="changeRightMonth(1)"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
               </div>
               <div class="calendar-grid">
                 <div class="calendar-day-header">Mo</div>
@@ -1685,7 +1685,7 @@
           <p class="text-[10px] text-blue-200/80 uppercase tracking-wider mt-0.5">Ubah detail laporan kegiatan Anda</p>
         </div>
         <button onclick="tutupEditModal()"
-          class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors min-h-unset p-0">✕</button>
+          class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors min-h-unset p-0"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
 
       <div class="p-6 max-h-[75vh] overflow-y-auto">
@@ -2400,7 +2400,7 @@
           <button
             onclick="document.getElementById('ai-apikey-section').style.display = document.getElementById('ai-apikey-section').style.display === 'none' ? 'block' : 'none';"
             style="width: auto; min-height: unset; padding: 8px 16px; background: transparent; color: #475569; border: 1px solid #334155; border-radius: 10px; font-size: 9px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; margin: 0; margin-left: 10px; transition: all 0.2s; display: inline-block;">
-            ⚙ API Key
+            <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> API Key
           </button>
         </div>
 
@@ -2512,6 +2512,30 @@
     const APP_TIMEZONE = 'Asia/Jakarta';
     const MAX_BACKDATE_DAYS = 30;
 
+    var ICONS = {
+      search: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>',
+      calendar: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/></svg>',
+      clipboard: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>',
+      zap: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+      clock: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+      check: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
+      x: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+      settings: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+      briefcase: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+      phone: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+      palette: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.5-.4 1.5-1.5 0-.3-.1-.6-.4-.9-.2-.3-.4-.6-.4-1 0-.8.6-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-5.5-4.5-10-10-10z"/></svg>',
+      package: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M16.5 9.4L7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>',
+      dollarSign: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+      beaker: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 3h15"/><path d="M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3"/><path d="M6 14h12"/></svg>',
+      alertTriangle: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+      noEntry: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>',
+      shuffle: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>',
+      arrowLeft: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>',
+      arrowRight: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>',
+      trash: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+      hourglass: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>',
+    };
+
     function getJakartaNow() {
       return new Date(new Date().toLocaleString('en-US', { timeZone: APP_TIMEZONE }));
     }
@@ -2620,12 +2644,12 @@
 
     // Peta deskripsi cakupan Bidang Tugas / Divisi
     const descsBidangTugas = {
-      'Manajemen': '💼 <strong>Manajemen</strong>: Perencanaan strategis, koordinasi antar divisi, pengawasan operasional, penyusunan kebijakan sistem, evaluasi kinerja, dan koordinasi internal.',
-      'Sales/CS': '📞 <strong>Sales / CSO</strong>: Komunikasi dengan klien, layanan pelanggan (CSO), demo produk, tindak lanjut klien potensial, penawaran harga, dan hubungan kemitraan.',
-      'Marketing/Kreatif': '🎨 <strong>Marketing / Kreatif</strong>: Pembuatan desain promosi, pengelolaan akun media sosial, penulisan copy/konten, kampanye digital, dan event pemasaran.',
-      'Operasional': '📦 <strong>Operasional / Logistik</strong>: Penerimaan & penyusunan barang, packing pengiriman, kontrol inventori/stok gudang, logistik kurir, dan koordinasi operasional gudang.',
-      'Keuangan/Admin': '💵 <strong>Keuangan / Akuntansi</strong>: Pembukuan transaksi masuk/keluar, pembuatan invoice, penagihan, pencatatan kas kecil, rekonsiliasi bank, dan tugas administrasi kantor.',
-      'R&D': '🧬 <strong>R&D / Riset</strong>: Pengembangan formulasi/sistem baru, penelitian berkala produk, pengujian mutu/quality control, perbaikan bug tracker, dan dokumentasi riset.'
+      'Manajemen': ICONS.briefcase + ' <strong>Manajemen</strong>: Perencanaan strategis, koordinasi antar divisi, pengawasan operasional, penyusunan kebijakan sistem, evaluasi kinerja, dan koordinasi internal.',
+      'Sales/CS': ICONS.phone + ' <strong>Sales / CSO</strong>: Komunikasi dengan klien, layanan pelanggan (CSO), demo produk, tindak lanjut klien potensial, penawaran harga, dan hubungan kemitraan.',
+      'Marketing/Kreatif': ICONS.palette + ' <strong>Marketing / Kreatif</strong>: Pembuatan desain promosi, pengelolaan akun media sosial, penulisan copy/konten, kampanye digital, dan event pemasaran.',
+      'Operasional': ICONS.package + ' <strong>Operasional / Logistik</strong>: Penerimaan & penyusunan barang, packing pengiriman, kontrol inventori/stok gudang, logistik kurir, dan koordinasi operasional gudang.',
+      'Keuangan/Admin': ICONS.dollarSign + ' <strong>Keuangan / Akuntansi</strong>: Pembukuan transaksi masuk/keluar, pembuatan invoice, penagihan, pencatatan kas kecil, rekonsiliasi bank, dan tugas administrasi kantor.',
+      'R&D': ICONS.beaker + ' <strong>R&D / Riset</strong>: Pengembangan formulasi/sistem baru, penelitian berkala produk, pengujian mutu/quality control, perbaikan bug tracker, dan dokumentasi riset.'
     };
 
     // Fungsi memperbarui asisten keterangan dinamis di bawah form
@@ -2895,7 +2919,7 @@
               var barWidth = Math.min(100, Math.round(divisiMinutes[cat] / 480 * 100));
               divisiHTML += '<div style="margin-bottom:4px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;"><span style="font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">' + cat + '</span><span style="font-size:9px;font-weight:800;color:' + barColor + ';">' + hours + 'j</span></div><div style="height:4px;background:#F1F5F9;border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + barWidth + '%;background:' + barColor + ';border-radius:4px;transition:width 0.5s;"></div></div></div>';
             });
-            divisiStatusEl.innerText = hasOverload ? '⚠ Ada divisi melebihi 8 jam kerja.' : 'Tidak ada indikasi overload.';
+            divisiStatusEl.innerHTML = hasOverload ? ICONS.alertTriangle + ' Ada divisi melebihi 8 jam kerja.' : 'Tidak ada indikasi overload.';
             divisiStatusEl.style.color = hasOverload ? '#EF4444' : '#10B981';
             divisiDetailEl.innerHTML = divisiHTML;
           }
@@ -2928,7 +2952,7 @@
             overlapStatusEl.innerText = 'Jam kerja teratur (No Conflicts).'; overlapStatusEl.style.color = '#10B981'; overlapDetailEl.innerHTML = '';
           } else {
             overlapStatusEl.innerText = 'Ditemukan ' + overlapCount + ' tumpang tindih jadwal.'; overlapStatusEl.style.color = '#EF4444';
-            var oh = ''; overlapDetails.slice(0, 3).forEach(function (od) { oh += '<div style="font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;padding:3px 6px;background:#FEF2F2;border-radius:4px;margin-bottom:2px;">⛔ ' + od.user + ': "' + (od.t1 || '').substring(0, 18) + '..." vs "' + (od.t2 || '').substring(0, 18) + '..."</div>'; });
+            var oh = ''; overlapDetails.slice(0, 3).forEach(function (od) { oh += '<div style="font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;padding:3px 6px;background:#FEF2F2;border-radius:4px;margin-bottom:2px;">' + ICONS.noEntry + ' ' + od.user + ': "' + (od.t1 || '').substring(0, 18) + '..." vs "' + (od.t2 || '').substring(0, 18) + '..."</div>'; });
             overlapDetailEl.innerHTML = oh;
           }
 
@@ -2948,7 +2972,7 @@
           if (misalignCount === 0) { msEl.innerText = 'Tugas sesuai spesialisasi.'; msEl.style.color = '#10B981'; mdEl.innerHTML = ''; }
           else {
             msEl.innerText = misalignCount + ' tugas di luar spesialisasi divisi.'; msEl.style.color = '#F59E0B';
-            var mh = ''; Object.keys(misalignMap).slice(0, 3).forEach(function (n) { mh += '<div style="font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;padding:3px 6px;background:#FFFBEB;border-radius:4px;margin-bottom:2px;">🔀 ' + n + ' (' + misalignMap[n].role + '): ' + misalignMap[n].cats.join(', ') + '</div>'; });
+            var mh = ''; Object.keys(misalignMap).slice(0, 3).forEach(function (n) { mh += '<div style="font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;padding:3px 6px;background:#FFFBEB;border-radius:4px;margin-bottom:2px;">' + ICONS.shuffle + ' ' + n + ' (' + misalignMap[n].role + '): ' + misalignMap[n].cats.join(', ') + '</div>'; });
             mdEl.innerHTML = mh;
           }
 
@@ -3005,13 +3029,13 @@
       var now = new Date().toLocaleString('id-ID');
       var crossC = crossOverlapC || 0;
       var entries = [
-        { label: 'Koneksi Backend GAS', status: 'OK', color: '#10B981', icon: '✓' },
-        { label: 'Periode Laporan', status: dateStr, color: '#2563EB', icon: '📅' },
-        { label: 'Total Aktivitas', status: totalAct + ' entri', color: '#2563EB', icon: '📋' },
-        { label: 'Overlap per orang', status: overlapC > 0 ? overlapC + ' tumpang tindih' : 'Teratur', color: overlapC > 0 ? '#EF4444' : '#10B981', icon: overlapC > 0 ? '⛔' : '✓' },
-        { label: 'Overlap lintas user', status: crossC > 0 ? crossC + ' (beban paralel)' : 'Rendah', color: crossC > 0 ? '#F59E0B' : '#10B981', icon: crossC > 0 ? '⚡' : '✓' },
-        { label: 'Job Misalignment', status: misalignC > 0 ? misalignC + ' item' : 'Sesuai spesialisasi', color: misalignC > 0 ? '#F59E0B' : '#10B981', icon: misalignC > 0 ? '🔀' : '✓' },
-        { label: 'Terakhir diperbarui', status: now, color: '#64748B', icon: '🕐' }
+        { label: 'Koneksi Backend GAS', status: 'OK', color: '#10B981', icon: ICONS.check },
+        { label: 'Periode Laporan', status: dateStr, color: '#2563EB', icon: ICONS.calendar },
+        { label: 'Total Aktivitas', status: totalAct + ' entri', color: '#2563EB', icon: ICONS.clipboard },
+        { label: 'Overlap per orang', status: overlapC > 0 ? overlapC + ' tumpang tindih' : 'Teratur', color: overlapC > 0 ? '#EF4444' : '#10B981', icon: overlapC > 0 ? ICONS.noEntry : ICONS.check },
+        { label: 'Overlap lintas user', status: crossC > 0 ? crossC + ' (beban paralel)' : 'Rendah', color: crossC > 0 ? '#F59E0B' : '#10B981', icon: crossC > 0 ? ICONS.zap : ICONS.check },
+        { label: 'Job Misalignment', status: misalignC > 0 ? misalignC + ' item' : 'Sesuai spesialisasi', color: misalignC > 0 ? '#F59E0B' : '#10B981', icon: misalignC > 0 ? ICONS.shuffle : ICONS.check },
+        { label: 'Terakhir diperbarui', status: now, color: '#64748B', icon: ICONS.clock }
       ];
       logEl.innerHTML = entries.map(function (e) { return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:#F8FAFC;border-radius:8px;border:1px solid #F1F5F9;"><span style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">' + e.icon + ' ' + e.label + '</span><span style="font-size:11px;font-weight:800;color:' + e.color + ';text-transform:uppercase;">' + e.status + '</span></div>'; }).join('');
     }
@@ -3024,7 +3048,7 @@
       if (key) {
         localStorage.setItem('gemini_api_key', key);
         document.getElementById('gemini-api-key').value = '';
-        document.getElementById('gemini-api-key').placeholder = '✓ API Key tersimpan di browser.';
+        document.getElementById('gemini-api-key').placeholder = '\u2713 API Key tersimpan di browser.';
         showToast('success', 'API Key Disimpan', 'Kunci Gemini API berhasil disimpan di browser Anda.');
       }
     }
@@ -3039,7 +3063,7 @@
       var endDateStr = selectedEndDate || dateStr;
       var dateRangeStr = (dateStr === endDateStr ? dateStr : dateStr + ' - ' + endDateStr);
 
-      btn.innerHTML = '⏳ Menganalisa...';
+      btn.innerHTML = ICONS.hourglass + ' Menganalisa...';
       btn.disabled = true;
 
       gasFetch({ action: 'getSPVSummary', startDate: dateStr, endDate: endDateStr })
@@ -3057,7 +3081,7 @@
             })
               .then(function (r) { return r.json(); })
               .then(function (result) {
-                btn.innerHTML = '✓ Audit Selesai'; btn.disabled = false;
+                btn.innerHTML = ICONS.check + ' Audit Selesai'; btn.disabled = false;
                 var text = ((((result.candidates || [])[0] || {}).content || {}).parts || [{}])[0].text || 'Tidak ada respons AI.';
                 dateLabelEl.innerText = 'Dianalisa: ' + dateRangeStr + ' · Real AI Gemini';
                 contentEl.innerHTML = formatMarkdownToHTML(text);
@@ -3075,7 +3099,7 @@
 
     function generateHeuristicReport(startDate, endDate, data, btn, outputContainer, contentEl, dateLabelEl) {
       setTimeout(function () {
-        btn.innerHTML = '✓ Laporan Siap'; btn.disabled = false;
+        btn.innerHTML = ICONS.check + ' Laporan Siap'; btn.disabled = false;
         var dateRangeStr = (startDate === endDate ? startDate : startDate + ' - ' + endDate);
         var divisiCounts = {}, divisiMinutes = {}, userTasks = {}, overlapCount = 0;
         data.forEach(function (row) {
@@ -3106,8 +3130,8 @@
           '<p style="margin:0 0 16px;color:#334155;line-height:1.8;">Tim merekam <strong>' + data.length + ' aktivitas</strong> pada ' + dateRangeStr + ', melibatkan <strong>' + uniqueStaff + ' staf</strong> dengan total <strong>' + totalJam + ' jam kerja</strong>. Divisi dengan beban tertinggi: <em style="color:#2563EB;">' + topDivisi + '</em> (' + (divisiCounts[topDivisi] || 0) + ' tugas).' + (data.length === 0 ? ' Tidak ada data aktivitas — pastikan tim melakukan input rutin harian.' : '') + '</p>' +
           '<h3 style="font-size:13px;font-weight:900;color:#0F172A;text-transform:uppercase;letter-spacing:0.8px;margin:0 0 12px;">2. Temuan Kritis</h3>' +
           '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">' +
-          '<div style="padding:10px 14px;border-radius:8px;border-left:3px solid ' + (overlapCount > 0 ? '#EF4444' : '#10B981') + ';background:' + (overlapCount > 0 ? '#FEF2F2' : '#F0FDF4') + ';"><span style="font-size:11px;font-weight:800;color:' + (overlapCount > 0 ? '#991B1B' : '#166534') + ';text-transform:uppercase;">' + (overlapCount > 0 ? '⛔ ' + overlapCount + ' Konflik Jadwal Terdeteksi' : '✓ Tidak Ada Konflik Jadwal') + '</span></div>' +
-          '<div style="padding:10px 14px;border-radius:8px;border-left:3px solid ' + (bebanWarning ? '#F59E0B' : '#10B981') + ';background:' + (bebanWarning ? '#FFFBEB' : '#F0FDF4') + ';"><span style="font-size:11px;font-weight:800;color:' + (bebanWarning ? '#92400E' : '#166534') + ';text-transform:uppercase;">' + (bebanWarning ? '⚠ Divisi "' + bebanWarning + '" Melebihi 8 Jam' : '✓ Semua Divisi dalam Batas Wajar') + '</span></div>' +
+          '<div style="padding:10px 14px;border-radius:8px;border-left:3px solid ' + (overlapCount > 0 ? '#EF4444' : '#10B981') + ';background:' + (overlapCount > 0 ? '#FEF2F2' : '#F0FDF4') + ';"><span style="font-size:11px;font-weight:800;color:' + (overlapCount > 0 ? '#991B1B' : '#166534') + ';text-transform:uppercase;">' + (overlapCount > 0 ? ICONS.noEntry + ' ' + overlapCount + ' Konflik Jadwal Terdeteksi' : ICONS.check + ' Tidak Ada Konflik Jadwal') + '</span></div>' +
+          '<div style="padding:10px 14px;border-radius:8px;border-left:3px solid ' + (bebanWarning ? '#F59E0B' : '#10B981') + ';background:' + (bebanWarning ? '#FFFBEB' : '#F0FDF4') + ';"><span style="font-size:11px;font-weight:800;color:' + (bebanWarning ? '#92400E' : '#166534') + ';text-transform:uppercase;">' + (bebanWarning ? ICONS.alertTriangle + ' Divisi "' + bebanWarning + '" Melebihi 8 Jam' : ICONS.check + ' Semua Divisi dalam Batas Wajar') + '</span></div>' +
           '</div>' +
           '<h3 style="font-size:13px;font-weight:900;color:#0F172A;text-transform:uppercase;letter-spacing:0.8px;margin:0 0 12px;">3. Rekomendasi Strategis</h3>' +
           '<ol style="margin:0 0 16px;padding-left:20px;display:flex;flex-direction:column;gap:8px;">' +
@@ -3530,7 +3554,7 @@
       if (!activeDeleteRowIndex) return;
       const btn = document.getElementById('btn-confirm-delete');
       const originalText = btn.innerHTML;
-      btn.innerHTML = '⏳ Menghapus...';
+      btn.innerHTML = ICONS.hourglass + ' Menghapus...';
       btn.disabled = true;
       showProgress();
 
@@ -3601,7 +3625,7 @@
 
       const btn = document.getElementById('btn-save-edit');
       const originalText = btn.innerHTML;
-      btn.innerHTML = '⏳ Menyimpan...';
+      btn.innerHTML = ICONS.hourglass + ' Menyimpan...';
       btn.disabled = true;
       showProgress();
 
@@ -3700,7 +3724,7 @@
         '<div class="toast-title">' + title + '</div>' +
         (message ? '<div class="toast-message">' + message + '</div>' : '') +
         '</div>' +
-        '<button class="toast-close" onclick="dismissToast(\'' + toastId + '\')">✕</button>';
+        '<button class="toast-close" onclick="dismissToast(\'' + toastId + '\')"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
 
       container.appendChild(toast);
 
