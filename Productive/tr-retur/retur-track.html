@@ -14,6 +14,8 @@
       -webkit-font-smoothing: antialiased;
     }
 
+    *, *::before, *::after { box-sizing: border-box; }
+
     ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
 
     h2 {
@@ -61,14 +63,9 @@
     #inputResi::placeholder { color: var(--text-muted); font-weight: 400; font-size: 14px; letter-spacing: 2px; }
     #inputResi:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(218,0,55,0.08); }
 
-    #inputOperator {
-      width: 100%; padding: 8px 14px; font-size: 13px;
-      color: var(--text); background: var(--surface); border: 1px solid var(--border);
-      border-radius: 8px; outline: none; margin-bottom: 8px;
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    #inputOperator::placeholder { color: var(--text-muted); font-weight: 400; }
-    #inputOperator:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(218,0,55,0.08); }
+    .operator-group { display: flex; gap: 12px; margin-bottom: 12px; padding: 6px 0; }
+    .op-label { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; cursor: pointer; }
+    .op-label input[type="radio"] { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
 
     /* ---- TABLE ---- */
     .table-wrap {
@@ -77,8 +74,8 @@
       display: flex; flex-direction: column;
     }
 
-    .table-scroll { flex-grow: 1; overflow-y: auto; }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
+    .table-scroll { flex-grow: 1; overflow: auto; display: flex; flex-direction: column; }
+    table { width: 100%; table-layout: fixed; border-collapse: collapse; text-align: left; }
     thead { position: sticky; top: 0; z-index: 2; }
 
     th {
@@ -124,14 +121,17 @@
 
     /* ---- MANUAL EXPEDITION INPUT ---- */
     .manual-exp-input {
-      width: 110px; padding: 6px 8px; font-size: 12px; font-weight: 500;
-      color: var(--text); background: var(--surface); border: 1px solid var(--accent);
-      border-radius: 6px; outline: none; margin-left: 6px;
+      width: 100%; padding: 6px 8px; font-size: 16px; font-weight: 500;
+      color: var(--text); background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; outline: none; margin-top: 4px; box-sizing: border-box;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
-
     .manual-exp-input::placeholder { color: var(--text-muted); font-weight: 400; }
-    .manual-exp-input:focus { box-shadow: 0 0 0 3px rgba(218,0,55,0.08); }
+    .manual-exp-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(218,0,55,0.08); }
+
+    .exp-cell { display: flex; flex-direction: column; gap: 2px; }
+    .exp-cell select { width: 100%; box-sizing: border-box; }
+    .exp-cell .manual-hint { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
 
     /* ---- COPY BUTTON ---- */
     .btn-copy {
@@ -147,7 +147,7 @@
 
     /* ---- BUTTON DELETE ---- */
     .btn-del {
-      width: 30px; height: 30px; background: transparent; color: var(--text-muted);
+      width: 44px; height: 44px; background: transparent; color: var(--text-muted);
       border: 1px solid transparent; border-radius: 6px;
       cursor: pointer; font-size: 16px; font-weight: 300;
       display: inline-flex; align-items: center; justify-content: center;
@@ -200,7 +200,7 @@
     .filter-btn {
       background: var(--surface); color: var(--text-muted); border: 1px solid var(--border);
       padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 500;
-      cursor: pointer; transition: 0.15s;
+      cursor: pointer; transition: 0.15s; min-height: 44px; display: inline-flex; align-items: center;
     }
 
     .filter-btn:hover { background: var(--surface); color: var(--text-muted); }
@@ -284,6 +284,13 @@
 
     .history-detail.show { display: block; }
 
+    .history-op-header {
+      font-size: 11px; font-weight: 600; color: var(--text-muted);
+      padding: 8px 14px 4px; background: var(--bg); border-bottom: 1px solid var(--border);
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .history-op-header:first-child { padding-top: 10px; }
+
     .history-item {
       display: flex; align-items: center; gap: 8px;
       padding: 10px 14px; font-size: 13px;
@@ -297,7 +304,7 @@
     .item-resi {
       font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
       font-size: 13px; font-weight: 500; color: var(--text);
-      min-width: 0; flex-shrink: 0;
+      min-width: 0; flex-shrink: 1; word-break: break-all;
     }
 
     .item-tanggal {
@@ -337,13 +344,25 @@
     .history-item.status-error .item-resi { text-decoration: line-through; color: var(--accent); }
 
     /* ---- RESPONSIVE ---- */
+    @media (max-width: 1024px) {
+      .panel-left { padding: 20px 24px; }
+      .panel-right { padding: 20px 24px; overflow-y: auto; }
+    }
+
     @media (max-width: 900px) {
       .container { flex-direction: column; }
       .panel-left, .panel-right { width: 100%; height: auto; }
-      .panel-left { max-height: 55vh; border-right: none; border-bottom: 1px solid var(--border); }
+      .panel-left { padding: 20px 20px; max-height: 55vh; border-right: none; border-bottom: 1px solid var(--border); }
       body { flex-direction: column; overflow: auto; }
       .table-wrap { min-height: 160px; }
-      .panel-right { max-height: 45vh; }
+      .panel-right { max-height: 45vh; padding: 20px; }
+    }
+
+    @media (max-width: 768px) {
+      .panel-left { padding: 14px 16px; max-height: 50vh; }
+      .panel-right { padding: 14px 16px; max-height: 50vh; overflow-y: auto; }
+      #inputResi { padding: 14px 16px; font-size: 18px; }
+      .filter-btn { font-size: 11px; padding: 4px 10px; }
     }
 
     .theme-toggle {
@@ -418,12 +437,6 @@
     /* pending badge */
     [data-theme="dark"] .pending-badge.zero { background: var(--border); color: var(--text-muted); }
 
-    /* ---- RESPONSIVE ---- */
-    @media (max-width: 768px) {
-      .container { flex-direction: column; }
-      .panel-left { width: 100%; height: 50vh; border-right: none; border-bottom: 1px solid var(--border); }
-      .panel-right { width: 100%; height: 50vh; overflow: hidden; }
-    }
   </style>
 </head>
 <body>
@@ -439,21 +452,29 @@
       <input type="text" id="inputResi" placeholder="SCAN BARCODE RESI..." autofocus autocomplete="off">
     </div>
 
-    <input type="text" id="inputOperator" placeholder="NAMA OPERATOR (Opsional)..." autocomplete="off">
+    <div class="operator-group">
+      <label class="op-label"><input type="radio" name="operator" value="Salsa" checked> Salsa</label>
+      <label class="op-label"><input type="radio" name="operator" value="Nesa"> Nesa</label>
+    </div>
 
     <div class="table-wrap">
       <div class="table-scroll">
         <table id="stagingTable">
           <thead>
             <tr>
-              <th style="width:30%">Tanggal</th>
-              <th style="width:30%">Operator</th>
+              <th style="width:18%">Tanggal</th>
+              <th style="width:17%">Operator</th>
+              <th style="width:25%">Ekspedisi</th>
               <th style="width:30%">Nomor Resi</th>
               <th style="width:10%"></th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
         </table>
+        <div class="table-empty" id="tableEmpty">
+          <div class="table-empty-icon">&#128230;</div>
+          <div class="table-empty-text">Belum ada data, scan barcode untuk memulai</div>
+        </div>
       </div>
     </div>
 
@@ -496,7 +517,7 @@
   // ============================================================
   // CONFIG & GAS BRIDGE
   // ============================================================
-  var GAS_URL = "https://script.google.com/macros/s/AKfycbwgnRWIknW1tjauamr9taXeGc-zEiOXjP-XbG6nLVNZKAwMDAbg_Bx7oCo_CF2fCGMZgg/exec";
+  var GAS_URL = "https://script.google.com/macros/s/AKfycbyO3jhASx3FW8B1CnBDqVteg-D4NzjdqHYsvw1XPfkAQrBVW4gI_tc44GVzg3mW33ag8A/exec";
 
   var GAS = {
     call: function(fnName, args, onSuccess, onFailure) {
@@ -509,23 +530,30 @@
         r[fnName].apply(null, args);
       } else {
         if (!GAS_URL) { if (onFailure) onFailure(new Error("GAS_URL belum dikonfigurasi")); return; }
+        var controller = new AbortController();
+        var tid = setTimeout(function() { controller.abort(); }, 30000);
         fetch(GAS_URL, {
           method: "POST",
           mode: "cors",
           redirect: "follow",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ function: fnName, args: args })
+          body: JSON.stringify({ function: fnName, args: args }),
+          signal: controller.signal
         })
           .then(function(r) {
+            clearTimeout(tid);
             if (!r.ok) throw new Error("HTTP " + r.status);
             return r.text();
           })
           .then(function(text) {
+            clearTimeout(tid);
             var data = JSON.parse(text);
             if (data.error) throw new Error(data.error);
+            if (data.success === false) throw new Error(data.message || "Gagal");
             if (onSuccess) onSuccess(data.result);
           })
           .catch(function(err) {
+            clearTimeout(tid);
             console.error("[GAS] fetch gagal:", err);
             if (onFailure) onFailure(err);
           });
@@ -538,7 +566,7 @@
   // ============================================================
   var configEkspedisi = [];
   var stagingData = [];
-  var currentOperator = '';
+  function getOperator() { return (document.querySelector('input[name="operator"]:checked') || {}).value || 'Salsa'; }
   var currentFilter = "all";
   var loadedHistory = [];
   var elInput = document.getElementById("inputResi");
@@ -561,36 +589,16 @@
     loadHistory("all", document.querySelector('.filter-btn.active'));
   };
 
-  document.addEventListener("click", function(e) {
-    var tag = e.target.tagName;
-    if (tag === "SELECT" || tag === "BUTTON" || tag === "INPUT") return;
-    if (e.target.closest("select") || e.target.closest("button") || e.target.closest("input")) return;
-    focusInput();
-  });
-
-  setInterval(function() {
-    var a = document.activeElement;
-    if (!a || a === document.body || a === document.documentElement) focusInput();
-  }, 1000);
+  // ponytail: removed aggressive auto-focus — was stealing focus on mobile
 
   // ============================================================
   // SCANNER
   // ============================================================
-  elInput.addEventListener("keypress", function(e) {
+  elInput.addEventListener("keydown", function(e) {
     if (e.key === "Enter") {
       e.preventDefault();
       var resi = this.value.trim();
       if (resi) { processScan(resi); this.value = ""; }
-    }
-  });
-
-  var elOperator = document.getElementById("inputOperator");
-  elOperator.addEventListener("keypress", function(e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      currentOperator = this.value.trim();
-      this.value = "";
-      focusInput();
     }
   });
 
@@ -621,8 +629,7 @@
   }
 
   function addStaging(resi, exp) {
-    var operator = document.getElementById('inputOperator') ? document.getElementById('inputOperator').value.trim() : '';
-    stagingData.unshift({ resi: resi, ekspedisi: exp, operator: operator, timestamp: Date.now() });
+    stagingData.unshift({ resi: resi, ekspedisi: exp, operator: getOperator(), timestamp: Date.now() });
     renderTable();
   }
 
@@ -656,9 +663,11 @@
 
     if (stagingData.length === 0) {
       elTableEmpty.style.display = "flex";
+      document.getElementById("stagingTable").style.display = "none";
     } else {
       elTableEmpty.style.display = "none";
-      var opts = '<option value="UNKNOWN">-- Pilih Manual --</option>';
+      document.getElementById("stagingTable").style.display = "";
+      var opts = '<option value="UNKNOWN">-- Pilih Ekspedisi --</option>';
       configEkspedisi.forEach(function(c) { opts += '<option value="' + c.name + '">' + c.name + "</option>"; });
 
 filtered.forEach(function(d) {
@@ -668,17 +677,19 @@ filtered.forEach(function(d) {
 
         var sel = opts.replace('value="' + d.ekspedisi + '"', 'value="' + d.ekspedisi + '" selected');
 
-        var expCell = '<select onchange="updateRowExpedition(' + i + ',this.value)">' + sel + '</select>';
+        var expCell = '<div class="exp-cell"><select onchange="updateRowExpedition(' + i + ',this.value)">' + sel + '</select>';
         if (d.ekspedisi === "UNKNOWN") {
-          expCell += '<input class="manual-exp-input" type="text" placeholder="Tulis manual..." value="' + (d.manualExp || "") + '" oninput="updateRowManual(' + i + ',this.value)">';
+          expCell += '<input class="manual-exp-input" type="text" placeholder="Ketik manual..." value="' + (d.manualExp || "") + '" oninput="updateRowManual(' + i + ',this.value)"><span class="manual-hint">atau ketik nama ekspedisi</span>';
         }
+        expCell += '</div>';
 
         var tanggal = new Date(d.timestamp).toLocaleDateString("id-ID");
-    var operator = d.operator || d.ekspedisi || '';
+    var operator = d.operator || '';
 
         tr.innerHTML =
           '<td style="color:#999;font-size:13px">' + tanggal + '</td>' +
           '<td>' + operator + '</td>' +
+          '<td>' + expCell + '</td>' +
           '<td><span style="font-family:monospace;font-size:14px">' + d.resi + '</span><button class="btn-copy" onclick="copyResi(this,\'' + d.resi + '\')">' + COPY_ICON_SVG + '</button></td>' +
           '<td><button class="btn-del" onclick="deleteRow(' + i + ')">&#215;</button></td>';
         elTableBody.appendChild(tr);
@@ -689,7 +700,7 @@ filtered.forEach(function(d) {
 
   function updateRowExpedition(i, v) { stagingData[i].ekspedisi = v; renderTable(); }
   function updateRowManual(i, v) { stagingData[i].manualExp = v; }
-  function deleteRow(i) { stagingData.splice(i, 1); renderTable(); focusInput(); }
+  function deleteRow(i) { stagingData.splice(i, 1); renderTable(); }
 
   // ============================================================
   // COPY RESI
@@ -741,10 +752,10 @@ filtered.forEach(function(d) {
     GAS.call("submitBatchData", [stagingData], function() {
       stagingData = []; renderTable();
       loadHistory(currentFilter, document.querySelector('.filter-btn.active'));
-      btn.innerText = "Proses Ke Database"; btn.disabled = false; focusInput();
+      btn.innerText = "Proses Ke Database"; btn.disabled = false;
     }, function(err) {
       alert("Gagal: " + (err.message || err));
-      btn.innerText = "Proses Ke Database"; btn.disabled = false; focusInput();
+      btn.innerText = "Proses Ke Database"; btn.disabled = false;
     });
   }
 
@@ -857,23 +868,38 @@ filtered.forEach(function(d) {
       var detail = document.createElement("div");
       detail.className = "history-detail" + (hasSearch ? " show" : "");
 
+      var opGroups = {};
       g.items.forEach(function(item) {
-        var statusClass = item.status === "Valid" ? " status-valid" : item.status === "Error" ? " status-error" : "";
-        var doneActive = item.status === "Valid" ? " active" : "";
-        var errActive = item.status === "Error" ? " active" : "";
+        var opKey = item.operator || 'Tanpa Operator';
+        if (!opGroups[opKey]) opGroups[opKey] = [];
+        opGroups[opKey].push(item);
+      });
+      var opKeys = Object.keys(opGroups).sort();
+      opKeys.forEach(function(opKey) {
+        var opItems = opGroups[opKey];
+        var opHeader = document.createElement("div");
+        opHeader.className = "history-op-header";
+        opHeader.textContent = opKey + ' (' + opItems.length + ')';
+        detail.appendChild(opHeader);
 
-        var div = document.createElement("div");
-        div.className = "history-item" + statusClass;
-        div.innerHTML =
-          '<span class="item-tanggal">' + item.tanggal + '</span>' +
-          '<span class="item-operator">' + (item.operator || item.ekspedisi) + '</span>' +
-          '<span class="item-resi">' + item.resi + '</span>' +
-          '<button class="btn-copy" onclick="copyResi(this,\'' + item.resi + '\')">' + COPY_ICON_SVG + '</button>' +
-          '<div class="item-actions">' +
-            '<button class="btn-status btn-done' + doneActive + '" onclick="markStatus(' + item.row + ',\'Valid\',this)" title="Valid">&#10003;</button>' +
-            '<button class="btn-status btn-err' + errActive + '" onclick="markStatus(' + item.row + ',\'Error\',this)" title="Error">&#10007;</button>' +
-          '</div>';
-        detail.appendChild(div);
+        opItems.forEach(function(item) {
+          var statusClass = item.status === "Valid" ? " status-valid" : item.status === "Error" ? " status-error" : "";
+          var doneActive = item.status === "Valid" ? " active" : "";
+          var errActive = item.status === "Error" ? " active" : "";
+
+          var div = document.createElement("div");
+          div.className = "history-item" + statusClass;
+          div.innerHTML =
+            '<span class="item-tanggal">' + item.tanggal + '</span>' +
+            '<span class="item-operator">' + (item.operator || '—') + '</span>' +
+            '<span class="item-resi">' + item.resi + '</span>' +
+            '<button class="btn-copy" onclick="copyResi(this,\'' + item.resi + '\')">' + COPY_ICON_SVG + '</button>' +
+            '<div class="item-actions">' +
+              '<button class="btn-status btn-done' + doneActive + '" onclick="markStatus(' + item.row + ',\'Valid\',this)" title="Valid">&#10003;</button>' +
+              '<button class="btn-status btn-err' + errActive + '" onclick="markStatus(' + item.row + ',\'Error\',this)" title="Error">&#10007;</button>' +
+            '</div>';
+          detail.appendChild(div);
+        });
       });
 
       groupEl.appendChild(header);
