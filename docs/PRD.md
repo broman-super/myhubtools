@@ -80,7 +80,7 @@ Internal team members of the organization using REYNAHUB_SYS for:
 
 ---
 
-#### SAS Analytic Dashboard (`Productive/Analytic.html`)
+#### SAS Analytic Dashboard (`Productive/analytic/Analytic.html`)
 **Purpose:** Sales performance analysis with interactive charts, importable Excel data, and target/expense tracking.
 
 **Features:**
@@ -161,7 +161,7 @@ Productive/latch/
 
 ---
 
-#### Package Tracker (`Productive/Outbondtrack.html`)
+#### Package Tracker (`Productive/outbondtrack/Outbondtrack.html`)
 **Purpose:** Package receiving/sending with scan logging.
 
 **Features:**

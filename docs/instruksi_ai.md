@@ -11,11 +11,11 @@ REYNAHUB_SYS adalah workspace hub internal — satu halaman shell yang menampung
 
 ### Tools yang Terpasang
 1. **Team Planner** (`Productive/Task/taskschedule.html`) — Calender, timeline, task/campaign/event/reminder, print view
-2. **SAS Analytic** (`Productive/Analytic.html`) — Sales dashboard, chart, import Excel
+2. **SAS Analytic** (`Productive/analytic/Analytic.html`) — Sales dashboard, chart, import Excel
 3. **LATCH** (`Productive/latch/latch.html`) — Link manager
 4. **Activity Tracker** (`Productive/tr/tracking.html`) — Daily activity + team workload
 5. **Retur Tracker** (`Productive/tr-retur/retur-track.html`) — Package return logging
-6. **Package Tracker** (`Productive/Outbondtrack.html`) — Package scan log
+6. **Package Tracker** (`Productive/outbondtrack/Outbondtrack.html`) — Package scan log
 7. **PDF Merger** (`Productive/PDF-Merger/PDFM_V2.html`) — PDF combine + label parser
 8. **Resi Generator** (`Productive/Resi-Generator/Index.html`) — Shipping label generator
 9. **Form DAK** (`Doc/form-dak.html`) — DAK application form
