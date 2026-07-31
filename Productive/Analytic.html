@@ -55,10 +55,16 @@
             --accent: #0f172a;
         }
 
+        html {
+            min-width: 360px;
+        }
+
         body {
             margin: 0;
             padding: 24px;
             font-family: 'Plus Jakarta Sans';
+            min-width: 360px;
+            overflow-x: auto;
         }
 
         .nav-bar {
@@ -198,6 +204,20 @@
             .col-span-4 {
                 grid-column: span 12;
             }
+
+            .nav-bar {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .nav-controls {
+                flex-wrap: wrap;
+            }
+
+            #reportrange {
+                flex: 1 1 240px;
+                max-width: 280px;
+            }
         }
 
         @media (max-width: 768px) {
@@ -222,6 +242,24 @@
                 flex-direction: column;
                 gap: 16px;
                 align-items: stretch;
+            }
+
+            .nav-controls {
+                gap: 8px;
+            }
+
+            #reportrange {
+                flex-basis: 100%;
+                max-width: none;
+                min-width: 0;
+            }
+
+            .compare-pill {
+                width: 100%;
+            }
+
+            .compare-pill button {
+                flex: 1;
             }
         }
 
@@ -256,6 +294,19 @@
 
             100% {
                 transform: rotate(360deg);
+            }
+        }
+
+        @keyframes pulse {
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.4);
+                opacity: 0.75;
             }
         }
 
@@ -724,10 +775,12 @@
     </div>
     <div id="loadingScreen"
         style="position:fixed; inset:0; background:var(--bg); z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-        <div
-            style="border:4px solid var(--accent); border-top:4px solid var(--primary); border-radius:50%; width:40px; height:40px; animation:spin 1s linear infinite;">
-        </div>
-        <p style="margin-top:10px; font-weight:800; font-size:12px; color:var(--text);">MEMUAT DATA KEUANGAN...</p>
+        <div id="loadingRoadmap"
+            style="margin-top:24px; display:flex; align-items:center;"></div>
+        <p id="loadingRoadmapLabel"
+            style="margin-top:12px; font-weight:800; font-size:11px; color:var(--text-muted); min-height:14px;"></p>
+        <p id="loadingErrorText"
+            style="margin-top:8px; font-weight:800; font-size:11px; color:var(--danger); display:none; max-width:420px; text-align:center;"></p>
     </div>
 
     <!-- Processing / Syncing Overlay -->
@@ -1313,7 +1366,7 @@
           circle: '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6"/></svg>',
           question: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
         };
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyAZ8WhxeLzkeUAZoECFW0QyBsEaSKkBuvV-kPj37wfZq4fj4ylkBptmzjN-tfkh59AjQ/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbx0OmcRVvhCSmX9r4J-RBsejZ_Th0fdfy46TaaPsdx6r1RxczSmmfcfeTHJe4fIFb1HEw/exec';
 
         // State pengaman proses GAS & refresh otomatis
         window.isProcessingGAS = false;
@@ -1476,11 +1529,12 @@
         async function syncDashboardData() {
             try {
                 // Tarik data keuangan terupdate
-                const res = await fetch(API_URL + "?action=getSalesData");
+                const res = await fetch(API_URL + "?action=getSalesData", { mode: 'cors', redirect: 'follow' });
+                if (!res.ok) throw new Error('Server ' + res.status);
                 const dataMentah = await res.json();
 
                 // Simpan cache lokal
-                localStorage.setItem("intel_pro_cache_v3", JSON.stringify(dataMentah));
+                try { localStorage.setItem("intel_pro_cache_v3", JSON.stringify(dataMentah)); } catch (e) { console.warn('Cache local gagal disimpan (ukuran data besar):', e); }
 
                 // Olah data mentah baru
                 olahDataMentah(dataMentah);
@@ -1497,7 +1551,8 @@
                 prosesData();
 
                 // Deteksi Stale AI Suggestion
-                if (document.getElementById('aiResultBox').style.display === 'block') {
+                 const aiBox = document.getElementById('aiResultBox');
+                 if (aiBox && aiBox.style.display === 'block') {
                     const staleBanner = document.getElementById('aiStaleWarning');
                     if (!staleBanner) {
                         const bannerHtml = `
@@ -1779,82 +1834,352 @@
         }
 
         function setupDatePicker() {
+            // ponytail: jangkar default ke tanggal terakhir DATA, bukan kalender hari ini
+            // (snapshot data bisa tertinggal beberapa hari -> range 7-hari-hari-ini jadi kosong)
+            let refEnd = moment();
+            if (rawDataTransaksi && rawDataTransaksi.length > 0) {
+                let maxTs = 0;
+                rawDataTransaksi.forEach(function (r) { let t = r.parsedDate.getTime(); if (t > maxTs) maxTs = t; });
+                if (maxTs > 0) refEnd = moment(maxTs);
+            }
+            const startDefault = refEnd.clone().subtract(6, 'days');
+            const endDefault = refEnd.clone();
+
+            function setHiddenRange(sM, eM) {
+                document.getElementById('startDate').value = sM.format('YYYY-MM-DD');
+                document.getElementById('endDate').value = eM.format('YYYY-MM-DD');
+            }
+            function applyRange(sM, eM) {
+                setHiddenRange(sM, eM);
+                const box = document.getElementById('aiResultBox');
+                if (box) box.style.display = 'none';
+                prosesData();
+            }
+            // ponytail: selalu isi input tersembunyi, jangan hanya saat plugin daterangepicker berhasil init
+            setHiddenRange(startDefault, endDefault);
+
             if (typeof $ !== 'undefined' && $.fn.daterangepicker && !$('#reportrange').data('daterangepicker')) {
                 $('#reportrange').daterangepicker({
                     ranges: {
+                        // ponytail: preset dijangkar ke akhir DATA (bukan hari ini) supaya selalu ada data; 'Hari Ini' literal
                         'Hari Ini': [moment().startOf('day'), moment().endOf('day')],
-                        'Kemarin': [moment().subtract(1, 'days').startOf('day'), moment().subtract(1, 'days').endOf('day')],
-                        '7 Hari Terakhir': [moment().subtract(6, 'days').startOf('day'), moment().endOf('day')],
-                        '30 Hari Terakhir': [moment().subtract(29, 'days').startOf('day'), moment().endOf('day')],
-                        'Bulan Ini': [moment().startOf('month'), moment().endOf('month')],
-                        'Bulan Lalu': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                        '7 Hari Terakhir': [refEnd.clone().subtract(6, 'days').startOf('day'), refEnd.clone().endOf('day')],
+                        '14 Hari Terakhir': [refEnd.clone().subtract(13, 'days').startOf('day'), refEnd.clone().endOf('day')],
+                        '30 Hari Terakhir': [refEnd.clone().subtract(29, 'days').startOf('day'), refEnd.clone().endOf('day')],
+                        'Bulan Ini': [refEnd.clone().startOf('month'), refEnd.clone().endOf('month')]
                     },
+                    showCustomRangeLabel: true,
                     alwaysShowCalendars: true,
-                    startDate: moment().subtract(6, 'days'),
-                    endDate: moment(),
-                    locale: { format: 'YYYY-MM-DD', customRangeLabel: 'Custom', applyLabel: 'Terapkan', cancelLabel: 'Batal' }
-                }, function (start, end, label) {
+                    startDate: startDefault,
+                    endDate: endDefault,
+                    locale: { format: 'DD/MM/YYYY', customRangeLabel: 'Custom', applyLabel: 'Terapkan', cancelLabel: 'Batal' }
+                }, function (start, end) {
                     $('#reportrange').val(start.format('DD MMM YYYY') + ' - ' + end.format('DD MMM YYYY'));
-                    document.getElementById('startDate').value = start.format('YYYY-MM-DD');
-                    document.getElementById('endDate').value = end.format('YYYY-MM-DD');
-                    document.getElementById('aiResultBox').style.display = 'none';
-                    prosesData();
+                    applyRange(start, end);
                 });
 
-                $('#reportrange').data('daterangepicker').setStartDate(moment().subtract(6, 'days'));
-                $('#reportrange').data('daterangepicker').setEndDate(moment());
-                $('#reportrange').val(moment().subtract(6, 'days').format('DD MMM YYYY') + ' - ' + moment().format('DD MMM YYYY'));
-                document.getElementById('startDate').value = moment().subtract(6, 'days').format('YYYY-MM-DD');
-                document.getElementById('endDate').value = moment().format('YYYY-MM-DD');
+                $('#reportrange').data('daterangepicker').setStartDate(startDefault);
+                $('#reportrange').data('daterangepicker').setEndDate(endDefault);
+                $('#reportrange').val(startDefault.format('DD MMM YYYY') + ' - ' + endDefault.format('DD MMM YYYY'));
                 document.getElementById('comparisonMode').value = 'rolling'; // Default: 7 Hari = rolling
+            } else if (typeof $ === 'undefined' || !$.fn.daterangepicker) {
+                // ponytail: fallback native bila plugin daterangepicker gagal ter-load (CDN diblokir/down)
+                buildNativeRangePicker(startDefault, endDefault, refEnd, applyRange);
+            }
+        }
 
-                $('body').on('mouseenter', '.ranges li', function () {
-                    let text = $(this).text();
-                    let ranges = $('#reportrange').data('daterangepicker').ranges;
-                    if (ranges[text]) {
-                        let start = ranges[text][0].format('DD MMM YYYY');
-                        let end = ranges[text][1].format('DD MMM YYYY');
-                        $('#reportrange').val(start + ' - ' + end);
-                    }
-                }).on('mouseleave', '.ranges li', function () {
-                    let start = $('#reportrange').data('daterangepicker').startDate.format('DD MMM YYYY');
-                    let end = $('#reportrange').data('daterangepicker').endDate.format('DD MMM YYYY');
-                    $('#reportrange').val(start + ' - ' + end);
+        function buildNativeRangePicker(startDefault, endDefault, refEnd, applyRange) {
+            if (document.getElementById('nativeRangeCtrl')) return;
+            const box = document.getElementById('reportrange');
+            if (!box || !box.parentNode) return;
+            box.style.display = 'none';
+
+            const presets = [
+                ['Hari Ini', -2], ['7 Hari Terakhir', 6], ['14 Hari Terakhir', 13], ['30 Hari Terakhir', 29], ['Bulan Ini', 99], ['Custom', -1]
+            ];
+            let selStart = moment(startDefault.format('YYYY-MM-DD')).startOf('day');
+            let selEnd = moment(endDefault.format('YYYY-MM-DD')).startOf('day');
+            let viewMonth = selStart.clone().startOf('month');
+            let activePreset = null;
+            let isOpen = false;
+
+            const wrap = document.createElement('div');
+            wrap.id = 'nativeRangeCtrl';
+            wrap.style.cssText = 'position:relative; width:100%; min-width:220px;';
+
+            // Tombol trigger (mirip shadcn): ikon kalender + teks rentang
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.style.cssText = 'display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:10px 15px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text); cursor:pointer; font-weight:700; font-size:12px; outline:none;';
+            const icon = document.createElement('span');
+            icon.style.cssText = 'display:inline-flex; flex-shrink:0;';
+            icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
+            const label = document.createElement('span');
+            label.id = 'nativeRangeLabel';
+            btn.appendChild(icon);
+            btn.appendChild(label);
+
+            // Popover
+            const pop = document.createElement('div');
+            pop.style.cssText = 'position:absolute; top:calc(100% + 8px); right:0; z-index:9999; display:none; background:var(--card); border:1px solid var(--border); border-radius:14px; box-shadow:0 12px 32px rgba(15,23,42,0.12); padding:16px; min-width:580px; max-width:94vw;';
+            pop.style.boxSizing = 'border-box';
+
+            // Layout: preset selalu di kiri, kalender selalu di kanan (nowrap = tak pernah bertumpuk)
+            const bodyRow = document.createElement('div');
+            bodyRow.style.cssText = 'display:flex; flex-wrap:nowrap; gap:16px; align-items:flex-start;';
+
+            // Kolom kiri: daftar preset (nama saja)
+            const presetList = document.createElement('div');
+            presetList.style.cssText = 'flex:0 0 160px; display:flex; flex-direction:column; gap:8px;';
+            const presetBtns = {};
+            presets.forEach(function (p) {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.textContent = p[0];
+                b.style.cssText = 'display:block; width:100%; text-align:left; padding:9px 12px; border:none; border-radius:8px; background:transparent; color:var(--text); cursor:pointer; font-weight:700; font-size:12px; transition:background 0.15s;';
+                presetBtns[p[0]] = b;
+                b.addEventListener('click', function () { selectPreset(p[0]); });
+                presetList.appendChild(b);
+            });
+            bodyRow.appendChild(presetList);
+
+            // Kolom kanan: nav bulan + 2 kalender + hint
+            const right = document.createElement('div');
+            right.style.cssText = 'flex:1 1 0; min-width:0;';
+
+            const nav = document.createElement('div');
+            nav.style.cssText = 'display:flex; justify-content:space-between; margin-bottom:10px;';
+            const navPrev = document.createElement('button'); navPrev.type = 'button'; navPrev.textContent = '‹';
+            const navNext = document.createElement('button'); navNext.type = 'button'; navNext.textContent = '›';
+            const navStyle = 'padding:4px 12px; border:1px solid var(--border); border-radius:7px; background:transparent; color:var(--text-muted); cursor:pointer; font-weight:900; font-size:15px; line-height:1; transition:background 0.15s, color 0.15s;';
+            navPrev.style.cssText = navStyle;
+            navNext.style.cssText = navStyle;
+            nav.appendChild(navPrev);
+            nav.appendChild(navNext);
+            right.appendChild(nav);
+
+            const calWrap = document.createElement('div');
+            calWrap.style.cssText = 'display:flex; flex-wrap:nowrap; gap:12px; justify-content:center;';
+            right.appendChild(calWrap);
+
+            const hint = document.createElement('div');
+            hint.id = 'nativeRangeHint';
+            hint.style.cssText = 'font-size:10px; color:var(--text-muted); font-weight:600; margin-top:10px; text-align:center;';
+            hint.textContent = 'Klik tanggal pertama lalu tanggal kedua untuk Custom';
+            right.appendChild(hint);
+
+            bodyRow.appendChild(right);
+            pop.appendChild(bodyRow);
+
+            wrap.appendChild(btn);
+            wrap.appendChild(pop);
+            box.parentNode.insertBefore(wrap, box.nextSibling);
+
+            function fmtRange() {
+                const same = selStart.isSame(selEnd, 'day');
+                label.textContent = selStart.format('DD MMM YYYY') + (same ? '' : ' - ' + selEnd.format('DD MMM YYYY'));
+            }
+            function apply() {
+                applyRange(selStart.clone(), selEnd.clone());
+                fmtRange();
+            }
+            function markPreset(name) {
+                activePreset = name;
+                Object.keys(presetBtns).forEach(function (k) {
+                    const b = presetBtns[k];
+                    const active = k === name;
+                    b.style.background = active ? 'var(--primary-light)' : 'transparent';
+                    b.style.color = active ? 'var(--primary)' : 'var(--text)';
+                    b.style.fontWeight = active ? '800' : '700';
                 });
             }
+            function selectPreset(name) {
+                const p = presets.find(function (x) { return x[0] === name; });
+                const days = p[1];
+                if (name === 'Hari Ini') {
+                    // ponytail: literal hari ini, boleh kosong bila data belum masuk
+                    const t = moment().startOf('day');
+                    selStart = t.clone(); selEnd = t.clone();
+                    viewMonth = selStart.clone().startOf('month');
+                    markPreset(name);
+                    apply();
+                    renderCalendars();
+                    closePop();
+                } else if (days >= 0) {
+                    let a, b;
+                    if (days === 99) { a = refEnd.clone().startOf('month'); b = refEnd.clone().endOf('month'); }
+                    else { a = refEnd.clone().subtract(days, 'days').startOf('day'); b = refEnd.clone().endOf('day'); }
+                    selStart = a.clone(); selEnd = b.clone();
+                    viewMonth = selStart.clone().startOf('month');
+                    markPreset(name);
+                    apply();
+                    renderCalendars();
+                    closePop();
+                } else {
+                    markPreset(name);
+                    hint.textContent = 'Klik dua tanggal di kalender untuk rentang custom';
+                }
+            }
+            function onDayClick(day) {
+                const d = moment(day.format('YYYY-MM-DD')).startOf('day');
+                if (!selStart || selEnd) {
+                    selStart = d; selEnd = null;
+                } else if (d.isBefore(selStart)) {
+                    selStart = d;
+                } else {
+                    selEnd = d;
+                }
+                if (selEnd) {
+                    markPreset(null);
+                    apply();
+                }
+                renderCalendars();
+            }
+            function buildMonth(monthStart) {
+                const col = document.createElement('div');
+                col.style.cssText = 'flex:1 1 210px; max-width:230px; min-width:160px;';
+                const head = document.createElement('div');
+                head.textContent = monthStart.format('MMMM YYYY');
+                head.style.cssText = 'text-align:center; font-weight:700; font-size:13px; padding:6px 0; color:var(--text);';
+                col.appendChild(head);
+                const grid = document.createElement('div');
+                grid.style.cssText = 'display:grid; grid-template-columns:repeat(7, 1fr); gap:2px;';
+                ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].forEach(function (dw) {
+                    const w = document.createElement('div');
+                    w.textContent = dw;
+                    w.style.cssText = 'text-align:center; font-size:10px; font-weight:800; color:var(--text-muted); padding:4px 0;';
+                    grid.appendChild(w);
+                });
+                for (let i = 0; i < monthStart.day(); i++) {
+                    const empty = document.createElement('div');
+                    grid.appendChild(empty);
+                }
+                const total = monthStart.daysInMonth();
+                for (let i = 1; i <= total; i++) {
+                    const day = monthStart.clone().date(i);
+                    const cell = document.createElement('button');
+                    cell.type = 'button';
+                    cell.textContent = i;
+                    let st = 'padding:5px 0; text-align:center; font-size:11px; font-weight:700; cursor:pointer; border:none; background:transparent; color:var(--text); border-radius:7px; transition:background 0.15s;';
+                    const inRange = selEnd && day.isSameOrAfter(selStart) && day.isSameOrBefore(selEnd);
+                    const isStart = day.isSame(selStart, 'day');
+                    const isEnd = selEnd && day.isSame(selEnd, 'day');
+                    if (day.isSame(moment(), 'day') && !isStart && !isEnd) st += ' color:var(--primary);';
+                    if (inRange && !isStart && !isEnd) st += ' background:var(--primary-light);';
+                    if (isStart || isEnd) st += ' background:var(--primary); color:#fff; font-weight:900;';
+                    cell.style.cssText = st;
+                    cell.addEventListener('click', function () { onDayClick(day); });
+                    grid.appendChild(cell);
+                }
+                col.appendChild(grid);
+                return col;
+            }
+            function renderCalendars() {
+                calWrap.innerHTML = '';
+                for (let m = 0; m < 2; m++) {
+                    calWrap.appendChild(buildMonth(viewMonth.clone().add(m, 'months')));
+                }
+            }
+            function openPop() { pop.style.display = 'block'; isOpen = true; renderCalendars(); }
+            function closePop() { pop.style.display = 'none'; isOpen = false; }
+
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (isOpen) closePop(); else openPop();
+            });
+            navPrev.addEventListener('click', function () { viewMonth.subtract(1, 'months'); renderCalendars(); });
+            navNext.addEventListener('click', function () { viewMonth.add(1, 'months'); renderCalendars(); });
+            document.addEventListener('click', function (e) {
+                if (wrap && !wrap.contains(e.target)) closePop();
+            });
+
+            fmtRange();
+            markPreset('7 Hari Terakhir');
         }
 
         async function initDashboard() {
             const syncStatus = document.getElementById('syncStatus');
-            if(syncStatus) syncStatus.innerText = "Memuat...";
+            const ls = document.getElementById('loadingScreen');
+            const roadmapEl = document.getElementById('loadingRoadmap');
+            const roadmapLabel = document.getElementById('loadingRoadmapLabel');
+            const errText = document.getElementById('loadingErrorText');
+
+            // Roadmap minimalis: 3 titik tahap pengambilan data dari backend
+            const STAGES = ['Menghubungkan server', 'Mengambil data', 'Menyiapkan dashboard'];
+            const dots = [];
+            const lines = [];
+            (function buildRoadmap() {
+                if (!roadmapEl) return;
+                roadmapEl.innerHTML = '';
+                STAGES.forEach(function (name, i) {
+                    if (i > 0) {
+                        const line = document.createElement('div');
+                        line.style.cssText = 'width:56px; height:3px; border-radius:2px; background:var(--accent); transition:background 0.3s;';
+                        roadmapEl.appendChild(line);
+                        lines.push(line);
+                    }
+                    const dot = document.createElement('div');
+                    dot.style.cssText = 'width:14px; height:14px; border-radius:50%; border:3px solid var(--accent); background:transparent; box-sizing:border-box; transition:all 0.3s;';
+                    roadmapEl.appendChild(dot);
+                    dots.push(dot);
+                });
+            })();
+
+            let activeStage = -1;
+            function setStage(i, status, detail) {
+                if (i < 0 || i >= dots.length) return;
+                const dot = dots[i];
+                dot.style.border = '3px solid var(--primary)';
+                dot.style.background = 'var(--primary)';
+                dot.style.animation = 'none';
+                if (status === 'active') {
+                    activeStage = i;
+                    dot.style.animation = 'pulse 1.2s ease-in-out infinite';
+                } else if (status === 'error') {
+                    dot.style.border = '3px solid var(--danger)';
+                    dot.style.background = 'var(--danger)';
+                    dot.style.animation = 'none';
+                }
+                if (status === 'done' && lines[i]) lines[i].style.background = 'var(--primary)';
+                if (roadmapLabel) {
+                    roadmapLabel.textContent = detail || '';
+                    roadmapLabel.style.color = status === 'error' ? 'var(--danger)' : 'var(--text-muted)';
+                }
+            }
+            function showErr(msg) {
+                if (errText) { errText.textContent = msg; errText.style.display = 'block'; }
+            }
+
+            // ponytail: loading screen mengunci front-end sampai SEMUA fungsi siap + data fresh tiba.
+            // Cache TIDAK ditampilkan duluan — front-end baru dibuka setelah semuanya load sempurna.
+            let memoriLama = localStorage.getItem("intel_pro_cache_v3");
+            let syncing = true;
+
+            if (ls) ls.style.display = 'flex';
             if (document.getElementById('inputExpenseDate')) {
                 document.getElementById('inputExpenseDate').value = moment().format('YYYY-MM-DD');
             }
             if (typeof initDropzone === 'function') initDropzone();
-            // TURBO CACHE SYSTEM
-            let memoriLama = localStorage.getItem("intel_pro_cache_v3");
-            if (memoriLama) {
-                try {
-                    let datCache = JSON.parse(memoriLama);
-                    olahDataMentah(datCache);
-                    setTimeout(() => {
-                        let ls = document.getElementById('loadingScreen');
-                        if (ls) ls.style.display = 'none';
-                        setupDatePicker();
-                        prosesData();
-                        if(syncStatus) syncStatus.innerText = "Data Offline (Cached)";
-                    }, 50); // Eksekusi super kilat 
-                } catch (e) { }
-            } else {
-                let ls = document.getElementById('loadingScreen');
-                if (ls) ls.style.display = 'flex';
+
+            const t0 = Date.now();
+            function unlock() {
+                setStage(2, 'done');
+                setTimeout(function () { if (ls) ls.style.display = 'none'; }, Math.max(0, 600 - (Date.now() - t0)));
             }
 
             try {
-                // Background Sync: Tarik data diam-diam dari API
                 if(syncStatus) syncStatus.innerText = "Sinkronisasi...";
-                const res = await fetch(API_URL + "?action=getSalesData");
+                setStage(0, 'active', 'Menghubungkan ke Google Apps Script...');
+                const controller = new AbortController();
+                const syncTimeout = setTimeout(() => controller.abort(), 90000);
+                const res = await fetch(API_URL + "?action=getSalesData", { mode: 'cors', redirect: 'follow', signal: controller.signal });
+                clearTimeout(syncTimeout);
+                if (!res.ok) throw new Error('Server ' + res.status);
+                setStage(0, 'done');
+
+                setStage(1, 'active', 'Mengambil data transaksi dari backend...');
                 let dataMentah = await res.json();
+                setStage(1, 'done');
 
                 // Pre-fill target input if available
                 if (dataMentah.settings && dataMentah.settings.length > 0) {
@@ -1863,24 +2188,34 @@
                 }
 
                 // Simpan cache untuk buka web berikutnya!
-                localStorage.setItem("intel_pro_cache_v3", JSON.stringify(dataMentah));
+                try { localStorage.setItem("intel_pro_cache_v3", JSON.stringify(dataMentah)); } catch (e) { console.warn('Cache local gagal disimpan (ukuran data besar):', e); }
 
+                setStage(2, 'active', 'Mengolah data & menyiapkan dashboard...');
                 olahDataMentah(dataMentah);
+                syncing = false;
                 if(syncStatus) syncStatus.innerText = "Data Terkini";
-
-                setTimeout(() => {
-                    let ls = document.getElementById('loadingScreen');
-                    if (ls) ls.style.display = 'none';
-                    setupDatePicker();
-                    prosesData();
-                }, 100);
-
+                setupDatePicker();
+                prosesData();
+                unlock();
             } catch (e) {
                 console.error("Sinkronisasi gagal:", e);
-                if(syncStatus) syncStatus.innerText = "Gagal Sinkronisasi";
-                if (!memoriLama) alert("Gagal mengambil data dari Google Sheet. Cek API!");
-                let ls = document.getElementById('loadingScreen');
-                if (ls) ls.style.display = 'none';
+                syncing = false;
+                if (activeStage >= 0) setStage(activeStage, 'error');
+                showErr('Gagal: ' + (e && e.message ? e.message : e) + (memoriLama ? ' — Menampilkan data cache.' : ''));
+                if(syncStatus) syncStatus.innerText = memoriLama ? "Data Offline (Cached)" : "Gagal Sinkronisasi";
+                if (memoriLama) {
+                    try {
+                        setStage(1, 'active', 'Memakai data cache lokal...');
+                        olahDataMentah(JSON.parse(memoriLama));
+                        setStage(1, 'done');
+                    } catch (err) { console.error('Cache error:', err); }
+                } else {
+                    alert("Gagal mengambil data dari Google Sheet. Cek API!");
+                }
+                setStage(2, 'active', 'Merender dashboard dari data yang tersedia...');
+                setupDatePicker();
+                prosesData();
+                unlock();
             }
         }
 
@@ -2130,7 +2465,8 @@
 
             function hitungVsText(skrg, lalu, revertColor = false) {
                 if (lalu === 0 && skrg === 0) return `<span style="color:#94a3b8">(-%)</span>`;
-                if (lalu === 0 && skrg > 0) return `<span style="color:${revertColor ? 'var(--danger)' : 'var(--success)'}">▲ MAX</span>`;
+                if (lalu === 0 && skrg > 0) return `<span style="color:${revertColor ? 'var(--danger)' : 'var(--success)'}">▲ NEW</span>`;
+                if (lalu === 0 && skrg < 0) return `<span style="color:${revertColor ? 'var(--success)' : 'var(--danger)'}">▼ N/A</span>`;
                 let dff = ((skrg - lalu) / Math.abs(lalu)) * 100;
                 let c = dff > 0 ? (revertColor ? 'var(--danger)' : 'var(--success)') : (revertColor ? 'var(--success)' : 'var(--danger)');
                 return `<span style="color:${c}">${dff > 0 ? '▲' : '▼'} ${Math.abs(dff).toFixed(1)}%</span>`;
@@ -2498,10 +2834,10 @@
             let dailyVelocity = netSales / hariBerjalan;
 
             // Hitung data tambahan untuk diagnostik lengkap
-            let netQtySkrg = dSkrg.qty - dSkrg.returQty;
-            let netQtyLalu = dLalu.qty - dLalu.returQty;
-            let aovSkrg = dSkrg.basket > 0 ? netSales / dSkrg.basket : 0;
-            let aovLalu = netSalesLalu > 0 && dLalu.basket > 0 ? netSalesLalu / dLalu.basket : 0;
+            let netQtySkrg = dSkrg.salesQty - dSkrg.returQty;
+            let netQtyLalu = dLalu.salesQty - dLalu.returQty;
+            let aovSkrg = dSkrg.trx > 0 ? netSales / dSkrg.trx : 0;
+            let aovLalu = netSalesLalu > 0 && dLalu.trx > 0 ? netSalesLalu / dLalu.trx : 0;
             let churnOmzet = 0;
             let now2 = new Date();
             Object.entries(rekapReseller).forEach(i => { let dAgo = Math.floor((now2 - (lastOrder[i[0]] || now2)) / (1000 * 3600 * 24)); if (dAgo > 14) churnOmzet += i[1]; });
@@ -2532,8 +2868,10 @@
             Chart.defaults.color = document.documentElement.getAttribute('data-theme') === 'dark' ? '#94a3b8' : '#64748b';
             Chart.defaults.font.family = 'Plus Jakarta Sans';
 
-            // 1. TREN CHART (LINE) - Exec Styling
-            const ctxTren = document.getElementById('chartTren').getContext('2d');
+             // 1. TREN CHART (LINE) - Exec Styling
+             const elTren = document.getElementById('chartTren');
+             if (!elTren) return;
+             const ctxTren = elTren.getContext('2d');
             const gradTren = ctxTren.createLinearGradient(0, 0, 0, 350);
             gradTren.addColorStop(0, 'rgba(59, 130, 246, 0.4)'); /* Blue */
             gradTren.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
@@ -2596,9 +2934,11 @@
                 });
             }
 
-            // 3. MARKET SHARE CHART
-            const sortedKat = Object.entries(kat).sort((a, b) => b[1] - a[1]);
-            const ctxKat = document.getElementById('chartKategori').getContext('2d');
+             // 3. MARKET SHARE CHART
+             const elKat = document.getElementById('chartKategori');
+             if (!elKat) return;
+             const ctxKat = elKat.getContext('2d');
+             const sortedKat = Object.entries(kat).sort((a, b) => b[1] - a[1]);
             if (charts['kategori']) charts['kategori'].destroy();
             charts['kategori'] = new Chart(ctxKat, {
                 type: 'doughnut',
@@ -2923,7 +3263,15 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             const content = document.getElementById('aiContent');
             box.style.display = 'block'; content.innerHTML = '<span style="color:#f59e0b;display:inline-flex;align-items:center;gap:4px;">Gemini memproses strategi... '+ICONS.bolt+'</span>';
             try {
-                const res = await fetch(API_URL + "?action=getAnalysis&context=" + encodeURIComponent(contextForAI));
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    redirect: 'follow',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8'
+                    },
+                    body: JSON.stringify({ action: 'getAnalysis', context: contextForAI })
+                });
                 const json = await res.json();
                 let hasilAkhir = json.analysis;
                 if (typeof hasilAkhir === 'object') {
