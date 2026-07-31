@@ -1226,9 +1226,13 @@
 
         <div class="bento-item col-span-4">
             <div class="bento-header">
-                <div class="bento-title">PETA WAKTU GACOR</div>
+                <div class="bento-title">MARKET SHARE <span class="help-icon"
+                        data-tooltip="Cara Baca: KANAN = Omzet Bersih & Porsi saat ini. KIRI (Merah/Hijau) = Persentase & Selisih Pertumbuhan vs Periode Lalu. Logika: Porsi (%) = (Omzet Bersih Kategori) ÷ (Total Omzet Bersih) × 100%. (Sudah dipotong Retur).">?</span>
+                </div>
             </div>
-            <div class="chart-box large"><canvas id="chartHari"></canvas></div>
+            <div class="chart-box" style="min-height:160px; margin-bottom:16px;"><canvas id="chartKategori"></canvas>
+            </div>
+            <div id="tableKategori" style="display:flex; flex-direction:column; gap:8px;"></div>
         </div>
 
         <!-- ROW 3 -->
@@ -1263,24 +1267,20 @@
             </div>
         </div>
 
-        <div class="bento-item col-span-4">
+        <div class="bento-item col-span-4" style="align-self:start;">
             <div class="bento-header">
                 <div class="bento-title">RASIO KESEHATAN KEUANGAN</div>
             </div>
-            <div class="chart-box" style="min-height:200px;"><canvas id="chartMargin"></canvas></div>
+            <div class="chart-box" style="height:300px; min-height:0; flex:0 0 auto;"><canvas id="chartMargin"></canvas></div>
             <div id="marginAnalysis" style="margin-top:16px;"></div>
         </div>
 
         <!-- ROW 4 -->
         <div class="bento-item col-span-4">
             <div class="bento-header">
-                <div class="bento-title">MARKET SHARE <span class="help-icon"
-                        data-tooltip="Cara Baca: KANAN = Omzet Bersih & Porsi saat ini. KIRI (Merah/Hijau) = Persentase & Selisih Pertumbuhan vs Periode Lalu. Logika: Porsi (%) = (Omzet Bersih Kategori) ÷ (Total Omzet Bersih) × 100%. (Sudah dipotong Retur).">?</span>
-                </div>
+                <div class="bento-title">PETA WAKTU GACOR</div>
             </div>
-            <div class="chart-box" style="min-height:160px; margin-bottom:16px;"><canvas id="chartKategori"></canvas>
-            </div>
-            <div id="tableKategori" style="display:flex; flex-direction:column; gap:8px;"></div>
+            <div class="chart-box large"><canvas id="chartHari"></canvas></div>
         </div>
 
         <div class="bento-item col-span-4">
@@ -1834,16 +1834,16 @@
         }
 
         function setupDatePicker() {
-            // ponytail: jangkar default ke tanggal terakhir DATA, bukan kalender hari ini
-            // (snapshot data bisa tertinggal beberapa hari -> range 7-hari-hari-ini jadi kosong)
+            // refEnd hanya untuk preset 'Bulan Ini'; 'N Hari Terakhir' & default dihitung dari hari ini (literal)
             let refEnd = moment();
             if (rawDataTransaksi && rawDataTransaksi.length > 0) {
                 let maxTs = 0;
                 rawDataTransaksi.forEach(function (r) { let t = r.parsedDate.getTime(); if (t > maxTs) maxTs = t; });
                 if (maxTs > 0) refEnd = moment(maxTs);
             }
-            const startDefault = refEnd.clone().subtract(6, 'days');
-            const endDefault = refEnd.clone();
+            const today = moment().startOf('day');
+            const startDefault = today.clone().subtract(6, 'days');
+            const endDefault = today.clone();
 
             function setHiddenRange(sM, eM) {
                 document.getElementById('startDate').value = sM.format('YYYY-MM-DD');
@@ -1861,11 +1861,11 @@
             if (typeof $ !== 'undefined' && $.fn.daterangepicker && !$('#reportrange').data('daterangepicker')) {
                 $('#reportrange').daterangepicker({
                     ranges: {
-                        // ponytail: preset dijangkar ke akhir DATA (bukan hari ini) supaya selalu ada data; 'Hari Ini' literal
+                        // 'Hari Ini' & 'N Hari Terakhir' literal dari hari ini; 'Bulan Ini' dijangkar ke akhir DATA
                         'Hari Ini': [moment().startOf('day'), moment().endOf('day')],
-                        '7 Hari Terakhir': [refEnd.clone().subtract(6, 'days').startOf('day'), refEnd.clone().endOf('day')],
-                        '14 Hari Terakhir': [refEnd.clone().subtract(13, 'days').startOf('day'), refEnd.clone().endOf('day')],
-                        '30 Hari Terakhir': [refEnd.clone().subtract(29, 'days').startOf('day'), refEnd.clone().endOf('day')],
+                        '7 Hari Terakhir': [moment().startOf('day').subtract(6, 'days'), moment().startOf('day')],
+                        '14 Hari Terakhir': [moment().startOf('day').subtract(13, 'days'), moment().startOf('day')],
+                        '30 Hari Terakhir': [moment().startOf('day').subtract(29, 'days'), moment().startOf('day')],
                         'Bulan Ini': [refEnd.clone().startOf('month'), refEnd.clone().endOf('month')]
                     },
                     showCustomRangeLabel: true,
@@ -2007,8 +2007,9 @@
                     closePop();
                 } else if (days >= 0) {
                     let a, b;
+                    const t = moment().startOf('day');
                     if (days === 99) { a = refEnd.clone().startOf('month'); b = refEnd.clone().endOf('month'); }
-                    else { a = refEnd.clone().subtract(days, 'days').startOf('day'); b = refEnd.clone().endOf('day'); }
+                    else { a = t.clone().subtract(days, 'days'); b = t.clone(); }
                     selStart = a.clone(); selEnd = b.clone();
                     viewMonth = selStart.clone().startOf('month');
                     markPreset(name);
@@ -2068,7 +2069,7 @@
                     if (inRange && !isStart && !isEnd) st += ' background:var(--primary-light);';
                     if (isStart || isEnd) st += ' background:var(--primary); color:#fff; font-weight:900;';
                     cell.style.cssText = st;
-                    cell.addEventListener('click', function () { onDayClick(day); });
+                    cell.addEventListener('click', function (e) { e.stopPropagation(); onDayClick(day); });
                     grid.appendChild(cell);
                 }
                 col.appendChild(grid);

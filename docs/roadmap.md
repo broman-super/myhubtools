@@ -94,11 +94,11 @@ Backend & frontend code complete. Menunggu deploy & test.
 | Tool | File | Status | Backend |
 |------|------|--------|---------|
 | Team Planner | `Productive/Task/taskschedule.html` | ✅ Stable | `code-taskschedule.gs` |
-| SAS Analytic | `Productive/Analytic.html` | ✅ Stable | GAS integration |
+| SAS Analytic | `Productive/analytic/Analytic.html` | ✅ Stable | GAS integration |
 | LATCH Link Manager | `Productive/latch/latch.html` | ✅ Fixed (2026-07-25) | GAS + localStorage |
 | Activity Tracker | `Productive/tr/tracking.html` | ✅ Stable | GAS integration |
 | Retur Tracker | `Productive/tr-retur/retur-track.html` | ✅ Stable | `code-retur-track.gs` |
-| Package Tracker | `Productive/Outbondtrack.html` | ✅ Stable | GAS integration |
+| Package Tracker | `Productive/outbondtrack/Outbondtrack.html` | ✅ Stable | GAS integration |
 | PDF Merger | `Productive/PDF-Merger/PDFM_V2.html` | ✅ Stable | None (client-side) |
 | Resi Generator | `Productive/Resi-Generator/Index.html` | ✅ Stable | None (client-side) |
 | Form DAK | `Doc/form-dak.html` | ✅ Stable | None (client-side) |

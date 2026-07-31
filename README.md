@@ -19,17 +19,17 @@ index.html          SPA Shell (landing + workspace + sidebar + iframe router)
   │   └── styles/                     CSS (tools.css, design-system.css, components.css, utilities.css)
   ├── Productive/
   │   ├── Task/taskschedule.html      Team Planner + Calendar + Timeline + Print
-  │   ├── Analytic.html               SAS Analytic Dashboard
+  │   ├── analytic/Analytic.html      SAS Analytic Dashboard
   │   ├── latch/latch.html            LATCH Link Manager
   │   │   ├── css/style.css
   │   │   └── js/app.js              (GAS backend: https://script.google.com/macros/s/AKfycbwHxK9RHMPXuqlOmucA0GyHwzc33A6WsGeUAD0iwtaGVBSihAQaUeyg_Q7UUn7cULnp/exec)
-  │   ├── Outbondtrack.html           Package Tracker (logistics scan)
+  │   ├── outbondtrack/Outbondtrack.html  Package Tracker (logistics scan)
   │   ├── tr/tracking.html            Activity Tracker
   │   ├── tr-retur/retur-track.html   Retur Tracker
   │   ├── PDF-Merger/PDFM_V2.html     PDF Merger + Label Parser
   │   └── Resi-Generator/Index.html   Resi Generator
   ├── Doc/form-dak.html              Form Pengajuan DAK
-  ├── code-taskschedule.gs            GAS backend (Team Planner)
+  ├── gscode/                        GAS backend (code-*.gs)
   └── package.json                     Vite, ESLint, Prettier, Vitest (dev deps only)
 ```
 
@@ -118,7 +118,7 @@ Manajemen tugas, event, reminder, dan campaign dengan calendar view, timeline, d
 
 ---
 
-#### SAS Analytic Dashboard (`Productive/Analytic.html`)
+#### SAS Analytic Dashboard (`Productive/analytic/Analytic.html`)
 **Judul:** SAS — Sales Analytic Simplify (Bento Edition)
 
 Dashboard analitik penjualan dengan chart interaktif, import Excel, target & expense tracking.
@@ -170,7 +170,7 @@ Pencatatan dan pelacakan barang retur dengan auto-detect ekspedisi dan staging t
 
 ---
 
-#### Package Tracker (`Productive/Outbondtrack.html`)
+#### Package Tracker (`Productive/outbondtrack/Outbondtrack.html`)
 Pendataan paket masuk/keluar dengan scanning barcode/QR code, live counter, dan print options (A3 detail, thermal label).
 
 ---

@@ -37,10 +37,10 @@ class ReynaHubRouter {
     var clean = hash.split('?')[0];
     var map = {
       '#productive/planner': 'Productive/Task/taskschedule.html',
-      '#productive/analytic': 'Productive/Analytic.html',
+      '#productive/analytic': 'Productive/analytic/Analytic.html',
       '#productive/latch': 'Productive/latch/latch.html',
       '#productive/expense': 'Productive/expense-tracker/index.html',
-      '#utilities/outbond': 'Productive/Outbondtrack.html',
+      '#utilities/outbond': 'Productive/outbondtrack/Outbondtrack.html',
       '#utilities/activity': 'Productive/tr/tracking.html',
       '#utilities/retur': 'Productive/tr-retur/retur-track.html',
       '#utilities/merger': 'Productive/PDF-Merger/PDFM_V2.html',
