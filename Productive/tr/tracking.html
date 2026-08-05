@@ -3060,7 +3060,7 @@
       var dateLabelEl = document.getElementById('ai-output-date-label');
       var dateStr = document.getElementById('audit-date-picker') ? document.getElementById('audit-date-picker').value : getTodayJakarta();
       if (!dateStr) dateStr = getTodayJakarta();
-      var endDateStr = selectedEndDate || dateStr;
+      var endDateStr = (document.getElementById('audit-date-end') && document.getElementById('audit-date-end').value) || dateStr;
       var dateRangeStr = (dateStr === endDateStr ? dateStr : dateStr + ' - ' + endDateStr);
 
       btn.innerHTML = ICONS.hourglass + ' Menganalisa...';
@@ -3800,7 +3800,7 @@
       } else if (context === 'beban') {
         var startVal = document.getElementById('filter-start').value;
         selectedStartDate = startVal || defaultDate;
-        selectedEndDate = selectedEndDate || selectedStartDate;
+        selectedEndDate = startVal || defaultDate;
       } else if (context === 'audit') {
         var auditVal = document.getElementById('audit-date-picker').value;
         var auditEndVal = document.getElementById('audit-date-end').value;
@@ -3809,7 +3809,7 @@
       } else if (context === 'global') {
         var globalVal = document.getElementById('global-audit-date').value;
         selectedStartDate = globalVal || defaultDate;
-        selectedEndDate = selectedEndDate || selectedStartDate;
+        selectedEndDate = globalVal || defaultDate;
       }
       
       // Align calendar view to the selected start date

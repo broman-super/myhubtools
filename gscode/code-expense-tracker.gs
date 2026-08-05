@@ -173,7 +173,7 @@ function getExpenseById_(id) {
   return null;
 }
 
-function updateExpenseStatus_(id, newStatus, optFields) {
+function updateExpenseStatus_(id, newStatus, optFields, allowedFrom) {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sheet = ss.getSheetByName('Expenses');
   if (!sheet) throw new Error('Sheet Expenses tidak ditemukan');
@@ -185,6 +185,10 @@ function updateExpenseStatus_(id, newStatus, optFields) {
   var now = new Date().toISOString();
   for (var i = 2; i <= lastRow; i++) {
     if (String(sheet.getRange(i, idCol + 1).getValue()) === String(id)) {
+      var currentStatus = String(sheet.getRange(i, statusCol + 1).getValue());
+      if (allowedFrom && allowedFrom.indexOf(currentStatus) === -1) {
+        return { success: false, message: 'Status ' + currentStatus + ' tidak mengizinkan aksi ini' };
+      }
       sheet.getRange(i, statusCol + 1).setValue(newStatus);
       sheet.getRange(i, tanggalUpdateCol + 1).setValue(now);
       if (optFields) {
@@ -223,7 +227,7 @@ function markReimburse_(id) {
 }
 
 function cancelExpense_(id) {
-  return updateExpenseStatus_(id, 'batal');
+  return updateExpenseStatus_(id, 'batal', null, ['draft', 'pengajuan']);
 }
 
 function deleteExpense_(id) {

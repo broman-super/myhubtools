@@ -37,7 +37,8 @@ const KURIR_NAMES = /(SPX|J&T|JNE|Sicepat|ID Express|POS Indonesia|J&T Cargo|Laz
 
 // ========== NORMALISASI ==========
 function normalizeText(text) {
-  let t = text.replace(/\s+/g, ' ');
+  // ponytail: keep newlines & 2+ space runs — product parsers need \r?\n split and \s{2,} column separators
+  let t = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
   const fixWords = [
     { bad: /P\s*e\s*n\s*g\s*i\s*r\s*i\s*m/gi, good: "Pengirim" },
@@ -222,7 +223,6 @@ function parseLabelData(rawText) {
   if (!rawText || !rawText.trim()) return emptyResult('unknown', 'Teks kosong');
 
   let text = normalizeText(rawText);
-  console.log('Normalized:', text);
 
   const platform = detectPlatform(text);
   const tpl = PARSER_TEMPLATES[platform];

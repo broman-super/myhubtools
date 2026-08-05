@@ -267,7 +267,6 @@ tr.status-batal { border-left: 4px solid #ef4444; }
         <button class="btn btn-outline" id="btnFilterReset">Reset</button>
       </div>
       <div class="list-summary" id="listSummary"></div>
-      <div class="loading" id="listLoading"><div class="spinner"></div>Memuat data...</div>
       <div class="table-wrap" id="listTableWrap">
         <table>
           <thead><tr>
@@ -289,7 +288,6 @@ tr.status-batal { border-left: 4px solid #ef4444; }
   <div class="page" id="pageDashboard">
     <div class="card">
       <h2>Ringkasan Bulan Ini</h2>
-      <div class="loading" id="dashLoading"><div class="spinner"></div>Memuat dashboard...</div>
       <div class="dashboard-grid" id="statGrid"></div>
     </div>
     <div class="card">
@@ -476,6 +474,10 @@ var ICONS = {
       return 'Rp' + parseInt(n).toLocaleString('id-ID');
     },
 
+    esc: function(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) { return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; });
+    },
+
     // ──── GAS FETCH ────
     fetchGAS: function(action, data, callback) {
       var opts = { method: 'POST', mode: 'cors', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: action, data: data }) };
@@ -572,7 +574,16 @@ var ICONS = {
         file: this.fileData
       };
 
+      var btnDraft = document.getElementById('btnDraft');
+      var btnSubmit = document.getElementById('btnSubmit');
+      if (btnDraft) btnDraft.disabled = true;
+      if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.innerHTML = 'Mengirim...'; }
+
       this.fetchGAS('submitExpense', data, function(res) {
+        var btnDraft = document.getElementById('btnDraft');
+        var btnSubmit = document.getElementById('btnSubmit');
+        if (btnDraft) btnDraft.disabled = false;
+        if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.innerHTML = 'Kirim Pengajuan'; }
         if (res.success || res.result) {
           App.showToast('Pengajuan ' + (status === 'draft' ? 'disimpan sebagai draft' : 'dikirim'), 'success');
           App.clearForm();
@@ -598,6 +609,8 @@ var ICONS = {
 
     // ──── LIST ────
     loadExpenses: function() {
+      var summary = document.getElementById('listSummary');
+      if (summary) summary.textContent = 'Memuat...';
       this.fetchGAS('getExpenses', this.filters, function(res) {
         if (res.result) {
           App.expenses = res.result.rows || [];
@@ -653,7 +666,6 @@ var ICONS = {
       }
 
       var totalData = ((this.currentPage - 1) * 20) + this.expenses.length;
-      var totalAll = '?';
       summary.textContent = 'Menampilkan ' + totalData + ' pengajuan' + (this.filters.search ? ' (filter: "' + this.filters.search + '")' : '') + (this.totalPages > 1 ? ' — Halaman ' + this.currentPage + '/' + this.totalPages : '');
 
       var self = this;
@@ -664,12 +676,12 @@ var ICONS = {
         var statusLabel = ex.status.charAt(0).toUpperCase() + ex.status.slice(1);
         tr.className = 'status-' + statusKey;
         tr.innerHTML =
-          '<td>' + ex.tanggal + '</td>' +
-          '<td><span class="badge" style="background:' + (CAT_COLORS[ex.kategori] || '#94a3b8') + '33;color:' + (CAT_COLORS[ex.kategori] || '#94a3b8') + '">' + ex.kategori + '</span></td>' +
-          '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">' + ex.deskripsi + '</td>' +
+          '<td>' + self.esc(ex.tanggal) + '</td>' +
+          '<td><span class="badge" style="background:' + (CAT_COLORS[ex.kategori] || '#94a3b8') + '33;color:' + (CAT_COLORS[ex.kategori] || '#94a3b8') + '">' + self.esc(ex.kategori) + '</span></td>' +
+          '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">' + self.esc(ex.deskripsi) + '</td>' +
           '<td class="amount">' + self.formatRupiah(ex.jumlah) + '</td>' +
-          '<td><span class="badge ' + statusClass + '">' + statusLabel + '</span></td>' +
-          '<td class="actions"><button class="btn btn-outline" data-id="' + ex.id + '">Detail</button></td>';
+          '<td><span class="badge ' + statusClass + '">' + self.esc(statusLabel) + '</span></td>' +
+          '<td class="actions"><button class="btn btn-outline" data-id="' + self.esc(ex.id) + '">Detail</button></td>';
         tr.querySelector('.btn').addEventListener('click', function() { self.showDetail(this.dataset.id); });
         tbody.appendChild(tr);
       });
@@ -703,18 +715,18 @@ var ICONS = {
         self.selectedId = ex.id;
         var grid = document.getElementById('detailGrid');
         grid.innerHTML =
-          '<div class="detail-item"><label>ID</label><span>' + (ex.id || '-') + '</span></div>' +
-          '<div class="detail-item"><label>Tanggal</label><span>' + (ex.tanggal || '-') + '</span></div>' +
-          '<div class="detail-item"><label>Kategori</label><span>' + (ex.kategori || '-') + '</span></div>' +
+          '<div class="detail-item"><label>ID</label><span>' + self.esc(ex.id) + '</span></div>' +
+          '<div class="detail-item"><label>Tanggal</label><span>' + self.esc(ex.tanggal) + '</span></div>' +
+          '<div class="detail-item"><label>Kategori</label><span>' + self.esc(ex.kategori) + '</span></div>' +
           '<div class="detail-item"><label>Jumlah</label><span>' + self.formatRupiah(ex.jumlah) + '</span></div>' +
-          '<div class="detail-item"><label>Status</label><span class="badge badge-' + (ex.status === 'realisasi' ? 'realisasi' : ex.status) + '">' + (ex.status || '-') + '</span></div>' +
-          '<div class="detail-item"><label>Pengaju</label><span>' + (ex.pengaju || '-') + '</span></div>' +
-          '<div class="detail-item full"><label>Deskripsi</label><span>' + (ex.deskripsi || '-') + '</span></div>' +
-          (ex.buktiUrl && ex.buktiUrl !== '-' ? '<div class="detail-item full"><label>Bukti</label>' + (ex.buktiUrl.match(/\.(jpg|jpeg|png|gif|webp)/i) ? '<img src="' + ex.buktiUrl + '" alt="Bukti">' : '<a href="' + ex.buktiUrl + '" target="_blank" style="color:var(--primary)">' + (ex.buktiNama || 'Download') + '</a>') + '</div>' : '') +
-          (ex.approvedBy ? '<div class="detail-item"><label>Disetujui oleh</label><span>' + ex.approvedBy + '</span></div>' : '') +
-          (ex.tanggalApproved ? '<div class="detail-item"><label>Tgl. Approve</label><span>' + ex.tanggalApproved + '</span></div>' : '') +
-          (ex.statusRealisasi && ex.statusRealisasi !== '-' ? '<div class="detail-item"><label>Realisasi</label><span>' + ex.statusRealisasi + '</span></div>' : '') +
-          '<div class="detail-item"><label>Update</label><span>' + (ex.tanggalUpdate || '-') + '</span></div>';
+          '<div class="detail-item"><label>Status</label><span class="badge badge-' + (ex.status === 'realisasi' ? 'realisasi' : ex.status) + '">' + self.esc(ex.status) + '</span></div>' +
+          '<div class="detail-item"><label>Pengaju</label><span>' + self.esc(ex.pengaju) + '</span></div>' +
+          '<div class="detail-item full"><label>Deskripsi</label><span>' + self.esc(ex.deskripsi) + '</span></div>' +
+          (ex.buktiUrl && ex.buktiUrl !== '-' ? '<div class="detail-item full"><label>Bukti</label>' + (ex.buktiUrl.match(/\.(jpg|jpeg|png|gif|webp)/i) ? '<img src="' + self.esc(ex.buktiUrl) + '" alt="Bukti">' : '<a href="' + self.esc(ex.buktiUrl) + '" target="_blank" style="color:var(--primary)">' + self.esc(ex.buktiNama || 'Download') + '</a>') + '</div>' : '') +
+          (ex.approvedBy ? '<div class="detail-item"><label>Disetujui oleh</label><span>' + self.esc(ex.approvedBy) + '</span></div>' : '') +
+          (ex.tanggalApproved ? '<div class="detail-item"><label>Tgl. Approve</label><span>' + self.esc(ex.tanggalApproved) + '</span></div>' : '') +
+          (ex.statusRealisasi && ex.statusRealisasi !== '-' ? '<div class="detail-item"><label>Realisasi</label><span>' + self.esc(ex.statusRealisasi) + '</span></div>' : '') +
+          '<div class="detail-item"><label>Update</label><span>' + self.esc(ex.tanggalUpdate) + '</span></div>';
 
         var timelineEl = document.getElementById('detailTimeline');
         timelineEl.innerHTML = '';
@@ -723,7 +735,7 @@ var ICONS = {
           for (var ti = 0; ti < timelineData.length; ti++) {
             var entry = timelineData[ti];
             var li = document.createElement('li');
-            li.innerHTML = '<div class="time">' + (entry.at || '-') + '</div><div class="desc">' + (entry.status || '-') + (entry.by ? ' oleh ' + entry.by : '') + '</div>';
+            li.innerHTML = '<div class="time">' + self.esc(entry.at) + '</div><div class="desc">' + self.esc(entry.status) + (entry.by ? ' oleh ' + self.esc(entry.by) : '') + '</div>';
             timelineEl.appendChild(li);
           }
         } else {
@@ -923,7 +935,6 @@ var ICONS = {
 <script>
 (function() {
   var html = document.documentElement;
-  var current = html.getAttribute('data-theme') || 'dark';
   window.addEventListener('message', function(e) {
     if (e.data && e.data.type === 'SET_THEME') {
       html.setAttribute('data-theme', e.data.theme);

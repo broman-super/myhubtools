@@ -27,11 +27,31 @@ function doPost(e) {
   return ContentService.createTextOutput(JSON.stringify(res)).setMimeType(ContentService.MimeType.JSON);
 }
 
+function doGet(e) {
+  var action = (e && e.parameter && e.parameter.action) || '';
+  try {
+    if (action === 'getTasks') {
+      // ponytail: bare array — matches frontend GET fallback expectation (Array.isArray(raw))
+      var res = getSheetData_(SpreadsheetApp.getActiveSpreadsheet(), 'Tasks');
+      return ContentService.createTextOutput(JSON.stringify(res)).setMimeType(ContentService.MimeType.JSON);
+    }
+    return ContentService.createTextOutput(JSON.stringify({ success: false, message: 'Unknown action: ' + action })).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ success: false, message: String(err.message || err) })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function isCampaignRow_(r) {
+  if (['tipe', 'type', 'kategori'].some(function(k) { return String(r[k] || '').toLowerCase().trim() === 'campaign'; })) return true;
+  if (['Instagram', 'Whatsapp', 'Tiktok', 'Shopee', 'Web', 'Event'].indexOf(String(r.tag || '')) > -1) return true;
+  return /^(IG|WA|TT|SP|WB|EV)\s*\|/.test(String(r.title || r.nama || ''));
+}
+
 function getCalendarData_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var tasks = getSheetData_(ss, 'Tasks');
-  var campaigns = tasks.filter(function(r) { return (r.tipe || '').toLowerCase() === 'campaign'; });
-  var plainTasks = tasks.filter(function(r) { return (r.tipe || '').toLowerCase() !== 'campaign'; });
+  var campaigns = tasks.filter(isCampaignRow_);
+  var plainTasks = tasks.filter(function(r) { return !isCampaignRow_(r); });
   var events = getSheetData_(ss, 'Events');
   var reminders = getSheetData_(ss, 'Reminders');
   return { tasks: plainTasks, campaigns: campaigns, events: events, reminders: reminders };
