@@ -57,7 +57,7 @@ function doGet(e) {
     var sheet = ss.getSheetByName("Settings");
     if (!sheet) {
       sheet = ss.insertSheet("Settings");
-      sheet.appendRow(["Key", "Value"]);
+      sheet.appendRow(TAB_HEADERS_()["Settings"]);
       sheet.appendRow(["Target", target]);
     } else {
       var data = sheet.getDataRange().getValues();
@@ -87,7 +87,7 @@ function doGet(e) {
     
     if (!sheet) {
       sheet = ss.insertSheet("Biaya");
-      sheet.appendRow(["Tanggal", "Kategori Biaya", "Nominal"]);
+      sheet.appendRow(TAB_HEADERS_()["Biaya"]);
     }
     
     sheet.appendRow([tanggal, kategori, nominal]);
@@ -105,9 +105,42 @@ function doGet(e) {
 // ==========================================
 // FUNGSI UTAMA PENARIK DATA 3 SHEET
 // ==========================================
+
+// Header standar per tab — sumber tunggal untuk auto-create (hindari drift header)
+function TAB_HEADERS_() {
+  return {
+    Transaksi: ['No. Transaksi', 'Tanggal', 'Nama Pelanggan', 'Nama Barang', 'Kuantitas', 'Total Harga', 'Tipe Transaksi', 'Nama Kategori Pelanggan', 'Status'],
+    Produk: ['Nama Barang', 'Kode Series', 'Nama Series', 'Kategori Produk', 'HPP'],
+    Biaya: ['Tanggal', 'Kategori Biaya', 'Nominal'],
+    Settings: ['Key', 'Value']
+  };
+}
+
+// Kalibrasi otomatis: buat tab + header bila tidak ada ATAU kosong. Balik true jika ada perubahan.
+function pastikanTabAda_(ss, nama) {
+  var headers = TAB_HEADERS_()[nama];
+  if (!headers) return false;
+  var sheet = ss.getSheetByName(nama);
+  if (sheet) {
+    var data = sheet.getDataRange().getValues();
+    var kosong = data.length === 0 || (data.length === 1 && String(data[0][0]).trim() === '');
+    if (!kosong) return false;
+    sheet.appendRow(headers);
+    return true;
+  }
+  var created = ss.insertSheet(nama);
+  created.appendRow(headers);
+  return true;
+}
+
 function getAllDashboardData() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  
+
+  // Kalibrasi: auto-create tab yang hilang/kosong, lalu buang cache GAS supaya tidak nyajikan data lama
+  var berubah = false;
+  ['Transaksi', 'Produk', 'Biaya', 'Settings'].forEach(function(n) { if (pastikanTabAda_(ss, n)) berubah = true; });
+  if (berubah) { try { CacheService.getScriptCache().remove('dash_data_v2'); } catch(e) {} }
+
   // PASTIKAN NAMA TAB DI EXCEL LU PERSIS SEPERTI INI (T, P, B huruf besar)
   var dataTransaksi = ambilDataDariSheet(ss, "Transaksi");
   var dataProduk    = ambilDataDariSheet(ss, "Produk");
