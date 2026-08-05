@@ -605,7 +605,8 @@
   var expeditionCache = {};
 
   function processScan(resi) {
-    if (stagingData.some(function(d) { return d.resi === resi; })) return;
+    var key = resi.toUpperCase();
+    if (stagingData.some(function(d) { return String(d.resi).toUpperCase() === key; })) return;
     var exp = matchRegex(resi);
     if (exp) { addStaging(resi, exp); return; }
     // Cek cache lokal (resi yang sama pernah di-scan session ini)

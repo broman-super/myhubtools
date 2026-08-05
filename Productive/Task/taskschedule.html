@@ -242,6 +242,26 @@
       background: var(--bg);
     }
 
+    .view-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 20px 0;
+    }
+
+    .view-header #page-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+
+    .view-header #page-meta {
+      font-size: 13px;
+      color: var(--text-soft);
+    }
+
     .stat-pill {
       display: flex;
       align-items: center;
@@ -327,6 +347,8 @@
       transform: translateY(-1px);
       box-shadow: 0 6px 20px rgba(27, 42, 74, 0.3);
     }
+
+    .spinning svg { animation: spin 0.8s linear infinite; }
 
     .btn-ghost {
       background: var(--bg);
@@ -1523,6 +1545,11 @@
         <div class="stat-pill">Campaign <b id="stat-campaign-val" style="color:#6366f1">0</b></div>
       </div>
 
+      <div class="view-header">
+        <span id="page-title">Task List</span>
+        <span id="page-meta"></span>
+      </div>
+
       <div class="view-area">
         <!-- List View -->
         <div id="view-list" class="view active">
@@ -1631,7 +1658,7 @@
         <!-- Event View -->
         <div id="view-event" class="view">
           <div class="toolbar">
-            <div class="tab-group" id="event-filter-bar">
+            <div class="tab-group">
               <div class="tab active" onclick="setEventFilter('all',this)">Semua</div>
               <div class="tab" onclick="setEventFilter('upcoming',this)">Akan Datang</div>
               <div class="tab" onclick="setEventFilter('past',this)">Terlewat</div>
@@ -1647,7 +1674,7 @@
         <!-- Reminder View -->
         <div id="view-reminder" class="view">
           <div class="toolbar">
-            <div class="tab-group" id="reminder-filter-bar">
+            <div class="tab-group">
               <div class="tab active" onclick="setReminderFilter('all',this)">Semua</div>
               <div class="tab" onclick="setReminderFilter('pending',this)">Pending</div>
               <div class="tab" onclick="setReminderFilter('done',this)">Selesai</div>
@@ -1829,7 +1856,7 @@
   </div>
 
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbx8On9-9HY1k5VYp9AUy5Okq-1k1tDJf6ZaPuEpidRq7CPae7w43Al_YVPOyiEMs4Iz/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwfE2068A_QaJpCLYvOTPCLuk5ap28qmQaSzz1pEcctCNK9N5gcMElHT00UH8sxXDtS/exec";
 
     var ICONS = {
       task: '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
@@ -1858,7 +1885,7 @@
 
     var S = {
       tasks: [], events: [], reminders: [], view: 'list', filter: 'pending', q: '',
-      weekOffset: 0, showMonthTasks: false, showMonthEvents: false, showMonthReminders: false,
+      weekOffset: 0, showMonthTasks: false, showMonthEvents: true, showMonthReminders: true,
       calYear: new Date().getFullYear(), calMonth: new Date().getMonth(),
       selectedId: null, dpTarget: null,
       dpYear: new Date().getFullYear(), dpMonth: new Date().getMonth(),
@@ -1898,6 +1925,11 @@
 
     // Utils
     function esc(t) { return (t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function isCampaignLike(t) {
+      if (String(t.type || t.tipe || '').toLowerCase().trim() === 'campaign') return true;
+      if (Object.keys(CHANNELS).indexOf(String(t.tag || '')) > -1) return true;
+      return Object.values(CHANNELS).some(c => (t.title || '').startsWith(c.prefix));
+    }
     function pad(n) { return n < 10 ? '0' + n : n; }
     function dateStr(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
      function formatShortDate(d) {
@@ -1922,10 +1954,10 @@
             ...t,
             enddate: normDate(t.enddate || t.endDate || ''),
             date: normDate(t.date),
-            type: String(t.type || 'task').toLowerCase().trim() === 'campaign' ? 'campaign' : 'task',
+            type: isCampaignLike(t) ? 'campaign' : 'task',
             color: t.color || '#6366f1'
           }));
-          try { localStorage.setItem('ts_cache_data', JSON.stringify({ timestamp: Date.now(), data: S.tasks })); } catch(e){}
+          try { localStorage.setItem('ts_cache_data_v2', JSON.stringify({ timestamp: Date.now(), data: S.tasks })); } catch(e){}
           return S.tasks;
         }
         if (action === 'getCalendarData') {
@@ -1962,6 +1994,8 @@
             color: r.warna || '#FFC300', status: r.status || '',
             done: r.status === 'Selesai', type: 'reminder'
           }; });
+          console.info('[Planner] getCalendarData OK:', S.tasks.length, 'tasks +', (json.result.campaigns || []).length, 'campaigns,', S.events.length, 'events,', S.reminders.length, 'reminders');
+          console.info('[Planner] sample keys:', json.result.tasks[0] ? Object.keys(json.result.tasks[0]).join(', ') : '(kosong)');
           return json.result;
         }
         const resp = await fetch(GAS_URL, {
@@ -1983,10 +2017,9 @@
 
     // Core Controls
     async function refreshData(silent = false) {
-      const btn = document.getElementById('refresh-btn');
-      const btn2 = document.getElementById('refresh-btn-top');
+      const btn = document.getElementById('refresh-btn-top');
       if (btn) btn.classList.add('spinning');
-      if (btn2) btn2.disabled = true;
+      if (btn) btn.disabled = true;
       try {
         await api('getCalendarData');
         renderAll();
@@ -1995,7 +2028,7 @@
         if (!silent) toast('Gagal refresh!', true);
       } finally {
         if (btn) btn.classList.remove('spinning');
-        if (btn2) btn2.disabled = false;
+        if (btn) btn.disabled = false;
       }
     }
 
@@ -2067,6 +2100,15 @@
       } catch (e) { console.warn('Failed to load holidays cache', e); }
     }
 
+    function showFallbackBanner() {
+      if (document.getElementById('fallback-banner')) return;
+      const div = document.createElement('div');
+      div.id = 'fallback-banner';
+      div.style.cssText = 'position:sticky;top:0;z-index:9999;background:#991b1b;color:#fecaca;padding:8px 12px;font-size:12px;font-weight:600;text-align:center;';
+      div.innerHTML = '⚠️ Mode fallback: action <b>getCalendarData</b> tidak tersedia di backend. Deploy <code>gscode/code-taskschedule.gs</code> versi terbaru agar Event &amp; Reminder muncul.';
+      document.body.insertBefore(div, document.body.firstChild);
+    }
+
     window.onload = () => {
       renderSkeletonGrid(6);
       // Safety net: always hide loading after 12s no matter what
@@ -2078,7 +2120,7 @@
 
       // Optimistic Offline Cache Load
       try {
-        const cachedTasks = localStorage.getItem('ts_cache_data');
+        const cachedTasks = localStorage.getItem('ts_cache_data_v2');
         if (cachedTasks) {
           var parsed = JSON.parse(cachedTasks);
           // TTL 5 menit
@@ -2096,6 +2138,7 @@
         })
         .catch(function(err) {
           console.warn('getCalendarData failed, fallback getTasks', err);
+          showFallbackBanner();
           return api('getTasks').then(function() {
             try { renderAll(); } catch (e) { }
           }).catch(function() { });
@@ -2740,12 +2783,6 @@
       return [r, g, b];
     }
 
-    function setTimelineZoom(px) {
-      // px <= 0 resets to auto-fit
-      S.timelineZoom = px <= 0 ? 0 : px;
-      renderTimeline();
-    }
-
     function resetTimelineZoom() {
       S.timelineZoom = 0;
       renderTimeline();
@@ -2952,7 +2989,7 @@
       renderAll();
       renderDetail();
       try {
-        await api('deleteTask', id);
+        await api('deleteTask', { id: id, type: type });
         showUndoSnackbar(ICONS.trash + ' Agenda dihapus', 'undo()');
         await refreshData(true);
       } catch (e) {

@@ -22,7 +22,7 @@ Manajemen perencanaan tugas tim, campaign, event, dan reminder dengan tampilan k
 ## 2. Keterkaitan
 
 ### 2.1 Backend GAS
-- `GAS_URL = https://script.google.com/macros/s/AKfycbx8On9-9HY1k5VYp9AUy5Okq-1k1tDJf6ZaPuEpidRq7CPae7w43Al_YVPOyiEMs4Iz/exec`
+- `GAS_URL = https://script.google.com/macros/s/AKfycbztQF43rq6TcEJvb1qUheMddor1ESSiVQHX0Hc3NRX6ipunZpiyi9bysIRhTVOL_OJC/exec` (sesuai `taskschedule.html:1859`)
 - **Baca data:** `GET ?action=getTasks` → array objek task.
 - **Tulis data:** `POST` JSON `{ action, data }` dengan header `Content-Type: text/plain;charset=utf-8` (bukan `application/json` — jangan diganti, GAS butuh `postData.contents`).
 - Action tulis didefinisikan di `gscode/code-taskschedule.gs` (save/update/delete item per tipe).
@@ -40,7 +40,7 @@ Manajemen perencanaan tugas tim, campaign, event, dan reminder dengan tampilan k
 ### 2.4 Storage & API eksternal
 | Key | Scope | Fungsi |
 |---|---|---|
-| `ts_cache_data` | localStorage | Cache hasil `getTasks` (offline/caching cepat) |
+| `ts_cache_data_v2` | localStorage | Cache hasil `getTasks` (offline/caching cepat) |
 | `ts_holidays_<tahun>` | localStorage | Cache libur nasional per tahun |
 | `ts-theme` | localStorage | Tema tool (key khusus tool ini, **bukan** `theme` milik hub) |
 
@@ -63,7 +63,7 @@ Bug di `gscode/code-taskschedule.gs` ini pernah terjadi dan sudah fixed:
 - Setiap aksi baru: pastikan backend punya nama action yang sama persis dengan frontend, dan map key tidak singular/plural tidak konsisten (ini akar T2/T3).
 
 ### 3.3 Cache & libur
-- `ts_cache_data` menyimpan `{ timestamp, data }` — jangan buang field `timestamp`, dipakai logika kesegaran cache.
+- `ts_cache_data_v2` menyimpan `{ timestamp, data }` — jangan buang field `timestamp`, dipakai logika kesegaran cache. Key di-versioning (v2, 2026-08-05) karena data lama menyimpan campaign dengan `type:'task'` (campaign jadi muncul di Task List).
 - Cache libur per-tahun (`ts_holidays_${year}`) — saat pindah tahun, key baru otomatis dibuat.
 
 ### 3.4 Cetak

@@ -165,19 +165,9 @@ const state = (() => {
     selectedIds: new Set(),
     dirtyRows: new Set()
   };
-  const listeners = {};
-
   function get(key) { return data[key]; }
-  function set(key, value) {
-    data[key] = value;
-    (listeners[key] || []).forEach(fn => fn(value));
-  }
-  function on(key, fn) { (listeners[key] = listeners[key] || []).push(fn); }
-  function off(key, fn) {
-    if (!listeners[key]) return;
-    listeners[key] = listeners[key].filter(f => f !== fn);
-  }
-  return { get, set, on, off, _data: data };
+  function set(key, value) { data[key] = value; }
+  return { get, set, _data: data };
 })();
 
 /* ---------------------------------------------------------------------- *
@@ -1111,7 +1101,7 @@ const dashboard = (() => {
     openDrawerForAdd, openDrawerForEdit, saveDrawer,
     renderCategoryModal, saveCategory, cancelEditCategory, renderIconPicker,
     exportCsv, handleCsvFile, confirmImport,
-    confirmDelete: confirmBulkDelete, performDelete
+    confirmBulkDelete, performDelete
   };
 })();
 
@@ -1123,7 +1113,6 @@ const theme = (() => {
     document.documentElement.setAttribute("data-theme", mode);
     state.set("theme", mode);
     storage.set("theme", mode);
-    document.querySelectorAll("#themeToggle svg, #themeToggleDash svg").forEach(svg => {});
     ["themeToggle", "themeToggleDash"].forEach(id => {
       const btn = document.getElementById(id);
       if (btn) btn.innerHTML = `<i data-feather="${mode === "dark" ? "sun" : "moon"}"></i>`;
@@ -1170,7 +1159,7 @@ const app = (() => {
     });
     document.getElementById("btnImportCsv")?.addEventListener("click", () => components.openModal("importModal"));
     document.getElementById("btnExportCsv")?.addEventListener("click", dashboard.exportCsv);
-    document.getElementById("btnBulkDelete")?.addEventListener("click", dashboard.confirmDelete);
+    document.getElementById("btnBulkDelete")?.addEventListener("click", dashboard.confirmBulkDelete);
     document.getElementById("dashNavToggle")?.addEventListener("click", () => components.openSheet("categorySheet"));
   }
 

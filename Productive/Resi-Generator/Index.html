@@ -595,9 +595,6 @@ function loadProductDatabase() {
       if (data && data.length) productDatabase = data;
     }).catch(function() {
       console.warn('products.json tidak ditemukan, pakai EMBEDDED_PRODUCTS');
-    })
-    .catch(function() {
-      /* silent: sudah pakai embedded fallback */
     });
 }
 
@@ -713,7 +710,10 @@ function initAutocomplete(row) {
     } else if (e.key === 'Enter') {
       e.preventDefault();
       e.stopPropagation();
-      if (active) active.click();
+      if (active && active._product) {
+        selectProduct(active, input, sku, active._product);
+        hideSuggestions(sug);
+      }
     }
   });
 }
@@ -729,6 +729,7 @@ function showSuggestions(container, input, matches, skuInput) {
   matches.slice(0, 8).forEach(function(p, i) {
     var item = document.createElement('div');
     item.className = 'suggestion-item' + (i === 0 ? ' active' : '');
+    item._product = p;
     item.innerHTML =
       '<span>' + p.name + '<span class="s-sku">(' + p.sku + ')</span></span>';
     item.addEventListener('mousedown', function(e) {
@@ -894,7 +895,7 @@ function buildResiHTML(d) {
   var now = new Date();
   var tgl = now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
 
-  var logoSection = COMPANY_LOGO_BASE64
+  var logoSection = (typeof COMPANY_LOGO_BASE64 !== 'undefined' && COMPANY_LOGO_BASE64)
     ? '<img src="' + COMPANY_LOGO_BASE64 + '" style="max-height:35px;max-width:140px;object-fit:contain;" alt="Logo">'
     : '<div style="font-size:16px;font-weight:900;color:#000;letter-spacing:1px">SUPERSUB</div>';
 
@@ -1060,11 +1061,6 @@ function resetForm() {
 }
 
 // ── Helpers ─────────────────────────────────────────────────────
-function setBtnState(id, loading, html) {
-  var btn = document.getElementById(id);
-  btn.disabled  = loading;
-  btn.innerHTML = html;
-}
 var _tt;
 function showToast(msg, type) {
   var t = document.getElementById('toast');

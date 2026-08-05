@@ -1,5 +1,5 @@
 // src/sw.js - Service Worker for REYNAHUB offline caching
-const CACHE_NAME = 'reynahub-v3';
+const CACHE_NAME = 'reynahub-v4';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -37,21 +37,20 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   if (url.pathname.startsWith('/Productive/')) {
+    // Network-first: tool files must reflect latest edits; cache only as offline fallback
     event.respondWith(
-      caches.match(request).then((cached) => {
+      fetch(request).then((response) => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        }
+        return response;
+      }).catch(() => caches.match(request).then((cached) => {
         if (cached) return cached;
-        return fetch(request).then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        }).catch(() => {
-          return new Response('<html><body><h2>Offline</h2><p>Tool tidak tersedia secara offline.</p></body></html>', {
-            headers: { 'Content-Type': 'text/html' }
-          });
+        return new Response('<html><body><h2>Offline</h2><p>Tool tidak tersedia secara offline.</p></body></html>', {
+          headers: { 'Content-Type': 'text/html' }
         });
-      })
+      }))
     );
     return;
   }

@@ -3,6 +3,11 @@
 (function() {
     let files = [];
     let parsedData = []; // data per halaman
+    let sortable = null;
+
+    function esc(s) {
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
 
     // DOM Elements
     const dropzone = document.getElementById('dropzone');
@@ -22,6 +27,8 @@
     function renderList() {
         fileListEl.innerHTML = '';
         if (files.length === 0) {
+            if (sortable) sortable.destroy();
+            sortable = null;
             fileListEl.innerHTML = '<li class="empty-message">Belum ada file</li>';
             mergeBtn.disabled = true;
             analyzeBtn.disabled = true;
@@ -30,10 +37,11 @@
             files.forEach((f, i) => {
                 const li = document.createElement('li');
                 li.setAttribute('data-index', i);
-                li.innerHTML = `<span class="handle">☰</span><span class="name" title="${f.name}">${f.name}</span><button class="remove-btn" data-index="${i}">✕</button>`;
+                li.innerHTML = `<span class="handle">☰</span><span class="name" title="${esc(f.name)}">${esc(f.name)}</span><button class="remove-btn" data-index="${i}">✕</button>`;
                 fileListEl.appendChild(li);
             });
-            new Sortable(fileListEl, {
+            if (sortable) sortable.destroy();
+            sortable = new Sortable(fileListEl, {
                 handle: '.handle',
                 animation: 150,
                 onEnd: function(evt) {
@@ -115,18 +123,12 @@
         for (const file of files) {
             try {
                 const pagesText = await extractTextFromPDF(file); // array per halaman
-                console.log(`=== File: ${file.name} (${pagesText.length} halaman) ===`);
                 pagesText.forEach((text, idx) => {
-                    console.log(`--- Halaman ${idx+1} ---`);
-                    console.log(text);
                     // Normalisasi teks untuk spasi aneh
                     const cleanText = normalizeText(text);
-                    console.log(`--- Setelah normalisasi ---`);
-                    console.log(cleanText);
                     const data = parseLabelData(cleanText);
                     parsedData.push({ ...data, fileName: file.name, page: idx+1 });
                 });
-                console.log(`=============================`);
             } catch(e) {
                 console.error(`Gagal proses ${file.name}:`, e);
                 parsedData.push({ fileName: file.name, page: 0, error: e.message, platform: 'error', resi: '-', kurir: '-', layanan: '-', penerima: '-', pengirim: '-', noPesanan: '-', produk: [] });
@@ -140,27 +142,6 @@
         analyzeBtn.disabled = false;
         setStatus('<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M20 6L9 17l-5-5"/></svg> Analisis selesai. ' + parsedData.length + ' label diproses.', 'success');
     });
-
-    // Fungsi normalisasi teks: perbaiki spasi berlebihan antar karakter
-    function normalizeText(text) {
-        // 1. Hapus spasi di antara karakter tunggal yang membentuk kata umum
-        // Contoh: "P e n g i r i m" -> "Pengirim"
-        // Kita lakukan penggantian untuk kata-kata kunci yang sering muncul
-        const keywords = ['Pengirim', 'Penerima', 'COD', 'Order', 'Id', 'Ship', 'Qty', 'Product', 'Name', 'SKU', 'Seller', 'Total', 'Jumlah', 'Barang'];
-        let result = text;
-        // Untuk setiap kata kunci, buat pola dengan spasi antar karakter
-        keywords.forEach(word => {
-            // Buat regex: setiap karakter diikuti spasi (kecuali terakhir)
-            const spacedPattern = word.split('').join('\\s*');
-            const regex = new RegExp(spacedPattern, 'gi');
-            result = result.replace(regex, word);
-        });
-
-        // 2. Hapus spasi berlebihan lainnya: jika ada spasi > 1, ganti jadi satu
-        result = result.replace(/\s+/g, ' ');
-
-        return result.trim();
-    }
 
     // Render ringkasan
     function renderSummary() {
