@@ -39,7 +39,7 @@ Dashboard analitik penjualan real-time berbasis **Google Sheets + Google Apps Sc
 - Router: `#productive/analytic` → `Productive/analytic/Analytic.html` (`src/core/router.js`). Hash TIDAK berubah walau path folder berubah.
 - Dimuat sebagai iframe → **CSS/JS tidak bocor antar-tool**.
 - Tema via `postMessage` (`src/core/iframe-communicator.js`): hub minta child ganti tema → tool menukar CSS variables. **Jangan ganti nama variabel** (`--primary`, `--card`, `--accent`, `--border`, `--text`, `--danger`, `--success`, `--warning`).
-- Service worker `src/sw.js` cache versi `reynahub-v3` (route `/Productive/`). Setelah edit file ini, bump versi cache.
+- Service worker `src/sw.js` cache versi `reynahub-v4` (route `/Productive/`, strategi **network-first**). Setelah edit file ini, bump versi cache.
 
 ### 2.3 Dependency (CDN, versi ter-pin)
 Chart.js 3.9.1 · datalabels 2.2.0 · zoom 2.0.1 (+hammerjs 2.0.8) · jQuery 3.7.1 · moment 2.29.4 · daterangepicker 3.1.1 · DataTables 1.13.6 · SheetJS (xlsx) 0.18.5 · marked.

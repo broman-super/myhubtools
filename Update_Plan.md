@@ -27,6 +27,7 @@
 - **Wajib deploy ulang GAS** agar split baru aktif.
 - **Iterasi 2:** campaign masih muncul di Task List padahal Timeline sudah benar → baris yang tersisa di list diduga punya penanda dengan nama kolom lain (`Type`/`Kategori`). `isCampaignRow_` diperluas: cek `tipe`/`type`/`kategori` bernilai `campaign`. Console juga menampilkan `[Planner] sample keys:` (nama kolom baris pertama) untuk verifikasi skema sheet. **Deploy GAS ulang wajib.**
 - **Konfirmasi user (2026-08-05):** skema sheet = kolom `Type`, nilai `campaign`. Cocok dengan `isCampaignRow_`. **Deploy GAS ulang terakhir lalu verifikasi `?v=3`.**
+- **✅ VERIFIED SELESAI:** user konfirmasi "Sudah Sempurna" — campaign tidak lagi masuk Task List, tampil benar di Timeline/Month View. Semua item tertutup.
 
 ### 🔍 Kenapa "Tidak Menunjukkan Hasil" — Service Worker cache-first
 - **Akar masalah:** `src/sw.js` versi `reynahub-v3` menyajikan semua path `/Productive/` dengan strategi **cache-first tanpa revalidasi** — begitu `taskschedule.html` masuk cache, browser terus menyajikan salinan LAMA, edit frontend tidak pernah termuat meski sudah save/deploy GAS.
@@ -53,3 +54,6 @@
 | 2026-08-05 | Taskschedule | Banner fallback + console.info count getCalendarData (diagnostik layer) | ✅ |
 | 2026-08-05 | Taskschedule | **Verifikasi akhir** — console: `getCalendarData OK: 116 tasks, 6 events, 5 reminders`; backend split campaign (code-taskschedule.gs:47-48); renderList exclude campaign (L2300); Month render event/reminder (L2522-2535). Ketiga bug tuntas. | ✅ |
 | 2026-08-05 | Taskschedule | Campaign data lama tetap jadi task → split campaign via heuristic (`isCampaignRow_` di backend + `isCampaignLike` di frontend). **Deploy GAS ulang wajib.** | ✅ code / ⏳ deploy |
+| 2026-08-05 | Taskschedule | `isCampaignRow_` diperluas ke kolom `tipe`/`type`/`kategori` + diagnostik `sample keys` di console | ✅ |
+| 2026-08-05 | Taskschedule | **SELESAI — verifikasi user:** skema sheet `Type`=`campaign` cocok; campaign tampil benar di Timeline, Task List bersih, deploy GAS terakhir sukses. | ✅ |
+| 2026-08-05 | Analytic/SAS | Kalibrasi GAS: auto-provision tab kosong/hilang (`pastikanTabAda_` + `TAB_HEADERS_`); Alasan Retur ditunda; catatan anti-error ditambah. **Deploy GAS ulang wajib.** | ✅ code / ⏳ deploy |
