@@ -8,18 +8,18 @@
   <title>Premium Team Planner</title>
   <style>
     :root {
-      --accent: #003DA5;
-      --accent-hover: #002D7A;
-      --accent-light: rgba(0,61,165,0.08);
-      --secondary: #8C8C8C;
-      --secondary-hover: #6E6E6E;
-      --secondary-light: rgba(140,140,140,0.08);
-      --bg: #F2F2F2;
+      --accent: #1B2A4A;
+      --accent-hover: #5B7A9D;
+      --accent-light: rgba(27,42,74,0.08);
+      --secondary: #5B7A9D;
+      --secondary-hover: #4A647F;
+      --secondary-light: rgba(91,122,157,0.12);
+      --bg: #F8F9FB;
       --surface: #FFFFFF;
-      --surface-alt: #F2F2F2;
-      --text: #1E1E1E;
-      --text-soft: #666666;
-      --border: #D4D4D4;
+      --surface-alt: #F1F5F9;
+      --text: #1E2430;
+      --text-soft: #7A828E;
+      --border: #D9DFE8;
       --radius: 16px;
       --radius-sm: 12px;
       --danger: #D70000;
@@ -67,10 +67,10 @@
     .top-loader-bar {
       width: 40%;
       height: 100%;
-      background: var(--accent);
+      background: var(--secondary);
       position: absolute;
       left: -40%;
-      box-shadow: 0 0 10px var(--accent);
+      box-shadow: 0 0 10px var(--secondary);
       animation: indeterminate 1.5s infinite linear;
     }
     @keyframes indeterminate {
@@ -188,7 +188,7 @@
 
     .nav-item:hover {
       color: var(--accent);
-      background: rgba(99, 102, 241, 0.05);
+      background: rgba(27, 42, 74, 0.06);
     }
 
     .nav-item.active {
@@ -319,13 +319,13 @@
     .btn-primary {
       background: var(--accent);
       color: #fff;
-      box-shadow: 0 4px 12px rgba(0, 61, 165, 0.2);
+      box-shadow: 0 4px 12px rgba(27, 42, 74, 0.2);
     }
 
     .btn-primary:hover {
       background: var(--accent-hover);
       transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(0, 61, 165, 0.3);
+      box-shadow: 0 6px 20px rgba(27, 42, 74, 0.3);
     }
 
     .btn-ghost {
@@ -569,13 +569,13 @@
       padding: 4px 8px;
       margin-top: auto;
       text-align: center;
-      background: rgba(99, 102, 241, 0.05);
+      background: rgba(27, 42, 74, 0.05);
       border-radius: 4px;
       cursor: pointer;
     }
 
     .more-chip:hover {
-      background: rgba(99, 102, 241, 0.1);
+      background: rgba(27, 42, 74, 0.1);
     }
 
     /* Custom Date Picker */
@@ -1057,7 +1057,7 @@
 
     .tl-label-drag:hover,
     .tl-label-drag:active {
-      background: rgba(99, 102, 241, 0.3);
+      background: rgba(27, 42, 74, 0.3);
     }
 
     #tl-zoom-info {
@@ -1398,18 +1398,18 @@
     .theme-toggle svg { width: 16px; height: 16px; }
 
     [data-theme="dark"] {
-        --accent: #4A80D4;
-        --accent-hover: #6B9AE0;
-        --accent-light: rgba(74,128,212,0.2);
-        --secondary: #8C8C8C;
-        --secondary-hover: #A0A0A0;
-        --secondary-light: rgba(140,140,140,0.15);
-        --bg: #1A1A1A;
-        --surface: #2A2A2A;
-        --surface-alt: #333333;
-        --text: #F0F0F0;
-        --text-soft: #8C8C8C;
-        --border: #3A3A3A;
+        --accent: #5B7A9D;
+        --accent-hover: #7B99BC;
+        --accent-light: rgba(91,122,157,0.25);
+        --secondary: #7B99BC;
+        --secondary-hover: #93AECF;
+        --secondary-light: rgba(123,153,188,0.18);
+        --bg: #161B24;
+        --surface: #1E2430;
+        --surface-alt: #262D3B;
+        --text: #F8F9FB;
+        --text-soft: #9AA3AF;
+        --border: #2E3644;
         --danger: #FF4444;
         --danger-light: rgba(255,68,68,0.15);
         --warning: #D4A000;
@@ -1515,7 +1515,7 @@
       <div class="stats-bar">
         <div class="stat-pill">Progres <b id="stat-progress-val">0%</b>
           <div style="width:50px;height:4px;background:#f1f5f9;border-radius:4px;overflow:hidden;margin-left:4px;">
-            <div id="stat-progress-bar" style="width:0%;height:100%;background:var(--accent);transition:0.5s;">
+            <div id="stat-progress-bar" style="width:0%;height:100%;background:var(--secondary);transition:0.5s;">
             </div>
           </div>
         </div>
