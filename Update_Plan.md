@@ -57,3 +57,4 @@
 | 2026-08-05 | Taskschedule | `isCampaignRow_` diperluas ke kolom `tipe`/`type`/`kategori` + diagnostik `sample keys` di console | ✅ |
 | 2026-08-05 | Taskschedule | **SELESAI — verifikasi user:** skema sheet `Type`=`campaign` cocok; campaign tampil benar di Timeline, Task List bersih, deploy GAS terakhir sukses. | ✅ |
 | 2026-08-05 | Analytic/SAS | Kalibrasi GAS: auto-provision tab kosong/hilang (`pastikanTabAda_` + `TAB_HEADERS_`); Alasan Retur ditunda; catatan anti-error ditambah. **Deploy GAS ulang wajib.** | ✅ code / ⏳ deploy |
+| 2026-08-05 | Analytic/SAS | Fix tooltip Trend Sales vs Retur menampilkan `<svg...>` di mode "Bandingkan Bulan Lalu" — `ICONS.calendar` dihapus dari tooltip `title` callback (Chart.js tooltip text-only) | ✅ |

@@ -99,7 +99,12 @@ JS merujuk elemen **via id** (`chartTren`, `chartHari`, `chartMargin`, `chartKat
 ### 3.8 🟡 Verifikasi layout pakai ukuran, bukan mata
 Bug layout di file ini mustahil dideteksi sekilas (lihat §3.1). Setelah mengubah layout, ukur tinggi kartu vs konten di beberapa kondisi (mis. length 5 → 25 → 5) — bisa dengan Chrome headless.
 
-### 3.9 ⚪ Utang teknis yang diketahui (belum diperbaiki)
+### 3.10 🔴 Tooltip Trend Sales vs Retur menampilkan string `<svg ...>` — SUDAH DIPERBAIKI
+**Gejala:** saat mode komparasi "Bandingkan Bulan Lalu", hover di grafik Trend menampilkan markup `<svg xmlns=...` mentah sebagai judul tooltip.
+**Akar:** tooltip `title` callback menempelkan `ICONS.calendar` (string SVG) ke teks tooltip. Chart.js tooltip merender teks polos (`textContent`) — SVG tidak pernah dirender, malah tampil sebagai string.
+**Fix:** ikon dihapus dari `title` callback chart Tren. **Aturan: jangan pernah menaruh string SVG/HTML ke dalam callback tooltip Chart.js** — tooltip tidak mendukung HTML; kalau mau ikon di tooltip, pakai `external` tooltip (elemen kustom).
+
+
 - Password login **hardcoded** `'Admin@'` di client-side (BugFound DD1) — siapa pun bisa lihat via inspect element. Deploy auth di backend untuk menghilangkan ini.
 - `<link>` sebelum `<meta charset>` (spec violation, BugFound A2).
 
