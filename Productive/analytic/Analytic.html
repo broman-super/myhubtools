@@ -798,7 +798,7 @@
                 style="font-family:'Geomini','Plus Jakarta Sans'; color:var(--text); margin-bottom:12px; font-size:20px; font-weight:800;">
                 Memproses Data...</h3>
             <p id="processingDesc" style="color:var(--text-muted); font-size:13px; line-height:1.6; font-weight:500;">
-                Mohon jangan menutup halaman atau melakukan refresh. Data sedang dikirim ke Google Spreadsheet secara
+                Mohon jangan menutup halaman atau melakukan refresh. Data sedang dikirim ke database secara
                 aman.</p>
 
             <!-- Progress Bar & Persentase Visual -->
@@ -829,7 +829,7 @@
                     style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1; font-weight:800;">&times;</button>
             </div>
             <p style="color:var(--text-muted); font-size:12px; margin-bottom:15px; font-weight:500;">Masukkan biaya
-                operasional di bawah ini. Data akan otomatis tercatat ke tab "Biaya" di spreadsheet.</p>
+                operasional di bawah ini. Data akan otomatis tercatat ke tabel "Biaya" di database.</p>
 
             <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
                 <div>
@@ -880,7 +880,7 @@
                     style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1; font-weight:800;">&times;</button>
             </div>
             <p style="color:var(--text-muted); font-size:12px; margin-bottom:15px; font-weight:500;">Masukkan target
-                omzet bulan ini. Data akan disimpan otomatis ke dalam spreadsheet (Sheet: Settings).</p>
+                omzet bulan ini. Data akan disimpan otomatis ke dalam database (Settings).</p>
             <input type="number" id="inputTargetSales" placeholder="Contoh: 820000000"
                 style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text); margin-bottom:16px; font-weight:800; outline:none; font-size:16px;">
             <button onclick="saveTargetToGAS()" id="btnSaveTarget"
@@ -1366,7 +1366,7 @@
           circle: '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6"/></svg>',
           question: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
         };
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwvp5hWFH3-eyHPqBmVR83EfSJlT4QRXKCWCP_cf2Q8oj511NphC7uL40TxwJhDJr4VkQ/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwd7WIrHV2Q7OGXc71L1zrKErJTtyc_w9c0i96WkzhxJjHCmg8fDJCx-TLi_G8qPSAiVg/exec';
 
         // State pengaman proses GAS & refresh otomatis
         window.isProcessingGAS = false;
@@ -1467,7 +1467,7 @@
                 titleEl.innerText = title || 'Proses Sukses!';
                 titleEl.style.color = 'var(--success)';
             }
-            if (descEl) descEl.innerHTML = desc || 'Data berhasil disimpan dan disinkronkan ke Google Spreadsheet.';
+            if (descEl) descEl.innerHTML = desc || 'Data berhasil disimpan dan disinkronkan ke database.';
             if (closeBtn) closeBtn.style.display = 'none';
 
             if (duration > 0) {
@@ -1528,6 +1528,10 @@
         // Sinkronisasi data asinkron dari spreadsheet ke dashboard secara in-place
         async function syncDashboardData() {
             try {
+                if (DATA_SOURCE === 'supabase') {
+                    await prosesData(); // refetch RPC + render ulang; cache v3 tidak dipakai di mode ini
+                    return true;
+                }
                 // Tarik data keuangan terupdate
                 const res = await fetch(API_URL + "?action=getSalesData", { mode: 'cors', redirect: 'follow' });
                 if (!res.ok) throw new Error('Server ' + res.status);
@@ -1583,6 +1587,122 @@
         const KODE_SERI_MASTER = ['S WP', 'SAG', 'STT', 'STX', 'STC', 'SX', 'S'].sort((a, b) => b.length - a.length);
         const WARNA_MASTER = ['HITAM', 'PUTIH', 'MERAH', 'BIRU', 'HIJAU', 'UNGU', 'ABU', 'KUNING', 'ORANGE', 'COKLAT', 'PINK', 'SILVER', 'GOLD', 'NAVY', 'MAROON', 'CREAM'];
 
+        // ============ SUMBER DATA: SUPABASE (READ cepat) vs GAS (rollback) ============
+        // 'supabase' = baca agregat dari PostgreSQL via RPC rekap_dashboard (RLS anon SELECT).
+        // 'gas'      = rollback penuh ke mesin lama (getSalesData). Ganti nilai ini saja.
+        // ponytail: pakai fetch REST langsung, tanpa library supabase-js (satu panggilan, tanpa dependency).
+        const SUPABASE_URL = 'https://ciukvojsknsdnkysbpjl.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdWt2b2pza25zZG5reXNicGpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwODM3NDgsImV4cCI6MjEwMTY1OTc0OH0.VlOnxyhan-pydisulQ6jT9g89eFbgwzPwuMrMRYRu7M';
+        const DATA_SOURCE = 'supabase';
+
+        let prosesSeqCounter = 0; // anti-race: abaikan respons RPC lama bila rentang berubah cepat
+
+        const isoDate = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+
+        async function muatRekapSupabase(params) {
+            const key = JSON.stringify(params);
+            try {
+                const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/rekap_dashboard', {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(params)
+                });
+                if (!res.ok) throw new Error('Supabase ' + res.status + ' ' + res.statusText);
+                let data = await res.json();
+                // PostgREST kadang membungkus hasil RPC scalar sebagai [ {...} ] atau [ {"rekap_dashboard": {...}} ] — normalisasi
+                if (Array.isArray(data)) {
+                    if (data.length === 1 && data[0] && typeof data[0] === 'object' && 'rekap_dashboard' in data[0]) data = data[0].rekap_dashboard;
+                    else if (data.length === 1) data = data[0];
+                }
+                try { localStorage.setItem('intel_pro_cache_v4', JSON.stringify({ key: key, data: data })); } catch (e) {}
+                return data;
+            } catch (err) {
+                // Offline fallback: cache untuk rentang yang persis sama
+                let cache = null;
+                try { cache = JSON.parse(localStorage.getItem('intel_pro_cache_v4') || 'null'); } catch (e) {}
+                if (cache && cache.key === key && cache.data) return cache.data;
+                throw err;
+            }
+        }
+
+        function updateKategoriFilterSupabase(r) {
+            const sel = document.getElementById('filterProdukKategori');
+            if (!sel) return;
+            const prev = sel.value;
+            const cats = new Set();
+            Object.keys(r.kategori || {}).forEach(k => { if (k && k !== 'UMUM') cats.add(k); });
+            Object.keys(r.kategoriLalu || {}).forEach(k => { if (k && k !== 'UMUM') cats.add(k); });
+            sel.innerHTML = '<option value="ALL">SEMUA KATEGORI</option>';
+            Array.from(cats).sort().forEach(k => sel.add(new Option(k, k)));
+            if (prev && Array.from(sel.options).some(o => o.value === prev)) sel.value = prev;
+        }
+
+        let __rekapSupabaseData = null; // hasil RPC terakhir; dipakai blok statis bulan berjalan
+
+        // Petakan hasil RPC rekap_dashboard ke variabel render prosesData().
+        // Struktur respons: fase2_fungsi.sql L128-335.
+        function terapkanRekapSupabase(r) {
+            const kpi = (k) => k || {};
+            const dS = kpi(r.kpi), dL = kpi(r.kpiLalu);
+            const lastOrder = {};
+            Object.keys(r.lastOrder || {}).forEach(k => { lastOrder[k] = new Date(r.lastOrder[k] + 'T00:00:00'); });
+            const firstPurchaseData = {};
+            Object.keys(r.firstPurchase || {}).forEach(k => { firstPurchaseData[k] = new Date(r.firstPurchase[k] + 'T00:00:00'); });
+            const basket = r.basket || {};
+            const basketData = {};
+            // ponytail: sintesis entri basket agregat supaya blok render basket lama (L2657-2672) jalan apa adanya
+            if (basket.COUNT) {
+                for (let i = 0; i < (basket.RESELLER_COUNT || 0); i++) {
+                    basketData['r' + i] = { qty: basket.QTY / basket.COUNT, nominal: (basket.RESELLER_NOMINAL || 0) / basket.RESELLER_COUNT, isReseller: true };
+                }
+                for (let i = 0; i < (basket.OTHER_COUNT || 0); i++) {
+                    basketData['o' + i] = { qty: basket.QTY / basket.COUNT, nominal: (basket.OTHER_NOMINAL || 0) / basket.OTHER_COUNT, isReseller: false };
+                }
+            }
+            const rekapProd = {};
+            Object.keys(r.produkDetail || {}).forEach(p => { rekapProd[p] = (r.produkDetail[p].qty || 0); });
+
+            if (r.target) {
+                TARGET_SALES = parseFloat(r.target) || TARGET_SALES;
+                const inp = document.getElementById('inputTargetSales');
+                if (inp) inp.value = TARGET_SALES;
+            }
+            const elGap = document.getElementById('kpiSalesGap');
+            if (elGap) elGap.innerText = 'Target: ' + formatRp(TARGET_SALES);
+
+            const defHari = { 'Senin': 0, 'Selasa': 0, 'Rabu': 0, 'Kamis': 0, 'Jumat': 0, 'Sabtu': 0, 'Minggu': 0 };
+            return {
+                dSkrg: { sales: dS.sales || 0, salesQty: dS.salesQty || 0, retur: dS.retur || 0, returQty: dS.returQty || 0, trx: dS.trx || 0, cogs: dS.cogs || 0 },
+                dLalu: { sales: dL.sales || 0, salesQty: dL.salesQty || 0, retur: dL.retur || 0, returQty: dL.returQty || 0, trx: dL.trx || 0, cogs: dL.cogs || 0 },
+                totalBiaya: r.totalBiaya || 0,
+                totalBiayaLalu: r.totalBiayaLalu || 0,
+                omzetBaru: r.omzetBaru || 0,
+                omzetLama: r.omzetLama || 0,
+                rekapTren: r.trend || [],
+                rekapReseller: r.reseller || {},
+                rekapMarketplace: r.marketplace || {},
+                rekapKat: r.kategori || {},
+                rekapKatLalu: r.kategoriLalu || {},
+                rekapProd: rekapProd,
+                rekapCont: r.kontributor || {},
+                lastOrder: lastOrder,
+                rekapHari: Object.assign({}, defHari, r.rekapHari || {}),
+                rekapSeri: r.series || {},
+                rekapWarna: r.warna || {},
+                rekapBiaya: r.biaya || {},
+                rekapProdukDetail: r.produkDetail || {},
+                rekapTrendProd: r.trendProd || {},
+                freqPelanggan: r.freq || {},
+                basketData: basketData,
+                firstPurchaseData: firstPurchaseData
+            };
+        }
+        // ============================================================
+
         const formatRp = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
         const svgJam = `<svg class="icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`;
 
@@ -1623,7 +1743,7 @@
             return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, limit || 10);
         }
 
-        function updateResellerPelangganDropdown(katFilter, gStart, gEnd) {
+        function updateResellerPelangganDropdown(katFilter, gStart, gEnd, sourceMap) {
             const sel = document.getElementById('filterResellerPelanggan');
             if (!sel) return;
             const prev = sel.value;
@@ -1634,7 +1754,10 @@
                 return;
             }
             sel.style.display = '';
-            const topList = buildTopPelangganForKat(katFilter, gStart, gEnd, 10);
+            // sourceMap = mode supabase: daftar top reseller langsung dari RPC (rawDataTransaksi kosong)
+            const topList = sourceMap
+                ? Object.entries(sourceMap).sort((a, b) => b[1] - a[1]).slice(0, 10)
+                : buildTopPelangganForKat(katFilter, gStart, gEnd, 10);
             sel.innerHTML = '<option value="ALL">SEMUA RESELLER</option>';
             topList.forEach(([nama, omzet]) => {
                 sel.add(new Option(nama + ' — ' + formatRp(omzet), nama));
@@ -2153,7 +2276,7 @@
 
             // ponytail: loading screen mengunci front-end sampai SEMUA fungsi siap + data fresh tiba.
             // Cache TIDAK ditampilkan duluan — front-end baru dibuka setelah semuanya load sempurna.
-            let memoriLama = localStorage.getItem("intel_pro_cache_v3");
+            let memoriLama = DATA_SOURCE === 'supabase' ? null : localStorage.getItem("intel_pro_cache_v3");
             let syncing = true;
 
             if (ls) ls.style.display = 'flex';
@@ -2170,33 +2293,43 @@
 
             try {
                 if(syncStatus) syncStatus.innerText = "Sinkronisasi...";
-                setStage(0, 'active', 'Menghubungkan ke Google Apps Script...');
-                const controller = new AbortController();
-                const syncTimeout = setTimeout(() => controller.abort(), 90000);
-                const res = await fetch(API_URL + "?action=getSalesData", { mode: 'cors', redirect: 'follow', signal: controller.signal });
-                clearTimeout(syncTimeout);
-                if (!res.ok) throw new Error('Server ' + res.status);
-                setStage(0, 'done');
 
-                setStage(1, 'active', 'Mengambil data transaksi dari backend...');
-                let dataMentah = await res.json();
-                setStage(1, 'done');
+                if (DATA_SOURCE === 'supabase') {
+                    setStage(0, 'active', 'Menghubungkan ke Supabase...');
+                    setStage(0, 'done');
+                    setStage(1, 'active', 'Mengambil data dari Supabase...');
+                    setStage(1, 'done');
+                } else {
+                    setStage(0, 'active', 'Menghubungkan ke Google Apps Script...');
+                    const controller = new AbortController();
+                    const syncTimeout = setTimeout(() => controller.abort(), 90000);
+                    const res = await fetch(API_URL + "?action=getSalesData", { mode: 'cors', redirect: 'follow', signal: controller.signal });
+                    clearTimeout(syncTimeout);
+                    if (!res.ok) throw new Error('Server ' + res.status);
+                    setStage(0, 'done');
 
-                // Pre-fill target input if available
-                if (dataMentah.settings && dataMentah.settings.length > 0) {
-                    let targetSet = dataMentah.settings.find(s => s.Key === 'Target');
-                    if (targetSet && targetSet.Value) document.getElementById('inputTargetSales').value = targetSet.Value;
+                    setStage(1, 'active', 'Mengambil data transaksi dari backend...');
+                    let dataMentah = await res.json();
+                    setStage(1, 'done');
+
+                    // Pre-fill target input if available
+                    if (dataMentah.settings && dataMentah.settings.length > 0) {
+                        let targetSet = dataMentah.settings.find(s => s.Key === 'Target');
+                        if (targetSet && targetSet.Value) document.getElementById('inputTargetSales').value = targetSet.Value;
+                    }
+
+                    // Simpan cache untuk buka web berikutnya!
+                    try { localStorage.setItem("intel_pro_cache_v3", JSON.stringify(dataMentah)); } catch (e) { console.warn('Cache local gagal disimpan (ukuran data besar):', e); }
+
+                    setStage(2, 'active', 'Mengolah data & menyiapkan dashboard...');
+                    olahDataMentah(dataMentah);
                 }
 
-                // Simpan cache untuk buka web berikutnya!
-                try { localStorage.setItem("intel_pro_cache_v3", JSON.stringify(dataMentah)); } catch (e) { console.warn('Cache local gagal disimpan (ukuran data besar):', e); }
-
-                setStage(2, 'active', 'Mengolah data & menyiapkan dashboard...');
-                olahDataMentah(dataMentah);
                 syncing = false;
                 if(syncStatus) syncStatus.innerText = "Data Terkini";
                 setupDatePicker();
-                prosesData();
+                await prosesData();
+                if (DATA_SOURCE === 'supabase' && !__rekapSupabaseData) throw new Error('Data Supabase tidak tersedia (koneksi gagal / tanpa cache).');
                 unlock();
             } catch (e) {
                 console.error("Sinkronisasi gagal:", e);
@@ -2211,11 +2344,11 @@
                         setStage(1, 'done');
                     } catch (err) { console.error('Cache error:', err); }
                 } else {
-                    alert("Gagal mengambil data dari Google Sheet. Cek API!");
+                    alert("Gagal mengambil data dari " + (DATA_SOURCE === 'supabase' ? 'Supabase' : 'Google Sheet') + ". Cek koneksi dan API!");
                 }
                 setStage(2, 'active', 'Merender dashboard dari data yang tersedia...');
                 setupDatePicker();
-                prosesData();
+                await prosesData();
                 unlock();
             }
         }
@@ -2223,7 +2356,7 @@
         // applyQuickFilter digantikan oleh Library Daterangepicker.
 
 
-        function prosesData() {
+        async function prosesData() {
             let startVal = document.getElementById('startDate').value;
             let endVal = document.getElementById('endDate').value;
             let gStart = null;
@@ -2290,8 +2423,32 @@
 
             let barisDihitung = 0;
             const filterKatProduk = document.getElementById('filterProdukKategori')?.value || 'ALL';
-            updateResellerPelangganDropdown(filterKatProduk, gStart, gEnd);
+            // Mode supabase: dropdown reseller diisi dari RPC (terapkanRekapSupabase), bukan rawDataTransaksi (kosong)
+            if (DATA_SOURCE !== 'supabase') updateResellerPelangganDropdown(filterKatProduk, gStart, gEnd);
             const filterPelReseller = document.getElementById('filterResellerPelanggan')?.value || 'ALL';
+
+            if (DATA_SOURCE === 'supabase') {
+                const mySeq = ++prosesSeqCounter;
+                let r;
+                try {
+                    r = await muatRekapSupabase({
+                        p_start: isoDate(gStart),
+                        p_end: isoDate(gEnd),
+                        p_start_lalu: isoDate(pStart),
+                        p_end_lalu: isoDate(pEnd),
+                        p_kat_filter: filterKatProduk,
+                        p_pel_filter: filterPelReseller
+                    });
+                } catch (err) {
+                    console.error("Supabase read gagal:", err);
+                    return; // data lama tetap tampil; coba lagi saat interaksi berikutnya
+                }
+                if (mySeq !== prosesSeqCounter) return; // respons basi dari rentang yang berubah cepat
+                __rekapSupabaseData = r;
+                updateKategoriFilterSupabase(r);
+                updateResellerPelangganDropdown(filterKatProduk, gStart, gEnd, r.reseller);
+                ({ dSkrg, dLalu, totalBiaya, totalBiayaLalu, omzetBaru, omzetLama, rekapTren, rekapReseller, rekapMarketplace, rekapKat, rekapKatLalu, rekapProd, rekapCont, lastOrder, rekapHari, rekapSeri, rekapWarna, rekapBiaya, rekapProdukDetail, rekapTrendProd, freqPelanggan, basketData, firstPurchaseData } = terapkanRekapSupabase(r));
+            }
 
             if (rawDataTransaksi && rawDataTransaksi.length > 0) {
                 rawDataTransaksi.forEach(b => {
@@ -2502,6 +2659,15 @@
                 let staticMaxDate = 1;
                 let daysInCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
                 let isEndOfCurrentMonth = today.getDate() === daysInCurrentMonth;
+
+                // Mode supabase: nilai statis bulan berjalan datang dari RPC (rawDataTransaksi kosong)
+                if (DATA_SOURCE === 'supabase' && __rekapSupabaseData && __rekapSupabaseData.staticMonthly) {
+                    const st = __rekapSupabaseData.staticMonthly;
+                    staticMonthlySales = st.sales || 0;
+                    staticMonthlyQty = st.qty || 0;
+                    staticPrevMonthlyQty = st.prevQty || 0;
+                    staticMaxDate = st.maxDate || 1;
+                }
 
                 if (rawDataTransaksi && rawDataTransaksi.length > 0) {
                     rawDataTransaksi.forEach(b => {
@@ -3184,7 +3350,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             // Tutup settings modal agar tidak menumpuk
             document.getElementById('settingsModal').style.display = 'none';
 
-            showProcessingOverlay('Menyimpan Target...', 'Mohon tunggu, target omzet baru sedang disimpan ke Google Spreadsheet.');
+            showProcessingOverlay('Menyimpan Target...', 'Mohon tunggu, target omzet baru sedang disimpan ke database.');
 
             try {
                 const res = await fetch(API_URL + "?action=saveTarget&value=" + targetVal);
@@ -3199,7 +3365,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                     if (syncSuccess) {
                         showSuccessOverlay('Target Berhasil Disimpan!', 'Target omzet terupdate telah diterapkan pada dashboard secara dinamis.', 1500);
                     } else {
-                        showErrorOverlay('Sinkronisasi Gagal!', 'Target berhasil disimpan ke Spreadsheet, namun dashboard gagal diperbarui secara lokal. Silakan refresh halaman.');
+                        showErrorOverlay('Sinkronisasi Gagal!', 'Target berhasil disimpan ke database, namun dashboard gagal diperbarui secara lokal. Silakan refresh halaman.');
                     }
                 } else {
                     throw new Error(data.message || "Gagal menyimpan target");
@@ -3222,7 +3388,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             // Tutup modal OPEX agar tidak menumpuk
             document.getElementById('expenseModal').style.display = 'none';
 
-            showProcessingOverlay('Mencatat Pengeluaran...', 'Mohon tunggu, data biaya operasional sedang disimpan ke Google Spreadsheet secara aman.');
+            showProcessingOverlay('Mencatat Pengeluaran...', 'Mohon tunggu, data biaya operasional sedang disimpan ke database secara aman.');
 
             // Konversi YYYY-MM-DD ke format d/m/yyyy untuk dikirim ke database
             let dateValDb = dateVal;
@@ -3248,7 +3414,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                     if (syncSuccess) {
                         showSuccessOverlay('Biaya Berhasil Dicatat!', 'Biaya operasional baru berhasil ditambahkan dan disinkronkan ke dalam dashboard.', 1500);
                     } else {
-                        showErrorOverlay('Sinkronisasi Gagal!', 'Biaya berhasil dicatat ke Spreadsheet, namun dashboard gagal diperbarui secara lokal. Silakan refresh halaman.');
+                        showErrorOverlay('Sinkronisasi Gagal!', 'Biaya berhasil dicatat ke database, namun dashboard gagal diperbarui secara lokal. Silakan refresh halaman.');
                     }
                 } else {
                     throw new Error(data.message || "Gagal menyimpan");
@@ -3307,6 +3473,9 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
         let excelRawRows = [];   // raw rows from Excel
         let excelWorksheet = null; // referensi sheet untuk baca cell.w (teks tampilan Excel)
         let mappingState = {};   // { targetKey: excelHeader }
+        // Mode supabase: rawDataTransaksi kosong, jadi snapshot sheet di-fetch sekali per buka modal
+        // agar preview (BARU/UPDATE/SKIP) dan payload upload tetap membawa kolom penuh (Tipe/Kategori/Penjualan).
+        let uploadSheetData = null;
 
         const TARGET_COLUMNS = [
             { key: 'noTransaksi', label: 'No. Transaksi', candidates: ['nomor', 'nomor #', 'no #', 'no. #', 'nofaktur', 'no. transaksi', 'no. invoice', 'invoice', 'id transaksi', 'id', 'no'] },
@@ -3366,6 +3535,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             excelRawRows = [];
             excelWorksheet = null;
             mappingState = {};
+            uploadSheetData = null;
 
             const fileInput = document.getElementById('excelFileInput');
             if (fileInput) fileInput.value = '';
@@ -3866,7 +4036,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             tbody.innerHTML = html;
         }
 
-        function runDataAnalysis() {
+        async function runDataAnalysis() {
             const missingEssential = [];
             if (!mappingState.tanggal) missingEssential.push('Tanggal');
             if (!mappingState.namaBarang) missingEssential.push('Nama Barang');
@@ -3877,6 +4047,37 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             if (missingEssential.length > 0) {
                 alert(`Silakan lengkapi pemetaan kolom esensial berikut: \n• ${missingEssential.join('\n• ')}`);
                 return;
+            }
+
+            // Mode supabase: rawDataTransaksi kosong → ambil snapshot transaksi langsung dari
+            // Supabase sekali per buka modal (RPC get_all_transaksi, grant anon) supaya payload
+            // membawa kolom penuh (Tipe/Kategori/Penjualan) & preview BARU/UPDATE/SKIP akurat.
+            if (DATA_SOURCE === 'supabase' && uploadSheetData === null) {
+                try {
+                    const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_all_transaksi', {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({})
+                    });
+                    if (!res.ok) throw new Error('Supabase ' + res.status);
+                    const rows = await res.json();
+                    // RPC mengembalikan kolom teknis (id, dedupe_key) yang mengganggu
+                    // getKeyOfRow & originalColumns → buang sebelum dipakai preview.
+                    uploadSheetData = (Array.isArray(rows) ? rows : []).map(r => {
+                        const clean = {};
+                        for (const k in r) {
+                            if (k !== 'id' && k !== 'dedupe_key') clean[k] = r[k];
+                        }
+                        return clean;
+                    });
+                } catch (err) {
+                    console.warn("Gagal ambil snapshot transaksi dari Supabase untuk upload preview:", err);
+                    uploadSheetData = [];
+                }
             }
 
             uploadedData = excelRawRows.map(row => {
@@ -3894,7 +4095,9 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                 const kuantitasVal = row[mappingState.kuantitas] || 0;
                 const totalHargaVal = row[mappingState.totalHarga] || 0;
 
-                const originalColumns = rawDataTransaksi.length > 0 ? Object.keys(rawDataTransaksi[0]) : [];
+                const originalColumns = uploadSheetData && uploadSheetData.length > 0
+                    ? Object.keys(uploadSheetData[0])
+                    : (rawDataTransaksi.length > 0 ? Object.keys(rawDataTransaksi[0]) : []);
 
                 const getSheetHeaderName = (candidates) => {
                     for (let col of originalColumns) {
@@ -4011,7 +4214,8 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
 
         function analyzeUploadedRows(rows) {
             const cacheMap = {};
-            rawDataTransaksi.forEach(item => {
+            const sourceRows = (uploadSheetData && uploadSheetData.length > 0) ? uploadSheetData : rawDataTransaksi;
+            sourceRows.forEach(item => {
                 const key = getKeyOfRow(item);
                 if (key) cacheMap[key] = item;
             });
@@ -4078,7 +4282,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                                 cacheVal = cacheVal !== null ? cacheVal.toString().trim() : "";
                             }
 
-                            if (excelVal !== cacheVal) {
+                            if (excelVal !== "" && excelVal !== cacheVal) {
                                 isDifferent = true;
                                 break;
                             }
@@ -4170,15 +4374,15 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                 if (currentProgress < 30) {
                     // Fase 1: Unggah awal (cepat)
                     currentProgress += Math.random() * 3 + 2; // Naik 2-5% per tick
-                    statusText = 'Mengirim data transaksi ke Google Apps Script...';
+                    statusText = 'Mengirim data transaksi ke server database...';
                 } else if (currentProgress < 75) {
                     // Fase 2: Ingest data di server
                     currentProgress += Math.random() * 1.5 + 0.5; // Naik 0.5-2% per tick
-                    statusText = 'Data diterima! Menghubungkan ke spreadsheet...';
+                    statusText = 'Data diterima! Menghubungkan ke database...';
                 } else if (currentProgress < 95) {
                     // Fase 3: Pencocokan baris (asimtotik melambat)
                     currentProgress += (95 - currentProgress) * 0.05;
-                    statusText = 'Menyimpan & memfilter baris transaksi baru di Google Spreadsheet. Mohon tunggu...';
+                    statusText = 'Menyimpan & memfilter baris transaksi baru di database. Mohon tunggu...';
                 }
 
                 updateProcessingProgress(currentProgress, statusText);
@@ -4219,7 +4423,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                             } else {
                                 showErrorOverlay(
                                     'Sinkronisasi Dashboard Gagal!',
-                                    'Data transaksi berhasil disimpan di Google Spreadsheet, namun dashboard gagal memuat data terbaru secara asinkron. Silakan refresh halaman.'
+                                    'Data transaksi berhasil disimpan di database, namun dashboard gagal memuat data terbaru secara asinkron. Silakan refresh halaman.'
                                 );
                             }
                         });
