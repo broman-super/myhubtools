@@ -67,6 +67,30 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 
+  // 3.6. Update Biaya (edit) — LANGSUNG ke Supabase biaya
+  if (action === 'updateBiaya') {
+    try { CacheService.getScriptCache().remove('dash_data_v2'); } catch(e) {}
+    var id = e.parameter.id;
+    if (!id) throw new Error('id biaya kosong');
+    var tanggal = canonicalizeDate_(e.parameter.tanggal);
+    var kategori = e.parameter.kategori;
+    var nominal = parseFloat(e.parameter.nominal) || 0;
+    supabaseRequest_('patch', '/rest/v1/biaya?id=eq.' + encodeURIComponent(id),
+      [{ 'Tanggal': tanggal, 'Kategori Biaya': kategori, 'Nominal': nominal }]);
+    return ContentService.createTextOutput(JSON.stringify({status: "success"}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 3.7. Hapus Biaya — LANGSUNG ke Supabase biaya
+  if (action === 'deleteBiaya') {
+    try { CacheService.getScriptCache().remove('dash_data_v2'); } catch(e) {}
+    var id = e.parameter.id;
+    if (!id) throw new Error('id biaya kosong');
+    supabaseRequest_('delete', '/rest/v1/biaya?id=eq.' + encodeURIComponent(id));
+    return ContentService.createTextOutput(JSON.stringify({status: "success"}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   // 4. TAMBAHKAN INI: Agar Iframe di ReynaHub Bisa Menampilkan File GitHub
   return HtmlService.createHtmlOutput("API ReynaHub V2 Active")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
