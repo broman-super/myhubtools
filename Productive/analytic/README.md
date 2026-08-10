@@ -54,10 +54,10 @@ Chart.js 3.9.1 · datalabels 2.2.0 · zoom 2.0.1 (+hammerjs 2.0.8) · jQuery 3.7
 | `theme` | localStorage | `dark` / `light` |
 
 ### 2.5 Struktur Layout (bento grid 12 kolom)
-- ROW 2: TREN SALES VS RETUR (8) + MARKET SHARE (4)
-- ROW 3: TOP PRODUK & MOMENTUM (8) + RASIO KESEHATAN KEUANGAN (4)
-- ROW 4: PETA WAKTU GACOR (4) + INTELIJEN KERANJANG & CAC (4) + VIP SEGMENTATION & CHURN (4)
-- ROW 5: INSTANT DIAGNOSTICS (12)
+- ROW 2: TREN SALES VS RETUR (12) — full width + toggle Harian/Mingguan/Bulanan (mode Auto: >60 hari → Mingguan, >180 hari → Bulanan)
+- ROW 3: MARKET SHARE (4) + TOP PRODUK & MOMENTUM (8)
+- ROW 4: RASIO KESEHATAN KEUANGAN (4) + PETA WAKTU GACOR (4) + INTELIJEN KERANJANG & CAC (4)
+- ROW 5: VIP SEGMENTATION & CHURN (4) + INSTANT DIAGNOSTICS (8)
 
 ---
 

@@ -1215,15 +1215,22 @@
         </div>
 
         <!-- ROW 2 -->
-        <div class="bento-item col-span-8">
+        <div class="bento-item col-span-12">
             <div class="bento-header">
                 <div class="bento-title">TREN SALES VS RETUR <span class="help-icon"
-                        data-tooltip="Logika: Sumbu X = Timeline Hari. Garis Solid = Penjualan Aktual. Garis Putus-putus = Penjualan di titik waktu yang sama pada Periode Pembanding (sebagai benchmark).">?</span>
+                        data-tooltip="Logika: Sumbu X = Timeline Hari. Garis Solid = Penjualan Aktual. Garis Putus-putus = Penjualan di titik waktu yang sama pada Periode Pembanding (sebagai benchmark). Toggle Harian/Mingguan/Bulanan = kerincian sumbu waktu.">?</span>
+                </div>
+                <div class="compare-pill" title="Kerincian sumbu waktu chart trend">
+                    <button data-gran="auto" onclick="setTrendGranularity('auto')">Auto</button>
+                    <button data-gran="daily" onclick="setTrendGranularity('daily')">Harian</button>
+                    <button data-gran="weekly" onclick="setTrendGranularity('weekly')">Mingguan</button>
+                    <button data-gran="monthly" onclick="setTrendGranularity('monthly')">Bulanan</button>
                 </div>
             </div>
-            <div class="chart-box large"><canvas id="chartTren"></canvas></div>
+            <div class="chart-box large" style="min-height:420px;"><canvas id="chartTren"></canvas></div>
         </div>
 
+        <!-- ROW 3: MARKET SHARE (4) + TOP PRODUK (8) -->
         <div class="bento-item col-span-4">
             <div class="bento-header">
                 <div class="bento-title">MARKET SHARE <span class="help-icon"
@@ -1235,7 +1242,6 @@
             <div id="tableKategori" style="display:flex; flex-direction:column; gap:8px;"></div>
         </div>
 
-        <!-- ROW 3 -->
         <div class="bento-item col-span-8">
             <div class="bento-header">
                 <div class="bento-title">TOP PRODUK & MOMENTUM</div>
@@ -1267,6 +1273,7 @@
             </div>
         </div>
 
+        <!-- ROW 4: RASIO (4) + PETA WAKTU (4) + KERANJANG (4) -->
         <div class="bento-item col-span-4" style="align-self:start;">
             <div class="bento-header">
                 <div class="bento-title">RASIO KESEHATAN KEUANGAN</div>
@@ -1275,7 +1282,6 @@
             <div id="marginAnalysis" style="margin-top:16px;"></div>
         </div>
 
-        <!-- ROW 4 -->
         <div class="bento-item col-span-4">
             <div class="bento-header">
                 <div class="bento-title">PETA WAKTU GACOR</div>
@@ -1297,6 +1303,7 @@
             <div id="opexList" style="display:flex; flex-direction:column; gap:8px;"></div>
         </div>
 
+        <!-- ROW 5: VIP (4) + DIAGNOSTICS (8) -->
         <div class="bento-item col-span-4">
             <div class="bento-header">
                 <div class="bento-title">VIP SEGMENTATION & CHURN <span class="help-icon"
@@ -1309,8 +1316,7 @@
             <div id="vipInsight" style="margin-top:auto; padding-top:15px;"></div>
         </div>
 
-        <!-- ROW 5 -->
-        <div class="bento-item col-span-12" style="border-color:var(--primary); background:var(--accent);">
+        <div class="bento-item col-span-8" style="border-color:var(--primary); background:var(--accent);">
             <div class="bento-header">
                 <div class="bento-title" style="color:var(--primary)">INSTANT DIAGNOSTICS (LOCAL ENGINE)</div>
             </div>
@@ -3031,14 +3037,71 @@
             renderCharts(Object.values(rekapTren).sort((a, b) => a.ts - b.ts), rekapKat, rekapProd, grossProfit, netProfit, totalBiaya, rekapHari);
         }
 
-        function renderCharts(tA, kat, prod, grossProfit, netProfit, totalBiaya, rekapHari) {
-            Chart.defaults.color = document.documentElement.getAttribute('data-theme') === 'dark' ? '#94a3b8' : '#64748b';
-            Chart.defaults.font.family = 'Plus Jakarta Sans';
+        let _trendDaily = [];
+        let _trendGran = 'auto';
 
-             // 1. TREN CHART (LINE) - Exec Styling
-             const elTren = document.getElementById('chartTren');
-             if (!elTren) return;
-             const ctxTren = elTren.getContext('2d');
+        function currentTrendGran() {
+            if (_trendGran !== 'auto') return _trendGran;
+            let s = document.getElementById('startDate')?.value;
+            let e = document.getElementById('endDate')?.value;
+            let days = (Date.parse(e) - Date.parse(s)) / 86400000;
+            if (!isFinite(days) || days <= 0) return 'daily';
+            if (days > 180) return 'monthly';
+            if (days > 60) return 'weekly';
+            return 'daily';
+        }
+
+        function bucketTrend(arr, gran) {
+            if (gran === 'daily' || !arr || arr.length === 0) return arr;
+            let gStart = new Date((document.getElementById('startDate')?.value || '') + 'T00:00:00');
+            if (isNaN(gStart.getTime())) return arr;
+            let DAY = 86400000;
+            let out = [], idx = {};
+            arr.forEach(e => {
+                let key, lbl;
+                if (gran === 'weekly') {
+                    key = Math.floor(e.ts / 7);
+                    if (idx[key] === undefined) {
+                        let ws = new Date(gStart.getTime() + key * 7 * DAY);
+                        let we = new Date(gStart.getTime() + (key * 7 + 6) * DAY);
+                        lbl = ws.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }) + ' – ' + we.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+                        idx[key] = out.length;
+                        out.push({ ts: e.ts, label: lbl, labelLalu: lbl, sales: 0, retur: 0, salesLalu: 0 });
+                    }
+                } else {
+                    let d = new Date(gStart.getTime() + e.ts * DAY);
+                    key = d.getFullYear() + '-' + d.getMonth();
+                    if (idx[key] === undefined) {
+                        lbl = d.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' }).toUpperCase();
+                        idx[key] = out.length;
+                        out.push({ ts: e.ts, label: lbl, labelLalu: lbl, sales: 0, retur: 0, salesLalu: 0 });
+                    }
+                }
+                let b = out[idx[key]];
+                b.sales += e.sales || 0;
+                b.retur += e.retur || 0;
+                b.salesLalu += e.salesLalu || 0;
+            });
+            return out;
+        }
+
+        function updateGranPills() {
+            let active = currentTrendGran();
+            document.querySelectorAll('.bento-container [data-gran]').forEach(b => {
+                b.classList.toggle('active', b.getAttribute('data-gran') === active);
+            });
+        }
+
+        function setTrendGranularity(g) {
+            _trendGran = g;
+            updateGranPills();
+            if (_trendDaily.length) renderTrendChart(bucketTrend(_trendDaily, currentTrendGran()));
+        }
+
+        function renderTrendChart(tA) {
+            const elTren = document.getElementById('chartTren');
+            if (!elTren) return;
+            const ctxTren = elTren.getContext('2d');
             const gradTren = ctxTren.createLinearGradient(0, 0, 0, 350);
             gradTren.addColorStop(0, 'rgba(59, 130, 246, 0.4)'); /* Blue */
             gradTren.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
@@ -3087,6 +3150,16 @@
                     }
                 }
             });
+        }
+
+        function renderCharts(tA, kat, prod, grossProfit, netProfit, totalBiaya, rekapHari) {
+            Chart.defaults.color = document.documentElement.getAttribute('data-theme') === 'dark' ? '#94a3b8' : '#64748b';
+            Chart.defaults.font.family = 'Plus Jakarta Sans';
+
+            // 1. TREN CHART (LINE) - Exec Styling
+            _trendDaily = tA;
+            updateGranPills();
+            renderTrendChart(bucketTrend(tA, currentTrendGran()));
 
             // 2. MARGIN HEALTH CHART
             if (document.getElementById('chartMargin')) {
