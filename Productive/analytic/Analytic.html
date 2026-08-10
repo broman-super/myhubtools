@@ -414,30 +414,27 @@
             font-weight: 800;
             cursor: help;
             margin-left: 6px;
-            position: relative;
         }
 
-        .help-icon:hover::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            top: 150%;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 999;
+        #kpiTip {
+            position: fixed;
+            z-index: 2147483000;
+            pointer-events: none;
+            display: none;
             background: var(--text);
             color: var(--bg);
             padding: 10px;
             border-radius: 8px;
-            width: max-content;
-            max-width: 250px;
             font-size: 11px;
             font-weight: 500;
             line-height: 1.4;
-            z-index: 10;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            pointer-events: none;
+            max-width: 280px;
             white-space: pre-wrap;
-            text-transform: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        #kpiTip.show {
+            display: block;
         }
 
         .dataTables_wrapper .dataTables_length select,
@@ -1068,6 +1065,10 @@
             </svg> SAS - SALES ANALYTIC SIMPLIFY</h1>
         <div id="syncStatus" style="font-size: 11px; color: var(--text-muted); font-weight: 500; margin-left: 20px;">Mengecek data...</div>
         <div class="nav-controls">
+            <div class="compare-pill" style="margin-right:2px;" title="Pilih tampilan dashboard">
+                <button id="tabMain" class="active" onclick="showTab('main')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg> Dashboard</button>
+                <button id="tabBiaya" onclick="showTab('biaya')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Biaya</button>
+            </div>
             <button class="theme-toggle" onclick="document.getElementById('settingsModal').style.display='flex'"
                 title="Pengaturan Target" style="padding: 8px 10px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1077,7 +1078,7 @@
                     </path>
                 </svg>
             </button>
-            <button class="theme-toggle" onclick="document.getElementById('expenseModal').style.display='flex'"
+            <button class="theme-toggle" onclick="bukaModalBiaya()"
                 title="Catat Pengeluaran (OPEX)" style="padding: 8px 10px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
@@ -1134,7 +1135,11 @@
                         <circle cx="12" cy="12" r="2" />
                     </svg></div>
             </div>
-            <div class="bento-value" id="kpiSales">Rp 0</div>
+            <div style="display:flex; align-items:center; gap:6px;">
+                <div class="bento-value" id="kpiSales">Rp 0</div>
+                <span class="help-icon static"
+                    data-static-tooltip="Omzet Bersih = (Total Penjualan) − (Total Retur) dalam rentang terpilih.">?</span>
+            </div>
             <div id="kpiSalesVs"
                 style="font-size:12px; font-weight:800; display:flex; gap:6px; color:var(--text-muted); margin-bottom:12px;">
             </div>
@@ -1142,9 +1147,13 @@
                 <div class="progress-fill" id="kpiSalesProgress" style="width:0%;"></div>
             </div>
             <div
-                style="display:flex; justify-content:space-between; font-size:10px; font-weight:800; color:var(--text-muted);">
-                <span id="kpiSalesPct">0%</span><span id="kpiSalesRunRate" style="color:var(--primary)">Proyeksi: Rp
-                    0</span>
+                style="display:flex; justify-content:space-between; align-items:center; font-size:10px; font-weight:800; color:var(--text-muted);">
+                <span style="display:inline-flex; align-items:center;"><span id="kpiSalesPct">0%</span><span
+                        class="help-icon static"
+                        data-static-tooltip="AVG = (Omzet bersih bulan berjalan) ÷ (hari yang sudah lewat di bulan itu). Pembagi memakai hari terakhir data bila data belum masuk (lag ±7 hari).">?</span></span>
+                <span style="display:inline-flex; align-items:center;"><span id="kpiSalesRunRate"
+                        style="color:var(--primary)">Proyeksi: Rp 0</span><span class="help-icon static"
+                        data-static-tooltip="Proyeksi Akhir = AVG × (total hari dalam bulan berjalan).">?</span></span>
             </div>
             <div style="font-size: 11px; font-weight: 800; margin-top: 10px; color: var(--danger);" id="kpiSalesGap">
                 Target: 820JT</div>
@@ -1161,11 +1170,18 @@
                         <path d="m7 9 5-5 5 5" />
                     </svg></div>
             </div>
-            <div class="bento-value" id="kpiRetur" style="color:var(--danger)">Rp 0</div>
+            <div style="display:flex; align-items:center; gap:6px;">
+                <div class="bento-value" id="kpiRetur" style="color:var(--danger)">Rp 0</div>
+                <span class="help-icon static"
+                    data-static-tooltip="Nominal Retur = total nilai (Rp) transaksi berstatus 'Retur' dalam rentang terpilih.">?</span>
+            </div>
             <div id="kpiReturVs"
                 style="font-size:12px; font-weight:800; display:flex; gap:6px; color:var(--text-muted); margin-bottom:12px;">
             </div>
-            <div class="bento-sub" id="kpiReturDetail" style="color:var(--danger); margin-top:auto;">0 Unit | 0% Loss
+            <div style="display:flex; align-items:center; gap:6px; margin-top:auto;">
+                <div class="bento-sub" id="kpiReturDetail" style="color:var(--danger);">0 Unit | 0% Loss</div>
+                <span class="help-icon static"
+                    data-static-tooltip="Loss Rate = (Total unit QTY diretur ÷ Total unit QTY terjual) × 100%.">?</span>
             </div>
         </div>
 
@@ -1179,11 +1195,18 @@
                         <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                     </svg></div>
             </div>
-            <div class="bento-value" id="kpiNetProfit" style="color:var(--success)">Rp 0</div>
+            <div style="display:flex; align-items:center; gap:6px;">
+                <div class="bento-value" id="kpiNetProfit" style="color:var(--success)">Rp 0</div>
+                <span class="help-icon static"
+                    data-static-tooltip="Laba Bersih = (Omzet Bersih − Total HPP Produk Terjual) − (Total Semua Pengeluaran / Biaya Opex).">?</span>
+            </div>
             <div id="kpiNetVs"
                 style="font-size:12px; font-weight:800; display:flex; gap:6px; color:var(--text-muted); margin-bottom:12px;">
             </div>
-            <div class="bento-sub" id="kpiOpexDetail" style="margin-top:auto;">Biaya: Rp 0 | Margin: 0%</div>
+            <div id="kpiOpexDetail" style="margin-top:auto; font-size:12px; font-weight:600; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+                <span>Biaya: Rp 0 | Margin: 0%</span><span class="help-icon static"
+                    data-static-tooltip="Margin = (Laba Bersih ÷ Omzet Bersih) × 100%. CAC = (Total Biaya Opex) ÷ (Jumlah Pelanggan Baru / Transaksi Perdana).">?</span>
+            </div>
         </div>
 
         <div class="bento-item col-span-3">
@@ -1201,7 +1224,11 @@
                         style="font-size:10px; font-weight:800; color:var(--text-muted); margin-bottom:4px; display:flex; align-items:center; gap:6px;">
                         <span style="color:var(--success)">●</span> HARI GACOR
                     </div>
-                    <div style="font-size:16px; font-weight:900; color:var(--text);" id="kpiGoldenDay">-</div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <div style="font-size:16px; font-weight:900; color:var(--text);" id="kpiGoldenDay">-</div>
+                        <span class="help-icon static"
+                            data-static-tooltip="Hari dalam seminggu dengan total omzet tertinggi (dari penjualan bersih, bukan retur).">?</span>
+                    </div>
                 </div>
                 <div style="height:1px; background:var(--border); width:100%;"></div>
                 <div>
@@ -1209,7 +1236,11 @@
                         style="font-size:10px; font-weight:800; color:var(--text-muted); margin-bottom:4px; display:flex; align-items:center; gap:6px;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--warning)" stroke="var(--warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> TOP KONTRIBUTOR
                     </div>
-                    <div style="font-size:16px; font-weight:900; color:var(--text);" id="kpiTopCont">-</div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <div style="font-size:16px; font-weight:900; color:var(--text);" id="kpiTopCont">-</div>
+                        <span class="help-icon static"
+                            data-static-tooltip="Pelanggan dengan omzet tertinggi dalam rentang terpilih.">?</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1237,9 +1268,9 @@
                         data-tooltip="Cara Baca: KANAN = Omzet Bersih & Porsi saat ini. KIRI (Merah/Hijau) = Persentase & Selisih Pertumbuhan vs Periode Lalu. Logika: Porsi (%) = (Omzet Bersih Kategori) ÷ (Total Omzet Bersih) × 100%. (Sudah dipotong Retur).">?</span>
                 </div>
             </div>
-            <div class="chart-box" style="min-height:160px; margin-bottom:16px;"><canvas id="chartKategori"></canvas>
+            <div class="chart-box" style="height:180px; min-height:0; flex:0 0 auto; margin-bottom:16px;"><canvas id="chartKategori"></canvas>
             </div>
-            <div id="tableKategori" style="display:flex; flex-direction:column; gap:8px;"></div>
+            <div id="tableKategori" style="display:flex; flex-direction:column; gap:8px; flex:1;"></div>
         </div>
 
         <div class="bento-item col-span-8">
@@ -1274,12 +1305,12 @@
         </div>
 
         <!-- ROW 4: RASIO (4) + PETA WAKTU (4) + KERANJANG (4) -->
-        <div class="bento-item col-span-4" style="align-self:start;">
+        <div class="bento-item col-span-4">
             <div class="bento-header">
                 <div class="bento-title">RASIO KESEHATAN KEUANGAN</div>
             </div>
             <div class="chart-box" style="height:300px; min-height:0; flex:0 0 auto;"><canvas id="chartMargin"></canvas></div>
-            <div id="marginAnalysis" style="margin-top:16px;"></div>
+            <div id="marginAnalysis" style="margin-top:16px; flex:1;"></div>
         </div>
 
         <div class="bento-item col-span-4">
@@ -1300,7 +1331,7 @@
             <div class="bento-header" style="margin-top:24px;">
                 <div class="bento-title" style="color:var(--danger)">RADAR KEBOCORAN BIAYA</div>
             </div>
-            <div id="opexList" style="display:flex; flex-direction:column; gap:8px;"></div>
+            <div id="opexList" style="display:flex; flex-direction:column; gap:8px; flex:1;"></div>
         </div>
 
         <!-- ROW 5: VIP (4) + DIAGNOSTICS (8) -->
@@ -1327,13 +1358,107 @@
                 <div id="aiContent"></div>
             </div>
             <button onclick="mintaSaranAI()"
-                style="background:var(--primary); color:white; border:none; padding:12px 20px; border-radius:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; transition:0.2s;">
+                style="background:var(--primary); color:white; border:none; padding:12px 20px; border-radius:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:auto; transition:0.2s;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg> TANYA GEMINI UNTUK SOLUSI
             </button>
         </div>
     </div>
+
+    <!-- ===== TAB BIAYA (Dashboard Khusus Pengeluaran) ===== -->
+    <div class="bento-container" id="biayaContainer" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; grid-column:1 / -1;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span style="font-family:'Geomini','Plus Jakarta Sans'; color:var(--text); font-size:18px; font-weight:800;">DASHBOARD BIAYA (OPEX)</span>
+                <span class="help-icon" data-static-tooltip="Seluruh angka di tab ini dihitung dari baris tabel 'biaya' di database pada rentang tanggal aktif. Mode komparasi membandingkan dengan rentang periode sebelumnya.">?</span>
+            </div>
+            <button class="theme-toggle" onclick="bukaModalBiaya()"
+                title="Catat Pengeluaran (OPEX)" style="padding:10px 14px; display:inline-flex; align-items:center; gap:6px; color:var(--primary); font-weight:800; font-size:12px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Catat Biaya
+            </button>
+        </div>
+
+        <!-- ROW 1: KPI BIAYA -->
+        <div class="bento-item col-span-3">
+            <div class="bento-header">
+                <div class="bento-title">TOTAL BIAYA <span class="help-icon" data-static-tooltip="Rumus: Jumlah seluruh Nominal biaya pada rentang tanggal aktif.">?</span></div>
+                <div class="badge primary">OPEX</div>
+            </div>
+            <div class="bento-value" id="biayaKpiTotal">Rp 0</div>
+            <div id="biayaKpiTotalDelta" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">±0% vs periode lalu</div>
+        </div>
+
+        <div class="bento-item col-span-3">
+            <div class="bento-header">
+                <div class="bento-title">OPEX RATIO <span class="help-icon" data-static-tooltip="Rumus: Total Biaya ÷ Omzet Bersih (Penjualan − Retur). Semakin tinggi, semakin besar bagian omzet yang dimakan biaya operasional.">?</span></div>
+                <div class="badge primary">EFISIENSI</div>
+            </div>
+            <div class="bento-value" id="biayaKpiRatio">0%</div>
+            <div id="biayaKpiRatioDelta" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">dari omzet bersih</div>
+        </div>
+
+        <div class="bento-item col-span-3">
+            <div class="bento-header">
+                <div class="bento-title">BIAYA / NOTA <span class="help-icon" data-static-tooltip="Rumus: Total Biaya ÷ Jumlah Nota (1 pembeli × 1 hari = 1 nota). Rata-rata beban biaya per transaksi.">?</span></div>
+                <div class="badge primary">RATA-RATA</div>
+            </div>
+            <div class="bento-value" id="biayaKpiPerNota">Rp 0</div>
+            <div id="biayaKpiPerNotaInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">0 nota</div>
+        </div>
+
+        <div class="bento-item col-span-3">
+            <div class="bento-header">
+                <div class="bento-title">KATEGORI TERBESAR <span class="help-icon" data-static-tooltip="Kategori biaya dengan total tertinggi pada rentang aktif, beserta persentase dari seluruh biaya.">?</span></div>
+                <div class="badge primary">TOP 1</div>
+            </div>
+            <div class="bento-value" id="biayaKpiTopCat" style="font-size:18px;">—</div>
+            <div id="biayaKpiTopCatShare" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">0% dari total biaya</div>
+        </div>
+
+        <!-- ROW 2: TREN BIAYA + OMSET -->
+        <div class="bento-item col-span-12">
+            <div class="bento-header">
+                <div class="bento-title">TREN BIAYA & OMZET <span class="help-icon" data-static-tooltip="Garis biaya vs omzet bersih per hari/minggu/bulan. Bila biaya naik tajam saat omzet turun = indikasi kebocoran biaya.">?</span></div>
+                <div class="compare-pill" title="Kerincian sumbu waktu chart biaya">
+                    <button data-gran="daily" onclick="setBiayaGranularity('daily')">Hari</button>
+                    <button data-gran="weekly" onclick="setBiayaGranularity('weekly')">Minggu</button>
+                    <button data-gran="monthly" onclick="setBiayaGranularity('monthly')">Bulan</button>
+                </div>
+            </div>
+            <div class="chart-box large" style="height:300px;"><canvas id="biayaChartTren"></canvas></div>
+        </div>
+
+        <!-- ROW 3: KOMPOSISI + RANKING -->
+        <div class="bento-item col-span-4">
+            <div class="bento-header">
+                <div class="bento-title">KOMPOSISI KATEGORI <span class="help-icon" data-static-tooltip="Proporsi nominal tiap kategori biaya pada rentang aktif.">?</span></div>
+            </div>
+            <div style="height:250px;"><canvas id="biayaChartKomposisi"></canvas></div>
+        </div>
+
+        <div class="bento-item col-span-8">
+            <div class="bento-header">
+                <div class="bento-title">RANKING KATEGORI <span class="help-icon" data-static-tooltip="Urutan kategori berdasarkan total biaya, dengan selisih terhadap periode sebelumnya.">?</span></div>
+            </div>
+            <div id="biayaRankList" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+
+        <!-- ROW 4: TABEL PER-ENTRI -->
+        <div class="bento-item col-span-12">
+            <div class="bento-header">
+                <div class="bento-title">DETAIL PER-ENTRI BIAYA <span class="help-icon" data-static-tooltip="Semua baris biaya pada rentang aktif. Edit membuka kembali form Catat Biaya; Hapus menghapus baris dari database.">?</span></div>
+            </div>
+            <div style="overflow-x:auto;">
+                <table id="biayaTable" class="display" style="width:100%;">
+                    <thead><tr><th>Tanggal</th><th>Kategori</th><th>Nominal</th><th style="width:120px;">Aksi</th></tr></thead>
+                    <tbody id="biayaTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <script>
         var ICONS = {
           search: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
@@ -1372,7 +1497,7 @@
           circle: '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6"/></svg>',
           question: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
         };
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwd7WIrHV2Q7OGXc71L1zrKErJTtyc_w9c0i96WkzhxJjHCmg8fDJCx-TLi_G8qPSAiVg/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbztNBViqhtlAsnXvEUXEjh9oOktee8b-OkcWLBudQAE-WmhdcQs2bF3YxzBGz05IsQ/exec';
 
         // State pengaman proses GAS & refresh otomatis
         window.isProcessingGAS = false;
@@ -1983,6 +2108,7 @@
                 const box = document.getElementById('aiResultBox');
                 if (box) box.style.display = 'none';
                 prosesData();
+                if (isBiayaTabActive()) renderBiayaTab();
             }
             // ponytail: selalu isi input tersembunyi, jangan hanya saat plugin daterangepicker berhasil init
             setHiddenRange(startDefault, endDefault);
@@ -2618,6 +2744,7 @@
             }
 
             let netSales = (dSkrg.sales || 0) - (dSkrg.retur || 0);
+            __lastNetSales = netSales;
             let grossProfit = netSales - dSkrg.cogs;
             let netProfit = grossProfit - totalBiaya;
 
@@ -2646,7 +2773,9 @@
                 let persen = (netSales / TARGET) * 100;
 
                 if (document.getElementById('kpiSales')) document.getElementById('kpiSales').innerText = formatRp(netSales);
-                if (document.getElementById('kpiSalesVs')) document.getElementById('kpiSalesVs').innerHTML = `${hitungVsText(netSales, netSalesLalu)} vs <span style="font-weight:700; color:#cbd5e1;">${formatRp(netSalesLalu)}</span>`;
+                let notaCount = Object.keys(basketData).length;
+                __lastNotaCount = notaCount;
+                if (document.getElementById('kpiSalesVs')) document.getElementById('kpiSalesVs').innerHTML = `<span class="help-icon" data-tooltip="Persentase pertumbuhan omzet bersih vs periode pembanding. Nota = 1 pembeli yang belanja dalam 1 hari (proxy transaksi).">?</span> ${hitungVsText(netSales, netSalesLalu)} vs <span style="font-weight:700; color:#cbd5e1;">${formatRp(netSalesLalu)}</span> · <span style="color:var(--text-muted); font-weight:700;">${notaCount.toLocaleString('id-ID')} Nota</span>`;
                 let barFill = document.getElementById('kpiSalesProgress');
                 if (barFill) {
                     let displayPersen = persen < 0 ? 0 : (persen > 100 ? 100 : persen);
@@ -2718,20 +2847,24 @@
                     });
                 }
 
-                // Pembagi AVG mengambil hari ini atau hari transaksi terakhir di bulan ini
-                let pembagiHari = Math.max(staticMaxDate, today.getDate());
+                // Pembagi AVG: pakai hari terakhir data saat lag (data belum masuk), hari ini saat real-time
+                let pembagiHari = (staticMaxDate < today.getDate() - 1) ? staticMaxDate : today.getDate();
                 let staticAvg = staticMonthlySales / pembagiHari;
                 let staticRunRate = staticAvg * daysInCurrentMonth;
+                let bulanNama = today.toLocaleDateString('id-ID', { month: 'short' });
 
-                if (document.getElementById('kpiSalesPct')) document.getElementById('kpiSalesPct').innerText = `AVG: ${formatRp(staticAvg)} / hari`;
-                if (document.getElementById('kpiSalesRunRate')) document.getElementById('kpiSalesRunRate').innerText = `Proyeksi Akhir: ${formatRp(staticRunRate)}`;
+                if (document.getElementById('kpiSalesPct')) document.getElementById('kpiSalesPct').innerText = `AVG (${bulanNama}): ${formatRp(staticAvg)} / hari`;
+                if (document.getElementById('kpiSalesRunRate')) document.getElementById('kpiSalesRunRate').innerText = `Proyeksi (${bulanNama}): ${formatRp(staticRunRate)}`;
 
                 let elGap = document.getElementById('kpiSalesGap');
                 if (elGap) {
                     let staticPersen = TARGET > 0 ? (staticMonthlySales / TARGET) * 100 : 0;
                     let defisitText = '';
-                    if (staticPersen >= 100) { defisitText = '<span style="color:var(--success);">'+ICONS.fire+' TARGET TEMBUS!</span>'; }
-                    else { defisitText = `<span style="color:var(--danger);">Defisit: - ${formatRp(TARGET - staticMonthlySales)}</span>`; }
+                    if (staticPersen >= 100) { defisitText = `<span style="color:var(--success);">${ICONS.fire} TARGET TEMBUS! ${staticPersen.toFixed(0)}%</span>`; }
+                    else {
+                        let pctColor = staticPersen >= 80 ? 'var(--warning)' : 'var(--danger)';
+                        defisitText = `<span class="help-icon static" data-static-tooltip="Pencapaian = (Omzet bersih bulan berjalan ÷ Target) × 100%. Bar: Hijau ≥100%, Kuning ≥80%, Merah <80%.">?</span><span style="color:${pctColor};">${staticPersen.toFixed(0)}% · Defisit −${formatRp(TARGET - staticMonthlySales)}</span>`;
+                    }
 
                     let qtyDiff = staticMonthlyQty - staticPrevMonthlyQty;
                     let diffArrow = qtyDiff > 0 ? '▲' : (qtyDiff < 0 ? '▼' : '-');
@@ -2750,12 +2883,12 @@
                 }
 
                 if (document.getElementById('kpiRetur')) document.getElementById('kpiRetur').innerText = formatRp(dSkrg.retur);
-                if (document.getElementById('kpiReturVs')) document.getElementById('kpiReturVs').innerHTML = `${hitungVsText(dSkrg.retur, dLalu.retur, true)} vs <span style="font-weight:700; color:#cbd5e1;">${formatRp(dLalu.retur)}</span>`;
+                if (document.getElementById('kpiReturVs')) document.getElementById('kpiReturVs').innerHTML = `<span class="help-icon" data-tooltip="Persentase perubahan retur vs periode pembanding. Naik retur = merah.">?</span> ${hitungVsText(dSkrg.retur, dLalu.retur, true)} vs <span style="font-weight:700; color:#cbd5e1;">${formatRp(dLalu.retur)}</span>`;
                 let pctRetur = netSales > 0 ? (dSkrg.retur / netSales * 100).toFixed(1) : 0;
                 if (document.getElementById('kpiReturDetail')) document.getElementById('kpiReturDetail').innerText = dSkrg.returQty + " Unit | " + pctRetur + "% Loss Rate";
 
                 if (document.getElementById('kpiNetProfit')) document.getElementById('kpiNetProfit').innerText = formatRp(netProfit);
-                if (document.getElementById('kpiNetVs')) document.getElementById('kpiNetVs').innerHTML = `${hitungVsText(netProfit, netProfitLalu)} vs <span style="font-weight:700; color:#cbd5e1;">${formatRp(netProfitLalu)}</span>`;
+                if (document.getElementById('kpiNetVs')) document.getElementById('kpiNetVs').innerHTML = `<span class="help-icon" data-tooltip="Persentase perubahan laba bersih vs periode pembanding.">?</span> ${hitungVsText(netProfit, netProfitLalu)} vs <span style="font-weight:700; color:#cbd5e1;">${formatRp(netProfitLalu)}</span>`;
                 let pelBaruBulanIni = 0;
                 for (let plg in firstPurchaseData) {
                     let pd = firstPurchaseData[plg];
@@ -2763,13 +2896,13 @@
                 }
                 let CAC = pelBaruBulanIni > 0 ? totalBiaya / pelBaruBulanIni : 0;
 
-                if (document.getElementById('kpiOpexDetail')) document.getElementById('kpiOpexDetail').innerHTML = `Biaya: ${formatRp(totalBiaya)} | CAC: <b style="color:var(--danger)">${formatRp(CAC)}/plg</b>`;
+                if (document.getElementById('kpiOpexDetail')) document.getElementById('kpiOpexDetail').innerHTML = `<div>Margin: ${netMargin.toFixed(1)}% | Biaya: ${formatRp(totalBiaya)}</div><div>CAC: <b style="color:var(--danger)">${formatRp(CAC)}/plg</b></div>`;
 
                 let maxHari = Object.keys(rekapHari).reduce((a, b) => rekapHari[a] > rekapHari[b] ? a : b, '-');
-                if (document.getElementById('kpiGoldenDay')) document.getElementById('kpiGoldenDay').innerText = rekapHari[maxHari] > 0 ? maxHari : '-';
+                if (document.getElementById('kpiGoldenDay')) document.getElementById('kpiGoldenDay').innerText = rekapHari[maxHari] > 0 ? `${maxHari} · ${formatRp(rekapHari[maxHari])}` : '-';
 
                 const tC = Object.entries(rekapCont).sort((a, b) => b[1] - a[1]);
-                if (document.getElementById('kpiTopCont')) document.getElementById('kpiTopCont').innerText = tC.length > 0 ? tC[0][0] : '-';
+                if (document.getElementById('kpiTopCont')) document.getElementById('kpiTopCont').innerText = tC.length > 0 ? `${tC[0][0]} · ${formatRp(tC[0][1])}` : '-';
 
                 // Modul 7 & 8: Basket Intelijen
                 let totalBasket = 0, totalItemsKeranjang = 0, totalNominalKeranjang = 0;
@@ -2796,16 +2929,16 @@
                     <div style="background:var(--primary); color:white; padding:15px; border-radius:12px; display:flex; flex-direction:column; gap:12px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:12px;">
                             <div>
-                                <div style="font-size:10px; font-weight:800; color:#94a3b8;">AVG: RESELLER</div>
+                                <div style="font-size:10px; font-weight:800; color:rgba(255,255,255,0.75);">AVG: RESELLER</div>
                                 <div style="font-size:16px; font-weight:900;">${avgRsl}</div>
                             </div>
                             <div style="text-align:right;">
-                                <div style="font-size:10px; font-weight:800; color:#94a3b8;">AVG: MARKETPLACE</div>
+                                <div style="font-size:10px; font-weight:800; color:rgba(255,255,255,0.75);">AVG: MARKETPLACE</div>
                                 <div style="font-size:16px; font-weight:900;">${avgOth}</div>
                             </div>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <div style="font-size:10px; font-weight:800; color:#94a3b8;">GLOBAL UNIT/TRX (UPT)</div>
+                            <div style="font-size:10px; font-weight:800; color:rgba(255,255,255,0.75);">GLOBAL UNIT/TRX (UPT)</div>
                             <div style="font-size:14px; font-weight:900; color:#fff;">${UPT} <span style="font-size:10px;">pcs</span></div>
                         </div>
                     </div>
@@ -3087,7 +3220,7 @@
 
         function updateGranPills() {
             let active = currentTrendGran();
-            document.querySelectorAll('.bento-container [data-gran]').forEach(b => {
+            document.querySelectorAll('#mainContainer [data-gran]').forEach(b => {
                 b.classList.toggle('active', b.getAttribute('data-gran') === active);
             });
         }
@@ -3120,6 +3253,10 @@
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { display: false }
+                    },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
@@ -3414,6 +3551,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
 
             // Re-render data dengan mode baru
             prosesData();
+            if (isBiayaTabActive()) renderBiayaTab();
         }
 
         async function saveTargetToGAS() {
@@ -3471,12 +3609,22 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             }
 
             try {
-                const res = await fetch(API_URL + "?action=addBiaya&tanggal=" + encodeURIComponent(dateValDb) + "&kategori=" + encodeURIComponent(categoryVal) + "&nominal=" + encodeURIComponent(amountVal));
+                const isEdit = _editBiayaId !== null;
+                let url = API_URL + '?action=' + (isEdit ? 'updateBiaya' : 'addBiaya');
+                if (isEdit) url += '&id=' + encodeURIComponent(_editBiayaId);
+                url += '&tanggal=' + encodeURIComponent(dateValDb) + '&kategori=' + encodeURIComponent(categoryVal) + '&nominal=' + encodeURIComponent(amountVal);
+                const res = await fetch(url);
                 const data = await res.json();
                 if (data.status === 'success') {
                     // Kosongkan form field
+                    document.getElementById('inputExpenseDate').value = moment().format('YYYY-MM-DD');
                     document.getElementById('inputExpenseCategory').value = '';
                     document.getElementById('inputExpenseAmount').value = '';
+                    if (isEdit) {
+                        _editBiayaId = null;
+                        const btnSave = document.getElementById('btnSaveExpense');
+                        if (btnSave) btnSave.textContent = 'CATAT PENGELUARAN';
+                    }
 
                     // Bersihkan cache agar sync menarik data terbaru
                     localStorage.removeItem("intel_pro_cache_v3");
@@ -3484,10 +3632,15 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                     // Dynamic Sync
                     const syncSuccess = await syncDashboardData();
 
+                    // Paksa refetch tab biaya bila sedang terbuka (setelah sync → omzet overlay fresh)
+                    _biayaRangeKey = null;
+                    _biayaPrevKey = null;
+                    if (isBiayaTabActive()) await renderBiayaTab();
+
                     if (syncSuccess) {
-                        showSuccessOverlay('Biaya Berhasil Dicatat!', 'Biaya operasional baru berhasil ditambahkan dan disinkronkan ke dalam dashboard.', 1500);
+                        showSuccessOverlay(isEdit ? 'Biaya Diperbarui!' : 'Biaya Berhasil Dicatat!', isEdit ? 'Perubahan biaya berhasil disimpan dan disinkronkan ke dashboard.' : 'Biaya operasional baru berhasil ditambahkan dan disinkronkan ke dalam dashboard.', 1500);
                     } else {
-                        showErrorOverlay('Sinkronisasi Gagal!', 'Biaya berhasil dicatat ke database, namun dashboard gagal diperbarui secara lokal. Silakan refresh halaman.');
+                        showErrorOverlay('Sinkronisasi Gagal!', 'Biaya berhasil disimpan ke database, namun dashboard gagal diperbarui secara lokal. Silakan refresh halaman.');
                     }
                 } else {
                     throw new Error(data.message || "Gagal menyimpan");
@@ -4534,6 +4687,377 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             if (e.key === 'Enter') verifyPwd();
         });
         checkLogin();
+
+        // ===== TAB BIAYA: dashboard khusus pengeluaran (OPEX) =====
+        let _biayaRowsCur = null, _biayaRowsPrev = null, _biayaRangeKey = null, _biayaPrevKey = null;
+        let _biayaGran = 'daily', _biayaDaily = null, _biayaCatCur = [], _biayaAggPrev = {}, _biayaTotalCur = 0;
+        let _biayaChartTren = null, _biayaChartKomposisi = null, _biayaDataTable = null;
+        let _editBiayaId = null;
+        const _BIYA_PALETTE = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#64748b'];
+
+        function isBiayaTabActive() {
+            const c = document.getElementById('biayaContainer');
+            return c && c.style.display !== 'none';
+        }
+
+        function showTab(name) {
+            const isMain = name === 'main';
+            document.getElementById('mainContainer').style.display = isMain ? '' : 'none';
+            document.getElementById('biayaContainer').style.display = isMain ? 'none' : '';
+            document.getElementById('tabMain').classList.toggle('active', isMain);
+            document.getElementById('tabBiaya').classList.toggle('active', !isMain);
+            if (!isMain) renderBiayaTab();
+        }
+
+        function getPrevRangeIso() {
+            const gStart = new Date((document.getElementById('startDate').value || '') + 'T00:00:00');
+            const gEnd = new Date((document.getElementById('endDate').value || '') + 'T00:00:00');
+            const mode = document.getElementById('comparisonMode')?.value || 'rolling';
+            let pStart, pEnd;
+            if (mode === 'monthly') {
+                pStart = new Date(gStart); pStart.setMonth(pStart.getMonth() - 1);
+                pEnd = new Date(gEnd); pEnd.setMonth(pEnd.getMonth() - 1);
+            } else {
+                const totalHari = Math.round((gEnd - gStart) / 86400000) + 1;
+                pEnd = new Date(gStart.getTime() - 86400000);
+                pStart = new Date(pEnd.getTime() - (totalHari - 1) * 86400000);
+            }
+            return { start: isoDate(pStart), end: isoDate(pEnd) };
+        }
+
+        async function fetchBiayaRows(startIso, endIso) {
+            const p = new URLSearchParams({ select: 'id,"Tanggal","Kategori Biaya","Nominal"', order: '"Tanggal".asc' });
+            p.append('"Tanggal"', 'gte.' + startIso);
+            p.append('"Tanggal"', 'lte.' + endIso);
+            const res = await fetch(SUPABASE_URL + '/rest/v1/biaya?' + p.toString(), {
+                headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+            });
+            if (!res.ok) throw new Error('Supabase ' + res.status);
+            return await res.json();
+        }
+
+        function fmtRpBiaya(v) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v);
+        }
+
+        async function renderBiayaTab() {
+            const gStart = document.getElementById('startDate').value;
+            const gEnd = document.getElementById('endDate').value;
+            if (!gStart || !gEnd) return;
+            const key = gStart + '|' + gEnd;
+            const prev = getPrevRangeIso();
+            const prevKey = prev.start + '|' + prev.end;
+            try {
+                if (_biayaRangeKey !== key) {
+                    _biayaRowsCur = await fetchBiayaRows(gStart, gEnd);
+                    _biayaRangeKey = key;
+                }
+                if (_biayaPrevKey !== prevKey) {
+                    _biayaRowsPrev = await fetchBiayaRows(prev.start, prev.end);
+                    _biayaPrevKey = prevKey;
+                }
+                drawBiaya();
+            } catch (err) {
+                console.error('Gagal memuat data biaya:', err);
+                const tbody = document.getElementById('biayaTableBody');
+                if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="color:var(--danger); text-align:center; padding:20px;">Gagal memuat data biaya: ' + err.message + '</td></tr>';
+            }
+        }
+
+        function buildBiayaDaily() {
+            const gStart = new Date((document.getElementById('startDate').value || '') + 'T00:00:00');
+            const gEnd = new Date((document.getElementById('endDate').value || '') + 'T00:00:00');
+            const DAY = 86400000;
+            const totalDays = Math.round((gEnd - gStart) / DAY) + 1;
+            const biayaByDate = {};
+            (_biayaRowsCur || []).forEach(r => {
+                const iso = String(r['Tanggal'] || '').slice(0, 10);
+                if (iso) biayaByDate[iso] = (biayaByDate[iso] || 0) + (parseFloat(r['Nominal']) || 0);
+            });
+            const omzetByDate = {};
+            (_trendDaily || []).forEach(e => {
+                const d = new Date(gStart.getTime() + e.ts * DAY);
+                omzetByDate[isoDate(d)] = (omzetByDate[isoDate(d)] || 0) + (e.sales || 0);
+            });
+            const daily = [];
+            for (let i = 0; i < totalDays; i++) {
+                const d = new Date(gStart.getTime() + i * DAY);
+                daily.push({
+                    ts: i,
+                    label: d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }),
+                    biaya: biayaByDate[isoDate(d)] || 0,
+                    omzet: omzetByDate[isoDate(d)] || 0
+                });
+            }
+            return daily;
+        }
+
+        function bucketBiaya(arr, gran) {
+            if (gran === 'daily' || !arr || !arr.length) return arr;
+            const gStart = new Date((document.getElementById('startDate').value || '') + 'T00:00:00');
+            const DAY = 86400000;
+            const out = [], idx = {};
+            arr.forEach(e => {
+                let key, lbl;
+                if (gran === 'weekly') {
+                    key = Math.floor(e.ts / 7);
+                    if (idx[key] === undefined) {
+                        const ws = new Date(gStart.getTime() + key * 7 * DAY);
+                        const we = new Date(gStart.getTime() + (key * 7 + 6) * DAY);
+                        lbl = ws.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }) + ' – ' + we.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+                        idx[key] = out.length;
+                        out.push({ ts: e.ts, label: lbl, biaya: 0, omzet: 0 });
+                    }
+                } else {
+                    const d = new Date(gStart.getTime() + e.ts * DAY);
+                    key = d.getFullYear() + '-' + d.getMonth();
+                    if (idx[key] === undefined) {
+                        lbl = d.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' }).toUpperCase();
+                        idx[key] = out.length;
+                        out.push({ ts: e.ts, label: lbl, biaya: 0, omzet: 0 });
+                    }
+                }
+                const b = out[idx[key]];
+                b.biaya += e.biaya || 0;
+                b.omzet += e.omzet || 0;
+            });
+            return out;
+        }
+
+        function updateBiayaGranPills() {
+            document.querySelectorAll('#biayaContainer [data-gran]').forEach(b => {
+                b.classList.toggle('active', b.getAttribute('data-gran') === _biayaGran);
+            });
+        }
+
+        function setBiayaGranularity(g) {
+            _biayaGran = g;
+            updateBiayaGranPills();
+            if (_biayaDaily) renderBiayaTren();
+        }
+
+        function renderBiayaTren() {
+            const el = document.getElementById('biayaChartTren');
+            if (!el) return;
+            if (_biayaChartTren) _biayaChartTren.destroy();
+            const tA = bucketBiaya(_biayaDaily || [], _biayaGran);
+            _biayaChartTren = new Chart(el.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: tA.map(x => x.label),
+                    datasets: [
+                        { label: 'Biaya', data: tA.map(x => x.biaya), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)', fill: true, tension: 0.4, borderWidth: 3, pointRadius: 0, pointHoverRadius: 5 },
+                        { label: 'Omzet Bersih', data: tA.map(x => x.omzet), borderColor: '#3b82f6', borderDash: [5, 5], borderWidth: 2, tension: 0.4, pointRadius: 0 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
+                        y: { display: false }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (item) => ' ' + item.dataset.label + ': ' + fmtRpBiaya(item.raw) } }
+                    }
+                }
+            });
+        }
+
+        function renderBiayaKomposisi() {
+            const el = document.getElementById('biayaChartKomposisi');
+            if (!el) return;
+            if (_biayaChartKomposisi) _biayaChartKomposisi.destroy();
+            const slice = _biayaCatCur.slice(0, 8);
+            if (!slice.length) {
+                _biayaChartKomposisi = new Chart(el.getContext('2d'), {
+                    type: 'doughnut',
+                    data: { labels: ['Belum ada data'], datasets: [{ data: [1], backgroundColor: ['var(--accent)'] }] },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false } } }
+                });
+                return;
+            }
+            _biayaChartKomposisi = new Chart(el.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: slice.map(x => x[0]),
+                    datasets: [{ data: slice.map(x => x[1]), backgroundColor: _BIYA_PALETTE, borderWidth: 2, borderColor: 'var(--card)', hoverOffset: 4 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '65%',
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+                }
+            });
+        }
+
+        function renderBiayaRank() {
+            const list = document.getElementById('biayaRankList');
+            if (!list) return;
+            list.innerHTML = _biayaCatCur.slice(0, 10).map(([k, v]) => {
+                const share = _biayaTotalCur > 0 ? (v / _biayaTotalCur * 100) : 0;
+                const p = _biayaAggPrev[k] || 0;
+                let d = '';
+                if (p > 0) {
+                    const dff = (v - p) / p * 100;
+                    d = `<span style="color:${dff > 0 ? 'var(--danger)' : 'var(--success)'}; font-weight:800;">${dff > 0 ? '▲' : '▼'} ${Math.abs(dff).toFixed(0)}%</span>`;
+                } else if (v > 0) {
+                    d = '<span style="color:var(--warning); font-weight:800;">NEW</span>';
+                }
+                return `<div style="display:flex; align-items:center; gap:10px;">
+                    <div style="flex:1; min-width:0;">
+                        <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:4px; align-items:baseline;">
+                            <span style="font-weight:800; color:var(--text); font-size:12px;">${k}</span>
+                            <span style="font-weight:700; color:var(--text-muted); font-size:12px; white-space:nowrap;">${fmtRpBiaya(v)} <span style="color:var(--text-muted);">· ${share.toFixed(0)}%</span> ${d}</span>
+                        </div>
+                        <div style="height:6px; background:var(--accent); border-radius:99px; overflow:hidden;">
+                            <div style="height:100%; width:${Math.min(100, share)}%; background:${share >= 30 ? 'var(--danger)' : 'var(--warning)'}; border-radius:99px;"></div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('') || '<div style="color:var(--text-muted); font-size:13px; padding:10px;">Belum ada biaya pada rentang ini.</div>';
+        }
+
+        function renderBiayaTable() {
+            const tbody = document.getElementById('biayaTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = (_biayaRowsCur || []).map(r => {
+                const id = r.id;
+                const tgl = String(r['Tanggal'] || '').slice(0, 10);
+                const kat = String(r['Kategori Biaya'] || '');
+                const nom = parseFloat(r['Nominal']) || 0;
+                const tglFmt = new Date(tgl + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+                return `<tr><td>${tglFmt}</td><td>${kat}</td><td>${fmtRpBiaya(nom)}</td>
+                    <td><div style="display:flex; gap:6px;">
+                        <button onclick="editBiayaRow(${id})" class="theme-toggle" title="Edit" style="padding:6px 10px; color:var(--primary); font-weight:800; font-size:11px;">EDIT</button>
+                        <button onclick="deleteBiayaRow(${id})" class="theme-toggle" title="Hapus" style="padding:6px 10px; color:var(--danger); font-weight:800; font-size:11px;">HAPUS</button>
+                    </div></td></tr>`;
+            }).join('') || '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:20px;">Belum ada biaya pada rentang ini.</td></tr>';
+            if (_biayaDataTable) { _biayaDataTable.destroy(); _biayaDataTable = null; }
+            if (window.$ && $.fn.DataTable && (_biayaRowsCur || []).length > 0) {
+                _biayaDataTable = $('#biayaTable').DataTable({ pageLength: 10, lengthChange: false, order: [], columns: [null, null, null, { orderable: false }] });
+            }
+        }
+
+        function drawBiaya() {
+            const sum = (arr) => arr.reduce((a, r) => a + (parseFloat(r['Nominal']) || 0), 0);
+            _biayaTotalCur = sum(_biayaRowsCur || []);
+            const totalPrev = sum(_biayaRowsPrev || []);
+            const agg = (arr) => { const m = {}; (arr || []).forEach(r => { const k = String(r['Kategori Biaya'] || '').trim().toUpperCase(); if (!k) return; m[k] = (m[k] || 0) + (parseFloat(r['Nominal']) || 0); }); return m; };
+            _biayaAggPrev = agg(_biayaRowsPrev);
+            _biayaCatCur = Object.entries(agg(_biayaRowsCur)).sort((a, b) => b[1] - a[1]);
+            _biayaDaily = buildBiayaDaily();
+            updateBiayaGranPills();
+
+            document.getElementById('biayaKpiTotal').textContent = fmtRpBiaya(_biayaTotalCur);
+            const pct = totalPrev > 0 ? ((_biayaTotalCur - totalPrev) / totalPrev * 100) : 0;
+            const deltaEl = document.getElementById('biayaKpiTotalDelta');
+            deltaEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1) + '% vs periode lalu';
+            deltaEl.style.color = _biayaTotalCur > totalPrev ? 'var(--danger)' : 'var(--success)';
+
+            const netSales = typeof __lastNetSales === 'number' ? __lastNetSales : 0;
+            document.getElementById('biayaKpiRatio').textContent = (netSales > 0 ? (_biayaTotalCur / netSales * 100) : 0).toFixed(1) + '%';
+            document.getElementById('biayaKpiRatioDelta').textContent = 'dari omzet bersih ' + fmtRpBiaya(netSales);
+
+            const nota = typeof __lastNotaCount === 'number' ? __lastNotaCount : 0;
+            document.getElementById('biayaKpiPerNota').textContent = nota > 0 ? fmtRpBiaya(_biayaTotalCur / nota) : 'Rp 0';
+            document.getElementById('biayaKpiPerNotaInfo').textContent = nota.toLocaleString('id-ID') + ' nota';
+
+            const top = _biayaCatCur[0];
+            document.getElementById('biayaKpiTopCat').textContent = top ? top[0] : '—';
+            document.getElementById('biayaKpiTopCatShare').textContent = (top && _biayaTotalCur > 0 ? (top[1] / _biayaTotalCur * 100) : 0).toFixed(1) + '% dari total biaya';
+
+            renderBiayaTren();
+            renderBiayaKomposisi();
+            renderBiayaRank();
+            renderBiayaTable();
+        }
+
+        function bukaModalBiaya() {
+            _editBiayaId = null;
+            const btn = document.getElementById('btnSaveExpense');
+            if (btn) btn.textContent = 'CATAT PENGELUARAN';
+            const dt = document.getElementById('inputExpenseDate');
+            if (dt) dt.value = moment().format('YYYY-MM-DD');
+            const kt = document.getElementById('inputExpenseCategory');
+            if (kt) kt.value = '';
+            const am = document.getElementById('inputExpenseAmount');
+            if (am) am.value = '';
+            const modal = document.getElementById('expenseModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function editBiayaRow(id) {
+            const r = (_biayaRowsCur || []).find(x => x.id === id);
+            if (!r) return;
+            _editBiayaId = id;
+            const btn = document.getElementById('btnSaveExpense');
+            if (btn) btn.textContent = 'SIMPAN PERUBAHAN';
+            const dt = document.getElementById('inputExpenseDate');
+            if (dt) dt.value = String(r['Tanggal'] || '').slice(0, 10);
+            const kt = document.getElementById('inputExpenseCategory');
+            if (kt) kt.value = r['Kategori Biaya'] || '';
+            const am = document.getElementById('inputExpenseAmount');
+            if (am) am.value = parseFloat(r['Nominal']) || '';
+            const modal = document.getElementById('expenseModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        async function deleteBiayaRow(id) {
+            if (!confirm('Hapus baris biaya ini? Tindakan tidak bisa dibatalkan.')) return;
+            try {
+                const res = await fetch(API_URL + '?action=deleteBiaya&id=' + encodeURIComponent(id));
+                const data = await res.json();
+                if (data.status !== 'success') throw new Error(data.message || 'Gagal menghapus biaya');
+                _biayaRangeKey = null; // paksa refetch pada render berikutnya
+                if (isBiayaTabActive()) await renderBiayaTab();
+                showSuccessOverlay('Biaya Dihapus!', 'Baris biaya berhasil dihapus dari database.', 1500);
+            } catch (err) {
+                console.error('Gagal menghapus biaya:', err);
+                showErrorOverlay('Gagal Menghapus!', err.message);
+            }
+        }
+
+        // ===== Global tooltip (bebas dari stacking context kartu, anti-terpotong tepi) =====
+        (function () {
+            var tip = document.getElementById('kpiTip');
+            if (!tip) { tip = document.createElement('div'); tip.id = 'kpiTip'; document.body.appendChild(tip); }
+            var showEl = null;
+            function hide() { tip.classList.remove('show'); showEl = null; }
+            function show(el, e) {
+                var txt = el.getAttribute('data-static-tooltip') || el.getAttribute('data-tooltip');
+                if (!txt) { hide(); return; }
+                showEl = el;
+                tip.textContent = txt;
+                tip.classList.add('show');
+                position(e);
+            }
+            function position(e) {
+                if (!showEl) return;
+                var gap = 12, pad = 4;
+                var left = e.clientX + gap;
+                var top = e.clientY + gap;
+                var r = tip.getBoundingClientRect();
+                if (left + r.width > window.innerWidth - pad) left = e.clientX - r.width - gap;
+                if (left < pad) left = pad;
+                if (top + r.height > window.innerHeight - pad) top = e.clientY - r.height - gap;
+                if (top < pad) top = pad;
+                tip.style.left = left + 'px';
+                tip.style.top = top + 'px';
+            }
+            document.addEventListener('mouseover', function (e) {
+                var el = e.target && e.target.closest && e.target.closest('.help-icon');
+                if (el) { show(el, e); return; }
+                hide();
+            });
+            document.addEventListener('mousemove', position);
+            document.addEventListener('mouseout', function (e) {
+                if (e.target && e.target.closest && e.target.closest('.help-icon')) return;
+                hide();
+            });
+            document.addEventListener('scroll', hide, true);
+            window.addEventListener('resize', hide);
+        })();
     </script>
     <script>
         window.addEventListener('message', function(e) {

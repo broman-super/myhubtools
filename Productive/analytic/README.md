@@ -68,8 +68,16 @@ Chart.js 3.9.1 · datalabels 2.2.0 · zoom 2.0.1 (+hammerjs 2.0.8) · jQuery 3.7
 ### 3.1 🔴 Kartu macet tidak mengecil (Circular Sizing Lock) — SUDAH DIPERBAIKI
 **Gejala:** tinggi kartu tidak mengecil walau isi (tabel) mengecil — mis. `dtProduk_length` diubah 25→5, kartu tetap tinggi.
 **Akar:** Chart.js (`maintainAspectRatio:false`) menulis `height:858px` inline di canvas. Canvas itu jadi *content-height* dari `.chart-box { flex:1 }` di dalam flex-column ber-tinggi-auto → mengunci tinggi baris grid. Saat baris harus menyusut, canvas tidak pernah menyusut.
-**Fix terpasang (kartu RASIO):** `.chart-box { height:300px; min-height:0; flex:0 0 auto }` + kartu `align-self:start`.
+**Fix terpasang:** `.chart-box { height:<tetap>; min-height:0; flex:0 0 auto }` — chart ukuran tetap, daftar teks memakai `flex:1` untuk mengisi sisa tinggi kartu.
 **Aturan:** chart yang memakai pola `flex:1` + canvas Chart.js bisa kena lagi (mis. PETA WAKTU GACOR). Kalau kartu nyangkut, terapkan pola yang sama: lepaskan flex-grow chart-box atau beri tinggi tetap.
+
+### 3.1b 🎨 Model layout: "band seragam + isi mengisi"
+Grid default merentangkan semua kartu setinggi kartu tertinggi sebaris. Agar rapi, jangan biarkan ruang kosong di bawah isi pendek:
+- Kartu chart-doughnut (MARKET SHARE, RASIO): chart-box **tinggi tetap** (180/300px, `flex:0 0 auto`) — doughnut jelek jika diregang.
+- Kartu chart-bar/line (PETA, TREN): chart-box boleh `flex:1` (chart ikut membesar, aman).
+- Semua daftar teks (tableKategori, marginAnalysis, opexList, basketIntel, rfmList): `flex:1` supaya mengisi sisa kartu.
+- Tombol/elemen penutup (mis. TANYA GEMINI): `margin-top:auto` agar menempel bawah kartu.
+- Jangan pakai `align-self:start` — itu meninggalkan kartu pendek dengan lubang di bawahnya; isi memakai `flex:1` sebagai gantinya.
 
 ### 3.2 🔴 Date picker nutup sendiri setelah 1 klik tanggal — SUDAH DIPERBAIKI
 **Akar:** `onDayClick` → `renderCalendars()` me-*render* ulang kalender sehingga tombol yang baru diklik terlepas dari DOM; listener `document` melihat `wrap.contains(e.target) === false` → `closePop()`.
@@ -82,6 +90,28 @@ Spinner & `loadingScreenText` sengaja **dihapus** (diganti 3-dot roadmap via `se
 - **7/14/30 Hari Terakhir + default range = `moment()` hari ini** (boleh kosong bila data GAS belum masuk — data lag ±7 hari).
 - **Bulan Ini = anchor ke `refEnd`** (timestamp transaksi terakhir di data), bukan hari ini.
 Jangan "perbaiki" preset jadi anchor `refEnd` semua — itu keputusan user (default kosong boleh).
+
+### 3.4b AVG & Proyeksi bulan berjalan — pembagi data-lag
+- `pembagiHari = (staticMaxDate < today - 1) ? staticMaxDate : today` — memakai **hari terakhir data** saat data lag (proyeksi akurat), atau **hari ini** saat real-time. Jangan balik ke `Math.max` (AVG jadi pesimis saat data lag ±7 hari).
+- Label `AVG (Jul):` / `Proyeksi (Jul):` memakai bulan yang dikunci (`today`), biar tidak menyesatkan di rentang multi-bulan.
+- `kpiSalesGap` kiri menampilkan **persen pencapaian target** (hijau ≥100% / kuning ≥80% / merah), bukan cuma teks defisit.
+
+### 3.4c 🛟 Tooltip kalkulasi KPI — JS global + dua varian
+- Tooltip **bukan CSS lagi** — pakai satu elemen global `#kpiTip` (`position:fixed; z-index:2147483000`) yang digerakkan delegasi event di akhir skrip utama. Alasannya: `.bento-item:hover { transform: translateY(-4px) }` menciptakan *stacking context* yang mengunci z-index tooltip di dalam kartu → tertutup chart lain; dan `translateX(-50%)` memotong tooltip di tepi layar.
+- Posisi mengikuti mouse dengan **flip otomatis** (horizontal + vertikal) + clamp 4px dari tepi viewport → tidak pernah keluar layar.
+- `.help-icon` + `data-tooltip` = tooltip **dinamis** (baris "vs periode") → `setCompareMode` menambahkan suffix "Mode komparasi".
+- `.help-icon` + `data-static-tooltip` = tooltip **rumus murni** (omzet, AVG, proyeksi, %, margin, CAC, loss rate, nota, insights) — tidak kena suffix mode.
+- Aturan: nilai KPI di-set via `innerText` → ikon harus jadi **saudara statis** di HTML/JS template, bukan bagian dari teks nilai. Bungkus: `flex` container (value + icon).
+
+### 3.4d 📊 Tab BIAYA (Dashboard khusus OPEX)
+- Nav-bar mendapat **segmented pill** `DASHBOARD`/`BIAYA` (`showTab`) — satu baris dengan tombol dark mode. `biayaContainer` adalah bento grid kedua (hidden default). Baris tanggal & pill komparasi **tetap global**.
+- **Data:** baris biaya di-fetch langsung ke Supabase REST (`GET /rest/v1/biaya?...` filter `"Tanggal" gte/lte`, anon, RLS public read) — **tanpa SQL/RPC baru**. Fetch lazy + cache per rentang (`_biayaRangeKey`/`_biayaPrevKey`); refetch saat rentang/mode komparasi berubah atau setelah tambah/edit/hapus.
+- **Rentang pembanding** dihitung ulang di `getPrevRangeIso()` — duplikat logika `pStart/pEnd` di `prosesData` (monthly = tanggal sama bulan lalu; rolling = N hari sebelum rentang). Jangan "refactor" salah satu saja tanpa menyesuaikan yang lain.
+- **Widget:** KPI×4 (TOTAL BIAYA +% vs lalu [naik=merah], OPEX RATIO = biaya÷omzet bersih, BIAYA/NOTA = biaya÷nota, KATEGORI TERBESAR + share%) · TREN BIAYA **di-overlay omzet bersih** (`_trendDaily`) · doughnut KOMPOSISI + RANKING kategori (+selisih vs lalu / NEW) · TABEL per-entri (DataTables) dengan **EDIT** (reuse `expenseModal` mode update `_editBiayaId` → GAS `updateBiaya`) & **HAPUS** (confirm → GAS `deleteBiaya`).
+- **GAS:** `deleteBiaya` & `updateBiaya` baru di `doGet` (`supabaseRequest_` method `delete`/`patch` — helper sudah generik). Simpanan cache `dash_data_v2` dihapus agar sync ambil data terbaru.
+- **Global state yang dipakai tab biaya:** `__lastNetSales` & `__lastNotaCount` di-set di `prosesData` (jangan dihapus); `_trendDaily` (omzet per hari) dari `renderCharts`. Chart biaya di-`destroy` tiap re-render (anti-leak Chart.js).
+- `updateGranPills` di-scope `#mainContainer` supaya tidak menyentuh pill granularity tab biaya (`updateBiayaGranPills` terpisah).
+- **Pendekatan komputasi:** semua KPI/komposisi/delta dihitung **client-side dari baris biaya** (bukan dari agregat RPC `rekapBiaya`) — konsisten antar widget di tab ini.
 
 ### 3.5 🟡 Responsif
 - `html`/`body` `min-width:360px` + `body { overflow-x:auto }` (kunci minimum layar HP).
