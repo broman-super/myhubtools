@@ -342,83 +342,86 @@ GRANT EXECUTE ON FUNCTION rekap_dashboard(date, date, date, date, text, text) TO
 -- dedupe_key TIDAK unique → upsert manual:
 --   update baris dengan id terakhir ber-key sama; bila tak ada → insert.
 --   skipped bila data identik (mirror perilaku sheet GAS).
+-- SET-BASED (bukan loop baris-per-baris): 20rb baris di bawah 1 detik.
 -- ============================================================
 CREATE OR REPLACE FUNCTION bulk_upsert_transaksi(rows jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
-  r jsonb;
-  vid bigint;
-  tgl date; nom text; tipe text; pel text; kat text; barang text;
-  qty int; hrg numeric; penjualan numeric; key text;
-  s_tgl date; s_nom text; s_tipe text; s_pel text; s_kat text; s_barang text;
-  s_qty int; s_hrg numeric; s_penjualan numeric;
-  added int := 0; updated int := 0; skipped int := 0;
-  sama boolean;
+  added int := 0; updated int := 0; skipped int := 0; cnt bigint;
 BEGIN
   IF jsonb_typeof(rows) <> 'array' THEN
     RAISE EXCEPTION 'rows harus berupa array JSON';
   END IF;
 
-  FOR r IN SELECT * FROM jsonb_array_elements(rows) LOOP
-    key := nullif(r->>'dedupe_key', '');
-    IF key IS NULL THEN CONTINUE; END IF;
+  -- Normalisasi sekali jalan, lalu buang baris invalid (key/tanggal kosong).
+  CREATE TEMP TABLE _in ON COMMIT DROP AS
+  SELECT
+    nullif(x."dedupe_key", '') AS key,
+    CASE
+      WHEN x."Tanggal" ~ '^\d{4}-\d{2}-\d{2}'     THEN x."Tanggal"::date
+      WHEN x."Tanggal" ~ '^\d{1,2}/\d{1,2}/\d{4}' THEN to_date(x."Tanggal", 'DD/MM/YYYY')
+      ELSE NULL END AS tgl,
+    nullif(x."Nomor #", '') AS nom,
+    nullif(x."Tipe Transaksi", '') AS tipe,
+    nullif(x."Nama Pelanggan", '') AS pel,
+    nullif(x."Nama Kategori Pelanggan", '') AS kat,
+    nullif(x."Nama Barang", '') AS barang,
+    CASE WHEN nullif(x."Kuantitas", '')   ~ '^[0-9]+$'   THEN x."Kuantitas"::int     ELSE NULL END AS qty,
+    CASE WHEN nullif(x."Total Harga", '') ~ '^[0-9.-]+$' THEN x."Total Harga"::numeric ELSE NULL END AS hrg,
+    CASE WHEN nullif(x."Penjualan", '')  ~ '^[0-9.-]+$' THEN x."Penjualan"::numeric  ELSE NULL END AS penjualan
+  FROM jsonb_to_recordset(rows) AS x(
+    "dedupe_key" text, "Tanggal" text, "Nomor #" text, "Tipe Transaksi" text,
+    "Nama Pelanggan" text, "Nama Kategori Pelanggan" text, "Nama Barang" text,
+    "Kuantitas" text, "Total Harga" text, "Penjualan" text);
 
-    tgl := CASE
-      WHEN r->>'Tanggal' ~ '^\d{4}-\d{2}-\d{2}'     THEN (r->>'Tanggal')::date
-      WHEN r->>'Tanggal' ~ '^\d{1,2}/\d{1,2}/\d{4}' THEN to_date(r->>'Tanggal', 'DD/MM/YYYY')
-      ELSE NULL END;
-    nom      := nullif(r->>'Nomor #', '');
-    tipe     := nullif(r->>'Tipe Transaksi', '');
-    pel      := nullif(r->>'Nama Pelanggan', '');
-    kat      := nullif(r->>'Nama Kategori Pelanggan', '');
-    barang   := nullif(r->>'Nama Barang', '');
-    qty      := CASE WHEN nullif(r->>'Kuantitas', '')   ~ '^[0-9]+$'   THEN (r->>'Kuantitas')::int     ELSE NULL END;
-    hrg      := CASE WHEN nullif(r->>'Total Harga', '') ~ '^[0-9.-]+$' THEN (r->>'Total Harga')::numeric ELSE NULL END;
-    penjualan:= CASE WHEN nullif(r->>'Penjualan', '')  ~ '^[0-9.-]+$' THEN (r->>'Penjualan')::numeric  ELSE NULL END;
+  DELETE FROM _in WHERE key IS NULL OR tgl IS NULL;
 
-    IF tgl IS NULL THEN CONTINUE; END IF;  -- baris tanpa tanggal = invalid (mirror migrate)
+  -- UPDATE hanya baris yang benar-benar berbeda (anti-wipe: payload kosong
+  -- tidak menimpa nilai existing via COALESCE).
+  WITH upd AS (
+    UPDATE transaksi t SET
+      "Tanggal" = COALESCE(i.tgl, t."Tanggal"),
+      "Nomor #" = COALESCE(i.nom, t."Nomor #"),
+      "Tipe Transaksi" = COALESCE(i.tipe, t."Tipe Transaksi"),
+      "Nama Pelanggan" = COALESCE(i.pel, t."Nama Pelanggan"),
+      "Nama Kategori Pelanggan" = COALESCE(i.kat, t."Nama Kategori Pelanggan"),
+      "Nama Barang" = COALESCE(i.barang, t."Nama Barang"),
+      "Kuantitas" = COALESCE(i.qty, t."Kuantitas"),
+      "Total Harga" = COALESCE(i.hrg, t."Total Harga"),
+      "Penjualan" = COALESCE(i.penjualan, t."Penjualan")
+    FROM _in i
+    WHERE t.dedupe_key = i.key
+      AND t.id = (SELECT t2.id FROM transaksi t2 WHERE t2.dedupe_key = i.key ORDER BY t2.id DESC LIMIT 1)
+      AND NOT (
+        t."Tanggal" IS NOT DISTINCT FROM COALESCE(i.tgl, t."Tanggal")
+        AND t."Nomor #" IS NOT DISTINCT FROM COALESCE(i.nom, t."Nomor #")
+        AND t."Tipe Transaksi" IS NOT DISTINCT FROM COALESCE(i.tipe, t."Tipe Transaksi")
+        AND t."Nama Pelanggan" IS NOT DISTINCT FROM COALESCE(i.pel, t."Nama Pelanggan")
+        AND t."Nama Kategori Pelanggan" IS NOT DISTINCT FROM COALESCE(i.kat, t."Nama Kategori Pelanggan")
+        AND t."Nama Barang" IS NOT DISTINCT FROM COALESCE(i.barang, t."Nama Barang")
+        AND t."Kuantitas" IS NOT DISTINCT FROM COALESCE(i.qty, t."Kuantitas")
+        AND t."Total Harga" IS NOT DISTINCT FROM COALESCE(i.hrg, t."Total Harga")
+        AND t."Penjualan" IS NOT DISTINCT FROM COALESCE(i.penjualan, t."Penjualan")
+      )
+    RETURNING 1
+  )
+  SELECT count(*) INTO updated FROM upd;
 
-    SELECT id, "Tanggal", "Nomor #", "Tipe Transaksi", "Nama Pelanggan", "Nama Kategori Pelanggan",
-           "Nama Barang", "Kuantitas", "Total Harga", "Penjualan"
-      INTO vid, s_tgl, s_nom, s_tipe, s_pel, s_kat, s_barang, s_qty, s_hrg, s_penjualan
-      FROM transaksi WHERE dedupe_key = key ORDER BY id DESC LIMIT 1;
+  -- matched = jumlah key yang sudah ada di tabel
+  SELECT count(*) INTO cnt FROM (SELECT DISTINCT t.dedupe_key FROM transaksi t JOIN _in i ON i.key = t.dedupe_key) s;
+  skipped := cnt - updated;
 
-    IF FOUND THEN
-      -- ANTI-WIPE: kolom payload yang kosong/null TIDAK menimpa nilai existing
-      -- (perilaku sama dengan anti-wipe lama di sheet). Supabase = sumber kebenaran.
-      tgl       := COALESCE(tgl, s_tgl);
-      nom       := COALESCE(nom, s_nom);
-      tipe      := COALESCE(tipe, s_tipe);
-      pel       := COALESCE(pel, s_pel);
-      kat       := COALESCE(kat, s_kat);
-      barang    := COALESCE(barang, s_barang);
-      qty       := COALESCE(qty, s_qty);
-      hrg       := COALESCE(hrg, s_hrg);
-      penjualan := COALESCE(penjualan, s_penjualan);
-
-      sama := (s_tgl IS NOT DISTINCT FROM tgl AND s_nom IS NOT DISTINCT FROM nom
-           AND s_tipe IS NOT DISTINCT FROM tipe AND s_pel IS NOT DISTINCT FROM pel
-           AND s_kat IS NOT DISTINCT FROM kat AND s_barang IS NOT DISTINCT FROM barang
-           AND s_qty IS NOT DISTINCT FROM qty AND s_hrg IS NOT DISTINCT FROM hrg
-           AND s_penjualan IS NOT DISTINCT FROM penjualan);
-      IF sama THEN
-        skipped := skipped + 1;
-      ELSE
-        UPDATE transaksi SET
-          "Tanggal" = tgl, "Nomor #" = nom, "Tipe Transaksi" = tipe,
-          "Nama Pelanggan" = pel, "Nama Kategori Pelanggan" = kat, "Nama Barang" = barang,
-          "Kuantitas" = qty, "Total Harga" = hrg, "Penjualan" = penjualan
-        WHERE id = vid;
-        updated := updated + 1;
-      END IF;
-    ELSE
-      INSERT INTO transaksi ("Tanggal", "Nomor #", "Tipe Transaksi", "Nama Pelanggan",
-        "Nama Kategori Pelanggan", "Nama Barang", "Kuantitas", "Total Harga", "Penjualan", dedupe_key)
-      VALUES (tgl, nom, tipe, pel, kat, barang, qty, hrg, penjualan, key);
-      added := added + 1;
-    END IF;
-  END LOOP;
+  -- INSERT baris baru (key belum ada)
+  WITH ins AS (
+    INSERT INTO transaksi ("Tanggal", "Nomor #", "Tipe Transaksi", "Nama Pelanggan",
+      "Nama Kategori Pelanggan", "Nama Barang", "Kuantitas", "Total Harga", "Penjualan", dedupe_key)
+    SELECT i.tgl, i.nom, i.tipe, i.pel, i.kat, i.barang, i.qty, i.hrg, i.penjualan, i.key
+    FROM _in i
+    WHERE NOT EXISTS (SELECT 1 FROM transaksi t WHERE t.dedupe_key = i.key)
+    RETURNING 1
+  )
+  SELECT count(*) INTO added FROM ins;
 
   RETURN jsonb_build_object('status', 'success', 'added', added, 'updated', updated, 'skipped', skipped);
 END;
@@ -426,6 +429,9 @@ $$;
 
 REVOKE EXECUTE ON FUNCTION bulk_upsert_transaksi(jsonb) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION bulk_upsert_transaksi(jsonb) TO service_role;
+
+-- Akselerasi pencocokan dedupe_key (dipakai upsert & anti-duplikat)
+CREATE INDEX IF NOT EXISTS idx_transaksi_dedupe_key_id ON transaksi(dedupe_key, id);
 
 -- ============================================================
 -- get_all_transaksi — READ semua baris (untuk preview upload &
