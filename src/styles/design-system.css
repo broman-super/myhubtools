@@ -41,6 +41,38 @@
     --platform-wb-txt:  #ffffff;
     --platform-evt-txt: #ffffff;
     --platform-other-txt:#ffffff;
+
+    /* ===== REYNAHUB Design Tokens (additive, single source of truth) ===== */
+    /* Fonts */
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-display: 'Geomini', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    /* Alias bridge: nama token yang sudah dipakai tools (tanpa break) */
+    --primary: var(--accent);
+    --primary-light: #ff7b7b;
+    --primary-soft: rgba(255, 0, 0, 0.10);
+    --bg: var(--bg-primary);
+    --surface: var(--bg-card);
+    --surface2: #f1f5f9;
+    --text: var(--text-main);
+    --muted: var(--text-muted);
+    --danger: #ef4444;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    /* Radius scale */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    /* Shadow scale (nilai asli components.css) */
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    --shadow-md: 0 12px 24px -10px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+    /* Spacing scale */
+    --space-1: 4px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    /* Focus */
+    --focus-ring: 0 0 0 3px var(--accent-glow);
 }
 
 [data-theme="dark"] {
@@ -68,6 +100,15 @@
     --platform-wb-bg:   rgba(59, 130, 246, 0.18);
     --platform-evt-bg:  rgba(6, 182, 212, 0.18);
     --platform-other-bg:rgba(100, 116, 139, 0.18);
+
+    /* Dark overrides for the additive tokens */
+    --primary: var(--accent);
+    --primary-light: #ff6b6b;
+    --primary-soft: rgba(255, 59, 59, 0.18);
+    --surface2: #1e293b;
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 12px 24px -10px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.6);
 }
 
 *, *::before, *::after {
@@ -84,7 +125,7 @@ html {
 }
 
 body {
-    font-family: 'Plus Jakarta Sans';
+    font-family: var(--font-sans);
     background: var(--bg-primary);
     color: var(--text-main);
     overflow: hidden;
