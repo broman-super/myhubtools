@@ -164,6 +164,18 @@
       text-transform: uppercase;
     }
 
+    .hit-resi {
+      border: 2px solid var(--primary);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      background: color-mix(in srgb, var(--primary) 12%, transparent);
+    }
+
+    .resi-card.hit-card {
+      background: color-mix(in srgb, var(--primary) 10%, transparent);
+    }
+
     .resi-card .resi-text {
       font-family: monospace;
       font-size: 14px;
@@ -558,6 +570,18 @@
         <div id="riwayatArea">
           <h3>Riwayat Sesi</h3>
           <input type="text" id="searchRiwayatGlobal" placeholder="Cari resi / ekspedisi / ID sesi..." onkeyup="filterRiwayatGlobal()" style="margin-bottom: 10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px; flex-wrap:wrap;">
+            <select id="ukuranRiwayat" onchange="ubahUkuranRiwayat(this.value)" style="padding:4px 8px; border-radius:6px;">
+              <option value="50" selected>50 data</option>
+              <option value="100">100 data</option>
+              <option value="500">500 data</option>
+            </select>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn-outline" id="prevRiwayat" onclick="pindahRiwayat(-1)" style="padding:4px 12px;">«</button>
+              <span id="infoRiwayat" style="font-size:12px;"></span>
+              <button class="btn-outline" id="nextRiwayat" onclick="pindahRiwayat(1)" style="padding:4px 12px;">»</button>
+            </div>
+          </div>
           <div style="overflow-x:auto;">
             <table>
               <thead>
@@ -699,30 +723,42 @@
         .then(res => { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); });
     }
 
-    // Riwayat: tarik semua paket (terbaru dulu) lalu grup per id_penginputan di client.
+    // Riwayat: tarik SEMUA paket via paginasi (Supabase REST max 1000 baris/request),
+    // lalu grup per id_penginputan di client.
     function supabaseReadRiwayatGrouped(onSuccess, onError) {
-      const p = new URLSearchParams({ select: 'id,"id_penginputan",waktu,resi,ekspedisi', order: 'id.desc' });
-      supabaseGet('/rest/v1/outbond_paket?' + p.toString())
-        .then(rows => {
-          dataPaketAll = rows;
-          const groups = {};
-          rows.forEach(r => {
-            const idp = r.id_penginputan;
-            if (!groups[idp]) groups[idp] = { id: idp, waktu: r.waktu || '-', n: 0, kurir: new Set() };
-            groups[idp].n++;
-            if (r.ekspedisi) groups[idp].kurir.add(r.ekspedisi);
-          });
-          dataRiwayatGrouped = Object.keys(groups).map(k => {
-            const g = groups[k];
-            return { id: g.id, waktu: g.waktu, ringkasan: g.n + ' paket · ' + g.kurir.size + ' ekspedisi' };
-          });
-          if (onSuccess) onSuccess(dataRiwayatGrouped);
-        })
-        .catch(err => {
+      const CHUNK = 1000;
+      const all = [];
+      const bacaHalaman = (offset) => {
+        const p = new URLSearchParams({ select: 'id,"id_penginputan",waktu,resi,ekspedisi', order: 'id.desc', limit: CHUNK, offset: offset });
+        return supabaseGet('/rest/v1/outbond_paket?' + p.toString());
+      };
+      const selesai = (rows) => {
+        dataPaketAll = rows;
+        const groups = {};
+        rows.forEach(r => {
+          const idp = r.id_penginputan;
+          if (!groups[idp]) groups[idp] = { id: idp, waktu: r.waktu || '-', n: 0, kurir: new Set() };
+          groups[idp].n++;
+          if (r.ekspedisi) groups[idp].kurir.add(r.ekspedisi);
+        });
+        dataRiwayatGrouped = Object.keys(groups).map(k => {
+          const g = groups[k];
+          return { id: g.id, waktu: g.waktu, ringkasan: g.n + ' paket · ' + g.kurir.size + ' ekspedisi' };
+        });
+        if (onSuccess) onSuccess(dataRiwayatGrouped);
+      };
+      const lanjut = (offset) => {
+        bacaHalaman(offset).then(rows => {
+          all.push(...rows);
+          if (rows.length === CHUNK) lanjut(offset + CHUNK);
+          else selesai(all);
+        }).catch(err => {
           console.error("[Supabase] riwayat gagal:", err);
           if (onError) onError(err.message);
           else customAlert("Gagal memuat riwayat: " + err.message);
         });
+      };
+      lanjut(0);
     }
 
     function pecahWaktu(waktuString) {
@@ -733,27 +769,62 @@
     }
 
     function renderRiwayatGrouped() {
-      const data = dataRiwayatGrouped;
-      let html = "";
-      if (data.length === 0) {
-        html = "<tr><td colspan='3' style='text-align:center; color:#64748b;'>Belum ada riwayat.</td></tr>";
-      } else {
-        data.forEach(row => {
-          const w = pecahWaktu(row.waktu);
-          html += `<tr class="clickable-row" onclick="bukaDetailRiwayat('${row.id}')">
-                     <td style="white-space:nowrap;">${w.tgl}</td>
-                     <td style="white-space:nowrap;">${w.jam}</td>
-                     <td style="font-size: 12px;">${row.ringkasan}</td>
-                   </tr>`;
-        });
+      const tbody = document.getElementById('tabelRiwayatData');
+      const total = dataRiwayatGrouped.length;
+      const prevBtn = document.getElementById('prevRiwayat');
+      const nextBtn = document.getElementById('nextRiwayat');
+      const info = document.getElementById('infoRiwayat');
+      if (total === 0) {
+        tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; color:#64748b;'>Belum ada riwayat.</td></tr>";
+        info.innerText = "";
+        if (prevBtn) prevBtn.disabled = true;
+        if (nextBtn) nextBtn.disabled = true;
+        return;
       }
-      document.getElementById('tabelRiwayatData').innerHTML = html;
+      const maksHal = Math.max(1, Math.ceil(total / ukuranRiwayat));
+      if (halamanRiwayat > maksHal) halamanRiwayat = maksHal;
+      const start = (halamanRiwayat - 1) * ukuranRiwayat;
+      const slice = dataRiwayatGrouped.slice(start, start + ukuranRiwayat);
+      let html = "";
+      slice.forEach(row => {
+        const w = pecahWaktu(row.waktu);
+        html += `<tr class="clickable-row" onclick="bukaDetailRiwayat('${row.id}')">
+                   <td style="white-space:nowrap;">${w.tgl}</td>
+                   <td style="white-space:nowrap;">${w.jam}</td>
+                   <td style="font-size: 12px;">${row.ringkasan}</td>
+                 </tr>`;
+      });
+      tbody.innerHTML = html;
+      info.innerText = `Hal ${halamanRiwayat}/${maksHal} · ${total} sesi`;
+      if (prevBtn) prevBtn.disabled = halamanRiwayat <= 1;
+      if (nextBtn) nextBtn.disabled = halamanRiwayat >= maksHal;
+    }
+
+    function ubahUkuranRiwayat(v) {
+      ukuranRiwayat = parseInt(v, 10) || 50;
+      halamanRiwayat = 1;
+      renderRiwayatGrouped();
+    }
+
+    function pindahRiwayat(d) {
+      halamanRiwayat += d;
+      renderRiwayatGrouped();
+    }
+
+    // Bungkus teks yang cocok dengan bingkai sorotan (case-insensitive).
+    function sorotResi(text, q) {
+      const t = String(text || '');
+      if (!q) return t;
+      const i = t.toLowerCase().indexOf(q);
+      if (i === -1) return t;
+      return t.slice(0, i) + `<span class="hit-resi">` + t.slice(i, i + q.length) + `</span>` + t.slice(i + q.length);
     }
 
     // Pencarian global di riwayat: filter semua paket (resi/ekspedisi/ID sesi)
     // tanpa harus buka setiap sesi tanggal satu per satu.
     function filterRiwayatGlobal() {
       const q = document.getElementById('searchRiwayatGlobal').value.trim().toLowerCase();
+      lastRiwayatCari = q;
       const tbody = document.getElementById('tabelRiwayatData');
       if (!q) { renderRiwayatGrouped(); return; }
       const hits = dataPaketAll.filter(r =>
@@ -771,7 +842,7 @@
         html += `<tr class="clickable-row" onclick="bukaDetailRiwayat('${r.id_penginputan}')">
                    <td style="white-space:nowrap;">${w.tgl}</td>
                    <td style="white-space:nowrap;">${w.jam}</td>
-                   <td style="font-size: 12px;">${r.resi} · ${r.ekspedisi || '-'}</td>
+                   <td style="font-size: 12px;">${sorotResi(r.resi, q)} · ${r.ekspedisi || '-'}</td>
                  </tr>`;
       });
       tbody.innerHTML = html;
@@ -799,6 +870,9 @@
     let dataDetailRiwayat = [];
     let dataRiwayatGrouped = [];
     let dataPaketAll = [];
+    let lastRiwayatCari = "";
+    let halamanRiwayat = 1;
+    let ukuranRiwayat = 50;
 
     function customAlert(pesan) {
       document.getElementById('alertMessageText').innerHTML = pesan;
@@ -1116,6 +1190,8 @@
         document.getElementById('detailArea').style.display = 'none';
         document.getElementById('detailRiwayatArea').style.display = 'none';
         document.getElementById('searchRiwayatGlobal').value = "";
+        lastRiwayatCari = "";
+        halamanRiwayat = 1;
         area.style.display = 'block';
         document.getElementById('tabelRiwayatData').innerHTML = "<tr><td colspan='3' style='text-align:center;'>Mengambil data...</td></tr>";
 
@@ -1133,14 +1209,15 @@
     function bukaDetailRiwayat(idPenginputan) {
       document.getElementById('detailRiwayatArea').style.display = 'block';
       document.getElementById('judulIdRiwayat').innerText = idPenginputan;
-      document.getElementById('searchRiwayatResi').value = "";
+      const filter = lastRiwayatCari ? lastRiwayatCari.toUpperCase() : "";
+      document.getElementById('searchRiwayatResi').value = filter;
       document.getElementById('containerDetailRiwayat').innerHTML = "<div style='text-align:center; grid-column: 1 / -1; padding: 20px;'>Loading...</div>";
 
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 
       apiCall("getDetailById", idPenginputan, function (details) {
         dataDetailRiwayat = details; // <--- TAMBAHKAN BARIS INI
-        renderDetailRiwayat();
+        renderDetailRiwayat(filter);
       });
     }
 
@@ -1150,7 +1227,8 @@
         let resiUpper = item.resi ? item.resi.toUpperCase() : "";
         let kurirUpper = item.ekspedisi ? item.ekspedisi.toUpperCase() : "";
         if (resiUpper.includes(filterText) || kurirUpper.includes(filterText)) {
-          html += `<div class="resi-card">
+          const hit = filterText ? ' hit-card' : '';
+          html += `<div class="resi-card${hit}">
                      <span class="kurir-badge">${item.ekspedisi}</span>
                      <span class="resi-text">${item.resi}</span>
                    </div>`;
