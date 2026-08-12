@@ -557,6 +557,7 @@
 
         <div id="riwayatArea">
           <h3>Riwayat Sesi</h3>
+          <input type="text" id="searchRiwayatGlobal" placeholder="Cari resi / ekspedisi / ID sesi..." onkeyup="filterRiwayatGlobal()" style="margin-bottom: 10px;">
           <div style="overflow-x:auto;">
             <table>
               <thead>
@@ -638,10 +639,19 @@
   question: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
 };
     // URL Web App Google Apps Script Anda (WAJIB DIISI SETELAH DEPLOY)
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzWGeJrkRT7Ll6DEgSz2IxswFQaTq7tI2gZAtDetMgy83HdZWeya1coh1Yvr5pC6_E/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlD6rjMl_oONgJyo4hSPZgvKuJeEU8WtTM_p4AEn1aWtKy101S2_OH7oM8FzMD_8qy/exec";
+
+    // Kredensial Supabase (project UNITOOLS). Isi dari Dashboard > Settings > API.
+    const SUPABASE_URL = "https://iyraamxkrygtzsqkvnqz.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5cmFhbXhrcnlndHpzcWt2bnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MDE3NTQsImV4cCI6MjEwMjA3Nzc1NH0.g9naRe6CJaZ-FIZHjUkVx_62GZlxVFixQbIUzDF3M7s";
 
     // Fungsi Pembantu untuk Memanggil API
+    // Read (riwayat/detail) → langsung Supabase REST (anon, tabel paket read-only).
+    // Write (simpanDataGudang) → Google Apps Script (service_role).
     function apiCall(action, payload, onSuccess, onError) {
+      if (action === 'getRiwayatGrouped') { supabaseReadRiwayatGrouped(onSuccess, onError); return; }
+      if (action === 'getDetailById') { supabaseReadDetail(payload, onSuccess, onError); return; }
+
       if (SCRIPT_URL === "URL_WEB_APP_ANDA_DISINI") {
         customAlert("ERROR: SCRIPT_URL belum diisi. Silakan edit file HTML dan masukkan URL Web App Anda.");
         if (onError) onError("URL Kosong");
@@ -676,10 +686,119 @@
         });
     }
 
+    function supabaseGet(path) {
+      if (SUPABASE_URL.indexOf("XXXXXXXX") !== -1) {
+        return Promise.reject(new Error("SUPABASE_URL / ANON KEY belum diisi. Isi dari Dashboard Supabase > Settings > API."));
+      }
+      return fetch(SUPABASE_URL + path, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+        }
+      })
+        .then(res => { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); });
+    }
+
+    // Riwayat: tarik semua paket (terbaru dulu) lalu grup per id_penginputan di client.
+    function supabaseReadRiwayatGrouped(onSuccess, onError) {
+      const p = new URLSearchParams({ select: 'id,"id_penginputan",waktu,resi,ekspedisi', order: 'id.desc' });
+      supabaseGet('/rest/v1/outbond_paket?' + p.toString())
+        .then(rows => {
+          dataPaketAll = rows;
+          const groups = {};
+          rows.forEach(r => {
+            const idp = r.id_penginputan;
+            if (!groups[idp]) groups[idp] = { id: idp, waktu: r.waktu || '-', n: 0, kurir: new Set() };
+            groups[idp].n++;
+            if (r.ekspedisi) groups[idp].kurir.add(r.ekspedisi);
+          });
+          dataRiwayatGrouped = Object.keys(groups).map(k => {
+            const g = groups[k];
+            return { id: g.id, waktu: g.waktu, ringkasan: g.n + ' paket · ' + g.kurir.size + ' ekspedisi' };
+          });
+          if (onSuccess) onSuccess(dataRiwayatGrouped);
+        })
+        .catch(err => {
+          console.error("[Supabase] riwayat gagal:", err);
+          if (onError) onError(err.message);
+          else customAlert("Gagal memuat riwayat: " + err.message);
+        });
+    }
+
+    function pecahWaktu(waktuString) {
+      const w = waktuString || "-";
+      const splitChar = w.includes(',') ? ',' : ' ';
+      const parts = w.split(splitChar);
+      return { tgl: (parts[0] || "-").trim(), jam: (parts[1] || "-").trim() };
+    }
+
+    function renderRiwayatGrouped() {
+      const data = dataRiwayatGrouped;
+      let html = "";
+      if (data.length === 0) {
+        html = "<tr><td colspan='3' style='text-align:center; color:#64748b;'>Belum ada riwayat.</td></tr>";
+      } else {
+        data.forEach(row => {
+          const w = pecahWaktu(row.waktu);
+          html += `<tr class="clickable-row" onclick="bukaDetailRiwayat('${row.id}')">
+                     <td style="white-space:nowrap;">${w.tgl}</td>
+                     <td style="white-space:nowrap;">${w.jam}</td>
+                     <td style="font-size: 12px;">${row.ringkasan}</td>
+                   </tr>`;
+        });
+      }
+      document.getElementById('tabelRiwayatData').innerHTML = html;
+    }
+
+    // Pencarian global di riwayat: filter semua paket (resi/ekspedisi/ID sesi)
+    // tanpa harus buka setiap sesi tanggal satu per satu.
+    function filterRiwayatGlobal() {
+      const q = document.getElementById('searchRiwayatGlobal').value.trim().toLowerCase();
+      const tbody = document.getElementById('tabelRiwayatData');
+      if (!q) { renderRiwayatGrouped(); return; }
+      const hits = dataPaketAll.filter(r =>
+        String(r.resi || '').toLowerCase().includes(q) ||
+        String(r.ekspedisi || '').toLowerCase().includes(q) ||
+        String(r.id_penginputan || '').toLowerCase().includes(q)
+      );
+      if (hits.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='3' style='text-align:center; color:#64748b;'>Tidak ditemukan.</td></tr>";
+        return;
+      }
+      let html = "";
+      hits.forEach(r => {
+        const w = pecahWaktu(r.waktu);
+        html += `<tr class="clickable-row" onclick="bukaDetailRiwayat('${r.id_penginputan}')">
+                   <td style="white-space:nowrap;">${w.tgl}</td>
+                   <td style="white-space:nowrap;">${w.jam}</td>
+                   <td style="font-size: 12px;">${r.resi} · ${r.ekspedisi || '-'}</td>
+                 </tr>`;
+      });
+      tbody.innerHTML = html;
+    }
+
+    // Detail: filter semua baris paket milik satu id_penginputan.
+    function supabaseReadDetail(idPenginputan, onSuccess, onError) {
+      const p = new URLSearchParams({ select: 'id,resi,"ekspedisi"', order: 'id.asc' });
+      p.append('"id_penginputan"', 'eq.' + idPenginputan);
+      supabaseGet('/rest/v1/outbond_paket?' + p.toString())
+        .then(rows => {
+          const data = rows.map(r => ({ resi: r.resi, ekspedisi: r.ekspedisi }));
+          if (onSuccess) onSuccess(data);
+        })
+        .catch(err => {
+          console.error("[Supabase] detail gagal:", err);
+          if (onError) onError(err.message);
+          else customAlert("Gagal memuat detail: " + err.message);
+        });
+    }
+
     let dataPengiriman = {};
     let semuaResi = new Set();
     let kurirSedangDilihat = "";
     let dataDetailRiwayat = [];
+    let dataRiwayatGrouped = [];
+    let dataPaketAll = [];
 
     function customAlert(pesan) {
       document.getElementById('alertMessageText').innerHTML = pesan;
@@ -757,7 +876,7 @@
       else if (resi.startsWith("SPX")) kurir = "Shopee Express";
       else if (resi.startsWith("CM") || resi.match(/^[0-9]{15}$/)) kurir = "JNE";
       else if (resi.startsWith("IDS")) kurir = "ID Express";
-      else if (resi.startsWith("JP") || resi.startsWith("JX") || resi.startsWith("JT")) kurir = "J&T";
+      else if (resi.startsWith("JP") || resi.startsWith("JX") || resi.startsWith("JT") || resi.startsWith("JY")) kurir = "J&T";
       else if (resi.startsWith("00")) kurir = "SiCepat";
 
       if (!dataPengiriman[kurir]) dataPengiriman[kurir] = [];
@@ -996,30 +1115,12 @@
       if (area.style.display === 'none' || area.style.display === '') {
         document.getElementById('detailArea').style.display = 'none';
         document.getElementById('detailRiwayatArea').style.display = 'none';
+        document.getElementById('searchRiwayatGlobal').value = "";
         area.style.display = 'block';
         document.getElementById('tabelRiwayatData').innerHTML = "<tr><td colspan='3' style='text-align:center;'>Mengambil data...</td></tr>";
 
         apiCall("getRiwayatGrouped", null, function (data) {
-          let html = "";
-          if (data.length === 0) {
-            html = "<tr><td colspan='3' style='text-align:center; color:#64748b;'>Belum ada riwayat.</td></tr>";
-          } else {
-            data.forEach(row => {
-              // Misah tanggal, bodo amat mau koma atau spasi tetep jalan
-              let waktuString = row.waktu || "-";
-              let splitChar = waktuString.includes(',') ? ',' : ' ';
-              let parts = waktuString.split(splitChar);
-              let tgl = parts[0] ? parts[0].trim() : "-";
-              let jam = parts[1] ? parts[1].trim() : "-";
-
-              html += `<tr class="clickable-row" onclick="bukaDetailRiwayat('${row.id}')">
-                         <td style="white-space:nowrap;">${tgl}</td>
-                         <td style="white-space:nowrap;">${jam}</td>
-                         <td style="font-size: 12px;">${row.ringkasan}</td>
-                       </tr>`;
-            });
-          }
-          document.getElementById('tabelRiwayatData').innerHTML = html;
+          renderRiwayatGrouped();
         });
 
       } else {

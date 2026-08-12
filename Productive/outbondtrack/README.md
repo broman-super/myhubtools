@@ -2,9 +2,9 @@
 
 Sistem logging dan scanning barcode untuk pencatatan paket masuk/keluar, live counter, dan print resi.
 
-- **File:** `Productive/outbondtrack/Outbondtrack.html` (±1089 baris, single-file)
-- **Backend:** Google Apps Script (Web App) — kode backend **tidak tersimpan di repo ini** (lihat §3.2)
-- **Status:** ✅ Stable — GAS integration
+- **File:** `Productive/outbondtrack/Outbondtrack.html` (±1130 baris, single-file)
+- **Backend:** Hybrid — write lewat Google Apps Script `gscode/outbondtrack.gs` (service_role), read langsung Supabase REST (anon). Database: **Supabase** (project **UNITOOLS** — database gabungan beberapa tool, tabel per tool ber-prefix `outbond_`). Skema ada di `migrasi_supabase.sql`.
+- **Status:** ✅ Stable — Supabase + GAS write hybrid
 
 ---
 
@@ -20,16 +20,14 @@ Sistem logging dan scanning barcode untuk pencatatan paket masuk/keluar, live co
 
 ## 2. Keterkaitan
 
-### 2.1 Backend GAS
-- `SCRIPT_URL = https://script.google.com/macros/s/AKfycbzWGeJrkRT7Ll6DEgSz2IxswFQaTq7tI2gZAtDetMgy83HdZWeya1coh1Yvr5pC6_E/exec` (baris 641).
-- Semua panggilan lewat **satu helper** `apiCall(action, payload, onSuccess, onError)`:
-  - `POST` dengan `Content-Type: text/plain;charset=utf-8` (trik hindari CORS preflight — jangan diganti jadi `application/json`).
-  - Body: `JSON.stringify({ action, payload })`.
-  - Response yang diharapkan: `{ success: true, data }` atau `{ success: false, error }`.
-- **Action yang dipakai frontend:**
-  - `simpanDataGudang` (payload: data paket)
-  - `getRiwayatGrouped`
-  - `getDetailById` (payload: id penginputan)
+### 2.1 Backend — Hybrid Supabase + GAS
+- **Read** (riwayat & detail) **tidak lagi lewat GAS** — langsung `fetch` ke Supabase REST dengan anon key:
+  - `getRiwayatGrouped` → `GET /rest/v1/outbond_paket?select=...&order=id.desc`, digrup per `id_penginputan` di client.
+  - `getDetailById` → `GET /rest/v1/outbond_paket?`"id_penginputan"`=eq.<id>`.
+  - Kredensial: `SUPABASE_URL` + `SUPABASE_ANON_KEY` (baris ±641). Tabel `outbond_paket` punya policy `select using (true)` — baca publik, **tidak ada policy insert** (write mustahil via client).
+- **Write** (`simpanDataGudang`) tetap lewat `SCRIPT_URL = .../exec` (GAS Web App, kode di `gscode/outbondtrack.gs`) dengan **service_role** — respons `{ success: true, data }` / `{ success: false, error }`.
+- `apiCall(action, payload, onSuccess, onError)` = satu pintu: dispatch action read → Supabase, sisanya → GAS. Action lain yang ditambah ke frontend otomatis via GAS.
+- Body POST GAS tetap `text/plain;charset=utf-8` (trik hindari CORS preflight — jangan diganti jadi `application/json`).
 
 ### 2.2 Hub & Shell
 - Router: `#utilities/outbond` → `Productive/outbondtrack/Outbondtrack.html`.
@@ -44,8 +42,10 @@ Sistem logging dan scanning barcode untuk pencatatan paket masuk/keluar, live co
 - **O1** — `<meta charset="UTF-8">` sudah ada (korupsi teks di beberapa browser). Jangan hapus.
 - **O2** — `<html lang="id">` sudah ada (accessibility). Jangan hapus.
 
-### 3.2 ⚠️ Backend GAS tidak tersimpan di repo
-Kode `.gs` dari tool ini **belum ada** di `gscode/` (tidak seperti tool lain yang sudah dipindahkan ke sana). Backend hanya hidup di Apps Script / Sheets. **Sebaiknya simpan salinannya ke `gscode/`** agar perubahan bisa dilacak dan tidak hilang.
+### 3.2 ✅ Backend tersimpan di repo
+Kode backend ada di `gscode/outbondtrack.gs` (script GAS terpisah khusus outbond) dan skema DB di `migrasi_supabase.sql`. Deployment = paste file .gs ke project GAS baru → `setupSupabaseProps` → deploy Web App (akses = Anyone) → tempel URL ke `SCRIPT_URL`.
+
+**Migrasi data lama** (Sheet `WAKTU_SCAN/ID_PENGINPUTAN/NOMOR_RESI/EKSPEDISI` → `outbond_paket`) sudah selesai dan kode migrasinya sengaja **tidak disertakan** di file `.gs` ini. Jika suatu saat perlu migrasi ulang, tambahkan fungsi batch-insert (contoh pola lama tersimpan di riwayat commit) atau minta ke maintainer.
 
 ### 3.3 Kontrak `{ action, payload }`
 - Nama action di frontend harus **persis** dengan yang di-cek backend (`doPost` → `JSON.parse(e.postData.contents)`).
@@ -66,8 +66,9 @@ Kode `.gs` dari tool ini **belum ada** di `gscode/` (tidak seperti tool lain yan
 
 ```
 Scan / isi data → apiCall("simpanDataGudang", data)
-  → POST text/plain {action, payload} → res {success, data}
-Buka riwayat → apiCall("getRiwayatGrouped") → render grouped
-Klik detail  → apiCall("getDetailById", id) → render detail
+  → POST text/plain {action, payload} → GAS service_role INSERT ke tabel paket
+  → res {success, data}
+Buka riwayat → apiCall("getRiwayatGrouped") → GET Supabase REST (anon) → grup per id_penginputan
+Klik detail  → apiCall("getDetailById", id) → GET Supabase REST filter id_penginputan
 Print resi  → susun HTML #printArea → window.print()
 ```
