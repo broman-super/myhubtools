@@ -30,6 +30,13 @@ var ToolCard = {
       desc: 'Pengajuan, approval, realisasi & reimburse expense operasional tim.',
       search: 'expense tracker pengajuan realisasi reimburse approval'
     },
+    {
+      group: 'productive',
+      hash: '#productive/rnd-roadmap',
+      title: 'RND Roadmap Tracker',
+      desc: 'Pelacakan roadmap produk baru Divisi R&D: tahapan, checklist, dan evaluasi kelayakan.',
+      search: 'rnd roadmap tracker produk baru riset pengembangan tahapan evaluasi'
+    },
     // Universal
     {
       group: 'universal',

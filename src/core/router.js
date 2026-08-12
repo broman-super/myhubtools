@@ -40,6 +40,7 @@ class ReynaHubRouter {
       '#productive/analytic': 'Productive/analytic/Analytic.html',
       '#productive/latch': 'Productive/latch/latch.html',
       '#productive/expense': 'Productive/expense-tracker/index.html',
+      '#productive/rnd-roadmap': 'Productive/Project_develop/dist/index.html',
       '#utilities/outbond': 'Productive/outbondtrack/Outbondtrack.html',
       '#utilities/activity': 'Productive/tr/tracking.html',
       '#utilities/retur': 'Productive/tr-retur/retur-track.html',
