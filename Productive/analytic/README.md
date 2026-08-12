@@ -44,7 +44,7 @@ Dashboard analitik penjualan real-time berbasis **Google Sheets + Google Apps Sc
 ### 2.3 Dependency (CDN, versi ter-pin)
 Chart.js 3.9.1 · datalabels 2.2.0 · zoom 2.0.1 (+hammerjs 2.0.8) · jQuery 3.7.1 · moment 2.29.4 · daterangepicker 3.1.1 · DataTables 1.13.6 · SheetJS (xlsx) 0.18.5 · marked.
 
-> Jangan "upgrade" ke major baru tanpa uji — BugFound.md (DD2) mencatat unpinned version pernah jadi masalah.
+> Jangan "upgrade" ke major baru tanpa uji — unpinned version pernah jadi masalah (catatan internal).
 
 ### 2.4 Storage
 | Key | Scope | Fungsi |
@@ -134,12 +134,7 @@ Bug layout di file ini mustahil dideteksi sekilas (lihat §3.1). Setelah menguba
 **Akar:** tooltip `title` callback menempelkan `ICONS.calendar` (string SVG) ke teks tooltip. Chart.js tooltip merender teks polos (`textContent`) — SVG tidak pernah dirender, malah tampil sebagai string.
 **Fix:** ikon dihapus dari `title` callback chart Tren. **Aturan: jangan pernah menaruh string SVG/HTML ke dalam callback tooltip Chart.js** — tooltip tidak mendukung HTML; kalau mau ikon di tooltip, pakai `external` tooltip (elemen kustom).
 
-
-- Password login **hardcoded** `'Admin@'` di client-side (BugFound DD1) — siapa pun bisa lihat via inspect element. Deploy auth di backend untuk menghilangkan ini.
-- `<link>` sebelum `<meta charset>` (spec violation, BugFound A2).
-
 ---
-
 ## 4. Flow Data (ringkas)
 
 ```

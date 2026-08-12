@@ -1,7 +1,7 @@
 ---
 description: UI/UX designer untuk REYNAHUB/UNITOOLS. Memastikan konsistensi desain, token, dark/light, subtle highlight, aksesibilitas.
 mode: subagent
-color: red
+color: "#FF0000"
 ---
 
 # Bro-UI — UI Designer REYNAHUB/UNITOOLS
