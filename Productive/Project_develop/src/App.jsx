@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import {
   Plus, ChevronDown, ChevronRight, Pencil, Trash2, Camera, CheckCircle2,
   Circle, AlertTriangle, X, ArrowLeft, TrendingUp, Archive, Star,
@@ -343,6 +343,9 @@ export default function App() {
   const [view, setView] = useState("dashboard"); // dashboard | project
   const hydrated = useRef(false);
   const skipSync = useRef(false);
+  const saveTimer = useRef(null);
+  const saving = useRef(false);
+  const queued = useRef(null);
 
   // --- Load dari Supabase (anon read) ---
   useEffect(() => {
@@ -375,21 +378,33 @@ export default function App() {
     return () => { cancelled = true; };
   }, []);
 
-  // --- Simpan tiap perubahan ke Supabase via GAS (debounce) ---
+  // --- Simpan tiap perubahan ke Supabase via GAS (debounce + optimistic) ---
+  const doSave = useCallback(async () => {
+    if (saving.current) return;
+    const batch = queued.current;
+    if (!batch) return;
+    saving.current = true;
+    setSaveStatus({ state: "saved", msg: "Tersimpan" }); // optimis: langsung tandai
+    try {
+      await syncToSupabase(batch.rows, batch.deletes || []);
+    } catch (e) {
+      setSaveStatus({ state: "error", msg: "Gagal simpan: " + (e && e.message ? e.message : e) });
+    } finally {
+      saving.current = false;
+      if (queued.current && queued.current !== batch) doSave(); // ada edit baru, simpan lagi
+    }
+  }, []);
+
   useEffect(() => {
     if (!hydrated.current || skipSync.current) {
       skipSync.current = false;
       return;
     }
+    queued.current = { rows: projects.map((p) => ({ id: p.id, data: p })), deletes: [] };
     setSaveStatus({ state: "saving", msg: "Menyimpan…" });
-    const t = setTimeout(() => {
-      syncToSupabase(projects.map((p) => ({ id: p.id, data: p })), [])
-        .then(() => setSaveStatus({ state: "saved", msg: "Tersimpan" }))
-        .catch((e) =>
-          setSaveStatus({ state: "error", msg: "Gagal simpan: " + (e && e.message ? e.message : e) })
-        );
-    }, 600);
-    return () => clearTimeout(t);
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => doSave(), 400);
+    return () => clearTimeout(saveTimer.current);
   }, [projects]);
   const [activeProjectId, setActiveProjectId] = useState(null);
   const [projectModal, setProjectModal] = useState(null); // null | {} (new) | project (edit)
