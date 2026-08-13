@@ -17,8 +17,8 @@
 // ============================================
 
 var __SUPABASE_CONFIG__ = {
-  SUPABASE_URL: '',       // ← tempel Project URL project UNITOOLS di sini
-  SERVICE_ROLE_KEY: ''    // ← tempel service_role key di sini
+  SUPABASE_URL: 'https://iyraamxkrygtzsqkvnqz.supabase.co',       // ← tempel Project URL project UNITOOLS di sini
+  SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5cmFhbXhrcnlndHpzcWt2bnF6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjUwMTc1NCwiZXhwIjoyMTAyMDc3NzU0fQ.VJODIL3SbUyDQHdM9ljsScOFqPIRDNoYR51QClAiuVY'    // ← tempel service_role key di sini
 };
 
 function setupSupabaseProps() {
@@ -92,6 +92,22 @@ function doPost(e) {
   }
 
   return jsonOut({ success: false, error: 'Action tidak dikenal: ' + action });
+}
+
+function doGet(e) {
+  var configured = false;
+  try {
+    var c = supabaseCreds_();
+    configured = !!(c.baseUrl && c.apiKey);
+  } catch (err) {
+    configured = false;
+  }
+  return jsonOut({
+    status: 'ok',
+    service: 'rndtracker',
+    configured: configured,
+    note: 'GET=status. POST action=sync untuk simpan dari webtool.'
+  });
 }
 
 function jsonOut(obj) {

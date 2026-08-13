@@ -28,7 +28,9 @@ export async function syncToSupabase(rows, deletes) {
   if (!GAS_SCRIPT_URL) return { skipped: true };
   const res = await fetch(GAS_SCRIPT_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    // text/plain (bukan application/json) agar tidak memicu CORS preflight OPTIONS
+    // yang tidak dijawab GAS. e.postData.contents tetap berisi JSON mentah.
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify({ action: 'sync', payload: { rows, deletes: deletes || [] } }),
   });
   if (!res.ok) throw new Error('Gagal menyimpan roadmap (' + res.status + ')');

@@ -339,6 +339,7 @@ function Modal({ title, onClose, children, width = 460 }) {
 export default function App() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [saveStatus, setSaveStatus] = useState({ state: "idle", msg: "" }); // idle | saving | saved | error
   const [view, setView] = useState("dashboard"); // dashboard | project
   const hydrated = useRef(false);
   const skipSync = useRef(false);
@@ -357,7 +358,12 @@ export default function App() {
           const seeded = seedData();
           skipSync.current = true;
           setProjects(seeded);
-          await syncToSupabase(seeded.map((p) => ({ id: p.id, data: p })), []);
+          try {
+            await syncToSupabase(seeded.map((p) => ({ id: p.id, data: p })), []);
+            setSaveStatus({ state: "saved", msg: "Tersimpan" });
+          } catch (e) {
+            setSaveStatus({ state: "error", msg: "Gagal simpan: " + (e && e.message ? e.message : e) });
+          }
         }
       } catch (e) {
         if (!cancelled) console.error("Gagal memuat roadmap:", e);
@@ -375,10 +381,13 @@ export default function App() {
       skipSync.current = false;
       return;
     }
+    setSaveStatus({ state: "saving", msg: "Menyimpan…" });
     const t = setTimeout(() => {
-      syncToSupabase(projects.map((p) => ({ id: p.id, data: p })), []).catch((e) =>
-        console.error("Gagal menyimpan roadmap:", e)
-      );
+      syncToSupabase(projects.map((p) => ({ id: p.id, data: p })), [])
+        .then(() => setSaveStatus({ state: "saved", msg: "Tersimpan" }))
+        .catch((e) =>
+          setSaveStatus({ state: "error", msg: "Gagal simpan: " + (e && e.message ? e.message : e) })
+        );
     }, 600);
     return () => clearTimeout(t);
   }, [projects]);
@@ -453,6 +462,23 @@ export default function App() {
             <ChevronRight size={14} color={C.inkFaint} />
             <span style={{ fontSize: 14, color: C.inkMuted }}>{activeProject.name}</span>
           </>
+        )}
+        {saveStatus.state !== "idle" && (
+          <span
+            title={saveStatus.msg}
+            style={{
+              marginLeft: "auto",
+              fontSize: 12,
+              fontWeight: 600,
+              padding: "4px 10px",
+              borderRadius: R.sm,
+              background: saveStatus.state === "error" ? "#ffe0c2" : saveStatus.state === "saved" ? "#c9f2d3" : "#f6f5f4",
+              color: saveStatus.state === "error" ? C.orangeDeep : saveStatus.state === "saved" ? "#0b5e1e" : C.inkMuted,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {saveStatus.state === "error" ? "⚠ " : saveStatus.state === "saved" ? "✓ " : ""}{saveStatus.msg}
+          </span>
         )}
       </div>
 
