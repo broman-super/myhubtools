@@ -7,6 +7,10 @@ build/
 *.min.js
 *.min.css
 
+# Kecuali: hasil build webtool RND Roadmap Tracker harus ikut ter-deploy
+!Productive/Project_develop/dist/
+!Productive/Project_develop/dist/**
+
 # Environment files
 .env
 .env.local
