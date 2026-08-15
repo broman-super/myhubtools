@@ -4,7 +4,7 @@ import {
   Circle, AlertTriangle, X, ArrowLeft, TrendingUp, Archive, Star,
   ClipboardList,   LayoutGrid
 } from "lucide-react";
-import { loadProjects, syncToSupabase, uploadPhoto } from "./supabase.js";
+import { loadProjects, syncToSupabase } from "./supabase.js";
 
 // ---------- Design tokens (Notion-Design.md) ----------
 const C = {
@@ -1162,12 +1162,11 @@ function ChecklistModal({ initial, onClose, onSave }) {
     if (file) {
       setBusy(true);
       try {
-        const dataUrl = await resizeImageFile(file);
-        const r = await uploadPhoto(dataUrl, file.name, "image/jpeg");
-        if (r && r.photoUrl) photoUrl = r.photoUrl;
+        // Simpan foto langsung sebagai data URL terkompresi ke Supabase (tanpa Google Drive)
+        photoUrl = await resizeImageFile(file);
       } catch (err) {
         setBusy(false);
-        alert("Gagal upload foto: " + (err && err.message ? err.message : err));
+        alert("Gagal proses foto: " + (err && err.message ? err.message : err));
         return;
       }
       setBusy(false);
