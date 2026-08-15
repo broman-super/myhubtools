@@ -100,6 +100,7 @@ function doPost(e) {
  } catch (err) {
   return jsonOut({ success: false, error: 'GAS error: ' + (err && err.message ? err.message : err) });
  }
+}
 
 function getFolder_() {
   // Folder Drive tujuan (disediakan user)
