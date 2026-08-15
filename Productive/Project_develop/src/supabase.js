@@ -40,3 +40,19 @@ export async function syncToSupabase(rows, deletes) {
     return { ok: true };
   }
 }
+
+// --- Upload foto ke Google Drive lewat GAS (bukan Supabase) ---
+export async function uploadPhoto(base64, name, mime) {
+  if (!GAS_SCRIPT_URL) return { skipped: true };
+  const res = await fetch(GAS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'uploadPhoto', payload: { base64, name, mime } }),
+  });
+  if (!res.ok) throw new Error('Gagal upload foto (' + res.status + ')');
+  try {
+    return await res.json();
+  } catch {
+    return { ok: true };
+  }
+}

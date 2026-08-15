@@ -4,7 +4,7 @@ import {
   Circle, AlertTriangle, X, ArrowLeft, TrendingUp, Archive, Star,
   ClipboardList,   LayoutGrid
 } from "lucide-react";
-import { loadProjects, syncToSupabase } from "./supabase.js";
+import { loadProjects, syncToSupabase, uploadPhoto } from "./supabase.js";
 
 // ---------- Design tokens (Notion-Design.md) ----------
 const C = {
@@ -745,7 +745,7 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
     updateMilestones((ms) => mapTree(ms, milestoneId, (n) => ({
       ...n, checklist: [...(n.checklist || []), {
         id: nid(), title: data.title, notes: data.notes, isCompleted: data.isCompleted,
-        completedAt: data.isCompleted ? todayStr() : null, hasPhoto: data.hasPhoto,
+        completedAt: data.isCompleted ? todayStr() : null, photoUrl: data.photoUrl || "",
       }],
     })));
     setChecklistModal(null);
@@ -755,7 +755,7 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
       ...n,
       checklist: (n.checklist || []).map((c) => c.id === itemId ? {
         ...c, title: data.title, notes: data.notes, isCompleted: data.isCompleted,
-        completedAt: data.isCompleted ? (c.completedAt || todayStr()) : null, hasPhoto: data.hasPhoto,
+        completedAt: data.isCompleted ? (c.completedAt || todayStr()) : null, photoUrl: data.photoUrl || "",
       } : c),
     })));
     setChecklistModal(null);
@@ -991,7 +991,15 @@ function MilestoneNode({ node, depth, isLast, onAddChild, onEdit, onDelete, onAd
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 500, textDecoration: c.isCompleted ? "line-through" : "none", color: c.isCompleted ? C.inkFaint : C.ink }}>
-                            {c.title} {c.hasPhoto && <Camera size={12} style={{ display: "inline", marginLeft: 4, verticalAlign: -1 }} color={C.inkFaint} />}
+                            {c.title}
+                            {c.photoUrl && (
+                              <img
+                                src={c.photoUrl}
+                                alt=""
+                                onClick={(e) => { e.stopPropagation(); window.open(c.photoUrl, "_blank"); }}
+                                style={{ display: "inline-block", width: 18, height: 18, objectFit: "cover", borderRadius: 4, marginLeft: 4, verticalAlign: -3, cursor: "pointer" }}
+                              />
+                            )}
                           </div>
                           {c.notes && <div style={{ fontSize: 12, color: C.inkMuted }}>{c.notes}</div>}
                           {c.completedAt && <div style={{ fontSize: 11, color: C.inkFaint }}>Selesai: {c.completedAt}</div>}
@@ -1106,12 +1114,47 @@ function ChecklistModal({ initial, onClose, onSave }) {
     title: initial?.title || "",
     notes: initial?.notes || "",
     isCompleted: initial?.isCompleted || false,
-    hasPhoto: initial?.hasPhoto || false,
+    photoUrl: initial?.photoUrl || "",
   });
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(initial?.photoUrl || "");
+  const [busy, setBusy] = useState(false);
+
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  function onPick(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    setFile(f);
+    const reader = new FileReader();
+    reader.onload = () => setPreview(reader.result);
+    reader.readAsDataURL(f);
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.title.trim()) return;
+    let photoUrl = form.photoUrl;
+    if (file) {
+      setBusy(true);
+      try {
+        const dot = (file.name.split(".").pop() || "png").toLowerCase();
+        const mime = file.type || "image/" + (dot === "jpg" ? "jpeg" : dot);
+        const r = await uploadPhoto(preview, file.name, mime);
+        if (r && r.photoUrl) photoUrl = r.photoUrl;
+      } catch (err) {
+        setBusy(false);
+        alert("Gagal upload foto: " + (err && err.message ? err.message : err));
+        return;
+      }
+      setBusy(false);
+    }
+    onSave({ ...form, photoUrl });
+  }
+
   return (
     <Modal title={initial ? "Edit Checklist Item" : "Tambah Checklist Item"} onClose={onClose}>
-      <form onSubmit={(e) => { e.preventDefault(); if (!form.title.trim()) return; onSave(form); }} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div>
           <FieldLabel>Judul Item</FieldLabel>
           <input style={inputStyle} value={form.title} onChange={set("title")} placeholder="mis. Uji akurasi sensor" required />
@@ -1120,17 +1163,20 @@ function ChecklistModal({ initial, onClose, onSave }) {
           <FieldLabel>Catatan</FieldLabel>
           <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 56 }} value={form.notes} onChange={set("notes")} />
         </div>
+        <div>
+          <FieldLabel>Foto Bukti (ke Google Drive)</FieldLabel>
+          {preview && (
+            <img src={preview} alt="" style={{ maxWidth: "100%", maxHeight: 160, borderRadius: R.sm, marginBottom: 8, display: "block" }} />
+          )}
+          <input type="file" accept="image/*" onChange={onPick} style={{ fontSize: 13 }} />
+        </div>
         <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.inkSecondary, cursor: "pointer" }}>
           <input type="checkbox" checked={form.isCompleted} onChange={(e) => setForm((f) => ({ ...f, isCompleted: e.target.checked }))} />
           Sudah selesai
         </label>
-        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.inkSecondary, cursor: "pointer" }}>
-          <input type="checkbox" checked={form.hasPhoto} onChange={(e) => setForm((f) => ({ ...f, hasPhoto: e.target.checked }))} />
-          <Camera size={14} /> Lampirkan foto bukti (simulasi)
-        </label>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
           <SecondaryButton onClick={onClose}>Batal</SecondaryButton>
-          <PrimaryButton type="submit">Simpan</PrimaryButton>
+          <PrimaryButton type="submit" disabled={busy}>{busy ? "Mengupload…" : "Simpan"}</PrimaryButton>
         </div>
       </form>
     </Modal>
@@ -1207,7 +1253,8 @@ function ReportView({ project }) {
               {m.checklist.map((c) => (
                 <div key={c.id} style={{ fontSize: 12, color: C.inkMuted, display: "flex", gap: 6, alignItems: "center", marginBottom: 2 }}>
                   {c.isCompleted ? <CheckCircle2 size={12} color={C.green} /> : <Circle size={12} color={C.inkFaint} />}
-                  {c.title} {c.hasPhoto && <Camera size={11} color={C.inkFaint} />}
+                  {c.title}
+                  {c.photoUrl && <img src={c.photoUrl} alt="" style={{ width: 14, height: 14, objectFit: "cover", borderRadius: 3, marginLeft: 4, verticalAlign: -2 }} />}
                 </div>
               ))}
             </div>
