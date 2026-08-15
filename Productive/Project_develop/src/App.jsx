@@ -674,6 +674,7 @@ export default function App() {
 function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProject, onEditProject, onArchive }) {
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sort, setSort] = useState("default");
   const DASH_FILTERS = [
     { key: "all", label: "Semua" },
     { key: "Ideation", label: "Ideation" },
@@ -681,6 +682,13 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
     { key: "At Risk", label: "At Risk" },
     { key: "Done", label: "Done" },
   ];
+  const STATUS_ORDER = { "Ideation": 0, "On Track": 1, "At Risk": 2, "Done": 3 };
+  const comparators = {
+    default: () => 0,
+    status: (a, b) => ((STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99)) || (a.name || "").localeCompare(b.name || ""),
+    target: (a, b) => (a.targetReleaseDate || "9999-99-99").localeCompare(b.targetReleaseDate || "9999-99-99"),
+    progress: (a, b) => projectChecklistStats(b).pct - projectChecklistStats(a).pct,
+  };
   const needle = q.trim().toLowerCase();
   const visible = projects
     .filter((p) => (showArchived ? p.archived : !p.archived))
@@ -694,7 +702,7 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
         (m.title || "").toLowerCase().includes(needle) ||
         (m.checklist || []).some((c) => (c.title || "").toLowerCase().includes(needle))
       );
-    });
+    }).slice().sort(comparators[sort] || comparators.default);
 
   const counts = { Ideation: 0, "On Track": 0, "At Risk": 0, Done: 0 };
   projects.filter((p) => !p.archived).forEach((p) => { counts[p.status] = (counts[p.status] || 0) + 1; });
@@ -749,6 +757,16 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
             </button>
           ))}
         </div>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+          style={{ padding: "8px 10px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, fontSize: 13, color: C.ink, cursor: "pointer" }}
+        >
+          <option value="default">Urutkan: Default</option>
+          <option value="status">Status</option>
+          <option value="target">Target Rilis</option>
+          <option value="progress">Progress</option>
+        </select>
       </div>
 
       {/* Status summary */}
