@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import {
   Plus, ChevronDown, ChevronRight, Pencil, Trash2, Camera, CheckCircle2,
   Circle, AlertTriangle, X, ArrowLeft, TrendingUp, Archive, Star,
-  ClipboardList, LayoutGrid, Download
+  ClipboardList, LayoutGrid, Download, Printer
 } from "lucide-react";
 import { loadProjects, syncToSupabase } from "./supabase.js";
 
@@ -158,6 +158,34 @@ function downloadCsv(filename, csv) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+function openPrintableReport(projects) {
+  const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  let body = "";
+  projects.filter((p) => !p.archived).forEach((p) => {
+    body += `<h2>${esc(p.name)} <small>(${esc(p.code)} · ${esc(p.status)})</small></h2>`;
+    body += `<p class="meta">${esc(p.category)} · Target: ${esc(p.targetReleaseDate || "—")}</p>`;
+    flattenMilestones(p.milestones).forEach((m) => {
+      body += `<h3>${esc(m.title)} <small>(${esc(m.status || "")} · ${esc(m.targetDate || "")})</small></h3>`;
+      const items = m.checklist || [];
+      if (items.length) body += "<ul>" + items.map((c) => `<li class="${c.isCompleted ? "done" : ""}">${esc(c.title)}${c.photoUrl ? " 📷" : ""}</li>`).join("") + "</ul>";
+    });
+  });
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>RND Roadmap</title>
+<style>
+body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#1a1a1a;margin:32px;}
+h1{font-size:22px;margin:0 0 4px;} .sub{color:#666;margin:0 0 24px;font-size:13px;}
+h2{font-size:16px;margin:24px 0 2px;} h2 small{color:#888;font-weight:400;font-size:12px;}
+.meta{color:#666;font-size:12px;margin:0 0 8px;} h3{font-size:13px;margin:12px 0 4px;} h3 small{color:#888;font-weight:400;}
+ul{margin:4px 0;padding-left:18px;} li{font-size:12px;margin:2px 0;} li.done{color:#0a7d3c;text-decoration:line-through;}
+</style></head><body>
+<h1>RND Roadmap</h1><p class="sub">Diekspor ${new Date().toLocaleString("id-ID")}</p>
+${body || "<p>Tidak ada project.</p>"}
+<script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script>
+</body></html>`;
+  const w = window.open("", "_blank");
+  if (!w) { alert("Popup diblokir. Izinkan popup untuk export PDF."); return; }
+  w.document.open(); w.document.write(html); w.document.close();
 }
 
 function projectChecklistStats(project) {
@@ -643,6 +671,10 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
             onClick={() => downloadCsv("rnd-roadmap.csv", buildRoadmapCsv(projects.filter((p) => !p.archived)))}
             style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 14px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, color: C.ink, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
           ><Download size={16} /> Export CSV</button>
+          <button
+            onClick={() => openPrintableReport(projects)}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 14px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, color: C.ink, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+          ><Printer size={16} /> Export PDF</button>
           <PrimaryButton onClick={onNewProject}><Plus size={16} /> Project Baru</PrimaryButton>
         </div>
       </div>
