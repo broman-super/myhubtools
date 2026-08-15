@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import {
   Plus, ChevronDown, ChevronRight, Pencil, Trash2, Camera, CheckCircle2,
   Circle, AlertTriangle, X, ArrowLeft, TrendingUp, Archive, Star,
-  ClipboardList,   LayoutGrid
+  ClipboardList, LayoutGrid, Download
 } from "lucide-react";
 import { loadProjects, syncToSupabase } from "./supabase.js";
 
@@ -116,6 +116,48 @@ function findNode(nodes, id) {
     }
   }
   return null;
+}
+
+function csvCell(v) {
+  const s = v == null ? "" : String(v);
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+function buildRoadmapCsv(projects) {
+  const header = ["Project Code", "Project Name", "Category", "Status", "Target Release", "Milestone Title", "Milestone Status", "Milestone Target", "Checklist Item", "Done?", "Foto?"];
+  const rows = [header.map(csvCell).join(",")];
+  projects.forEach((p) => {
+    const ms = flattenMilestones(p.milestones);
+    if (ms.length === 0) {
+      rows.push([p.code, p.name, p.category, p.status, p.targetReleaseDate || "", "", "", "", "", "", ""].map(csvCell).join(","));
+      return;
+    }
+    ms.forEach((m) => {
+      const items = m.checklist || [];
+      if (items.length === 0) {
+        rows.push([p.code, p.name, p.category, p.status, p.targetReleaseDate || "", m.title, m.status || "", m.targetDate || "", "", "", ""].map(csvCell).join(","));
+        return;
+      }
+      items.forEach((c) => {
+        rows.push([
+          p.code, p.name, p.category, p.status, p.targetReleaseDate || "",
+          m.title, m.status || "", m.targetDate || "",
+          c.title, c.isCompleted ? "Ya" : "Tidak", c.photoUrl ? "Ya" : "Tidak",
+        ].map(csvCell).join(","));
+      });
+    });
+  });
+  return rows.join("\r\n");
+}
+function downloadCsv(filename, csv) {
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function projectChecklistStats(project) {
@@ -596,7 +638,13 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
           <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.625px", margin: "0 0 4px" }}>Dashboard</h1>
           <p style={{ fontSize: 14, color: C.inkMuted, margin: 0 }}>Ringkasan progres produk baru Divisi R&D.</p>
         </div>
-        <PrimaryButton onClick={onNewProject}><Plus size={16} /> Project Baru</PrimaryButton>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => downloadCsv("rnd-roadmap.csv", buildRoadmapCsv(projects.filter((p) => !p.archived)))}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 14px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, color: C.ink, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+          ><Download size={16} /> Export CSV</button>
+          <PrimaryButton onClick={onNewProject}><Plus size={16} /> Project Baru</PrimaryButton>
+        </div>
       </div>
 
       {/* Search & filter */}
