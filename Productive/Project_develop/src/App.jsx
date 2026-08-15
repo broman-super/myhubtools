@@ -556,7 +556,29 @@ export default function App() {
 
 // ---------- Dashboard ----------
 function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProject, onEditProject, onArchive }) {
-  const visible = projects.filter((p) => (showArchived ? p.archived : !p.archived));
+  const [q, setQ] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const DASH_FILTERS = [
+    { key: "all", label: "Semua" },
+    { key: "Ideation", label: "Ideation" },
+    { key: "On Track", label: "On Track" },
+    { key: "At Risk", label: "At Risk" },
+    { key: "Done", label: "Done" },
+  ];
+  const needle = q.trim().toLowerCase();
+  const visible = projects
+    .filter((p) => (showArchived ? p.archived : !p.archived))
+    .filter((p) => statusFilter === "all" || p.status === statusFilter)
+    .filter((p) => {
+      if (!needle) return true;
+      if ((p.name || "").toLowerCase().includes(needle)) return true;
+      if ((p.code || "").toLowerCase().includes(needle)) return true;
+      if ((p.description || "").toLowerCase().includes(needle)) return true;
+      return (p.milestones || []).some((m) =>
+        (m.title || "").toLowerCase().includes(needle) ||
+        (m.checklist || []).some((c) => (c.title || "").toLowerCase().includes(needle))
+      );
+    });
 
   const counts = { Ideation: 0, "On Track": 0, "At Risk": 0, Done: 0 };
   projects.filter((p) => !p.archived).forEach((p) => { counts[p.status] = (counts[p.status] || 0) + 1; });
@@ -575,6 +597,32 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
           <p style={{ fontSize: 14, color: C.inkMuted, margin: 0 }}>Ringkasan progres produk baru Divisi R&D.</p>
         </div>
         <PrimaryButton onClick={onNewProject}><Plus size={16} /> Project Baru</PrimaryButton>
+      </div>
+
+      {/* Search & filter */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Cari project, milestone, atau checklist…"
+          style={{ flex: "1 1 240px", minWidth: 200, padding: "9px 12px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, fontSize: 13, color: C.ink, outline: "none" }}
+        />
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {DASH_FILTERS.map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setStatusFilter(f.key)}
+              style={{
+                padding: "7px 12px", borderRadius: R.full, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+                border: `1px solid ${statusFilter === f.key ? C.primary : C.hairline}`,
+                background: statusFilter === f.key ? C.primary : C.surface,
+                color: statusFilter === f.key ? "#fff" : C.inkSecondary,
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Status summary */}
@@ -635,7 +683,7 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
 
       {visible.length === 0 && (
         <div style={{ background: C.surface, border: `1px dashed ${C.hairline}`, borderRadius: R.lg, padding: 40, textAlign: "center", color: C.inkMuted, fontSize: 14 }}>
-          {showArchived ? "Belum ada project yang diarsipkan." : "Belum ada project. Tambahkan project baru untuk mulai melacak roadmap."}
+          {needle ? `Tidak ada hasil untuk "${q}".` : showArchived ? "Belum ada project yang diarsipkan." : "Belum ada project. Tambahkan project baru untuk mulai melacak roadmap."}
         </div>
       )}
 
