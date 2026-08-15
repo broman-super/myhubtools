@@ -48,9 +48,8 @@ Tanggal: 2026-08-13
 - [x] Tombol "Export CSV" di dashboard (export semua project aktif)
 
 ### M3.2 — PDF
-- [ ] Print stylesheet + `window.print()` (zero-dep)
-- [ ] (Opsional) `jspdf` bila butuh styling terstruktur
-- [ ] Rebuild dist + push
+- [x] Print via window baru berisi HTML rapi + `window.print()` (zero-dep, tanpa jspdf)
+- [x] Tombol "Export PDF" di dashboard (popup izinkan)
 
 ---
 
