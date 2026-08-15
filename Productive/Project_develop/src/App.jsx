@@ -200,6 +200,36 @@ function highlightMatch(text, q) {
   </>);
 }
 
+const LightboxContext = React.createContext({ viewPhoto: () => {} });
+const useLightbox = () => React.useContext(LightboxContext);
+function Lightbox({ url, onClose }) {
+  useEffect(() => {
+    if (!url) return;
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [url, onClose]);
+  if (!url) return null;
+  return (
+    <div
+      onClick={onClose}
+      style={{ position: "fixed", inset: 0, background: "rgba(15,18,22,0.82)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 24, cursor: "zoom-out" }}
+    >
+      <button
+        onClick={onClose}
+        aria-label="Tutup"
+        style={{ position: "absolute", top: 16, right: 16, background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", width: 38, height: 38, borderRadius: R.full, cursor: "pointer", fontSize: 22, lineHeight: 1 }}
+      >×</button>
+      <img
+        src={url}
+        alt=""
+        onClick={(e) => e.stopPropagation()}
+        style={{ maxWidth: "92vw", maxHeight: "88vh", borderRadius: R.lg, boxShadow: "0 20px 60px rgba(0,0,0,0.5)", cursor: "default" }}
+      />
+    </div>
+  );
+}
+
 function projectChecklistStats(project) {
   const all = flattenMilestones(project.milestones);
   let total = 0, done = 0;
@@ -515,6 +545,7 @@ export default function App() {
   const [activeProjectId, setActiveProjectId] = useState(null);
   const [projectModal, setProjectModal] = useState(null); // null | {} (new) | project (edit)
   const [showArchived, setShowArchived] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState(null);
 
   const activeProject = useMemo(
     () => projects.find((p) => p.id === activeProjectId) || null,
@@ -560,6 +591,7 @@ export default function App() {
   }
 
   return (
+    <LightboxContext.Provider value={{ viewPhoto: setLightboxUrl }}>
     <div style={{ fontFamily: "Inter, -apple-system, system-ui, 'Segoe UI', Helvetica, Arial, sans-serif", background: C.canvasSoft, minHeight: "100vh", color: C.ink }}>
       <style>{`
         * { box-sizing: border-box; }
@@ -632,7 +664,9 @@ export default function App() {
           onSave={saveProject}
         />
       )}
+      <Lightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </div>
+    </LightboxContext.Provider>
   );
 }
 
@@ -1095,6 +1129,7 @@ function TimelineDot({ status, isOverdue, size = 28 }) {
 
 // ---------- Milestone Node (recursive, timeline style) ----------
 function MilestoneNode({ node, depth, isLast, onAddChild, onEdit, onDelete, onAddChecklist, onEditChecklist, onToggleChecklist, onDeleteChecklist, onAddEval }) {
+  const { viewPhoto } = useLightbox();
   const [open, setOpen] = useState(depth < 1);
   const [showChecklist, setShowChecklist] = useState(true);
   const [showEval, setShowEval] = useState(false);
@@ -1170,7 +1205,7 @@ function MilestoneNode({ node, depth, isLast, onAddChild, onEdit, onDelete, onAd
                               <img
                                 src={c.photoUrl}
                                 alt=""
-                                onClick={(e) => { e.stopPropagation(); window.open(c.photoUrl, "_blank"); }}
+                                onClick={(e) => { e.stopPropagation(); viewPhoto(c.photoUrl); }}
                                 style={{ display: "inline-block", width: 48, height: 48, objectFit: "cover", borderRadius: 6, marginLeft: 8, verticalAlign: "middle", cursor: "pointer", border: `1px solid ${C.hairline}` }}
                               />
                             )}
@@ -1284,6 +1319,7 @@ function MilestoneModal({ isEdit, initial, onClose, onSave }) {
 
 // ---------- Checklist Modal ----------
 function ChecklistModal({ initial, onClose, onSave }) {
+  const { viewPhoto } = useLightbox();
   const [form, setForm] = useState({
     title: initial?.title || "",
     notes: initial?.notes || "",
@@ -1338,7 +1374,7 @@ function ChecklistModal({ initial, onClose, onSave }) {
         <div>
           <FieldLabel>Foto Bukti (ke Google Drive)</FieldLabel>
           {preview && (
-            <img src={preview} alt="" onClick={() => window.open(preview, "_blank")} style={{ maxWidth: "100%", maxHeight: 260, borderRadius: R.sm, marginBottom: 8, display: "block", cursor: "pointer" }} />
+            <img src={preview} alt="" onClick={() => viewPhoto(preview)} style={{ maxWidth: "100%", maxHeight: 260, borderRadius: R.sm, marginBottom: 8, display: "block", cursor: "pointer" }} />
           )}
           <input type="file" accept="image/*" onChange={onPick} style={{ fontSize: 13 }} />
         </div>
@@ -1398,6 +1434,7 @@ function EvaluationModal({ onClose, onSave }) {
 
 // ---------- Report View ----------
 function ReportView({ project }) {
+  const { viewPhoto } = useLightbox();
   const all = flattenMilestones(project.milestones);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -1426,7 +1463,7 @@ function ReportView({ project }) {
                 <div key={c.id} style={{ fontSize: 12, color: C.inkMuted, display: "flex", gap: 6, alignItems: "center", marginBottom: 2 }}>
                   {c.isCompleted ? <CheckCircle2 size={12} color={C.green} /> : <Circle size={12} color={C.inkFaint} />}
                   {c.title}
-                  {c.photoUrl && <img src={c.photoUrl} alt="" style={{ width: 28, height: 28, objectFit: "cover", borderRadius: 4, marginLeft: 6, verticalAlign: "middle", cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); window.open(c.photoUrl, "_blank"); }} />}
+                  {c.photoUrl && <img src={c.photoUrl} alt="" style={{ width: 28, height: 28, objectFit: "cover", borderRadius: 4, marginLeft: 6, verticalAlign: "middle", cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); viewPhoto(c.photoUrl); }} />}
                 </div>
               ))}
             </div>
