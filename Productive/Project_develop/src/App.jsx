@@ -1396,6 +1396,8 @@ function ChecklistModal({ initial, onClose, onSave }) {
         return;
       }
       setBusy(false);
+    } else if (!preview) {
+      photoUrl = "";
     }
     onSave({ ...form, photoUrl });
   }
@@ -1412,9 +1414,12 @@ function ChecklistModal({ initial, onClose, onSave }) {
           <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 56 }} value={form.notes} onChange={set("notes")} />
         </div>
         <div>
-          <FieldLabel>Foto Bukti (ke Google Drive)</FieldLabel>
+          <FieldLabel>Foto Bukti</FieldLabel>
           {preview && (
-            <img src={preview} alt="" onClick={() => viewPhoto(preview)} style={{ maxWidth: "100%", maxHeight: 260, borderRadius: R.sm, marginBottom: 8, display: "block", cursor: "pointer" }} />
+            <>
+              <img src={preview} alt="" onClick={() => viewPhoto(preview)} style={{ maxWidth: "100%", maxHeight: 260, borderRadius: R.sm, marginBottom: 8, display: "block", cursor: "pointer" }} />
+              <button type="button" onClick={() => { setPreview(""); setFile(null); }} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: R.sm, border: `1px solid ${C.hairline}`, background: C.surface, color: C.inkSecondary, fontSize: 12, cursor: "pointer", marginBottom: 8 }}>Hapus foto</button>
+            </>
           )}
           <input type="file" accept="image/*" onChange={onPick} style={{ fontSize: 13 }} />
         </div>
