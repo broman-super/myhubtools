@@ -67,6 +67,7 @@ function supabaseRequest_(method, path, payload, prefer) {
 }
 
 function doPost(e) {
+ try {
   var body = JSON.parse(e.postData.contents);
   var action = body.action;
   var payload = body.payload || {};
@@ -96,7 +97,9 @@ function doPost(e) {
   }
 
   return jsonOut({ success: false, error: 'Action tidak dikenal: ' + action });
-}
+ } catch (err) {
+  return jsonOut({ success: false, error: 'GAS error: ' + (err && err.message ? err.message : err) });
+ }
 
 function getFolder_() {
   // Folder Drive tujuan (disediakan user)

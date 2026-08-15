@@ -55,6 +55,30 @@ let idCounter = 1000;
 const nid = () => `id-${idCounter++}`;
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
+// Kompres gambar di browser agar payload kecil (hindari timeout GAS)
+async function resizeImageFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Gagal baca file"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Gagal baca gambar"));
+      img.onload = () => {
+        const max = 1024;
+        let w = img.width, h = img.height;
+        if (w > h && w > max) { h = Math.round((h * max) / w); w = max; }
+        else if (h > max) { w = Math.round((w * max) / h); h = max; }
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.7));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 function mapTree(nodes, id, fn) {
   return nodes.map((n) => {
     if (n.id === id) return fn(n);
@@ -1138,9 +1162,8 @@ function ChecklistModal({ initial, onClose, onSave }) {
     if (file) {
       setBusy(true);
       try {
-        const dot = (file.name.split(".").pop() || "png").toLowerCase();
-        const mime = file.type || "image/" + (dot === "jpg" ? "jpeg" : dot);
-        const r = await uploadPhoto(preview, file.name, mime);
+        const dataUrl = await resizeImageFile(file);
+        const r = await uploadPhoto(dataUrl, file.name, "image/jpeg");
         if (r && r.photoUrl) photoUrl = r.photoUrl;
       } catch (err) {
         setBusy(false);

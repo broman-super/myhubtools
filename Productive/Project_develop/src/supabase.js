@@ -50,9 +50,7 @@ export async function uploadPhoto(base64, name, mime) {
     body: JSON.stringify({ action: 'uploadPhoto', payload: { base64, name, mime } }),
   });
   if (!res.ok) throw new Error('Gagal upload foto (' + res.status + ')');
-  try {
-    return await res.json();
-  } catch {
-    return { ok: true };
-  }
+  const r = await res.json().catch(() => ({}));
+  if (r && r.success === false) throw new Error(r.error || 'Gagal upload foto');
+  return r;
 }
