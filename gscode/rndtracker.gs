@@ -147,8 +147,9 @@ function jsonOut(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// Jalankan fungsi ini sekali dari editor (tombol Run) untuk memicu izin Google Drive.
+// Jalankan fungsi ini sekali dari editor (tombol Run) untuk memicu izin Google Drive (write).
 function izinkanDrive() {
-  DriveApp.getRootFolder();
+  var f = DriveApp.getRootFolder().createFile("rndtracker_test.txt", "ok");
+  f.setTrashed(true); // bersihkan
   return "Drive OK";
 }
