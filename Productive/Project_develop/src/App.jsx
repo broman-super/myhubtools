@@ -187,6 +187,18 @@ ${body || "<p>Tidak ada project.</p>"}
   if (!w) { alert("Popup diblokir. Izinkan popup untuk export PDF."); return; }
   w.document.open(); w.document.write(html); w.document.close();
 }
+function highlightMatch(text, q) {
+  const s = text == null ? "" : String(text);
+  const needle = (q || "").trim().toLowerCase();
+  if (!needle) return s;
+  const idx = s.toLowerCase().indexOf(needle);
+  if (idx === -1) return s;
+  return (<>
+    {s.slice(0, idx)}
+    <mark style={{ background: "#fff3a3", color: "inherit", borderRadius: 2, padding: "0 1px" }}>{s.slice(idx, idx + needle.length)}</mark>
+    {s.slice(idx + needle.length)}
+  </>);
+}
 
 function projectChecklistStats(project) {
   const all = flattenMilestones(project.milestones);
@@ -784,9 +796,9 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
                   <IconButton title={p.archived ? "Aktifkan" : "Arsipkan"} onClick={() => onArchive(p.id)}><Archive size={14} /></IconButton>
                 </div>
               </div>
-              <h4 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 2px", letterSpacing: "-0.25px" }}>{p.name}</h4>
+              <h4 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 2px", letterSpacing: "-0.25px" }}>{highlightMatch(p.name, q)}</h4>
               <p style={{ fontSize: 12, color: C.inkFaint, margin: "0 0 10px" }}>{p.code} · {p.category}</p>
-              <p style={{ fontSize: 13, color: C.inkSecondary, margin: "0 0 14px", lineHeight: 1.4, minHeight: 34 }}>{p.description}</p>
+              <p style={{ fontSize: 13, color: C.inkSecondary, margin: "0 0 14px", lineHeight: 1.4, minHeight: 34 }}>{highlightMatch(p.description, q)}</p>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: C.inkMuted, marginBottom: 4 }}>
                 <span>Progress checklist</span>
                 <span style={{ fontWeight: 600, color: C.ink }}>{stats.pct}%</span>
