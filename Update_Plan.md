@@ -27,7 +27,7 @@ Tanggal: 2026-08-13
 ---
 
 ## Fitur 2: Filter & Search Project di Dashboard
-**Status:** 📋 Rencana  |  **Lanjutan:** M2.1 (search + chip status)
+**Status:** ✅ Selesai  |  **Lanjutan:** — (selesai)
 - Tujuan: cari project by nama/kode/kategori + filter by status. Client-side, tanpa backend.
 
 ### M2.1 — Dashboard (`src/App.jsx`)
@@ -39,7 +39,7 @@ Tanggal: 2026-08-13
 ---
 
 ## Fitur 3: Export Roadmap ke PDF / CSV
-**Status:** 📋 Rencana  |  **Lanjutan:** M3.1 (CSV native dulu)
+**Status:** ✅ Selesai  |  **Lanjutan:** — (selesai)
 - Tujuan: unduh seluruh roadmap.
 
 ### M3.1 — CSV (native, tanpa lib)
