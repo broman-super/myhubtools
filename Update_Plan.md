@@ -43,8 +43,9 @@ Tanggal: 2026-08-13
 - Tujuan: unduh seluruh roadmap.
 
 ### M3.1 — CSV (native, tanpa lib)
-- [ ] Flatten project → milestone → checklist jadi baris
-- [ ] Download via `Blob` + `URL.createObjectURL`
+- [x] Flatten project → milestone → checklist jadi baris
+- [x] Download via `Blob` + `URL.createObjectURL` (BOM UTF-8)
+- [x] Tombol "Export CSV" di dashboard (export semua project aktif)
 
 ### M3.2 — PDF
 - [ ] Print stylesheet + `window.print()` (zero-dep)
