@@ -706,6 +706,12 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
 
   const counts = { Ideation: 0, "On Track": 0, "At Risk": 0, Done: 0 };
   projects.filter((p) => !p.archived).forEach((p) => { counts[p.status] = (counts[p.status] || 0) + 1; });
+  let totalItems = 0, doneItems = 0;
+  projects.filter((p) => !p.archived).forEach((p) => {
+    flattenMilestones(p.milestones).forEach((m) => (m.checklist || []).forEach((c) => { totalItems++; if (c.isCompleted) doneItems++; }));
+  });
+  const overallPct = totalItems ? Math.round((doneItems / totalItems) * 100) : 0;
+  const CIRC = 2 * Math.PI * 36;
 
   const alerts = [];
   projects.filter((p) => !p.archived).forEach((p) => {
@@ -769,17 +775,33 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
         </select>
       </div>
 
-      {/* Status summary */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
-        {Object.entries(PROJECT_STATUS).map(([key, cfg]) => (
-          <div key={key} style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <span style={{ width: 8, height: 8, borderRadius: R.full, background: cfg.fg }} />
-              <span style={{ fontSize: 13, color: C.inkMuted, fontWeight: 500 }}>{cfg.label}</span>
+      {/* Status summary + overall progress */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 320px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+          {Object.entries(PROJECT_STATUS).map(([key, cfg]) => (
+            <div key={key} style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{ width: 8, height: 8, borderRadius: R.full, background: cfg.fg }} />
+                <span style={{ fontSize: 13, color: C.inkMuted, fontWeight: 500 }}>{cfg.label}</span>
+              </div>
+              <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.5px" }}>{counts[key] || 0}</div>
             </div>
-            <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.5px" }}>{counts[key] || 0}</div>
+          ))}
+        </div>
+        <div style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 16, display: "flex", alignItems: "center", gap: 14 }}>
+          <svg width="84" height="84" viewBox="0 0 88 88">
+            <circle cx="44" cy="44" r="36" fill="none" stroke={C.hairline} strokeWidth="10" />
+            <circle cx="44" cy="44" r="36" fill="none" stroke={C.primary} strokeWidth="10"
+              strokeDasharray={CIRC}
+              strokeDashoffset={CIRC * (1 - overallPct / 100)}
+              transform="rotate(-90 44 44)" strokeLinecap="round" />
+            <text x="44" y="44" textAnchor="middle" dominantBaseline="central" fontSize="18" fontWeight="700" fill={C.ink}>{overallPct}%</text>
+          </svg>
+          <div>
+            <div style={{ fontSize: 13, color: C.inkMuted, fontWeight: 500 }}>Progress Keseluruhan</div>
+            <div style={{ fontSize: 12, color: C.inkFaint, marginTop: 2 }}>{doneItems}/{totalItems} item checklist</div>
           </div>
-        ))}
+        </div>
       </div>
 
       {/* Alert panel */}
