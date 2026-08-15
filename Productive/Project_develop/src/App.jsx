@@ -947,7 +947,17 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
           <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.5px", margin: "0 0 6px" }}>{project.name}</h1>
           <p style={{ fontSize: 14, color: C.inkSecondary, margin: 0, maxWidth: 620 }}>{project.description}</p>
         </div>
-        <SecondaryButton onClick={onEditProject}><Pencil size={14} /> Edit Project</SecondaryButton>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button
+            onClick={() => downloadCsv(`${project.code || "project"}-roadmap.csv`, buildRoadmapCsv([project]))}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, color: C.ink, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+          ><Download size={14} /> CSV</button>
+          <button
+            onClick={() => openPrintableReport([project])}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, color: C.ink, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+          ><Printer size={14} /> PDF</button>
+          <SecondaryButton onClick={onEditProject}><Pencil size={14} /> Edit Project</SecondaryButton>
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>

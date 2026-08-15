@@ -50,6 +50,7 @@ Tanggal: 2026-08-13
 ### M3.2 — PDF
 - [x] Print via window baru berisi HTML rapi + `window.print()` (zero-dep, tanpa jspdf)
 - [x] Tombol "Export PDF" di dashboard (popup izinkan)
+- [x] Bonus: tombol Export CSV/PDF juga di dalam project view (per-project)
 
 ---
 
