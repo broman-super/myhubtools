@@ -1021,7 +1021,7 @@ function MilestoneNode({ node, depth, isLast, onAddChild, onEdit, onDelete, onAd
                                 src={c.photoUrl}
                                 alt=""
                                 onClick={(e) => { e.stopPropagation(); window.open(c.photoUrl, "_blank"); }}
-                                style={{ display: "inline-block", width: 18, height: 18, objectFit: "cover", borderRadius: 4, marginLeft: 4, verticalAlign: -3, cursor: "pointer" }}
+                                style={{ display: "inline-block", width: 48, height: 48, objectFit: "cover", borderRadius: 6, marginLeft: 8, verticalAlign: "middle", cursor: "pointer", border: `1px solid ${C.hairline}` }}
                               />
                             )}
                           </div>
@@ -1188,7 +1188,7 @@ function ChecklistModal({ initial, onClose, onSave }) {
         <div>
           <FieldLabel>Foto Bukti (ke Google Drive)</FieldLabel>
           {preview && (
-            <img src={preview} alt="" style={{ maxWidth: "100%", maxHeight: 160, borderRadius: R.sm, marginBottom: 8, display: "block" }} />
+            <img src={preview} alt="" onClick={() => window.open(preview, "_blank")} style={{ maxWidth: "100%", maxHeight: 260, borderRadius: R.sm, marginBottom: 8, display: "block", cursor: "pointer" }} />
           )}
           <input type="file" accept="image/*" onChange={onPick} style={{ fontSize: 13 }} />
         </div>
@@ -1276,7 +1276,7 @@ function ReportView({ project }) {
                 <div key={c.id} style={{ fontSize: 12, color: C.inkMuted, display: "flex", gap: 6, alignItems: "center", marginBottom: 2 }}>
                   {c.isCompleted ? <CheckCircle2 size={12} color={C.green} /> : <Circle size={12} color={C.inkFaint} />}
                   {c.title}
-                  {c.photoUrl && <img src={c.photoUrl} alt="" style={{ width: 14, height: 14, objectFit: "cover", borderRadius: 3, marginLeft: 4, verticalAlign: -2 }} />}
+                  {c.photoUrl && <img src={c.photoUrl} alt="" style={{ width: 28, height: 28, objectFit: "cover", borderRadius: 4, marginLeft: 6, verticalAlign: "middle", cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); window.open(c.photoUrl, "_blank"); }} />}
                 </div>
               ))}
             </div>
