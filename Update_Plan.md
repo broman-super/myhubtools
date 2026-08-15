@@ -10,25 +10,19 @@ Tanggal: 2026-08-13
 
 ---
 
-## Fitur 1: Foto Bukti Nyata (Upload ke Google Drive)
-**Status:** 🔧 Dikerjakan  |  **Lanjutan:** Deploy GAS baru + `git push`, lalu tes upload foto di live
-- Tujuan: item checklist punya foto asli; thumbnail langsung tampil. Storage di Drive → nol beban kuota Supabase free.
+## Fitur 1: Foto Bukti Nyata (Simpan ke Supabase)
+**Status:** ✅ Selesai (pivot dari Google Drive)  |  **Lanjutan:** `git push` lalu tes
+- Tujuan: item checklist punya foto asli; thumbnail langsung tampil.
+- **Pivot:** awalnya rencana upload ke Google Drive, tapi izin Drive berulang gagal ("Akses ditolak: DriveApp.") walau sudah grant scope & deploy baru. Maka foto disimpan langsung ke Supabase sebagai **data URL JPEG terkompresi (~100KB)** di kolom `data` jsonb (lewat jalur `sync` GAS yang sudah jalan). Beban masuk kuota DB Supabase free (500MB), bukan Storage bucket.
 
-### M1.1 — Backend GAS (`gscode/rndtracker.gs`)
-- [x] Buat/temukan folder Drive tujuan (`DriveApp.getFoldersByName` / `createFolder`)
-- [x] `doPost` tangani `action:'uploadPhoto'` → terima `{ name, base64, mime }`
-- [x] `Drive.Files.create` dari base64 (decode)
-- [x] Set izin: siapa saja dgn link bisa lihat (`setSharing`)
-- [x] Kembalikan `{ photoUrl }` (`https://drive.google.com/uc?export=view&id=...`)
-- [ ] Deploy ulang GAS → tes via POST (curl / extension)  ← aksi user
+### M1.1 — Backend GAS `uploadPhoto` (DIBATALKAN)
+- [ ] Upload ke Drive dibatalkan (izin gagal). `uploadPhoto` di GAS tetap ada tapi tidak dipakai frontend.
 
-### M1.2 — Frontend (`src/App.jsx` + `src/supabase.js`)
-- [x] `ChecklistModal`: ganti checkbox simulasi `hasPhoto` → `<input type="file" accept="image/*">` + preview
-- [x] `FileReader` → base64, panggil `uploadPhoto`
-- [x] Simpan `photoUrl` ke item checklist (`addChecklist`/`editChecklist`)
+### M1.2 — Frontend (`src/App.jsx`)
+- [x] `ChecklistModal`: input file + preview + `resizeImageFile` (canvas → JPEG 0.7, max 1024px)
+- [x] Foto disimpan langsung sebagai `photoUrl` (data URL) ke item checklist
 - [x] `MilestoneNode` & `ReportView`: render `<img>` thumbnail bila `photoUrl` ada (klik → full)
-- [x] `supabase.js`: export `uploadPhoto` (fetch GAS, text/plain)
-- [ ] Rebuild dist + push  ← aksi user (sudah di-build, tinggal push)
+- [x] Rebuild dist + commit (`c745f77`)
 
 ---
 
