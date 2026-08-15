@@ -31,10 +31,10 @@ Tanggal: 2026-08-13
 - Tujuan: cari project by nama/kode/kategori + filter by status. Client-side, tanpa backend.
 
 ### M2.1 — Dashboard (`src/App.jsx`)
-- [ ] Tambah input search (filter nama/kode/kategori, case-insensitive)
-- [ ] Tambah chip/select filter status (Ideation/On Track/At Risk/Done)
-- [ ] Filter client-side pada array `projects` (sudah di-memory)
-- [ ] Rebuild dist + push
+- [x] Tambah input search (filter nama/kode/kategori/deskripsi + milestone/checklist title, case-insensitive, live)
+- [x] Tambah chip filter status (Semua/Ideation/On Track/At Risk/Done)
+- [x] Filter client-side pada array `projects` (sudah di-memory)
+- [x] Rebuild dist + commit
 
 ---
 
