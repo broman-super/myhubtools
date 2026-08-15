@@ -659,6 +659,7 @@ export default function App() {
 
       {projectModal !== null && (
         <ProjectModal
+          key={projectModal.id || "new"}
           initial={projectModal}
           onClose={() => setProjectModal(null)}
           onSave={saveProject}
@@ -1121,6 +1122,7 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
 
       {milestoneModal && (
         <MilestoneModal
+          key={milestoneModal.edit ? "edit-" + milestoneModal.edit.id : "add-" + milestoneModal.parentId}
           isEdit={!!milestoneModal.edit}
           initial={milestoneModal.edit}
           onClose={() => setMilestoneModal(null)}
@@ -1129,6 +1131,7 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
       )}
       {checklistModal && (
         <ChecklistModal
+          key={checklistModal.edit ? "edit-" + checklistModal.edit.id : "add-" + checklistModal.milestoneId}
           initial={checklistModal.edit}
           onClose={() => setChecklistModal(null)}
           onSave={(data) => checklistModal.edit
