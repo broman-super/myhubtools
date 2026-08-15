@@ -91,7 +91,36 @@ function doPost(e) {
     return jsonOut({ success: true, upserted: rows.length, deleted: deletes.length });
   }
 
+  if (action === 'uploadPhoto') {
+    return uploadPhoto_(payload);
+  }
+
   return jsonOut({ success: false, error: 'Action tidak dikenal: ' + action });
+}
+
+function getFolder_() {
+  var NAME = 'RND Roadmap Photos';
+  var it = DriveApp.getFoldersByName(NAME);
+  if (it.hasNext()) return it.next();
+  return DriveApp.createFolder(NAME);
+}
+
+function uploadPhoto_(p) {
+  var data = p.base64 || '';
+  var mime = p.mime || 'image/png';
+  var idx = data.indexOf(',');
+  if (idx !== -1) {
+    var header = data.substring(0, idx); // data:image/png;base64
+    var m = header.match(/data:(.*?);base64/);
+    if (m) mime = m[1];
+    data = data.substring(idx + 1);
+  }
+  var bytes = Utilities.base64Decode(data);
+  var blob = Utilities.newBlob(bytes, mime, p.name || 'photo.png');
+  var file = getFolder_().createFile(blob);
+  file.setSharing(DriveApp.Access.ANYONE, DriveApp.Permission.VIEW);
+  var url = 'https://drive.google.com/uc?export=view&id=' + file.getId();
+  return jsonOut({ success: true, photoUrl: url, id: file.getId() });
 }
 
 function doGet(e) {

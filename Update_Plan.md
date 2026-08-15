@@ -11,23 +11,24 @@ Tanggal: 2026-08-13
 ---
 
 ## Fitur 1: Foto Bukti Nyata (Upload ke Google Drive)
-**Status:** 📋 Rencana  |  **Lanjutan:** M1.1 (backend GAS `uploadPhoto`)
+**Status:** 🔧 Dikerjakan  |  **Lanjutan:** Deploy GAS baru + `git push`, lalu tes upload foto di live
 - Tujuan: item checklist punya foto asli; thumbnail langsung tampil. Storage di Drive → nol beban kuota Supabase free.
 
 ### M1.1 — Backend GAS (`gscode/rndtracker.gs`)
-- [ ] Buat/temukan folder Drive tujuan (`DriveApp.getFoldersByName` / `createFolder`)
-- [ ] `doPost` tangani `action:'uploadPhoto'` → terima `{ name, base64, mime }`
-- [ ] `Drive.Files.create` dari base64 (decode)
-- [ ] Set izin: siapa saja dgn link bisa lihat (`setSharing`)
-- [ ] Kembalikan `{ photoUrl: thumbnailLink / webContentLink }`
-- [ ] Deploy ulang GAS → tes via POST (curl / extension)
+- [x] Buat/temukan folder Drive tujuan (`DriveApp.getFoldersByName` / `createFolder`)
+- [x] `doPost` tangani `action:'uploadPhoto'` → terima `{ name, base64, mime }`
+- [x] `Drive.Files.create` dari base64 (decode)
+- [x] Set izin: siapa saja dgn link bisa lihat (`setSharing`)
+- [x] Kembalikan `{ photoUrl }` (`https://drive.google.com/uc?export=view&id=...`)
+- [ ] Deploy ulang GAS → tes via POST (curl / extension)  ← aksi user
 
 ### M1.2 — Frontend (`src/App.jsx` + `src/supabase.js`)
-- [ ] `ChecklistModal`: ganti checkbox simulasi `hasPhoto` → `<input type="file" accept="image/*">`
-- [ ] `FileReader` → base64
-- [ ] Panggil `uploadPhoto` (fetch GAS) saat simpan, simpan `photoUrl` ke item checklist
-- [ ] `MilestoneNode`: render `<img>` thumbnail bila `photoUrl` ada (klik → full)
-- [ ] Rebuild dist + push
+- [x] `ChecklistModal`: ganti checkbox simulasi `hasPhoto` → `<input type="file" accept="image/*">` + preview
+- [x] `FileReader` → base64, panggil `uploadPhoto`
+- [x] Simpan `photoUrl` ke item checklist (`addChecklist`/`editChecklist`)
+- [x] `MilestoneNode` & `ReportView`: render `<img>` thumbnail bila `photoUrl` ada (klik → full)
+- [x] `supabase.js`: export `uploadPhoto` (fetch GAS, text/plain)
+- [ ] Rebuild dist + push  ← aksi user (sudah di-build, tinggal push)
 
 ---
 
@@ -61,8 +62,8 @@ Tanggal: 2026-08-13
 ## Ringkasan Milestone
 | ID | Fitur | Status |
 |----|-------|--------|
-| M1.1 | GAS `uploadPhoto` | ⬜ belum |
-| M1.2 | Frontend foto (thumbnail) | ⬜ belum |
+| M1.1 | GAS `uploadPhoto` | ✅ code / ⏳ deploy |
+| M1.2 | Frontend foto (thumbnail) | ✅ code / ⏳ push |
 | M2.1 | Filter & search dashboard | ⬜ belum |
 | M3.1 | Export CSV | ⬜ belum |
 | M3.2 | Export PDF | ⬜ belum |
