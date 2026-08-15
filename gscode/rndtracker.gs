@@ -146,3 +146,9 @@ function jsonOut(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+// Jalankan fungsi ini sekali dari editor (tombol Run) untuk memicu izin Google Drive.
+function izinkanDrive() {
+  DriveApp.getRootFolder();
+  return "Drive OK";
+}
