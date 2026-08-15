@@ -99,10 +99,9 @@ function doPost(e) {
 }
 
 function getFolder_() {
-  var NAME = 'RND Roadmap Photos';
-  var it = DriveApp.getFoldersByName(NAME);
-  if (it.hasNext()) return it.next();
-  return DriveApp.createFolder(NAME);
+  // Folder Drive tujuan (disediakan user)
+  var FOLDER_ID = '1gFfbxeNtP6t_mwZ8VG7Uw74c3D3REy7I';
+  return DriveApp.getFolderById(FOLDER_ID);
 }
 
 function uploadPhoto_(p) {
