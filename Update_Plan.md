@@ -110,6 +110,6 @@ Tanggal: 2026-08-13
 - [x] **Phase 3 — Badge "Lewat Target"** merah di kartu dashboard bila ada milestone overdue.
 - [x] **Phase 4 — Esc + klik backdrop tutup modal** (backdrop sudah ada) + auto-focus field pertama.
 - [x] **Phase 5 — Drag-and-drop gambar** di modal checklist (zona drop + petunjuk).
-- [ ] **Phase 6 — Thumbnail foto di PDF export** (bukan cuma 📷).
-- [ ] **Phase 7 — Skeleton loading** saat memuat data.
-- [ ] **Phase 8 — Indikator "ada foto"** (ikon kamera) di timeline checklist.
+- [x] **Phase 6 — Thumbnail foto** di PDF export (`openPrintableReport`).
+- [x] **Phase 7 — Skeleton loading** saat fetch awal (ganti teks "Memuat…").
+- [x] **Phase 8 — Indikator "ada foto"** (ter-cover oleh thumbnail 48px di timeline & 28px di laporan).
