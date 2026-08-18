@@ -21,6 +21,8 @@ var __SUPABASE_CONFIG__ = {
   SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5cmFhbXhrcnlndHpzcWt2bnF6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjUwMTc1NCwiZXhwIjoyMTAyMDc3NzU0fQ.VJODIL3SbUyDQHdM9ljsScOFqPIRDNoYR51QClAiuVY'    // ← tempel service_role key di sini
 };
 
+var STORAGE_BUCKET = 'roadmap-photos'; // ← buat bucket ini di Supabase Storage & set Public
+
 function setupSupabaseProps() {
   var props = PropertiesService.getScriptProperties();
   var url = String(__SUPABASE_CONFIG__.SUPABASE_URL || '').trim().replace(/\/+$/, '');
@@ -96,6 +98,14 @@ function doPost(e) {
     return uploadPhoto_(payload);
   }
 
+  if (action === 'uploadStorage') {
+    return uploadStorage_(payload);
+  }
+
+  if (action === 'deleteStorage') {
+    return deleteStorage_(payload);
+  }
+
   return jsonOut({ success: false, error: 'Action tidak dikenal: ' + action });
  } catch (err) {
   return jsonOut({ success: false, error: 'GAS error: ' + (err && err.message ? err.message : err) });
@@ -130,6 +140,55 @@ function uploadPhoto_(p) {
   file.setSharing(DriveApp.Access.ANYONE, DriveApp.Permission.VIEW);
   var url = 'https://drive.google.com/uc?export=view&id=' + file.getId();
   return jsonOut({ success: true, photoUrl: url, id: file.getId() });
+}
+
+function uploadStorage_(p) {
+  var data = p.base64 || '';
+  var mime = p.mime || 'image/png';
+  var idx = data.indexOf(',');
+  if (idx !== -1) {
+    var header = data.substring(0, idx);
+    var m = header.match(/data:(.*?);base64/);
+    if (m) mime = m[1];
+    data = data.substring(idx + 1);
+  }
+  var bytes = Utilities.base64Decode(data);
+  var c = supabaseCreds_();
+  var ext = (mime.split('/')[1] || 'png').replace(/[^a-z0-9]/gi, '');
+  var path = Utilities.getUuid() + '.' + ext;
+  var url = c.baseUrl + '/storage/v1/object/' + STORAGE_BUCKET + '/' + path;
+  var options = {
+    method: 'POST',
+    muteHttpExceptions: true,
+    headers: {
+      'apikey': c.apiKey,
+      'Authorization': 'Bearer ' + c.apiKey,
+      'Content-Type': mime,
+      'x-upsert': 'true'
+    },
+    payload: bytes
+  };
+  var res = UrlFetchApp.fetch(url, options);
+  if (res.getResponseCode() >= 300) {
+    throw new Error('Storage upload ' + res.getResponseCode() + ': ' + res.getContentText());
+  }
+  var publicUrl = c.baseUrl + '/storage/v1/object/public/' + STORAGE_BUCKET + '/' + path;
+  return jsonOut({ success: true, photoUrl: publicUrl });
+}
+
+function deleteStorage_(p) {
+  var url = p.url || '';
+  var m = url.match(/\/storage\/v1\/object\/(?:public\/)?([^\/]+)\/(.+)$/);
+  if (!m) return jsonOut({ success: true, skipped: true });
+  var c = supabaseCreds_();
+  var delUrl = c.baseUrl + '/storage/v1/object/' + m[1] + '/' + m[2];
+  var options = {
+    method: 'DELETE',
+    muteHttpExceptions: true,
+    headers: { 'apikey': c.apiKey, 'Authorization': 'Bearer ' + c.apiKey }
+  };
+  var res = UrlFetchApp.fetch(delUrl, options);
+  return jsonOut({ success: true, code: res.getResponseCode() });
 }
 
 function doGet(e) {

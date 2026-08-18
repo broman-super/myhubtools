@@ -4,7 +4,7 @@ import {
   Circle, AlertTriangle, X, ArrowLeft, TrendingUp, Archive, Star,
   ClipboardList, LayoutGrid, Download, Printer
 } from "lucide-react";
-import { loadProjects, syncToSupabase } from "./supabase.js";
+import { loadProjects, syncToSupabase, uploadToStorage, deleteFromStorage } from "./supabase.js";
 
 // ---------- Design tokens (Notion-Design.md) ----------
 const C = {
@@ -1016,9 +1016,11 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
     })));
   }
   function deleteChecklist(milestoneId, itemId) {
-    updateMilestones((ms) => mapTree(ms, milestoneId, (n) => ({
-      ...n, checklist: (n.checklist || []).filter((c) => c.id !== itemId),
-    })));
+    updateMilestones((ms) => mapTree(ms, milestoneId, (n) => {
+      const item = (n.checklist || []).find((c) => c.id === itemId);
+      if (item && item.photoUrl) deleteFromStorage(item.photoUrl);
+      return { ...n, checklist: (n.checklist || []).filter((c) => c.id !== itemId) };
+    }));
   }
   function addEvaluation(milestoneId, data) {
     updateMilestones((ms) => mapTree(ms, milestoneId, (n) => ({
@@ -1399,16 +1401,22 @@ function ChecklistModal({ initial, onClose, onSave }) {
     if (file) {
       setBusy(true);
       try {
-        // Simpan foto langsung sebagai data URL terkompresi ke Supabase (tanpa Google Drive)
-        photoUrl = await resizeImageFile(file);
+        // Kompres di client, lalu upload ke Supabase Storage lewat GAS (DB hanya simpan URL)
+        const dataUrl = await resizeImageFile(file);
+        const r = await uploadToStorage(dataUrl, file.name, "image/jpeg");
+        if (r && r.photoUrl) photoUrl = r.photoUrl;
       } catch (err) {
         setBusy(false);
-        alert("Gagal proses foto: " + (err && err.message ? err.message : err));
+        alert("Gagal upload foto: " + (err && err.message ? err.message : err));
         return;
       }
       setBusy(false);
     } else if (!preview) {
       photoUrl = "";
+    }
+    // Bersihkan foto lama di Storage bila diganti/dibuang (best-effort)
+    if (initial && initial.photoUrl && initial.photoUrl !== photoUrl) {
+      deleteFromStorage(initial.photoUrl);
     }
     onSave({ ...form, photoUrl });
   }
