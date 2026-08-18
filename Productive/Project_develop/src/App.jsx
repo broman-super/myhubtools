@@ -944,6 +944,9 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                 <Badge bg={cfg.bg} fg={cfg.fg}>{cfg.label}</Badge>
+                {overdueMilestones(p).length > 0 && (
+                  <Badge bg="#ffe0c2" fg={C.orangeDeep}>Lewat Target</Badge>
+                )}
                 <div style={{ display: "flex", gap: 2 }} onClick={(e) => e.stopPropagation()}>
                   <IconButton title="Edit" onClick={() => onEditProject(p)}><Pencil size={14} /></IconButton>
                   <IconButton title={p.archived ? "Aktifkan" : "Arsipkan"} onClick={() => onArchive(p.id)}><Archive size={14} /></IconButton>
