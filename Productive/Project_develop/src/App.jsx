@@ -122,6 +122,19 @@ function collectPhotoUrls(node, acc = []) {
   (node.children || []).forEach((ch) => collectPhotoUrls(ch, acc));
   return acc;
 }
+function milestoneMatchesSearch(m, q) {
+  if ((m.title || "").toLowerCase().includes(q)) return true;
+  if ((m.checklist || []).some((c) => (c.title || "").toLowerCase().includes(q))) return true;
+  return (m.children || []).some((ch) => milestoneMatchesSearch(ch, q));
+}
+function filterMilestoneTree(nodes, pred) {
+  const out = [];
+  for (const n of nodes) {
+    const kids = filterMilestoneTree(n.children || [], pred);
+    if (pred(n) || kids.length) out.push({ ...n, children: kids });
+  }
+  return out;
+}
 
 function csvCell(v) {
   const s = v == null ? "" : String(v);
@@ -278,7 +291,7 @@ function DatePicker({ value, onChange, style }) {
         <Calendar size={15} color={C.inkMuted} />
       </div>
       {open && (
-        <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 50, background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 12, boxShadow: "0 12px 32px rgba(0,0,0,0.18)", width: 250 }}>
+         <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 50, background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 12, boxShadow: "0 12px 32px rgba(0,0,0,0.18)", width: "100%", minWidth: 230 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
             <button type="button" onClick={() => setView((v) => v.m === 0 ? { y: v.y - 1, m: 11 } : { ...v, m: v.m - 1 })} style={navBtn}>‹</button>
             <span style={{ fontSize: 13, fontWeight: 600 }}>{MONTHS[view.m]} {view.y}</span>
@@ -520,10 +533,13 @@ const inputStyle = {
   border: "1px solid #dddddd", borderRadius: R.xs, padding: "8px 10px", outline: "none",
 };
 
-function Modal({ title, onClose, children, width = 460 }) {
+function Modal({ title, onClose, children, width = 460, onCloseAttempt }) {
   const ref = useRef(null);
   useEffect(() => {
-    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      if (onCloseAttempt) onCloseAttempt(); else onClose();
+    };
     window.addEventListener("keydown", onKey);
     const t = setTimeout(() => {
       const el = ref.current;
@@ -532,14 +548,15 @@ function Modal({ title, onClose, children, width = 460 }) {
       if (f) f.focus();
     }, 0);
     return () => { window.removeEventListener("keydown", onKey); clearTimeout(t); };
-  }, [onClose]);
+  }, [onCloseAttempt, onClose]);
+  const attemptClose = () => { if (onCloseAttempt) onCloseAttempt(); else onClose(); };
   return (
     <div
       style={{
         position: "fixed", inset: 0, background: "rgba(23,23,23,0.35)", zIndex: 50,
         display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
       }}
-      onClick={onClose}
+      onClick={attemptClose}
     >
       <div
         ref={ref}
@@ -551,7 +568,7 @@ function Modal({ title, onClose, children, width = 460 }) {
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <h3 style={{ fontSize: 18, fontWeight: 700, color: C.ink, margin: 0, letterSpacing: "-0.25px" }}>{title}</h3>
-          <IconButton onClick={onClose} title="Tutup"><X size={18} /></IconButton>
+          <IconButton onClick={attemptClose} title="Tutup"><X size={18} /></IconButton>
         </div>
         {children}
       </div>
@@ -1013,9 +1030,15 @@ function ProjectModal({ initial, onClose, onSave }) {
     targetReleaseDate: initial.targetReleaseDate || "",
   });
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const initialSnapshot = useRef(JSON.stringify(form)).current;
+  const dirty = JSON.stringify(form) !== initialSnapshot;
+  const handleClose = () => {
+    if (dirty && !window.confirm("Keluar? Data yang sudah diinput akan hilang.")) return;
+    onClose();
+  };
 
   return (
-    <Modal title={initial.id ? "Edit Project" : "Project Baru"} onClose={onClose} width={480}>
+    <Modal title={initial.id ? "Edit Project" : "Project Baru"} onClose={onClose} onCloseAttempt={handleClose} width={480}>
       <form
         onSubmit={(e) => { e.preventDefault(); if (!form.name.trim()) return; onSave(form); }}
         style={{ display: "flex", flexDirection: "column", gap: 12 }}
@@ -1052,11 +1075,11 @@ function ProjectModal({ initial, onClose, onSave }) {
           <FieldLabel>Status</FieldLabel>
           <select style={inputStyle} value={form.status} onChange={set("status")}>
             {Object.keys(PROJECT_STATUS).map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </div>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
-          <SecondaryButton onClick={onClose}>Batal</SecondaryButton>
-          <PrimaryButton type="submit">Simpan</PrimaryButton>
+            </select>
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
+            <SecondaryButton onClick={handleClose}>Batal</SecondaryButton>
+            <PrimaryButton type="submit">Simpan</PrimaryButton>
         </div>
       </form>
     </Modal>
@@ -1069,6 +1092,11 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
   const [milestoneModal, setMilestoneModal] = useState(null); // {parentId, edit?}
   const [checklistModal, setChecklistModal] = useState(null); // {milestoneId, edit?}
   const [evalModal, setEvalModal] = useState(null); // {milestoneId}
+  const [msQ, setMsQ] = useState("");
+  const msNeedle = msQ.trim().toLowerCase();
+  const visibleMilestones = msNeedle
+    ? filterMilestoneTree(project.milestones, (m) => milestoneMatchesSearch(m, msNeedle))
+    : project.milestones;
   const stats = projectChecklistStats(project);
   const cfg = PROJECT_STATUS[project.status];
   const overdue = overdueMilestones(project);
@@ -1204,21 +1232,28 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
 
       {tab === "roadmap" && (
         <>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+          <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+            <input
+              value={msQ}
+              onChange={(e) => setMsQ(e.target.value)}
+              placeholder="Cari tahapan atau checklist…"
+              style={{ flex: "1 1 200px", minWidth: 160, padding: "9px 12px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, fontSize: 13, color: C.ink, outline: "none" }}
+            />
             <PrimaryButton onClick={() => setMilestoneModal({ parentId: null })}><Plus size={16} /> Tambah Tahapan</PrimaryButton>
           </div>
-          {project.milestones.length === 0 ? (
+          {visibleMilestones.length === 0 ? (
             <div style={{ background: C.surface, border: `1px dashed ${C.hairline}`, borderRadius: R.lg, padding: 40, textAlign: "center", color: C.inkMuted, fontSize: 14 }}>
-              Belum ada tahapan. Tambahkan tahapan pertama untuk mulai menyusun roadmap.
+              {project.milestones.length === 0 ? "Belum ada tahapan. Tambahkan tahapan pertama untuk mulai menyusun roadmap." : `Tidak ada tahapan sesuai pencarian "${msQ}".`}
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column" }}>
-              {project.milestones.map((m, i) => (
+              {visibleMilestones.map((m, i) => (
                 <MilestoneNode
                   key={m.id}
                   node={m}
                   depth={0}
-                  isLast={i === project.milestones.length - 1}
+                  isLast={i === visibleMilestones.length - 1}
+                  q={msQ}
                   onAddChild={(parentId) => setMilestoneModal({ parentId })}
                   onEdit={(node) => setMilestoneModal({ parentId: null, edit: node })}
                   onDelete={deleteMilestone}
@@ -1287,7 +1322,7 @@ function TimelineDot({ status, isOverdue, size = 28 }) {
 }
 
 // ---------- Milestone Node (recursive, timeline style) ----------
-function MilestoneNode({ node, depth, isLast, onAddChild, onEdit, onDelete, onAddChecklist, onEditChecklist, onToggleChecklist, onDeleteChecklist, onAddEval }) {
+function MilestoneNode({ node, depth, isLast, q = "", onAddChild, onEdit, onDelete, onAddChecklist, onEditChecklist, onToggleChecklist, onDeleteChecklist, onAddEval }) {
   const { viewPhoto } = useLightbox();
   const [open, setOpen] = useState(depth < 1);
   const [showChecklist, setShowChecklist] = useState(true);
@@ -1317,7 +1352,7 @@ function MilestoneNode({ node, depth, isLast, onAddChild, onEdit, onDelete, onAd
             </IconButton>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
-                <span style={{ fontSize: depth === 0 ? 16 : 14, fontWeight: 700 }}>{node.title}</span>
+                <span style={{ fontSize: depth === 0 ? 16 : 14, fontWeight: 700 }}>{highlightMatch(node.title, q)}</span>
                 <Badge bg={st.bg} fg={st.fg}>{st.label}</Badge>
                 {isOverdue && <Badge bg="#ffe0c2" fg={C.orangeDeep} icon={<AlertTriangle size={11} />}>Overdue</Badge>}
               </div>
@@ -1359,7 +1394,7 @@ function MilestoneNode({ node, depth, isLast, onAddChild, onEdit, onDelete, onAd
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 500, textDecoration: c.isCompleted ? "line-through" : "none", color: c.isCompleted ? C.inkFaint : C.ink }}>
-                            {c.title}
+                            {highlightMatch(c.title, q)}
                             {c.photoUrl && (
                               <img
                                 src={c.photoUrl}
@@ -1418,6 +1453,7 @@ function MilestoneNode({ node, depth, isLast, onAddChild, onEdit, onDelete, onAd
                 node={child}
                 depth={depth + 1}
                 isLast={i === node.children.length - 1}
+                q={q}
                 onAddChild={onAddChild}
                 onEdit={onEdit}
                 onDelete={onDelete}
@@ -1444,8 +1480,14 @@ function MilestoneModal({ isEdit, initial, onClose, onSave }) {
     targetDate: initial?.targetDate || "",
   });
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const initialSnapshot = useRef(JSON.stringify(form)).current;
+  const dirty = JSON.stringify(form) !== initialSnapshot;
+  const handleClose = () => {
+    if (dirty && !window.confirm("Keluar? Data yang sudah diinput akan hilang.")) return;
+    onClose();
+  };
   return (
-    <Modal title={isEdit ? "Edit Tahapan" : "Tambah Tahapan"} onClose={onClose}>
+    <Modal title={isEdit ? "Edit Tahapan" : "Tambah Tahapan"} onClose={onClose} onCloseAttempt={handleClose}>
       <form onSubmit={(e) => { e.preventDefault(); if (!form.title.trim()) return; onSave(form); }} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div>
           <FieldLabel>Judul Tahapan</FieldLabel>
@@ -1468,7 +1510,7 @@ function MilestoneModal({ isEdit, initial, onClose, onSave }) {
           </div>
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
-          <SecondaryButton onClick={onClose}>Batal</SecondaryButton>
+          <SecondaryButton onClick={handleClose}>Batal</SecondaryButton>
           <PrimaryButton type="submit">Simpan</PrimaryButton>
         </div>
       </form>
@@ -1488,12 +1530,14 @@ function ChecklistModal({ initial, onClose, onSave }) {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(initial?.photoUrl || "");
   const [busy, setBusy] = useState(false);
+  const [dirty, setDirty] = useState(false);
 
-  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const set = (k) => (e) => { setForm((f) => ({ ...f, [k]: e.target.value })); setDirty(true); };
 
   function pickFile(f) {
     if (!f) return;
     setFile(f);
+    setDirty(true);
     const reader = new FileReader();
     reader.onload = () => setPreview(reader.result);
     reader.readAsDataURL(f);
@@ -1501,6 +1545,10 @@ function ChecklistModal({ initial, onClose, onSave }) {
   function onPick(e) {
     pickFile(e.target.files && e.target.files[0]);
   }
+  const handleClose = () => {
+    if (dirty && !window.confirm("Keluar? Data yang sudah diinput akan hilang.")) return;
+    onClose();
+  };
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -1530,7 +1578,7 @@ function ChecklistModal({ initial, onClose, onSave }) {
   }
 
   return (
-    <Modal title={initial ? "Edit Checklist Item" : "Tambah Checklist Item"} onClose={onClose}>
+    <Modal title={initial ? "Edit Checklist Item" : "Tambah Checklist Item"} onClose={onClose} onCloseAttempt={handleClose}>
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div>
           <FieldLabel>Judul Item</FieldLabel>
@@ -1550,7 +1598,7 @@ function ChecklistModal({ initial, onClose, onSave }) {
             {preview && (
               <>
                 <img src={preview} alt="" onClick={() => viewPhoto(preview)} style={{ maxWidth: "100%", maxHeight: 260, borderRadius: R.sm, marginBottom: 8, display: "block", cursor: "pointer" }} />
-                <button type="button" onClick={() => { setPreview(""); setFile(null); }} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: R.sm, border: `1px solid ${C.hairline}`, background: C.surface, color: C.inkSecondary, fontSize: 12, cursor: "pointer", marginBottom: 8 }}>Hapus foto</button>
+                <button type="button" onClick={() => { setPreview(""); setFile(null); setDirty(true); }} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: R.sm, border: `1px solid ${C.hairline}`, background: C.surface, color: C.inkSecondary, fontSize: 12, cursor: "pointer", marginBottom: 8 }}>Hapus foto</button>
               </>
             )}
             <input type="file" accept="image/*" onChange={onPick} style={{ fontSize: 13 }} />
@@ -1558,11 +1606,11 @@ function ChecklistModal({ initial, onClose, onSave }) {
           </div>
         </div>
         <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.inkSecondary, cursor: "pointer" }}>
-          <input type="checkbox" checked={form.isCompleted} onChange={(e) => setForm((f) => ({ ...f, isCompleted: e.target.checked }))} />
+          <input type="checkbox" checked={form.isCompleted} onChange={(e) => { setForm((f) => ({ ...f, isCompleted: e.target.checked })); setDirty(true); }} />
           Sudah selesai
         </label>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
-          <SecondaryButton onClick={onClose}>Batal</SecondaryButton>
+          <SecondaryButton onClick={handleClose}>Batal</SecondaryButton>
           <PrimaryButton type="submit" disabled={busy}>{busy ? "Mengupload…" : "Simpan"}</PrimaryButton>
         </div>
       </form>
@@ -1573,8 +1621,14 @@ function ChecklistModal({ initial, onClose, onSave }) {
 // ---------- Evaluation Modal ----------
 function EvaluationModal({ onClose, onSave }) {
   const [form, setForm] = useState({ score: 3, decision: "Go", comments: "" });
+  const initialSnapshot = useRef(JSON.stringify(form)).current;
+  const dirty = JSON.stringify(form) !== initialSnapshot;
+  const handleClose = () => {
+    if (dirty && !window.confirm("Keluar? Data yang sudah diinput akan hilang.")) return;
+    onClose();
+  };
   return (
-    <Modal title="Tambah Evaluasi" onClose={onClose}>
+    <Modal title="Tambah Evaluasi" onClose={onClose} onCloseAttempt={handleClose}>
       <form onSubmit={(e) => { e.preventDefault(); onSave(form); }} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div>
           <FieldLabel>Skor Kelayakan (1–5)</FieldLabel>
@@ -1603,7 +1657,7 @@ function EvaluationModal({ onClose, onSave }) {
           <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 70 }} value={form.comments} onChange={(e) => setForm((f) => ({ ...f, comments: e.target.value }))} placeholder="Pertimbangan, risiko, atau alasan keputusan..." />
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
-          <SecondaryButton onClick={onClose}>Batal</SecondaryButton>
+          <SecondaryButton onClick={handleClose}>Batal</SecondaryButton>
           <PrimaryButton type="submit">Simpan Evaluasi</PrimaryButton>
         </div>
       </form>

@@ -97,6 +97,11 @@ Tanggal: 2026-08-13
 - Modal **remount per item** (`key`) → tiap checklist/project/milestone simpan datanya sendiri (fix state-bleed antar-item).
 - Badge **"Tersimpan" auto-hide 3 detik**; **"Gagal"** tetap.
 
+**6. Polish lanjutan (Phase 9–11)**
+- Date Picker popup responsif (`right:0; width:100%; minWidth:230`) — match lebar field, tidak overflow tepi modal.
+- Konfirmasi keluar modal bila sudah input: `Modal` pakai prop `onCloseAttempt` (X / klik backdrop / Esc / tombol Batal) + `window.confirm` cegah kehilangan input.
+- Search + highlight kuning di tab Roadmap Project Detail (`milestoneMatchesSearch` + `filterMilestoneTree`, rekursif ke anak & checklist).
+
 **Catatan**
 - Menghapus project/item = foto ikut dihapus dari Storage (GAS `deleteStorage` best-effort); DB hanya simpan URL.
 - Deploy: `src/config.js` → `GAS_SCRIPT_URL`; ubah config = rebuild + `git push`.
@@ -113,3 +118,6 @@ Tanggal: 2026-08-13
 - [x] **Phase 6 — Thumbnail foto** di PDF export (`openPrintableReport`).
 - [x] **Phase 7 — Skeleton loading** saat fetch awal (ganti teks "Memuat…").
 - [x] **Phase 8 — Indikator "ada foto"** (ter-cover oleh thumbnail 48px di timeline & 28px di laporan).
+- [x] **Phase 9 — Fix lebar Date Picker**: popup kalender `width:250` (fixed) → `right:0; width:100%; minWidth:230` agar match lebar field & tidak overflow tepi modal.
+- [x] **Phase 10 — Konfirmasi keluar modal**: `Modal` dapat prop `onCloseAttempt`; X / klik backdrop / Esc / tombol **Batal** cek "dirty" lalu `window.confirm` sebelum tutup (cegah kehilangan input). Berlaku di Project, Milestone, Checklist, Evaluation modal.
+- [x] **Phase 11 — Search di Project Detail** (tab Roadmap): input cari milestone/checklist (rekursif, termasuk anak) + highlight kuning; helper `milestoneMatchesSearch` & `filterMilestoneTree`.
