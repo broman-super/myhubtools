@@ -248,7 +248,7 @@ function DatePicker({ value, onChange, style }) {
   useEffect(() => {
     if (!open) return;
     const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); setOpen(false); } };
     document.addEventListener("mousedown", onDoc);
     window.addEventListener("keydown", onKey);
     return () => { document.removeEventListener("mousedown", onDoc); window.removeEventListener("keydown", onKey); };
@@ -516,6 +516,18 @@ const inputStyle = {
 };
 
 function Modal({ title, onClose, children, width = 460 }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    const t = setTimeout(() => {
+      const el = ref.current;
+      if (!el) return;
+      const f = el.querySelector("input:not([type=hidden]), textarea, select") || el.querySelector("button");
+      if (f) f.focus();
+    }, 0);
+    return () => { window.removeEventListener("keydown", onKey); clearTimeout(t); };
+  }, [onClose]);
   return (
     <div
       style={{
@@ -525,6 +537,7 @@ function Modal({ title, onClose, children, width = 460 }) {
       onClick={onClose}
     >
       <div
+        ref={ref}
         style={{
           background: C.surface, borderRadius: R.lg, boxShadow: shadow2, width, maxWidth: "100%",
           maxHeight: "88vh", overflowY: "auto", padding: 24,
