@@ -542,6 +542,14 @@ export default function App() {
     saveTimer.current = setTimeout(() => doSave(), 400);
     return () => clearTimeout(saveTimer.current);
   }, [projects]);
+
+  // Sembunyikan badge "Tersimpan" otomatis setelah 3 detik; biarkan "error" bertahan
+  useEffect(() => {
+    if (saveStatus.state !== "saved") return;
+    const t = setTimeout(() => setSaveStatus({ state: "idle", msg: "" }), 3000);
+    return () => clearTimeout(t);
+  }, [saveStatus]);
+
   const [activeProjectId, setActiveProjectId] = useState(null);
   const [projectModal, setProjectModal] = useState(null); // null | {} (new) | project (edit)
   const [showArchived, setShowArchived] = useState(false);
