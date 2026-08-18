@@ -108,7 +108,7 @@ Tanggal: 2026-08-13
 - [x] **Phase 1 — Custom Date Picker**: `DatePicker` (kalender popover styled + ikon) ganti `<input type="date">` di Project & Milestone modal.
 - [x] **Phase 2 — Konfirmasi hapus** milestone & checklist (`window.confirm` sebelum hapus).
 - [x] **Phase 3 — Badge "Lewat Target"** merah di kartu dashboard bila ada milestone overdue.
-- [ ] **Phase 4 — Esc + klik backdrop tutup modal** + auto-focus field pertama.
+- [x] **Phase 4 — Esc + klik backdrop tutup modal** (backdrop sudah ada) + auto-focus field pertama.
 - [ ] **Phase 5 — Drag-and-drop / paste gambar** di modal checklist.
 - [ ] **Phase 6 — Thumbnail foto di PDF export** (bukan cuma 📷).
 - [ ] **Phase 7 — Skeleton loading** saat memuat data.
