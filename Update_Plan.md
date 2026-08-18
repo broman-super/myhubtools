@@ -118,7 +118,7 @@ Tanggal: 2026-08-13
 - [x] **Phase 6 — Thumbnail foto** di PDF export (`openPrintableReport`).
 - [x] **Phase 7 — Skeleton loading** saat fetch awal (ganti teks "Memuat…").
 - [x] **Phase 8 — Indikator "ada foto"** (ter-cover oleh thumbnail 48px di timeline & 28px di laporan).
-- [x] **Phase 9 — Fix lebar Date Picker**: popup kalender `width:250` (fixed) → `right:0; width:100%; minWidth:230` agar match lebar field & tidak overflow tepi modal.
+- [x] **Phase 9 — Fix Date Picker**: popup kalender di-render via portal ke `document.body` dengan `position:fixed` (koordinat viewport) + auto-buka-ke-atas bila dekat bawah layar, sehingga tidak lagi kepotong `overflow` modal. Lebar mengikuti field (`minWidth:230`). Reposisi otomatis saat scroll/resize.
 - [x] **Phase 10 — Konfirmasi keluar modal**: `Modal` dapat prop `onCloseAttempt`; X / klik backdrop / Esc / tombol **Batal** cek "dirty" lalu `window.confirm` sebelum tutup (cegah kehilangan input). Berlaku di Project, Milestone, Checklist, Evaluation modal.
 - [x] **Phase 11 — Search di Project Detail** (tab Roadmap): input cari milestone/checklist (rekursif, termasuk anak) + highlight kuning; helper `milestoneMatchesSearch` & `filterMilestoneTree`.
 - [x] **Phase 12 — Selaraskan style ke design-system webtools**: import `src/styles/design-system.css` (token) saja; font via Google Fonts `Plus Jakarta Sans` (link di `index.html`) agar dist tetap ringan (~212 KB). `C`/`R`/shadow dipetakan ke `var(--*)` (aksen merah brand, radius/shadow/shared). Wrapper jadi scroll-container (`100dvh` + `overflowY:auto`) karena `design-system.css` kunci `body{overflow:hidden}`. Catatan: font display `Geomini` (heading) fallback ke Plus Jakarta Sans di build ringan ini.
