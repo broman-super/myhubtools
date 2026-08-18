@@ -1300,7 +1300,7 @@ function MilestoneNode({ node, depth, isLast, onAddChild, onEdit, onDelete, onAd
             <div style={{ display: "flex", gap: 2 }}>
               <IconButton title="Tambah sub-tahapan" onClick={() => onAddChild(node.id)}><Plus size={15} /></IconButton>
               <IconButton title="Edit" onClick={() => onEdit(node)}><Pencil size={14} /></IconButton>
-              <IconButton title="Hapus" danger onClick={() => onDelete(node.id)}><Trash2 size={14} /></IconButton>
+              <IconButton title="Hapus" danger onClick={() => { if (window.confirm('Hapus milestone "' + (node.title || '') + '"? Tindakan tidak bisa dibatalkan.')) onDelete(node.id); }}><Trash2 size={14} /></IconButton>
             </div>
           </div>
 
@@ -1338,7 +1338,7 @@ function MilestoneNode({ node, depth, isLast, onAddChild, onEdit, onDelete, onAd
                         </div>
                         <div style={{ display: "flex", gap: 0 }}>
                           <IconButton title="Edit" onClick={() => onEditChecklist(node.id, c)}><Pencil size={12} /></IconButton>
-                          <IconButton title="Hapus" danger onClick={() => onDeleteChecklist(node.id, c.id)}><Trash2 size={12} /></IconButton>
+                          <IconButton title="Hapus" danger onClick={() => { if (window.confirm('Hapus item "' + (c.title || '') + '"? Tindakan tidak bisa dibatalkan.')) onDeleteChecklist(node.id, c.id); }}><Trash2 size={12} /></IconButton>
                         </div>
                       </div>
                     ))}
