@@ -9,4 +9,4 @@
 //   VITE_SUPABASE_URL=... VITE_SUPABASE_ANON_KEY=... VITE_GAS_SCRIPT_URL=...
 export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://iyraamxkrygtzsqkvnqz.supabase.co';
 export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5cmFhbXhrcnlndHpzcWt2bnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MDE3NTQsImV4cCI6MjEwMjA3Nzc1NH0.g9naRe6CJaZ-FIZHjUkVx_62GZlxVFixQbIUzDF3M7s';
-export const GAS_SCRIPT_URL = import.meta.env.VITE_GAS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbyxUlPYrgb7voastxpcyrOkOiT8zDL0xg3cdl0tRCUySQboNP48lAMC9sFoStJjs6Fp1w/exec';
+export const GAS_SCRIPT_URL = import.meta.env.VITE_GAS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbwVzU-1l_-9BYLS6_79iyaSd3rAbXkfXRx6qftJSLUpXiUdbfnWSvNZh8jEtLKG673HpQ/exec';
