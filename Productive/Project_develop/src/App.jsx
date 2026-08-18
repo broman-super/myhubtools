@@ -196,7 +196,7 @@ ${body || "<p>Tidak ada project.</p>"}
 <script>window.onload=function(){setTimeout(function(){window.print();},300);};<\/script>
 </body></html>`;
   const w = window.open("", "_blank");
-  if (!w) { alert("Popup diblokir. Izinkan popup untuk export PDF."); return; }
+  if (!w) { confirmDialog({ title: "Popup diblokir", message: "Izinkan popup di browser untuk export PDF.", confirmText: "Oke" }); return; }
   w.document.open(); w.document.write(html); w.document.close();
 }
 function highlightMatch(text, q) {
@@ -223,11 +223,12 @@ function Lightbox({ url, onClose }) {
   }, [url, onClose]);
   if (!url) return null;
   return (
-    <div
-      onClick={onClose}
-      id="rnd-lightbox"
-      style={{ position: "fixed", inset: 0, background: "rgba(15,18,22,0.82)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 24, cursor: "zoom-out" }}
-    >
+      <div
+        onClick={onClose}
+        id="rnd-lightbox"
+        className="rnd-overlay"
+        style={{ position: "fixed", inset: 0, background: "rgba(15,18,22,0.82)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 24, cursor: "zoom-out" }}
+      >
       <button
         onClick={onClose}
         aria-label="Tutup"
@@ -639,6 +640,39 @@ function RichTextInput({ value, onChange, placeholder, style, minHeight = 60 }) 
   );
 }
 
+// ---- Konfirmasi animasi (pengganti window.confirm) ----
+let _confirmAsk = (opts) => Promise.resolve(window.confirm((opts && opts.message) || "Lanjut?"));
+export function setConfirmAsk(fn) { _confirmAsk = fn; }
+export function confirmDialog(opts) { return _confirmAsk(opts || {}); }
+
+function ConfirmProvider() {
+  const [dlg, setDlg] = useState(null);
+  useEffect(() => {
+    setConfirmAsk((opts) => new Promise((resolve) => setDlg({ ...opts, resolve })));
+    return () => setConfirmAsk((o) => Promise.resolve(window.confirm((o && o.message) || "Lanjut?")));
+  }, []);
+  const close = (val) => { if (dlg) { dlg.resolve(val); setDlg(null); } };
+  useEffect(() => {
+    if (!dlg) return;
+    const onKey = (e) => { if (e.key === "Escape") close(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [dlg]);
+  if (!dlg) return null;
+  return (
+    <div className="rnd-overlay" style={{ position: "fixed", inset: 0, background: "rgba(23,23,23,0.4)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onMouseDown={(e) => { if (e.target === e.currentTarget) close(false); }}>
+      <div className="rnd-pop rnd-confirm" role="alertdialog" aria-modal="true">
+        {dlg.title && <h3 className="rnd-confirm-title">{dlg.title}</h3>}
+        {dlg.message && <p className="rnd-confirm-msg">{dlg.message}</p>}
+        <div className="rnd-confirm-actions">
+          <SecondaryButton onClick={() => close(false)}>{dlg.cancelText || "Batal"}</SecondaryButton>
+          <button onClick={() => close(true)} className={dlg.danger ? "rnd-btn-danger" : "rnd-btn-primary"}>{dlg.confirmText || "Ya"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Modal({ id, title, onClose, children, width = 460, onCloseAttempt }) {
   const ref = useRef(null);
   useEffect(() => {
@@ -657,22 +691,24 @@ function Modal({ id, title, onClose, children, width = 460, onCloseAttempt }) {
   }, [onCloseAttempt, onClose]);
   const attemptClose = () => { if (onCloseAttempt) onCloseAttempt(); else onClose(); };
   return (
-    <div
-      style={{
-        position: "fixed", inset: 0, background: "rgba(23,23,23,0.35)", zIndex: 50,
-        display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
-      }}
-      onClick={attemptClose}
-    >
       <div
-        ref={ref}
-        id={id}
+        className="rnd-overlay"
         style={{
-          background: C.surface, borderRadius: R.lg, boxShadow: shadow2, width, maxWidth: "100%",
-          maxHeight: "88vh", overflowY: "auto", padding: 24,
+          position: "fixed", inset: 0, background: "rgba(23,23,23,0.35)", zIndex: 50,
+          display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={attemptClose}
       >
+        <div
+          ref={ref}
+          id={id}
+          className="rnd-pop"
+          style={{
+            background: C.surface, borderRadius: R.lg, boxShadow: shadow2, width, maxWidth: "100%",
+            maxHeight: "88vh", overflowY: "auto", padding: 24,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <h3 style={{ fontSize: 18, fontWeight: 700, color: C.ink, margin: 0, letterSpacing: "-0.25px" }}>{title}</h3>
           <IconButton onClick={attemptClose} title="Tutup"><X size={18} /></IconButton>
@@ -801,17 +837,19 @@ export default function App() {
   function updateProject(id, patch) {
     setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
   }
-  function trashProject(id) {
-    if (!window.confirm("Pindahkan project ke Trash? (otomatis dihapus permanen setelah 14 hari)")) return;
+  async function trashProject(id) {
+    const ok = await confirmDialog({ title: "Buang ke Trash?", message: "Project dipindahkan ke Trash dan otomatis dihapus permanen setelah 14 hari.", confirmText: "Buang" });
+    if (!ok) return;
     updateProject(id, { trashedAt: new Date().toISOString() });
   }
   function recoverProject(id) {
     updateProject(id, { trashedAt: null });
   }
-  function permanentDeleteProject(id) {
+  async function permanentDeleteProject(id) {
     const p = projects.find((x) => x.id === id);
     if (!p) return;
-    if (!window.confirm("Hapus PERMANEN project ini? Tidak bisa dikembalikan.")) return;
+    const ok = await confirmDialog({ title: "Hapus Permanen?", message: "Project dihapus selamanya beserta foto-fotonya. Tidak bisa dikembalikan.", confirmText: "Hapus Permanen", danger: true });
+    if (!ok) return;
     flattenMilestones(p.milestones).forEach((m) => (m.checklist || []).forEach((c) => { if (c.photoUrl) try { deleteFromStorage(c.photoUrl); } catch (_) {} }));
     pendingDeletes.current.push(id);
     setProjects((prev) => prev.filter((x) => x.id !== id));
@@ -826,7 +864,7 @@ export default function App() {
     return (
       <div style={{ fontFamily: "var(--font-sans)", background: C.canvasSoft, minHeight: "100dvh", height: "100dvh", overflowY: "auto", color: C.ink, padding: "28px 24px" }}>
         <style>{`@keyframes sk{0%{opacity:.45}50%{opacity:1}100%{opacity:.45}} .sk{background:var(--surface2);border-radius:8px;animation:sk 1.2s ease-in-out infinite;}`}</style>
-        <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+        <div style={{ maxWidth: 1320, margin: "0 auto" }}>
           <div className="sk" style={{ height: 28, width: 220, marginBottom: 22 }} />
           <div id="rnd-project-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
             {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -854,6 +892,26 @@ export default function App() {
         .rt-li::before { content: "\\2022"; position: absolute; left: 4px; }
         .rt-quote { padding-left: 10px; border-left: 3px solid var(--border); color: var(--muted); }
         [contenteditable]:empty::before { content: attr(data-placeholder); color: var(--muted); }
+        @keyframes rnd-fade { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes rnd-pop { from { opacity: 0; transform: scale(.94) translateY(8px) } to { opacity: 1; transform: none } }
+        @keyframes rnd-rise { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: none } }
+        @keyframes rnd-toast { from { opacity: 0; transform: translateX(28px) } to { opacity: 1; transform: none } }
+        .rnd-overlay { animation: rnd-fade .18s ease both; }
+        .rnd-pop { animation: rnd-pop .22s cubic-bezier(.2,.8,.3,1) both; }
+        .rnd-rise { animation: rnd-rise .38s ease both; }
+        .rnd-toast { animation: rnd-toast .25s cubic-bezier(.2,.8,.3,1) both; }
+        .rnd-confirm { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-bento); box-shadow: var(--shadow-md); padding: 22px; width: 380px; max-width: 100%; }
+        .rnd-confirm-title { font-size: 16px; font-weight: 700; margin: 0 0 8px; color: var(--text); }
+        .rnd-confirm-msg { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.5; }
+        .rnd-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+        .rnd-btn-primary { background: var(--primary); color: #fff; border: none; border-radius: var(--radius-full); padding: 9px 18px; font-size: 14px; font-weight: 500; cursor: pointer; }
+        .rnd-btn-danger { background: #c0392b; color: #fff; border: none; border-radius: var(--radius-full); padding: 9px 18px; font-size: 14px; font-weight: 500; cursor: pointer; }
+        button { transition: background .15s ease, transform .08s ease; }
+        button:active { transform: scale(.97); }
+        @media (prefers-reduced-motion: reduce) {
+          .rnd-overlay, .rnd-pop, .rnd-rise, .rnd-toast { animation: none !important; }
+          button { transition: none !important; }
+        }
       `}</style>
 
       {/* Top nav */}
@@ -873,26 +931,9 @@ export default function App() {
             <span style={{ fontSize: 14, color: C.inkMuted }}>{activeProject.name}</span>
           </>
         )}
-        {saveStatus.state !== "idle" && (
-          <span
-            title={saveStatus.msg}
-            style={{
-              marginLeft: "auto",
-              fontSize: 12,
-              fontWeight: 600,
-              padding: "4px 10px",
-              borderRadius: R.sm,
-              background: saveStatus.state === "error" ? "#ffe0c2" : saveStatus.state === "saved" ? "#c9f2d3" : "#f6f5f4",
-              color: saveStatus.state === "error" ? C.orangeDeep : saveStatus.state === "saved" ? "#0b5e1e" : C.inkMuted,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {saveStatus.state === "error" ? "⚠ " : saveStatus.state === "saved" ? "✓ " : ""}{saveStatus.msg}
-          </span>
-        )}
       </div>
 
-      <div style={{ maxWidth: 1080, margin: "0 auto", padding: "28px 24px 64px" }}>
+        <div style={{ maxWidth: 1320, margin: "0 auto", padding: "28px 24px 64px" }}>
         {view === "dashboard" && (
           <Dashboard
             projects={projects}
@@ -926,6 +967,12 @@ export default function App() {
         />
       )}
       <Lightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+      <ConfirmProvider />
+      {saveStatus.state !== "idle" && (
+        <div className="rnd-toast" style={{ position: "fixed", top: 76, right: 20, zIndex: 300, fontSize: 13, fontWeight: 600, padding: "10px 14px", borderRadius: R.md, boxShadow: shadow2, background: saveStatus.state === "error" ? "#ffe0c2" : saveStatus.state === "saved" ? "#c9f2d3" : "#f6f5f4", color: saveStatus.state === "error" ? C.orangeDeep : saveStatus.state === "saved" ? "#0b5e1e" : C.inkMuted, whiteSpace: "nowrap" }}>
+          {saveStatus.state === "error" ? "⚠ " : saveStatus.state === "saved" ? "✓ " : ""}{saveStatus.msg}
+        </div>
+      )}
     </div>
     </LightboxContext.Provider>
   );
@@ -1058,19 +1105,19 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
       </div>
 
       {/* Status summary + overall progress */}
-      <div id="rnd-summary" style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
-        <div style={{ flex: "1 1 320px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+      <div id="rnd-summary" style={{ display: "flex", gap: 16, marginBottom: 20, flexWrap: "wrap", alignItems: "stretch" }}>
+        <div style={{ flex: "1 1 360px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(118px, 1fr))", gap: 12 }}>
           {Object.entries(PROJECT_STATUS).map(([key, cfg]) => (
-            <div key={key} style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <span style={{ width: 8, height: 8, borderRadius: R.full, background: cfg.fg }} />
-                <span style={{ fontSize: 13, color: C.inkMuted, fontWeight: 500 }}>{cfg.label}</span>
+            <div key={key} style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: "14px 16px", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 76 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ width: 9, height: 9, borderRadius: R.full, background: cfg.fg, flexShrink: 0 }} />
+                <span style={{ fontSize: 12.5, color: C.inkMuted, fontWeight: 500 }}>{cfg.label}</span>
               </div>
-              <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.5px" }}>{counts[key] || 0}</div>
+              <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.5px", lineHeight: 1.1 }}>{counts[key] || 0}</div>
             </div>
           ))}
         </div>
-        <div id="rnd-donut" style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 16, display: "flex", alignItems: "center", gap: 14 }}>
+        <div id="rnd-donut" style={{ flex: "0 0 auto", minWidth: 220, background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: "14px 18px", display: "flex", alignItems: "center", gap: 16 }}>
           <svg width="84" height="84" viewBox="0 0 88 88">
             <circle cx="44" cy="44" r="36" fill="none" stroke={C.hairline} strokeWidth="10" />
             <circle cx="44" cy="44" r="36" fill="none" stroke={C.primary} strokeWidth="10"
@@ -1097,14 +1144,14 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
       )}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
-        {visible.map((p) => {
+        {visible.map((p, i) => {
           const stats = projectChecklistStats(p);
           const cfg = PROJECT_STATUS[p.status] || PROJECT_STATUS["Ideation"];
           return (
           <div
             key={p.id}
             id={"rnd-project-card-" + p.id}
-            style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 18, cursor: "pointer" }}
+            style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 18, cursor: "pointer", animation: "rnd-rise .38s ease both", animationDelay: (i * 45) + "ms" }}
             onClick={() => onOpen(p.id)}
           >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
@@ -1177,8 +1224,8 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
                   key={i}
                   onClick={() => onOpen(a.project.id)}
                   style={{
-                    display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer",
-                    padding: "8px 10px", borderRadius: R.sm, background: a.kind === "overdue" ? "#fff4ec" : "#f6f5f4",
+                    display: "flex", flexDirection: "column", gap: 6, cursor: "pointer",
+                    padding: "9px 11px", borderRadius: R.sm, background: a.kind === "overdue" ? "#fff4ec" : "#f6f5f4",
                   }}
                 >
                   <div style={{ fontSize: 13 }}>
@@ -1216,8 +1263,8 @@ function ProjectModal({ initial, onClose, onSave }) {
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e && e.target ? e.target.value : e }));
   const initialSnapshot = useRef(JSON.stringify(form)).current;
   const dirty = JSON.stringify(form) !== initialSnapshot;
-  const handleClose = () => {
-    if (dirty && !window.confirm("Keluar? Data yang sudah diinput akan hilang.")) return;
+  const handleClose = async () => {
+    if (dirty && !(await confirmDialog({ title: "Keluar?", message: "Data yang sudah diinput akan hilang.", confirmText: "Keluar", cancelText: "Batal" }))) return;
     onClose();
   };
 
@@ -1555,7 +1602,7 @@ function MilestoneNode({ node, depth, isLast, q = "", onAddChild, onEdit, onDele
             <div style={{ display: "flex", gap: 2 }}>
               <IconButton title="Tambah sub-tahapan" onClick={() => onAddChild(node.id)}><Plus size={15} /></IconButton>
               <IconButton title="Edit" onClick={() => onEdit(node)}><Pencil size={14} /></IconButton>
-              <IconButton title="Hapus" danger onClick={() => { if (window.confirm('Hapus milestone "' + (node.title || '') + '"? Tindakan tidak bisa dibatalkan.')) onDelete(node.id); }}><Trash2 size={14} /></IconButton>
+              <IconButton title="Hapus" danger onClick={async () => { if (await confirmDialog({ title: "Hapus Tahapan?", message: 'Hapus milestone "' + (node.title || '') + '"? Tindakan tidak bisa dibatalkan.', confirmText: "Hapus", danger: true })) onDelete(node.id); }}><Trash2 size={14} /></IconButton>
             </div>
           </div>
 
@@ -1593,7 +1640,7 @@ function MilestoneNode({ node, depth, isLast, q = "", onAddChild, onEdit, onDele
                         </div>
                         <div style={{ display: "flex", gap: 0 }}>
                           <IconButton title="Edit" onClick={() => onEditChecklist(node.id, c)}><Pencil size={12} /></IconButton>
-                          <IconButton title="Hapus" danger onClick={() => { if (window.confirm('Hapus item "' + (c.title || '') + '"? Tindakan tidak bisa dibatalkan.')) onDeleteChecklist(node.id, c.id); }}><Trash2 size={12} /></IconButton>
+                          <IconButton title="Hapus" danger onClick={async () => { if (await confirmDialog({ title: "Hapus Item?", message: 'Hapus item "' + (c.title || '') + '"? Tindakan tidak bisa dibatalkan.', confirmText: "Hapus", danger: true })) onDeleteChecklist(node.id, c.id); }}><Trash2 size={12} /></IconButton>
                         </div>
                       </div>
                     ))}
@@ -1666,8 +1713,8 @@ function MilestoneModal({ isEdit, initial, onClose, onSave }) {
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e && e.target ? e.target.value : e }));
   const initialSnapshot = useRef(JSON.stringify(form)).current;
   const dirty = JSON.stringify(form) !== initialSnapshot;
-  const handleClose = () => {
-    if (dirty && !window.confirm("Keluar? Data yang sudah diinput akan hilang.")) return;
+  const handleClose = async () => {
+    if (dirty && !(await confirmDialog({ title: "Keluar?", message: "Data yang sudah diinput akan hilang.", confirmText: "Keluar", cancelText: "Batal" }))) return;
     onClose();
   };
   return (
@@ -1729,8 +1776,8 @@ function ChecklistModal({ initial, onClose, onSave }) {
   function onPick(e) {
     pickFile(e.target.files && e.target.files[0]);
   }
-  const handleClose = () => {
-    if (dirty && !window.confirm("Keluar? Data yang sudah diinput akan hilang.")) return;
+  const handleClose = async () => {
+    if (dirty && !(await confirmDialog({ title: "Keluar?", message: "Data yang sudah diinput akan hilang.", confirmText: "Keluar", cancelText: "Batal" }))) return;
     onClose();
   };
 
@@ -1807,8 +1854,8 @@ function EvaluationModal({ onClose, onSave }) {
   const [form, setForm] = useState({ score: 3, decision: "Go", comments: "" });
   const initialSnapshot = useRef(JSON.stringify(form)).current;
   const dirty = JSON.stringify(form) !== initialSnapshot;
-  const handleClose = () => {
-    if (dirty && !window.confirm("Keluar? Data yang sudah diinput akan hilang.")) return;
+  const handleClose = async () => {
+    if (dirty && !(await confirmDialog({ title: "Keluar?", message: "Data yang sudah diinput akan hilang.", confirmText: "Keluar", cancelText: "Batal" }))) return;
     onClose();
   };
   return (
