@@ -6,36 +6,28 @@ import {
 } from "lucide-react";
 import { loadProjects, syncToSupabase, uploadToStorage, deleteFromStorage } from "./supabase.js";
 
-// ---------- Design tokens (Notion-Design.md) ----------
+// ---------- Design tokens — diselaraskan ke design-system.css (REYNAHUB/UNITOOLS) ----------
 const C = {
-  canvasSoft: "#f6f5f4",
-  surface: "#ffffff",
-  hairline: "#e6e6e6",
-  ink: "#171717",
-  inkSecondary: "#31302e",
-  inkMuted: "#615d59",
-  inkFaint: "#a39e98",
-  primary: "#0075de",
-  primaryActive: "#005bab",
-  secondary: "#213183",
+  canvasSoft: "var(--bg)",
+  surface: "var(--surface)",
+  hairline: "var(--border)",
+  ink: "var(--text)",
+  inkSecondary: "var(--text)",
+  inkMuted: "var(--muted)",
+  inkFaint: "#a39e98", // tidak ada token faint di shared; pertahankan
+  primary: "var(--primary)",        // aksen merah brand webtools
+  primaryActive: "var(--primary-light)",
+  secondary: "#213183",             // navy logo RND (sub-brand)
   onPrimary: "#ffffff",
-  sky: "#62aef0",
-  purple: "#d6b6f6",
-  purpleDeep: "#391c57",
-  pink: "#ff64c8",
-  orange: "#dd5b00",
-  orangeDeep: "#793400",
-  teal: "#2a9d99",
-  green: "#1aae39",
-  brown: "#523410",
+  sky: "#62aef0", purple: "#d6b6f6", purpleDeep: "#391c57", pink: "#ff64c8",
+  orange: "var(--warning)", orangeDeep: "#793400",
+  teal: "#2a9d99", green: "var(--success)", brown: "#523410",
 };
 
-const R = { xs: 4, sm: 5, md: 8, lg: 12, xl: 16, full: 9999 };
+const R = { xs: 4, sm: "var(--radius-md)", md: "var(--radius-sm)", lg: "var(--radius-bento)", xl: "var(--radius-bento)", full: "var(--radius-full)" };
 
-const shadow1 =
-  "0 0.175px 1.041px rgba(0,0,0,0.01), 0 0.8px 2.925px rgba(0,0,0,0.02), 0 2.025px 7.847px rgba(0,0,0,0.027), 0 4px 18px rgba(0,0,0,0.04)";
-const shadow2 =
-  "0 0.3px 1.7px rgba(0,0,0,0.015), 0 1.3px 4.7px rgba(0,0,0,0.025), 0 3.3px 12.6px rgba(0,0,0,0.033), 0 6px 24px rgba(0,0,0,0.04), 0 23px 52px rgba(0,0,0,0.05)";
+const shadow1 = "var(--shadow-sm)";
+const shadow2 = "var(--shadow-md)";
 
 // ---------- Status config ----------
 const PROJECT_STATUS = {
@@ -697,8 +689,8 @@ export default function App() {
 
   if (loading) {
     return (
-      <div style={{ fontFamily: "Inter, -apple-system, system-ui, 'Segoe UI', Helvetica, Arial, sans-serif", background: C.canvasSoft, minHeight: "100vh", color: C.ink, padding: "28px 24px" }}>
-        <style>{`@keyframes sk{0%{opacity:.45}50%{opacity:1}100%{opacity:.45}} .sk{background:#e9e7e4;border-radius:8px;animation:sk 1.2s ease-in-out infinite;}`}</style>
+      <div style={{ fontFamily: "var(--font-sans)", background: C.canvasSoft, minHeight: "100dvh", height: "100dvh", overflowY: "auto", color: C.ink, padding: "28px 24px" }}>
+        <style>{`@keyframes sk{0%{opacity:.45}50%{opacity:1}100%{opacity:.45}} .sk{background:var(--surface2);border-radius:8px;animation:sk 1.2s ease-in-out infinite;}`}</style>
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
           <div className="sk" style={{ height: 28, width: 220, marginBottom: 22 }} />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
@@ -718,11 +710,11 @@ export default function App() {
 
   return (
     <LightboxContext.Provider value={{ viewPhoto: setLightboxUrl }}>
-    <div style={{ fontFamily: "Inter, -apple-system, system-ui, 'Segoe UI', Helvetica, Arial, sans-serif", background: C.canvasSoft, minHeight: "100vh", color: C.ink }}>
+    <div style={{ fontFamily: "var(--font-sans)", background: C.canvasSoft, minHeight: "100dvh", height: "100dvh", overflowY: "auto", color: C.ink }}>
       <style>{`
         * { box-sizing: border-box; }
-        ::placeholder { color: ${C.inkFaint}; }
-        input:focus, textarea:focus, select:focus { border-color: ${C.primary} !important; box-shadow: 0 0 0 3px rgba(0,117,222,0.12); }
+        ::placeholder { color: var(--muted); }
+        input:focus, textarea:focus, select:focus { border-color: var(--primary) !important; box-shadow: var(--focus-ring); }
       `}</style>
 
       {/* Top nav */}
