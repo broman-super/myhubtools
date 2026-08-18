@@ -1471,13 +1471,15 @@ function ChecklistModal({ initial, onClose, onSave }) {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  function onPick(e) {
-    const f = e.target.files && e.target.files[0];
+  function pickFile(f) {
     if (!f) return;
     setFile(f);
     const reader = new FileReader();
     reader.onload = () => setPreview(reader.result);
     reader.readAsDataURL(f);
+  }
+  function onPick(e) {
+    pickFile(e.target.files && e.target.files[0]);
   }
 
   async function handleSubmit(e) {
@@ -1520,13 +1522,20 @@ function ChecklistModal({ initial, onClose, onSave }) {
         </div>
         <div>
           <FieldLabel>Foto Bukti</FieldLabel>
-          {preview && (
-            <>
-              <img src={preview} alt="" onClick={() => viewPhoto(preview)} style={{ maxWidth: "100%", maxHeight: 260, borderRadius: R.sm, marginBottom: 8, display: "block", cursor: "pointer" }} />
-              <button type="button" onClick={() => { setPreview(""); setFile(null); }} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: R.sm, border: `1px solid ${C.hairline}`, background: C.surface, color: C.inkSecondary, fontSize: 12, cursor: "pointer", marginBottom: 8 }}>Hapus foto</button>
-            </>
-          )}
-          <input type="file" accept="image/*" onChange={onPick} style={{ fontSize: 13 }} />
+          <div
+            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onDrop={(e) => { e.preventDefault(); e.stopPropagation(); pickFile(e.dataTransfer.files && e.dataTransfer.files[0]); }}
+            style={{ border: `1px dashed ${C.hairline}`, borderRadius: R.md, padding: 12, marginBottom: 8 }}
+          >
+            {preview && (
+              <>
+                <img src={preview} alt="" onClick={() => viewPhoto(preview)} style={{ maxWidth: "100%", maxHeight: 260, borderRadius: R.sm, marginBottom: 8, display: "block", cursor: "pointer" }} />
+                <button type="button" onClick={() => { setPreview(""); setFile(null); }} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: R.sm, border: `1px solid ${C.hairline}`, background: C.surface, color: C.inkSecondary, fontSize: 12, cursor: "pointer", marginBottom: 8 }}>Hapus foto</button>
+              </>
+            )}
+            <input type="file" accept="image/*" onChange={onPick} style={{ fontSize: 13 }} />
+            <div style={{ fontSize: 11, color: C.inkFaint, marginTop: 4 }}>Klik pilih file, atau seret gambar ke sini.</div>
+          </div>
         </div>
         <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.inkSecondary, cursor: "pointer" }}>
           <input type="checkbox" checked={form.isCompleted} onChange={(e) => setForm((f) => ({ ...f, isCompleted: e.target.checked }))} />

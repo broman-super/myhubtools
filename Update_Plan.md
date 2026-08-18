@@ -109,7 +109,7 @@ Tanggal: 2026-08-13
 - [x] **Phase 2 — Konfirmasi hapus** milestone & checklist (`window.confirm` sebelum hapus).
 - [x] **Phase 3 — Badge "Lewat Target"** merah di kartu dashboard bila ada milestone overdue.
 - [x] **Phase 4 — Esc + klik backdrop tutup modal** (backdrop sudah ada) + auto-focus field pertama.
-- [ ] **Phase 5 — Drag-and-drop / paste gambar** di modal checklist.
+- [x] **Phase 5 — Drag-and-drop gambar** di modal checklist (zona drop + petunjuk).
 - [ ] **Phase 6 — Thumbnail foto di PDF export** (bukan cuma 📷).
 - [ ] **Phase 7 — Skeleton loading** saat memuat data.
 - [ ] **Phase 8 — Indikator "ada foto"** (ikon kamera) di timeline checklist.
