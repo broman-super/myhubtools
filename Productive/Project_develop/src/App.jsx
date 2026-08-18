@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { createPortal } from "react-dom";
 import {
   Plus, Calendar, ChevronDown, ChevronRight, Pencil, Trash2, Camera, CheckCircle2,
-  Circle, AlertTriangle, X, ArrowLeft, TrendingUp, Archive, Star,
+  Circle, AlertTriangle, X, ArrowLeft, TrendingUp, Archive, Star, FolderKanban, RotateCcw,
   ClipboardList, LayoutGrid, Download, Printer
 } from "lucide-react";
 import { loadProjects, syncToSupabase, uploadToStorage, deleteFromStorage } from "./supabase.js";
@@ -178,6 +178,7 @@ function openPrintableReport(projects) {
     body += `<p class="meta">${esc(p.category)} · Target: ${esc(p.targetReleaseDate || "—")}</p>`;
     flattenMilestones(p.milestones).forEach((m) => {
       body += `<h3>${esc(m.title)} <small>(${esc(m.status || "")} · ${esc(m.targetDate || "")})</small></h3>`;
+      if (m.description) body += renderRich(m.description);
       const items = m.checklist || [];
       if (items.length) body += "<ul>" + items.map((c) => `<li class="${c.isCompleted ? "done" : ""}">${esc(c.title)}${c.photoUrl ? ` <img src="${esc(c.photoUrl)}" style="height:26px;width:26px;object-fit:cover;border-radius:4px;vertical-align:middle;">` : ""}</li>`).join("") + "</ul>";
     });
@@ -252,6 +253,23 @@ function parseYMD(s) {
   if (p.length !== 3 || !p[0] || !p[1] || !p[2]) return null;
   const d = new Date(p[0], p[1] - 1, p[2]);
   return isNaN(d.getTime()) ? null : d;
+}
+
+// ---------- Rich text (format cerdas ala WhatsApp) ----------
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+// Markdown ringkas -> HTML aman: **bold**, "- "/"+" -> bullet, "> " -> kutipan.
+function renderRich(md) {
+  const lines = String(md || "").split("\n");
+  return lines.map((line) => {
+    let cls = "", raw = line;
+    if (/^[-+]\s+/.test(raw)) { cls = "rt-li"; raw = raw.replace(/^[-+]\s+/, ""); }
+    else if (/^>\s+/.test(raw)) { cls = "rt-quote"; raw = raw.replace(/^>\s+/, ""); }
+    let s = escapeHtml(raw).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+    if (s === "") s = "<br/>";
+    return `<div class="${cls}">${s}</div>`;
+  }).join("");
 }
 function DatePicker({ value, onChange, style }) {
   const [open, setOpen] = useState(false);
@@ -549,6 +567,78 @@ const inputStyle = {
   border: "1px solid #dddddd", borderRadius: R.xs, padding: "8px 10px", outline: "none",
 };
 
+// Editor teks cerdas: menyimpan plain text (markdown ringkas), menampilkan bold/bullet/quote secara live.
+function RichTextInput({ value, onChange, placeholder, style, minHeight = 60 }) {
+  const ref = useRef(null);
+  const last = useRef(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    const v = value || "";
+    if (last.current !== v) {
+      last.current = v;
+      ref.current.innerHTML = renderRich(v);
+    }
+  }, [value]);
+
+  const getOffset = (root) => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return null;
+    const range = sel.getRangeAt(0);
+    const pre = range.cloneRange();
+    pre.selectNodeContents(root);
+    pre.setEnd(range.endContainer, range.endOffset);
+    return pre.toString().length;
+  };
+  const setOffset = (root, offset) => {
+    if (offset == null) return;
+    let rem = offset;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let n;
+    while ((n = walker.nextNode())) {
+      const len = n.textContent.length;
+      if (rem <= len) {
+        const sel = window.getSelection();
+        const r = document.createRange();
+        r.setStart(n, rem);
+        r.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(r);
+        return;
+      }
+      rem -= len;
+    }
+    const sel = window.getSelection();
+    const r = document.createRange();
+    r.selectNodeContents(root);
+    r.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(r);
+  };
+
+  const sync = () => {
+    const root = ref.current;
+    if (!root) return;
+    const text = (root.innerText || "").replace(/\u00a0/g, " ");
+    const off = getOffset(root);
+    last.current = text;
+    root.innerHTML = renderRich(text);
+    setOffset(root, off);
+    onChange(text);
+  };
+
+  return (
+    <div
+      ref={ref}
+      contentEditable
+      suppressContentEditableWarning
+      data-placeholder={placeholder}
+      onInput={sync}
+      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); document.execCommand("insertText", false, "\n"); sync(); } }}
+      style={{ ...inputStyle, minHeight, resize: "vertical", overflowY: "auto", lineHeight: 1.5 }}
+    />
+  );
+}
+
 function Modal({ id, title, onClose, children, width = 460, onCloseAttempt }) {
   const ref = useRef(null);
   useEffect(() => {
@@ -658,7 +748,8 @@ export default function App() {
       skipSync.current = false;
       return;
     }
-    queued.current = { rows: projects.map((p) => ({ id: p.id, data: p })), deletes: [] };
+    queued.current = { rows: projects.map((p) => ({ id: p.id, data: p })), deletes: pendingDeletes.current.slice() };
+    pendingDeletes.current = [];
     setSaveStatus({ state: "saving", msg: "Menyimpan…" });
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => doSave(), 400);
@@ -674,7 +765,8 @@ export default function App() {
 
   const [activeProjectId, setActiveProjectId] = useState(null);
   const [projectModal, setProjectModal] = useState(null); // null | {} (new) | project (edit)
-  const [showArchived, setShowArchived] = useState(false);
+  const [navView, setNavView] = useState("project");
+  const pendingDeletes = useRef([]);
   const [lightboxUrl, setLightboxUrl] = useState(null);
 
   const activeProject = useMemo(
@@ -705,6 +797,24 @@ export default function App() {
   }
   function archiveProject(id) {
     setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, archived: !p.archived } : p)));
+  }
+  function updateProject(id, patch) {
+    setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  }
+  function trashProject(id) {
+    if (!window.confirm("Pindahkan project ke Trash? (otomatis dihapus permanen setelah 14 hari)")) return;
+    updateProject(id, { trashedAt: new Date().toISOString() });
+  }
+  function recoverProject(id) {
+    updateProject(id, { trashedAt: null });
+  }
+  function permanentDeleteProject(id) {
+    const p = projects.find((x) => x.id === id);
+    if (!p) return;
+    if (!window.confirm("Hapus PERMANEN project ini? Tidak bisa dikembalikan.")) return;
+    flattenMilestones(p.milestones).forEach((m) => (m.checklist || []).forEach((c) => { if (c.photoUrl) try { deleteFromStorage(c.photoUrl); } catch (_) {} }));
+    pendingDeletes.current.push(id);
+    setProjects((prev) => prev.filter((x) => x.id !== id));
   }
   function updateProjectMilestones(projectId, updater) {
     setProjects((prev) =>
@@ -740,6 +850,10 @@ export default function App() {
         * { box-sizing: border-box; }
         ::placeholder { color: var(--muted); }
         input:focus, textarea:focus, select:focus { border-color: var(--primary) !important; box-shadow: var(--focus-ring); }
+        .rt-li { position: relative; padding-left: 18px; }
+        .rt-li::before { content: "\\2022"; position: absolute; left: 4px; }
+        .rt-quote { padding-left: 10px; border-left: 3px solid var(--border); color: var(--muted); }
+        [contenteditable]:empty::before { content: attr(data-placeholder); color: var(--muted); }
       `}</style>
 
       {/* Top nav */}
@@ -782,12 +896,15 @@ export default function App() {
         {view === "dashboard" && (
           <Dashboard
             projects={projects}
-            showArchived={showArchived}
-            setShowArchived={setShowArchived}
+            navView={navView}
+            setNavView={setNavView}
             onOpen={openProject}
             onNewProject={() => setProjectModal({})}
             onEditProject={(p) => setProjectModal(p)}
             onArchive={archiveProject}
+            onTrash={trashProject}
+            onRecover={recoverProject}
+            onPermanentDelete={permanentDeleteProject}
           />
         )}
         {view === "project" && activeProject && (
@@ -815,7 +932,7 @@ export default function App() {
 }
 
 // ---------- Dashboard ----------
-function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProject, onEditProject, onArchive }) {
+function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEditProject, onArchive, onTrash, onRecover, onPermanentDelete }) {
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sort, setSort] = useState("default");
@@ -833,9 +950,29 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
     target: (a, b) => (a.targetReleaseDate || "9999-99-99").localeCompare(b.targetReleaseDate || "9999-99-99"),
     progress: (a, b) => projectChecklistStats(b).pct - projectChecklistStats(a).pct,
   };
+  const NAV = [
+    { key: "project", label: "Project", icon: <FolderKanban size={15} /> },
+    { key: "archive", label: "Arsip", icon: <Archive size={15} /> },
+    { key: "trash", label: "Trash", icon: <Trash2 size={15} /> },
+  ];
+  const daysLeft = (p) => {
+    if (!p.trashedAt) return null;
+    const t = parseYMD(p.trashedAt);
+    if (isNaN(t)) return null;
+    return Math.max(0, Math.ceil((t - Date.now()) / 86400000));
+  };
+  const inView = (p) =>
+    navView === "trash" ? !!p.trashedAt
+      : navView === "archive" ? (!!p.archived && !p.trashedAt)
+        : (!p.archived && !p.trashedAt);
+  const navCounts = {
+    project: projects.filter((p) => !p.archived && !p.trashedAt).length,
+    archive: projects.filter((p) => p.archived && !p.trashedAt).length,
+    trash: projects.filter((p) => p.trashedAt).length,
+  };
   const needle = q.trim().toLowerCase();
   const visible = projects
-    .filter((p) => (showArchived ? p.archived : !p.archived))
+    .filter(inView)
     .filter((p) => statusFilter === "all" || p.status === statusFilter)
     .filter((p) => {
       if (!needle) return true;
@@ -849,22 +986,23 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
     }).slice().sort(comparators[sort] || comparators.default);
 
   const counts = { Ideation: 0, "On Track": 0, "At Risk": 0, Done: 0 };
-  projects.filter((p) => !p.archived).forEach((p) => { counts[p.status] = (counts[p.status] || 0) + 1; });
+  projects.filter((p) => !p.archived && !p.trashedAt).forEach((p) => { counts[p.status] = (counts[p.status] || 0) + 1; });
   let totalItems = 0, doneItems = 0;
-  projects.filter((p) => !p.archived).forEach((p) => {
+  projects.filter((p) => !p.archived && !p.trashedAt).forEach((p) => {
     flattenMilestones(p.milestones).forEach((m) => (m.checklist || []).forEach((c) => { totalItems++; if (c.isCompleted) doneItems++; }));
   });
   const overallPct = totalItems ? Math.round((doneItems / totalItems) * 100) : 0;
   const CIRC = 2 * Math.PI * 36;
 
   const alerts = [];
-  projects.filter((p) => !p.archived).forEach((p) => {
+  projects.filter((p) => !p.archived && !p.trashedAt).forEach((p) => {
     overdueMilestones(p).forEach((m) => alerts.push({ project: p, milestone: m, kind: "overdue" }));
     upcomingMilestones(p).forEach((m) => alerts.push({ project: p, milestone: m, kind: "upcoming" }));
   });
 
   return (
-    <div id="rnd-dashboard">
+    <div id="rnd-dashboard" style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.625px", margin: "0 0 4px" }}>Dashboard</h1>
@@ -872,11 +1010,11 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button
-            onClick={() => downloadCsv("rnd-roadmap.csv", buildRoadmapCsv(projects.filter((p) => !p.archived)))}
+            onClick={() => downloadCsv("rnd-roadmap.csv", buildRoadmapCsv(projects.filter((p) => !p.archived && !p.trashedAt)))}
             style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 14px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, color: C.ink, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
           ><Download size={16} /> Export CSV</button>
           <button
-            onClick={() => openPrintableReport(projects)}
+            onClick={() => openPrintableReport(projects.filter((p) => !p.archived && !p.trashedAt))}
             style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 14px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, color: C.ink, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
           ><Printer size={16} /> Export PDF</button>
           <PrimaryButton onClick={onNewProject}><Plus size={16} /> Project Baru</PrimaryButton>
@@ -948,52 +1086,13 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
         </div>
       </div>
 
-      {/* Alert panel */}
-      {alerts.length > 0 && (
-        <div style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 18, marginBottom: 24, boxShadow: shadow1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <AlertTriangle size={16} color={C.orangeDeep} />
-            <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Panel Peringatan</h3>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {alerts.map((a, i) => (
-              <div
-                key={i}
-                onClick={() => onOpen(a.project.id)}
-                style={{
-                  display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer",
-                  padding: "8px 10px", borderRadius: R.sm, background: a.kind === "overdue" ? "#fff4ec" : "#f6f5f4",
-                }}
-              >
-                <div style={{ fontSize: 13 }}>
-                  <span style={{ fontWeight: 600 }}>{a.project.name}</span>
-                  <span style={{ color: C.inkMuted }}> — {a.milestone.title}</span>
-                </div>
-                <Badge
-                  bg={a.kind === "overdue" ? "#ffe0c2" : "#cfe6ff"}
-                  fg={a.kind === "overdue" ? C.orangeDeep : "#0b3a63"}
-                >
-                  {a.kind === "overdue" ? `Lewat target: ${a.milestone.targetDate}` : `Target: ${a.milestone.targetDate}`}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>{showArchived ? "Project Diarsipkan" : "Semua Project"}</h3>
-        <button
-          onClick={() => setShowArchived((s) => !s)}
-          style={{ background: "none", border: "none", color: C.primary, fontSize: 13, fontWeight: 500, cursor: "pointer" }}
-        >
-          {showArchived ? "Lihat project aktif" : "Lihat arsip"}
-        </button>
+        <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>{navView === "trash" ? "Project di Trash" : navView === "archive" ? "Project Diarsipkan" : "Semua Project"}</h3>
       </div>
 
       {visible.length === 0 && (
         <div style={{ background: C.surface, border: `1px dashed ${C.hairline}`, borderRadius: R.lg, padding: 40, textAlign: "center", color: C.inkMuted, fontSize: 14 }}>
-          {needle ? `Tidak ada hasil untuk "${q}".` : showArchived ? "Belum ada project yang diarsipkan." : "Belum ada project. Tambahkan project baru untuk mulai melacak roadmap."}
+          {needle ? `Tidak ada hasil untuk "${q}".` : navView === "trash" ? "Belum ada project di Trash." : navView === "archive" ? "Belum ada project yang diarsipkan." : "Belum ada project. Tambahkan project baru untuk mulai melacak roadmap."}
         </div>
       )}
 
@@ -1010,12 +1109,24 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
           >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                 <Badge bg={cfg.bg} fg={cfg.fg}>{cfg.label}</Badge>
-                {overdueMilestones(p).length > 0 && (
+                {p.trashedAt ? (
+                  <Badge bg="#ffe0c2" fg={C.orangeDeep}>Trash · {daysLeft(p)} hari</Badge>
+                ) : overdueMilestones(p).length > 0 && (
                   <Badge bg="#ffe0c2" fg={C.orangeDeep}>Lewat Target</Badge>
                 )}
                 <div style={{ display: "flex", gap: 2 }} onClick={(e) => e.stopPropagation()}>
-                  <IconButton title="Edit" onClick={() => onEditProject(p)}><Pencil size={14} /></IconButton>
-                  <IconButton title={p.archived ? "Aktifkan" : "Arsipkan"} onClick={() => onArchive(p.id)}><Archive size={14} /></IconButton>
+                  {navView === "trash" ? (
+                    <>
+                      <IconButton title="Pulihkan" onClick={() => onRecover(p.id)}><RotateCcw size={14} /></IconButton>
+                      <IconButton title="Hapus Permanen" onClick={() => onPermanentDelete(p.id)}><Trash2 size={14} /></IconButton>
+                    </>
+                  ) : (
+                    <>
+                      <IconButton title="Edit" onClick={() => onEditProject(p)}><Pencil size={14} /></IconButton>
+                      <IconButton title={p.archived ? "Aktifkan" : "Arsipkan"} onClick={() => onArchive(p.id)}><Archive size={14} /></IconButton>
+                      <IconButton title="Buang ke Trash" onClick={() => onTrash(p.id)}><Trash2 size={14} /></IconButton>
+                    </>
+                  )}
                 </div>
               </div>
               <h4 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 2px", letterSpacing: "-0.25px" }}>{highlightMatch(p.name, q)}</h4>
@@ -1031,6 +1142,61 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
           );
         })}
       </div>
+      </div>
+      <aside id="rnd-sidebar" style={{ flex: "0 0 248px", position: "sticky", top: 72, display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 14 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.inkMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.5px" }}>Navigasi</div>
+          <nav style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {NAV.map((n) => (
+              <button
+                key={n.key}
+                onClick={() => setNavView(n.key)}
+                style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  padding: "9px 11px", borderRadius: R.md, border: "none", cursor: "pointer",
+                  fontSize: 13, fontWeight: 600, textAlign: "left",
+                  background: navView === n.key ? C.primary : "transparent",
+                  color: navView === n.key ? "#fff" : C.ink,
+                }}
+              >
+                <span style={{ display: "flex", alignItems: "center", gap: 9 }}>{n.icon}{n.label}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, opacity: 0.85 }}>{navCounts[n.key]}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+        {alerts.length > 0 && (
+          <div style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 18, boxShadow: shadow1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <AlertTriangle size={16} color={C.orangeDeep} />
+              <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Panel Peringatan</h3>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {alerts.map((a, i) => (
+                <div
+                  key={i}
+                  onClick={() => onOpen(a.project.id)}
+                  style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer",
+                    padding: "8px 10px", borderRadius: R.sm, background: a.kind === "overdue" ? "#fff4ec" : "#f6f5f4",
+                  }}
+                >
+                  <div style={{ fontSize: 13 }}>
+                    <span style={{ fontWeight: 600 }}>{a.project.name}</span>
+                    <span style={{ color: C.inkMuted }}> — {a.milestone.title}</span>
+                  </div>
+                  <Badge
+                    bg={a.kind === "overdue" ? "#ffe0c2" : "#cfe6ff"}
+                    fg={a.kind === "overdue" ? C.orangeDeep : "#0b3a63"}
+                  >
+                    {a.kind === "overdue" ? `Lewat target: ${a.milestone.targetDate}` : `Target: ${a.milestone.targetDate}`}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </aside>
     </div>
   );
 }
@@ -1077,7 +1243,7 @@ function ProjectModal({ initial, onClose, onSave }) {
         </div>
         <div>
           <FieldLabel>Deskripsi Singkat</FieldLabel>
-          <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 60 }} value={form.description} onChange={set("description")} />
+          <RichTextInput value={form.description} onChange={(v) => setForm((f) => ({ ...f, description: v }))} placeholder="Tulis deskripsi… Gunakan **tebal**, - atau + untuk bullet, > untuk kutipan." />
         </div>
         <div style={{ display: "flex", gap: 12 }}>
           <div style={{ flex: 1 }}>
@@ -1194,7 +1360,7 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
             <span style={{ fontSize: 12, color: C.inkFaint }}>{project.code} · {project.category}</span>
           </div>
           <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.5px", margin: "0 0 6px" }}>{project.name}</h1>
-          <p style={{ fontSize: 14, color: C.inkSecondary, margin: 0, maxWidth: 620 }}>{project.description}</p>
+          <div style={{ fontSize: 14, color: C.inkSecondary, margin: 0, maxWidth: 620 }} dangerouslySetInnerHTML={{ __html: renderRich(project.description) }} />
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button
@@ -1374,7 +1540,7 @@ function MilestoneNode({ node, depth, isLast, q = "", onAddChild, onEdit, onDele
                 <Badge bg={st.bg} fg={st.fg}>{st.label}</Badge>
                 {isOverdue && <Badge bg="#ffe0c2" fg={C.orangeDeep} icon={<AlertTriangle size={11} />}>Overdue</Badge>}
               </div>
-              {node.description && <p style={{ fontSize: 13, color: C.inkMuted, margin: "0 0 6px" }}>{node.description}</p>}
+              {node.description && <div style={{ fontSize: 13, color: C.inkMuted, margin: "0 0 6px" }} dangerouslySetInnerHTML={{ __html: renderRich(node.description) }} />}
               <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 12, color: C.inkFaint, flexWrap: "wrap" }}>
                 {node.targetDate && <span>Target: {node.targetDate}</span>}
                 {checklistTotal > 0 && (
@@ -1452,7 +1618,7 @@ function MilestoneNode({ node, depth, isLast, q = "", onAddChild, onEdit, onDele
                           <span style={{ fontSize: 12, color: C.inkMuted }}>Skor {ev.score}/5</span>
                           <span style={{ fontSize: 11, color: C.inkFaint }}>· {ev.createdAt}</span>
                         </div>
-                        {ev.comments && <div style={{ fontSize: 12, color: C.inkSecondary }}>{ev.comments}</div>}
+                        {ev.comments && <div style={{ fontSize: 12, color: C.inkSecondary }} dangerouslySetInnerHTML={{ __html: renderRich(ev.comments) }} />}
                       </div>
                     ))}
                   </div>
@@ -1513,7 +1679,7 @@ function MilestoneModal({ isEdit, initial, onClose, onSave }) {
         </div>
         <div>
           <FieldLabel>Deskripsi</FieldLabel>
-          <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 56 }} value={form.description} onChange={set("description")} />
+          <RichTextInput value={form.description} onChange={(v) => setForm((f) => ({ ...f, description: v }))} placeholder="Tulis deskripsi… Gunakan **tebal**, - atau + untuk bullet, > untuk kutipan." />
         </div>
         <div style={{ display: "flex", gap: 12 }}>
           <div style={{ flex: 1 }}>
@@ -1672,7 +1838,7 @@ function EvaluationModal({ onClose, onSave }) {
         </div>
         <div>
           <FieldLabel>Catatan Kualitatif</FieldLabel>
-          <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 70 }} value={form.comments} onChange={(e) => setForm((f) => ({ ...f, comments: e.target.value }))} placeholder="Pertimbangan, risiko, atau alasan keputusan..." />
+          <RichTextInput value={form.comments} onChange={(v) => setForm((f) => ({ ...f, comments: v }))} placeholder="Pertimbangan, risiko, atau alasan keputusan… Gunakan **tebal**, - atau + untuk bullet, > untuk kutipan." minHeight={70} />
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
           <SecondaryButton onClick={handleClose}>Batal</SecondaryButton>
@@ -1705,7 +1871,7 @@ function ReportView({ project }) {
             <span style={{ fontWeight: 700, fontSize: 14 }}>{m.title}</span>
             <Badge bg={(MILESTONE_STATUS[m.status] || MILESTONE_STATUS["Belum mulai"]).bg} fg={(MILESTONE_STATUS[m.status] || MILESTONE_STATUS["Belum mulai"]).fg}>{m.status}</Badge>
           </div>
-          {m.description && <p style={{ fontSize: 13, color: C.inkMuted, margin: "0 0 8px" }}>{m.description}</p>}
+          {m.description && <div style={{ fontSize: 13, color: C.inkMuted, margin: "0 0 8px" }} dangerouslySetInnerHTML={{ __html: renderRich(m.description) }} />}
 
           {(m.checklist || []).length > 0 && (
             <div style={{ marginBottom: 8 }}>
@@ -1726,7 +1892,7 @@ function ReportView({ project }) {
               {m.evaluations.map((ev) => (
                 <div key={ev.id} style={{ fontSize: 12, color: C.inkMuted, marginBottom: 2 }}>
                   <Badge bg={ev.decision === "Go" ? "#c9f2d3" : "#ffe0c2"} fg={ev.decision === "Go" ? "#0b5e1e" : C.orangeDeep}>{ev.decision}</Badge>
-                  {" "}Skor {ev.score}/5 — {ev.comments} <span style={{ color: C.inkFaint }}>({ev.createdAt})</span>
+                  {" "}Skor {ev.score}/5 — <span dangerouslySetInnerHTML={{ __html: renderRich(ev.comments) }} /> <span style={{ color: C.inkFaint }}>({ev.createdAt})</span>
                 </div>
               ))}
             </div>

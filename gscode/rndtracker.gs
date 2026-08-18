@@ -53,7 +53,8 @@ function supabaseRequest_(method, path, payload, prefer) {
     muteHttpExceptions: true,
     headers: {
       'apikey': c.apiKey,
-      'Authorization': 'Bearer ' + c.apiKey
+      'Authorization': 'Bearer ' + c.apiKey,
+      'Accept': 'application/json'
     }
   };
   if (payload) {
@@ -104,6 +105,10 @@ function doPost(e) {
 
   if (action === 'deleteStorage') {
     return deleteStorage_(payload);
+  }
+
+  if (action === 'purgeTrash') {
+    return purgeTrash();
   }
 
   return jsonOut({ success: false, error: 'Action tidak dikenal: ' + action });
@@ -189,6 +194,51 @@ function deleteStorage_(p) {
   };
   var res = UrlFetchApp.fetch(delUrl, options);
   return jsonOut({ success: true, code: res.getResponseCode() });
+}
+
+// Auto-purge: hapus permanen project yang sudah >14 hari di Trash (termasuk foto Storage-nya).
+// Dijalankan via time-based trigger (lihat setupDailyPurge) atau POST action=purgeTrash.
+function purgeTrash() {
+  var path = '/rest/v1/rnd_roadmap?select=id,data';
+  var res = supabaseRequest_('get', path, null);
+  var rows = JSON.parse(res.getContentText());
+  var cutoff = Date.now() - 14 * 86400000;
+  var deleted = 0;
+  rows.forEach(function (r) {
+    var data = r.data || {};
+    var t = data.trashedAt ? Date.parse(data.trashedAt) : NaN;
+    if (isNaN(t) || t >= cutoff) return; // belum di-trash atau belum lewat 14 hari
+    collectPhotoUrls_(data.milestones).forEach(function (u) {
+      try { deleteStorage_({ url: u }); } catch (e) {}
+    });
+    var q = '?id=eq.' + encodeURIComponent(r.id);
+    supabaseRequest_('delete', '/rest/v1/rnd_roadmap' + q, null);
+    deleted++;
+  });
+  return jsonOut({ success: true, purged: deleted });
+}
+
+// Kumpulkan semua URL foto (checklist + evaluasi, rekursif per milestone) untuk dihapus dari Storage.
+function collectPhotoUrls_(milestones) {
+  var urls = [];
+  function walk(list) {
+    (list || []).forEach(function (m) {
+      (m.checklist || []).forEach(function (ch) { if (ch.photoUrl) urls.push(ch.photoUrl); });
+      (m.evaluations || []).forEach(function (ev) { if (ev.photoUrl) urls.push(ev.photoUrl); });
+      walk(m.children);
+    });
+  }
+  walk(milestones);
+  return urls;
+}
+
+// Jalankan sekali dari editor untuk mendaftarkan trigger harian (jam 03:00).
+function setupDailyPurge() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'purgeTrash') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('purgeTrash').timeBased().everyDays(1).atHour(3).create();
+  return jsonOut({ success: true, message: 'Trigger purge harian aktif (03:00).' });
 }
 
 function doGet(e) {
