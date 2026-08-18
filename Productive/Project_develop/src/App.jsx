@@ -117,6 +117,11 @@ function findNode(nodes, id) {
   }
   return null;
 }
+function collectPhotoUrls(node, acc = []) {
+  (node.checklist || []).forEach((c) => { if (c.photoUrl) acc.push(c.photoUrl); });
+  (node.children || []).forEach((ch) => collectPhotoUrls(ch, acc));
+  return acc;
+}
 
 function csvCell(v) {
   const s = v == null ? "" : String(v);
@@ -1085,6 +1090,8 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
     setMilestoneModal(null);
   }
   function deleteMilestone(id) {
+    const node = findNode(project.milestones, id);
+    if (node) collectPhotoUrls(node).forEach((u) => { try { deleteFromStorage(u); } catch (_) {} });
     updateMilestones((ms) => removeFromTree(ms, id));
   }
   function addChecklist(milestoneId, data) {
