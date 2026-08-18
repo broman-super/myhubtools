@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import {
-  Plus, ChevronDown, ChevronRight, Pencil, Trash2, Camera, CheckCircle2,
+  Plus, Calendar, ChevronDown, ChevronRight, Pencil, Trash2, Camera, CheckCircle2,
   Circle, AlertTriangle, X, ArrowLeft, TrendingUp, Archive, Star,
   ClipboardList, LayoutGrid, Download, Printer
 } from "lucide-react";
@@ -226,6 +226,76 @@ function Lightbox({ url, onClose }) {
         onClick={(e) => e.stopPropagation()}
         style={{ maxWidth: "92vw", maxHeight: "88vh", borderRadius: R.lg, boxShadow: "0 20px 60px rgba(0,0,0,0.5)", cursor: "default" }}
       />
+    </div>
+  );
+}
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+const WDAYS = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+function pad2(n) { return String(n).padStart(2, "0"); }
+function toYMD(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+function parseYMD(s) {
+  if (!s) return null;
+  const p = String(s).split("-").map(Number);
+  if (p.length !== 3 || !p[0] || !p[1] || !p[2]) return null;
+  const d = new Date(p[0], p[1] - 1, p[2]);
+  return isNaN(d.getTime()) ? null : d;
+}
+function DatePicker({ value, onChange, style }) {
+  const [open, setOpen] = useState(false);
+  const [view, setView] = useState(() => { const d = parseYMD(value) || new Date(); return { y: d.getFullYear(), m: d.getMonth() }; });
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    window.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDoc); window.removeEventListener("keydown", onKey); };
+  }, [open]);
+  const selected = parseYMD(value);
+  const startWeekday = new Date(view.y, view.m, 1).getDay();
+  const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < startWeekday; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  const display = selected ? selected.getDate() + " " + MONTHS[selected.getMonth()] + " " + selected.getFullYear() : "Pilih tanggal";
+  const isSel = (d) => selected && selected.getDate() === d && selected.getMonth() === view.m && selected.getFullYear() === view.y;
+  const pick = (d) => { onChange(toYMD(new Date(view.y, view.m, d))); setOpen(false); };
+  const navBtn = { border: "none", background: "transparent", cursor: "pointer", fontSize: 18, color: C.inkMuted, width: 30, height: 30, borderRadius: R.full };
+  return (
+    <div ref={ref} style={{ position: "relative", ...style }}>
+      <div
+        onClick={() => setOpen((o) => !o)}
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "9px 12px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, fontSize: 13, color: selected ? C.ink : C.inkFaint, cursor: "pointer" }}
+      >
+        <span>{display}</span>
+        <Calendar size={15} color={C.inkMuted} />
+      </div>
+      {open && (
+        <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 50, background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 12, boxShadow: "0 12px 32px rgba(0,0,0,0.18)", width: 250 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <button type="button" onClick={() => setView((v) => v.m === 0 ? { y: v.y - 1, m: 11 } : { ...v, m: v.m - 1 })} style={navBtn}>‹</button>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>{MONTHS[view.m]} {view.y}</span>
+            <button type="button" onClick={() => setView((v) => v.m === 11 ? { y: v.y + 1, m: 0 } : { ...v, m: v.m + 1 })} style={navBtn}>›</button>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2, marginBottom: 4 }}>
+            {WDAYS.map((w) => <div key={w} style={{ textAlign: "center", fontSize: 11, color: C.inkFaint, padding: "4px 0" }}>{w}</div>)}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
+            {cells.map((d, i) => d === null ? <div key={i} /> : (
+              <button
+                key={i}
+                type="button"
+                onClick={() => pick(d)}
+                onMouseEnter={(e) => { if (!isSel(d)) e.currentTarget.style.background = C.canvasSoft; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                style={{ border: "none", borderRadius: R.sm, padding: "6px 0", fontSize: 12, cursor: "pointer", background: isSel(d) ? C.primary : "transparent", color: isSel(d) ? "#fff" : C.ink }}
+              >{d}</button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -937,11 +1007,11 @@ function ProjectModal({ initial, onClose, onSave }) {
         <div style={{ display: "flex", gap: 12 }}>
           <div style={{ flex: 1 }}>
             <FieldLabel>Tanggal Mulai</FieldLabel>
-            <input type="date" style={inputStyle} value={form.startDate} onChange={set("startDate")} />
+            <DatePicker value={form.startDate} onChange={set("startDate")} />
           </div>
           <div style={{ flex: 1 }}>
             <FieldLabel>Target Rilis</FieldLabel>
-            <input type="date" style={inputStyle} value={form.targetReleaseDate} onChange={set("targetReleaseDate")} />
+            <DatePicker value={form.targetReleaseDate} onChange={set("targetReleaseDate")} />
           </div>
         </div>
         <div>
@@ -1358,7 +1428,7 @@ function MilestoneModal({ isEdit, initial, onClose, onSave }) {
           </div>
           <div style={{ flex: 1 }}>
             <FieldLabel>Target Tanggal</FieldLabel>
-            <input type="date" style={inputStyle} value={form.targetDate} onChange={set("targetDate")} />
+            <DatePicker value={form.targetDate} onChange={set("targetDate")} />
           </div>
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>

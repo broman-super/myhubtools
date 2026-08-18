@@ -101,3 +101,15 @@ Tanggal: 2026-08-13
 - Menghapus project/item = foto ikut dihapus dari Storage (GAS `deleteStorage` best-effort); DB hanya simpan URL.
 - Deploy: `src/config.js` → `GAS_SCRIPT_URL`; ubah config = rebuild + `git push`.
 - Foto butuh **bucket Storage `roadmap-photos` (Public)** di Supabase + **redeploy GAS** (update deployment) agar action `uploadStorage`/`deleteStorage` live.
+
+---
+
+## Polish (tahapan)
+- [x] **Phase 1 — Custom Date Picker**: `DatePicker` (kalender popover styled + ikon) ganti `<input type="date">` di Project & Milestone modal.
+- [ ] **Phase 2 — Konfirmasi hapus** project/milestone/checklist (cegah hilang tak sengaja).
+- [ ] **Phase 3 — Badge "Lewat Target"** merah di kartu dashboard bila ada milestone overdue.
+- [ ] **Phase 4 — Esc + klik backdrop tutup modal** + auto-focus field pertama.
+- [ ] **Phase 5 — Drag-and-drop / paste gambar** di modal checklist.
+- [ ] **Phase 6 — Thumbnail foto di PDF export** (bukan cuma 📷).
+- [ ] **Phase 7 — Skeleton loading** saat memuat data.
+- [ ] **Phase 8 — Indikator "ada foto"** (ikon kamera) di timeline checklist.
