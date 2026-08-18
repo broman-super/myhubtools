@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   Plus, Calendar, ChevronDown, ChevronRight, Pencil, Trash2, Camera, CheckCircle2,
   Circle, AlertTriangle, X, ArrowLeft, TrendingUp, Archive, Star,
@@ -254,14 +255,35 @@ function parseYMD(s) {
 function DatePicker({ value, onChange, style }) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState(() => { const d = parseYMD(value) || new Date(); return { y: d.getFullYear(), m: d.getMonth() }; });
-  const ref = useRef(null);
+  const wrapRef = useRef(null);
+  const popRef = useRef(null);
+  const [pos, setPos] = useState(null);
+  const place = () => {
+    const r = wrapRef.current.getBoundingClientRect();
+    const ph = 290, pw = Math.max(r.width, 230);
+    const openUp = r.bottom + ph > window.innerHeight && r.top > ph;
+    setPos({ top: openUp ? r.top - ph - 6 : r.bottom + 6, left: r.left, width: pw });
+  };
   useEffect(() => {
     if (!open) return;
-    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    place();
+    const onDoc = (e) => {
+      if (wrapRef.current && wrapRef.current.contains(e.target)) return;
+      if (popRef.current && popRef.current.contains(e.target)) return;
+      setOpen(false);
+    };
     const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); setOpen(false); } };
+    const onScroll = () => place();
     document.addEventListener("mousedown", onDoc);
     window.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("mousedown", onDoc); window.removeEventListener("keydown", onKey); };
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onScroll);
+    };
   }, [open]);
   const selected = parseYMD(value);
   const startWeekday = new Date(view.y, view.m, 1).getDay();
@@ -274,7 +296,7 @@ function DatePicker({ value, onChange, style }) {
   const pick = (d) => { onChange(toYMD(new Date(view.y, view.m, d))); setOpen(false); };
   const navBtn = { border: "none", background: "transparent", cursor: "pointer", fontSize: 18, color: C.inkMuted, width: 30, height: 30, borderRadius: R.full };
   return (
-    <div ref={ref} style={{ position: "relative", ...style }}>
+    <div ref={wrapRef} style={{ position: "relative", ...style }}>
       <div
         onClick={() => setOpen((o) => !o)}
         style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "9px 12px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, fontSize: 13, color: selected ? C.ink : C.inkFaint, cursor: "pointer" }}
@@ -282,8 +304,8 @@ function DatePicker({ value, onChange, style }) {
         <span>{display}</span>
         <Calendar size={15} color={C.inkMuted} />
       </div>
-      {open && (
-         <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 50, background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 12, boxShadow: "0 12px 32px rgba(0,0,0,0.18)", width: "100%", minWidth: 230 }}>
+      {open && pos && createPortal(
+        <div ref={popRef} style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 9999, background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 12, boxShadow: "0 12px 32px rgba(0,0,0,0.18)", width: pos.width, minWidth: 230 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
             <button type="button" onClick={() => setView((v) => v.m === 0 ? { y: v.y - 1, m: 11 } : { ...v, m: v.m - 1 })} style={navBtn}>‹</button>
             <span style={{ fontSize: 13, fontWeight: 600 }}>{MONTHS[view.m]} {view.y}</span>
@@ -304,7 +326,8 @@ function DatePicker({ value, onChange, style }) {
               >{d}</button>
             ))}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
