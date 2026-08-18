@@ -131,5 +131,6 @@ Tanggal: 2026-08-13
 - [x] **L2 — timezone `upcomingMilestones`**: pakai `parseYMD` (lokal) bukan `new Date(YYYY-MM-DD)` (UTC) → hindari off-by-one.
 - [x] **L4 — status "Tersimpan"** baru di-set setelah `await syncToSupabase` (bukan optimis di awal) → tidak flash saved lalu error.
 - [x] **L5 — laporan cetak project terarsip kosong**: filter `!p.archived` dilewati bila ekspor hanya 1 project (detail).
+- [x] **CRITICAL — Date Picker bikin layar blank putih**: `DatePicker` memanggil `onChange(nilai)` (string), tapi helper `set` di modal Project & Milestone membaca `e.target.value` → `TypeError: Cannot read 'target' of undefined` saat pilih tanggal. `set` diubah terima event maupun nilai mentah (`e && e.target ? e.target.value : e`).
 - [ ] **M2 — hapus foto Storage**: `deleteFromStorage` mengirim URL lengkap ke GAS `deleteStorage`; perlu verifikasi GAS bisa parse URL tersebut (atau simpan object name). Belum diubah (kontrak backend).
 - [ ] **M3 — Lightbox+Modal**: Esc tutup keduanya; `onClose` lightbox dibuat tiap render (listener churn). Minor, belum diubah.
