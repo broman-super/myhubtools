@@ -62,3 +62,41 @@ Tanggal: 2026-08-13
 | M2.1 | Filter & search dashboard (+ highlight) | ✅ selesai |
 | M3.1 | Export CSV | ✅ selesai |
 | M3.2 | Export PDF (+ per-project) | ✅ selesai |
+
+---
+
+## Rincian Update (Final)
+
+**Arsitektur**
+- React + Vite, build single-file `dist/index.html` (live di reynahub.web.io `#productive/rnd-roadmap`).
+- Data: Supabase UNITOOLS (`rnd_roadmap`), anon **read-only**; tulis lewat **GAS bridge** (`service_role`) agar key tidak terekspos. CORS `text/plain` (tanpa preflight).
+- Simpan **optimistic** + debounce 400ms.
+
+**1. Foto Bukti (per checklist item)** — `c745f77`, `863b5eb`, `f6f2c88`
+- Disimpan langsung ke Supabase sebagai **data URL JPEG terkompresi (~100KB)** di kolom `data` (pivot dari Google Drive karena izin gagal).
+- Thumbnail 48px (milestone), 28px (laporan), preview 260px (modal).
+- Klik thumbnail → **lightbox** in-app (× / Esc / klik luar).
+- Tombol **Hapus foto** di modal checklist.
+
+**2. Search & Filter** — `d8e159a`, `fd6854b`
+- Search live, case-insensitive: nama/kode/deskripsi project **+** judul milestone/checklist.
+- **Highlight** kata cocok (kuning) di kartu dashboard.
+- Chip filter status (Semua / Ideation / On Track / At Risk / Done).
+- Dropdown **sorting**: Default / Status / Target Rilis / Progress.
+
+**3. Export** — `01e13bf`, `18fc5b6`, `853ac68`
+- **CSV** native (Blob, BOM UTF-8), flatten project→milestone→checklist.
+- **PDF** via window baru (HTML rapi + `window.print()`), zero-dep.
+- Dari **dashboard** (seluruh roadmap) & **project view** (per-project).
+
+**4. Dashboard** — `de6f4d1`
+- 4 kartu ringkasan status + **donut progress keseluruhan** (persen + `done/total` checklist).
+- Panel peringatan overdue/upcoming.
+
+**5. UX / Bug-fix** — `a7ad0de`, `61aa54d`
+- Modal **remount per item** (`key`) → tiap checklist/project/milestone simpan datanya sendiri (fix state-bleed antar-item).
+- Badge **"Tersimpan" auto-hide 3 detik**; **"Gagal"** tetap.
+
+**Catatan**
+- Menghapus project/item = foto ikut hilang (semua dalam satu baris jsonb, tidak ada file terpisah di GDrive).
+- Deploy: `src/config.js` → `GAS_SCRIPT_URL`; ubah config = rebuild + `git push`.
