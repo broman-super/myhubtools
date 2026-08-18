@@ -168,7 +168,7 @@ function openPrintableReport(projects) {
     flattenMilestones(p.milestones).forEach((m) => {
       body += `<h3>${esc(m.title)} <small>(${esc(m.status || "")} · ${esc(m.targetDate || "")})</small></h3>`;
       const items = m.checklist || [];
-      if (items.length) body += "<ul>" + items.map((c) => `<li class="${c.isCompleted ? "done" : ""}">${esc(c.title)}${c.photoUrl ? " 📷" : ""}</li>`).join("") + "</ul>";
+      if (items.length) body += "<ul>" + items.map((c) => `<li class="${c.isCompleted ? "done" : ""}">${esc(c.title)}${c.photoUrl ? ` <img src="${esc(c.photoUrl)}" style="height:26px;width:26px;object-fit:cover;border-radius:4px;vertical-align:middle;">` : ""}</li>`).join("") + "</ul>";
     });
   });
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>RND Roadmap</title>
@@ -675,8 +675,21 @@ export default function App() {
 
   if (loading) {
     return (
-      <div style={{ fontFamily: "Inter, sans-serif", background: C.canvasSoft, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: C.inkMuted }}>
-        Memuat roadmap…
+      <div style={{ fontFamily: "Inter, -apple-system, system-ui, 'Segoe UI', Helvetica, Arial, sans-serif", background: C.canvasSoft, minHeight: "100vh", color: C.ink, padding: "28px 24px" }}>
+        <style>{`@keyframes sk{0%{opacity:.45}50%{opacity:1}100%{opacity:.45}} .sk{background:#e9e7e4;border-radius:8px;animation:sk 1.2s ease-in-out infinite;}`}</style>
+        <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+          <div className="sk" style={{ height: 28, width: 220, marginBottom: 22 }} />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div key={i} style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 18 }}>
+                <div className="sk" style={{ height: 16, width: "60%", marginBottom: 10 }} />
+                <div className="sk" style={{ height: 12, width: "40%", marginBottom: 16 }} />
+                <div className="sk" style={{ height: 8, width: "100%", marginBottom: 6 }} />
+                <div className="sk" style={{ height: 8, width: "82%" }} />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
