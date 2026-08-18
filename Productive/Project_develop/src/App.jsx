@@ -1044,7 +1044,7 @@ function ProjectModal({ initial, onClose, onSave }) {
     startDate: initial.startDate || todayStr(),
     targetReleaseDate: initial.targetReleaseDate || "",
   });
-  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e && e.target ? e.target.value : e }));
   const initialSnapshot = useRef(JSON.stringify(form)).current;
   const dirty = JSON.stringify(form) !== initialSnapshot;
   const handleClose = () => {
@@ -1494,7 +1494,7 @@ function MilestoneModal({ isEdit, initial, onClose, onSave }) {
     status: initial?.status || "Belum mulai",
     targetDate: initial?.targetDate || "",
   });
-  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e && e.target ? e.target.value : e }));
   const initialSnapshot = useRef(JSON.stringify(form)).current;
   const dirty = JSON.stringify(form) !== initialSnapshot;
   const handleClose = () => {
@@ -1547,7 +1547,7 @@ function ChecklistModal({ initial, onClose, onSave }) {
   const [busy, setBusy] = useState(false);
   const [dirty, setDirty] = useState(false);
 
-  const set = (k) => (e) => { setForm((f) => ({ ...f, [k]: e.target.value })); setDirty(true); };
+  const set = (k) => (e) => { setForm((f) => ({ ...f, [k]: e && e.target ? e.target.value : e })); setDirty(true); };
 
   function pickFile(f) {
     if (!f) return;
