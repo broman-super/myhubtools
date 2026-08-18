@@ -224,6 +224,7 @@ function Lightbox({ url, onClose }) {
   return (
     <div
       onClick={onClose}
+      id="rnd-lightbox"
       style={{ position: "fixed", inset: 0, background: "rgba(15,18,22,0.82)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 24, cursor: "zoom-out" }}
     >
       <button
@@ -296,7 +297,7 @@ function DatePicker({ value, onChange, style }) {
   const pick = (d) => { onChange(toYMD(new Date(view.y, view.m, d))); setOpen(false); };
   const navBtn = { border: "none", background: "transparent", cursor: "pointer", fontSize: 18, color: C.inkMuted, width: 30, height: 30, borderRadius: R.full };
   return (
-    <div ref={wrapRef} style={{ position: "relative", ...style }}>
+    <div ref={wrapRef} id="rnd-datepicker" style={{ position: "relative", ...style }}>
       <div
         onClick={() => setOpen((o) => !o)}
         style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "9px 12px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, fontSize: 13, color: selected ? C.ink : C.inkFaint, cursor: "pointer" }}
@@ -548,7 +549,7 @@ const inputStyle = {
   border: "1px solid #dddddd", borderRadius: R.xs, padding: "8px 10px", outline: "none",
 };
 
-function Modal({ title, onClose, children, width = 460, onCloseAttempt }) {
+function Modal({ id, title, onClose, children, width = 460, onCloseAttempt }) {
   const ref = useRef(null);
   useEffect(() => {
     const onKey = (e) => {
@@ -575,6 +576,7 @@ function Modal({ title, onClose, children, width = 460, onCloseAttempt }) {
     >
       <div
         ref={ref}
+        id={id}
         style={{
           background: C.surface, borderRadius: R.lg, boxShadow: shadow2, width, maxWidth: "100%",
           maxHeight: "88vh", overflowY: "auto", padding: 24,
@@ -716,7 +718,7 @@ export default function App() {
         <style>{`@keyframes sk{0%{opacity:.45}50%{opacity:1}100%{opacity:.45}} .sk{background:var(--surface2);border-radius:8px;animation:sk 1.2s ease-in-out infinite;}`}</style>
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
           <div className="sk" style={{ height: 28, width: 220, marginBottom: 22 }} />
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
+          <div id="rnd-project-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <div key={i} style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 18 }}>
                 <div className="sk" style={{ height: 16, width: "60%", marginBottom: 10 }} />
@@ -741,7 +743,7 @@ export default function App() {
       `}</style>
 
       {/* Top nav */}
-      <div style={{ background: C.surface, borderBottom: `1px solid ${C.hairline}`, padding: "14px 24px", display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 10 }}>
+      <div id="rnd-topnav" style={{ background: C.surface, borderBottom: `1px solid ${C.hairline}`, padding: "14px 24px", display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 10 }}>
         <div
           onClick={backToDashboard}
           style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}
@@ -862,7 +864,7 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
   });
 
   return (
-    <div>
+    <div id="rnd-dashboard">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.625px", margin: "0 0 4px" }}>Dashboard</h1>
@@ -882,7 +884,7 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
       </div>
 
       {/* Search & filter */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+      <div id="rnd-toolbar" style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -918,7 +920,7 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
       </div>
 
       {/* Status summary + overall progress */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+      <div id="rnd-summary" style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 320px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
           {Object.entries(PROJECT_STATUS).map(([key, cfg]) => (
             <div key={key} style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 16 }}>
@@ -930,7 +932,7 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
             </div>
           ))}
         </div>
-        <div style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 16, display: "flex", alignItems: "center", gap: 14 }}>
+        <div id="rnd-donut" style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 16, display: "flex", alignItems: "center", gap: 14 }}>
           <svg width="84" height="84" viewBox="0 0 88 88">
             <circle cx="44" cy="44" r="36" fill="none" stroke={C.hairline} strokeWidth="10" />
             <circle cx="44" cy="44" r="36" fill="none" stroke={C.primary} strokeWidth="10"
@@ -1000,11 +1002,12 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
           const stats = projectChecklistStats(p);
           const cfg = PROJECT_STATUS[p.status] || PROJECT_STATUS["Ideation"];
           return (
-            <div
-              key={p.id}
-              style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 18, cursor: "pointer" }}
-              onClick={() => onOpen(p.id)}
-            >
+          <div
+            key={p.id}
+            id={"rnd-project-card-" + p.id}
+            style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 18, cursor: "pointer" }}
+            onClick={() => onOpen(p.id)}
+          >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                 <Badge bg={cfg.bg} fg={cfg.fg}>{cfg.label}</Badge>
                 {overdueMilestones(p).length > 0 && (
@@ -1053,7 +1056,7 @@ function ProjectModal({ initial, onClose, onSave }) {
   };
 
   return (
-    <Modal title={initial.id ? "Edit Project" : "Project Baru"} onClose={onClose} onCloseAttempt={handleClose} width={480}>
+    <Modal id="modal-project" title={initial.id ? "Edit Project" : "Project Baru"} onClose={onClose} onCloseAttempt={handleClose} width={480}>
       <form
         onSubmit={(e) => { e.preventDefault(); if (!form.name.trim()) return; onSave(form); }}
         style={{ display: "flex", flexDirection: "column", gap: 12 }}
@@ -1179,7 +1182,7 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
   }
 
   return (
-    <div>
+    <div id="rnd-detail">
       <button onClick={onBack} style={{ background: "none", border: "none", color: C.inkMuted, fontSize: 13, display: "flex", alignItems: "center", gap: 4, cursor: "pointer", padding: 0, marginBottom: 14 }}>
         <ArrowLeft size={14} /> Kembali ke Dashboard
       </button>
@@ -1206,7 +1209,7 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
+      <div id="rnd-detail-stats" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
         <div style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 16 }}>
           <p style={{ fontSize: 12, color: C.inkMuted, margin: "0 0 6px" }}>Progress Checklist</p>
           <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 8 }}>
@@ -1229,7 +1232,7 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 4, marginBottom: 16, borderBottom: `1px solid ${C.hairline}` }}>
+      <div id="rnd-detail-tabs" style={{ display: "flex", gap: 4, marginBottom: 16, borderBottom: `1px solid ${C.hairline}` }}>
         {[["roadmap", "Roadmap"], ["laporan", "Laporan Detail"]].map(([key, label]) => (
           <button
             key={key}
@@ -1247,7 +1250,7 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
 
       {tab === "roadmap" && (
         <>
-          <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+          <div id="rnd-roadmap-toolbar" style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
             <input
               value={msQ}
               onChange={(e) => setMsQ(e.target.value)}
@@ -1261,7 +1264,7 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
               {project.milestones.length === 0 ? "Belum ada tahapan. Tambahkan tahapan pertama untuk mulai menyusun roadmap." : `Tidak ada tahapan sesuai pencarian "${msQ}".`}
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column" }}>
+            <div id="rnd-milestone-list" style={{ display: "flex", flexDirection: "column" }}>
               {visibleMilestones.map((m, i) => (
                 <MilestoneNode
                   key={m.id}
@@ -1502,7 +1505,7 @@ function MilestoneModal({ isEdit, initial, onClose, onSave }) {
     onClose();
   };
   return (
-    <Modal title={isEdit ? "Edit Tahapan" : "Tambah Tahapan"} onClose={onClose} onCloseAttempt={handleClose}>
+    <Modal id="modal-milestone" title={isEdit ? "Edit Tahapan" : "Tambah Tahapan"} onClose={onClose} onCloseAttempt={handleClose}>
       <form onSubmit={(e) => { e.preventDefault(); if (!form.title.trim()) return; onSave(form); }} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div>
           <FieldLabel>Judul Tahapan</FieldLabel>
@@ -1593,7 +1596,7 @@ function ChecklistModal({ initial, onClose, onSave }) {
   }
 
   return (
-    <Modal title={initial ? "Edit Checklist Item" : "Tambah Checklist Item"} onClose={onClose} onCloseAttempt={handleClose}>
+    <Modal id="modal-checklist" title={initial ? "Edit Checklist Item" : "Tambah Checklist Item"} onClose={onClose} onCloseAttempt={handleClose}>
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div>
           <FieldLabel>Judul Item</FieldLabel>
@@ -1643,7 +1646,7 @@ function EvaluationModal({ onClose, onSave }) {
     onClose();
   };
   return (
-    <Modal title="Tambah Evaluasi" onClose={onClose} onCloseAttempt={handleClose}>
+    <Modal id="modal-evaluation" title="Tambah Evaluasi" onClose={onClose} onCloseAttempt={handleClose}>
       <form onSubmit={(e) => { e.preventDefault(); onSave(form); }} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div>
           <FieldLabel>Skor Kelayakan (1–5)</FieldLabel>
@@ -1685,7 +1688,7 @@ function ReportView({ project }) {
   const { viewPhoto } = useLightbox();
   const all = flattenMilestones(project.milestones);
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+    <div id="rnd-report" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 18 }}>
         <h3 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px" }}>Ringkasan Produk</h3>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, fontSize: 13 }}>
