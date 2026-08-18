@@ -57,8 +57,8 @@ Tanggal: 2026-08-13
 ## Ringkasan Milestone
 | ID | Fitur | Status |
 |----|-------|--------|
-| M1.1 | GAS `uploadPhoto` | ✅ code / ⏳ deploy |
-| M1.2 | Frontend foto (thumbnail) | ✅ code / ⏳ push |
-| M2.1 | Filter & search dashboard | ⬜ belum |
-| M3.1 | Export CSV | ⬜ belum |
-| M3.2 | Export PDF | ⬜ belum |
+| M1.1 | GAS `uploadPhoto` (Drive) | ❌ dibatalkan (izin gagal) |
+| M1.2 | Frontend foto (thumbnail + lightbox + hapus) | ✅ selesai |
+| M2.1 | Filter & search dashboard (+ highlight) | ✅ selesai |
+| M3.1 | Export CSV | ✅ selesai |
+| M3.2 | Export PDF (+ per-project) | ✅ selesai |
