@@ -1404,7 +1404,7 @@ function MilestoneNode({ node, depth, isLast, q = "", onAddChild, onEdit, onDele
                   <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                     {node.checklist.map((c) => (
                       <div key={c.id} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "6px 8px", borderRadius: R.sm, background: C.canvasSoft }}>
-                        <div style={{ cursor: "pointer", marginTop: 1 }} onClick={() => onToggleChecklist(node.id, c.id)}>
+                        <div style={{ cursor: "pointer", display: "flex", alignItems: "center", height: 20, flexShrink: 0 }} onClick={() => onToggleChecklist(node.id, c.id)}>
                           {c.isCompleted ? <CheckCircle2 size={16} color={C.green} /> : <Circle size={16} color={C.inkFaint} />}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
