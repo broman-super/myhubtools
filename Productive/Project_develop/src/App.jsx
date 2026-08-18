@@ -92,7 +92,7 @@ function addChildToTree(nodes, parentId, child) {
     return n;
   });
 }
-function flattenMilestones(nodes) {
+function flattenMilestones(nodes = []) {
   let out = [];
   for (const n of nodes) {
     out.push(n);
@@ -173,7 +173,7 @@ function downloadCsv(filename, csv) {
 function openPrintableReport(projects) {
   const esc = (s) => (s == null ? "" : String(s)).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
   let body = "";
-  projects.filter((p) => !p.archived).forEach((p) => {
+  projects.filter((p) => !p.archived || projects.length === 1).forEach((p) => {
     body += `<h2>${esc(p.name)} <small>(${esc(p.code)} · ${esc(p.status)})</small></h2>`;
     body += `<p class="meta">${esc(p.category)} · Target: ${esc(p.targetReleaseDate || "—")}</p>`;
     flattenMilestones(p.milestones).forEach((m) => {
@@ -275,12 +275,12 @@ function DatePicker({ value, onChange, style }) {
     const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); setOpen(false); } };
     const onScroll = () => place();
     document.addEventListener("mousedown", onDoc);
-    window.addEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
     window.addEventListener("scroll", onScroll, true);
     window.addEventListener("resize", onScroll);
     return () => {
       document.removeEventListener("mousedown", onDoc);
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keydown", onKey, true);
       window.removeEventListener("scroll", onScroll, true);
       window.removeEventListener("resize", onScroll);
     };
@@ -356,7 +356,7 @@ function upcomingMilestones(project) {
   in7.setDate(today.getDate() + 7);
   return all.filter((m) => {
     if (!m.targetDate || m.status === "Selesai") return false;
-    const d = new Date(m.targetDate);
+    const d = parseYMD(m.targetDate);
     return d >= today && d <= in7;
   });
 }
@@ -640,9 +640,9 @@ export default function App() {
     const batch = queued.current;
     if (!batch) return;
     saving.current = true;
-    setSaveStatus({ state: "saved", msg: "Tersimpan" }); // optimis: langsung tandai
     try {
       await syncToSupabase(batch.rows, batch.deletes || []);
+      setSaveStatus({ state: "saved", msg: "Tersimpan" });
     } catch (e) {
       setSaveStatus({ state: "error", msg: "Gagal simpan: " + (e && e.message ? e.message : e) });
     } finally {
@@ -998,7 +998,7 @@ function Dashboard({ projects, showArchived, setShowArchived, onOpen, onNewProje
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
         {visible.map((p) => {
           const stats = projectChecklistStats(p);
-          const cfg = PROJECT_STATUS[p.status];
+          const cfg = PROJECT_STATUS[p.status] || PROJECT_STATUS["Ideation"];
           return (
             <div
               key={p.id}
@@ -1113,7 +1113,7 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
     ? filterMilestoneTree(project.milestones, (m) => milestoneMatchesSearch(m, msNeedle))
     : project.milestones;
   const stats = projectChecklistStats(project);
-  const cfg = PROJECT_STATUS[project.status];
+  const cfg = PROJECT_STATUS[project.status] || PROJECT_STATUS["Ideation"];
   const overdue = overdueMilestones(project);
 
   function addMilestone(parentId, data) {
@@ -1342,7 +1342,7 @@ function MilestoneNode({ node, depth, isLast, q = "", onAddChild, onEdit, onDele
   const [open, setOpen] = useState(depth < 1);
   const [showChecklist, setShowChecklist] = useState(true);
   const [showEval, setShowEval] = useState(false);
-  const st = MILESTONE_STATUS[node.status];
+  const st = MILESTONE_STATUS[node.status] || MILESTONE_STATUS["Belum mulai"];
   const checklistTotal = (node.checklist || []).length;
   const checklistDone = (node.checklist || []).filter((c) => c.isCompleted).length;
   const pct = checklistTotal ? Math.round((checklistDone / checklistTotal) * 100) : 0;
@@ -1700,7 +1700,7 @@ function ReportView({ project }) {
         <div key={m.id} style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
             <span style={{ fontWeight: 700, fontSize: 14 }}>{m.title}</span>
-            <Badge bg={MILESTONE_STATUS[m.status].bg} fg={MILESTONE_STATUS[m.status].fg}>{m.status}</Badge>
+            <Badge bg={(MILESTONE_STATUS[m.status] || MILESTONE_STATUS["Belum mulai"]).bg} fg={(MILESTONE_STATUS[m.status] || MILESTONE_STATUS["Belum mulai"]).fg}>{m.status}</Badge>
           </div>
           {m.description && <p style={{ fontSize: 13, color: C.inkMuted, margin: "0 0 8px" }}>{m.description}</p>}
 

@@ -122,3 +122,14 @@ Tanggal: 2026-08-13
 - [x] **Phase 10 — Konfirmasi keluar modal**: `Modal` dapat prop `onCloseAttempt`; X / klik backdrop / Esc / tombol **Batal** cek "dirty" lalu `window.confirm` sebelum tutup (cegah kehilangan input). Berlaku di Project, Milestone, Checklist, Evaluation modal.
 - [x] **Phase 11 — Search di Project Detail** (tab Roadmap): input cari milestone/checklist (rekursif, termasuk anak) + highlight kuning; helper `milestoneMatchesSearch` & `filterMilestoneTree`.
 - [x] **Phase 12 — Selaraskan style ke design-system webtools**: import `src/styles/design-system.css` (token) saja; font via Google Fonts `Plus Jakarta Sans` (link di `index.html`) agar dist tetap ringan (~212 KB). `C`/`R`/shadow dipetakan ke `var(--*)` (aksen merah brand, radius/shadow/shared). Wrapper jadi scroll-container (`100dvh` + `overflowY:auto`) karena `design-system.css` kunci `body{overflow:hidden}`. Catatan: font display `Geomini` (heading) fallback ke Plus Jakarta Sans di build ringan ini.
+
+## Bugfix (pasca review agent — static review semua fitur)
+- [x] **H1 — null-guard `flattenMilestones(nodes = [])`**: cegah crash `Cannot iterate undefined` bila `project.milestones` kosong/null (row lama/manual).
+- [x] **H2 — fallback `MILESTONE_STATUS[node.status]`** (default `Belum mulai`) di `MilestoneNode` & `ReportView` (App.jsx:1345, 1703).
+- [x] **H3 — fallback `PROJECT_STATUS[...status]`** (default `Ideation`) di dashboard & detail (App.jsx:1001, 1116).
+- [x] **M1 — Esc Date Picker tidak nutup modal induk**: listener keydown Date Picker pakai capture phase (`addEventListener(..., true)`) + `stopPropagation` sehingga Esc hanya menutup kalender, bukan modal (cegah hilang input form).
+- [x] **L2 — timezone `upcomingMilestones`**: pakai `parseYMD` (lokal) bukan `new Date(YYYY-MM-DD)` (UTC) → hindari off-by-one.
+- [x] **L4 — status "Tersimpan"** baru di-set setelah `await syncToSupabase` (bukan optimis di awal) → tidak flash saved lalu error.
+- [x] **L5 — laporan cetak project terarsip kosong**: filter `!p.archived` dilewati bila ekspor hanya 1 project (detail).
+- [ ] **M2 — hapus foto Storage**: `deleteFromStorage` mengirim URL lengkap ke GAS `deleteStorage`; perlu verifikasi GAS bisa parse URL tersebut (atau simpan object name). Belum diubah (kontrak backend).
+- [ ] **M3 — Lightbox+Modal**: Esc tutup keduanya; `onClose` lightbox dibuat tiap render (listener churn). Minor, belum diubah.
