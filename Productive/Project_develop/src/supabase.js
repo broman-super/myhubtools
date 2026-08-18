@@ -41,16 +41,31 @@ export async function syncToSupabase(rows, deletes) {
   }
 }
 
-// --- Upload foto ke Google Drive lewat GAS (bukan Supabase) ---
-export async function uploadPhoto(base64, name, mime) {
+// --- Upload foto ke Supabase Storage lewat GAS (service_role) ---
+// base64 = data URL hasil resizeImageFile (sudah dikompresi di client)
+export async function uploadToStorage(base64, name, mime) {
   if (!GAS_SCRIPT_URL) return { skipped: true };
   const res = await fetch(GAS_SCRIPT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'uploadPhoto', payload: { base64, name, mime } }),
+    body: JSON.stringify({ action: 'uploadStorage', payload: { base64, name, mime } }),
   });
   if (!res.ok) throw new Error('Gagal upload foto (' + res.status + ')');
   const r = await res.json().catch(() => ({}));
   if (r && r.success === false) throw new Error(r.error || 'Gagal upload foto');
-  return r;
+  return r; // { success: true, photoUrl }
+}
+
+// Hapus objek foto lama di Storage (best-effort)
+export async function deleteFromStorage(url) {
+  if (!GAS_SCRIPT_URL || !url) return;
+  try {
+    await fetch(GAS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'deleteStorage', payload: { url } }),
+    });
+  } catch {
+    /* abaikan: cleanup terbaik */
+  }
 }

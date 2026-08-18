@@ -13,14 +13,14 @@ Tanggal: 2026-08-13
 ## Fitur 1: Foto Bukti Nyata (Simpan ke Supabase)
 **Status:** ✅ Selesai (pivot dari Google Drive)  |  **Lanjutan:** `git push` lalu tes
 - Tujuan: item checklist punya foto asli; thumbnail langsung tampil.
-- **Pivot:** awalnya rencana upload ke Google Drive, tapi izin Drive berulang gagal ("Akses ditolak: DriveApp.") walau sudah grant scope & deploy baru. Maka foto disimpan langsung ke Supabase sebagai **data URL JPEG terkompresi (~100KB)** di kolom `data` jsonb (lewat jalur `sync` GAS yang sudah jalan). Beban masuk kuota DB Supabase free (500MB), bukan Storage bucket.
+- **Pivot:** awalnya rencana upload ke Google Drive, tapi izin Drive berulang gagal ("Akses ditolak: DriveApp.") walau sudah grant scope & deploy baru. Maka foto **dikompresi di client** lalu **diupload ke Supabase Storage** (bucket `roadmap-photos`, public) lewat GAS `action:'uploadStorage'`; yang disimpan di jsonb hanyalah **URL**-nya. DB tetap kecil & payload sync ringan. Kapasitas Storage free = 1 GB (terpisah dari DB 500 MB).
 
 ### M1.1 — Backend GAS `uploadPhoto` (DIBATALKAN)
 - [ ] Upload ke Drive dibatalkan (izin gagal). `uploadPhoto` di GAS tetap ada tapi tidak dipakai frontend.
 
 ### M1.2 — Frontend (`src/App.jsx`)
 - [x] `ChecklistModal`: input file + preview + `resizeImageFile` (canvas → JPEG 0.7, max 1024px)
-- [x] Foto disimpan langsung sebagai `photoUrl` (data URL) ke item checklist
+- [x] Foto diupload ke Supabase Storage, `photoUrl` menyimpan URL-nya (bukan base64)
 - [x] `MilestoneNode` & `ReportView`: render `<img>` thumbnail bila `photoUrl` ada (klik → full)
 - [x] Rebuild dist + commit (`c745f77`)
 
@@ -73,7 +73,7 @@ Tanggal: 2026-08-13
 - Simpan **optimistic** + debounce 400ms.
 
 **1. Foto Bukti (per checklist item)** — `c745f77`, `863b5eb`, `f6f2c88`
-- Disimpan langsung ke Supabase sebagai **data URL JPEG terkompresi (~100KB)** di kolom `data` (pivot dari Google Drive karena izin gagal).
+- Kompresi di client, lalu **upload ke Supabase Storage** (bucket `roadmap-photos`); DB hanya simpan **URL** (pivot dari Google Drive karena izin gagal).
 - Thumbnail 48px (milestone), 28px (laporan), preview 260px (modal).
 - Klik thumbnail → **lightbox** in-app (× / Esc / klik luar).
 - Tombol **Hapus foto** di modal checklist.
@@ -98,5 +98,6 @@ Tanggal: 2026-08-13
 - Badge **"Tersimpan" auto-hide 3 detik**; **"Gagal"** tetap.
 
 **Catatan**
-- Menghapus project/item = foto ikut hilang (semua dalam satu baris jsonb, tidak ada file terpisah di GDrive).
+- Menghapus project/item = foto ikut dihapus dari Storage (GAS `deleteStorage` best-effort); DB hanya simpan URL.
 - Deploy: `src/config.js` → `GAS_SCRIPT_URL`; ubah config = rebuild + `git push`.
+- Foto butuh **bucket Storage `roadmap-photos` (Public)** di Supabase + **redeploy GAS** (update deployment) agar action `uploadStorage`/`deleteStorage` live.
