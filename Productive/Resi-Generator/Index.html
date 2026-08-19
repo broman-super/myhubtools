@@ -49,6 +49,9 @@
   [data-theme="dark"] .eksp-btn { background: var(--bg); border-color: var(--border); color: var(--text); }
   [data-theme="dark"] .eksp-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
   [data-theme="dark"] .prod-row { background: var(--surface); border-color: var(--border); }
+  /* Dark mode: logo filter darkens the silhouette (invisible on near-black btn). Invert to white silhouette. */
+  [data-theme="dark"] .eksp-logo { filter: brightness(0) invert(1); }
+  [data-theme="dark"] .eksp-btn.active .eksp-logo, [data-theme="dark"] .eksp-btn:hover .eksp-logo { filter: brightness(0) invert(1); }
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
 
@@ -66,12 +69,29 @@
   .topbar-icon svg { width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round; }
   .topbar-title { font-size:16px;font-weight:800;color:var(--text);white-space:nowrap; }
   .topbar-ver   { margin-left:auto;font-size:11px;color:var(--muted);background:var(--bg);border:1px solid var(--border);padding:3px 9px;border-radius:100px;white-space:nowrap;flex-shrink:0; }
+  .theme-toggle {
+    width:34px;height:34px;flex-shrink:0;
+    border:none;background:var(--accent-lt);color:var(--accent);
+    border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    transition:all .2s cubic-bezier(.4,0,.2,1);
+  }
+  .theme-toggle svg { width:18px;height:18px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round; }
+  .theme-toggle:active { background:var(--accent);color:#fff; }
+  @media (hover:hover){ .theme-toggle:hover{ background:var(--accent);color:#fff; } }
 
   /* ══════════════════════════════════════════════════
      LAYOUT
      ══════════════════════════════════════════════════ */
-  .main { max-width:960px; margin:0 auto; padding:24px 18px; display:grid; grid-template-columns:1fr 1fr; gap:18px; }
-  @media (max-width:680px){ .main{ grid-template-columns:1fr; gap:14px; padding:16px 12px; } }
+  .main { max-width:1080px; margin:0 auto; padding:28px 18px 104px; display:grid; grid-template-columns:minmax(0,1fr) 392px; gap:22px; align-items:start; }
+  .form-pane { display:flex; flex-direction:column; gap:20px; min-width:0; }
+  .preview-pane { position:sticky; top:76px; align-self:start; background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius); padding:16px; box-shadow:var(--neo-out); overflow:hidden; }
+  .preview-title { font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:7px; }
+  .preview-title .ico { display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:var(--accent-lt);border-radius:6px;flex-shrink:0; }
+  .preview-title .ico svg { width:13px;height:13px;stroke:var(--accent);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round; }
+  .preview-frame-wrap { display:flex; justify-content:center; transform-origin:top center; }
+  .preview-frame { width:378px; min-height:420px; border:none; border-radius:8px; background:#fff; box-shadow:0 1px 6px rgba(0,0,0,.12); flex-shrink:0; }
+  @media (max-width:900px){ .main{ grid-template-columns:1fr; } .preview-pane{ position:static; top:auto; } }
+  @media (max-width:680px){ .main{ padding:20px 14px 100px; gap:16px; } }
   .full-col { grid-column:1/-1; }
 
   /* ══════════════════════════════════════════════════
@@ -79,22 +99,22 @@
      ══════════════════════════════════════════════════ */
   .card {
     background:var(--surface); border:1.5px solid var(--border);
-    border-radius:var(--radius); padding:18px 20px;
+    border-radius:var(--radius); padding:20px 22px;
     box-shadow:var(--neo-out);
     transition:box-shadow .25s ease, transform .25s ease;
   }
   .card:hover { box-shadow:10px 10px 20px var(--neo-deep), -10px -10px 20px var(--neo-light); transform:translateY(-1px); }
-  @media (max-width:480px){ .card{ padding:14px 14px; } }
-  .card-title { font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:7px; }
+  @media (max-width:480px){ .card{ padding:16px 16px; } }
+  .card-title { font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:16px;padding-bottom:11px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px; }
   .card-title .ico { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; background:var(--accent-lt); border-radius:6px; flex-shrink:0; }
   .card-title .ico svg { width:14px; height:14px; stroke:var(--accent); stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
 
   /* ══════════════════════════════════════════════════
      FORM ELEMENTS
      ══════════════════════════════════════════════════ */
-  .field { margin-bottom:13px; }
+  .field { margin-bottom:16px; }
   .field:last-child { margin-bottom:0; }
-  label { display:block;font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:4px;letter-spacing:.2px; }
+  label { display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:5px;letter-spacing:.2px; }
   input,select,textarea {
     width:100%; padding:11px 12px;
     border:1.5px solid var(--border); border-radius:8px;
@@ -126,10 +146,10 @@
   .locked-badge {
     display:inline-flex; align-items:center; gap:5px;
     padding:4px 10px; border-radius:7px;
-    background:#F1F5F9; border:1px solid var(--border);
-    font-size:10.5px;font-weight:600; color:var(--lock);
-    margin-bottom:12px;
-  }
+  background:var(--lock-bg); border:1px solid var(--border);
+  font-size:10.5px;font-weight:600; color:var(--lock);
+  margin-bottom:12px;
+}
 
   /* ══════════════════════════════════════════════════
      MODE TOGGLE
@@ -256,6 +276,7 @@
   /* ══════════════════════════════════════════════════
      ACTION BAR
      ══════════════════════════════════════════════════ */
+  .action-card { position:sticky; bottom:12px; z-index:60; box-shadow:0 10px 30px rgba(0,0,0,.18), var(--neo-out); }
   .action-bar { display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap; }
   .btn {
     display:inline-flex;align-items:center;justify-content:center;gap:6px; min-height:44px;
@@ -325,7 +346,19 @@
      ══════════════════════════════════════════════════ */
   .spin { display:inline-block;width:14px;height:14px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite; }
   @keyframes sp { to{ transform:rotate(360deg) } }
-  </style>
+
+  /* ══════════════════════════════════════════════════
+     FOCUS-VISIBLE & REDUCED MOTION (design-system §7.2 / §8.1)
+     ══════════════════════════════════════════════════ */
+  .btn:focus-visible, .btn-secondary:focus-visible, .btn-primary:focus-visible,
+  .btn-add:focus-visible, .btn-sm:focus-visible, .btn-del:focus-visible,
+  .pill:focus-visible, .eksp-btn:focus-visible, .mode-btn:focus-visible {
+    outline:2px solid var(--accent); outline-offset:2px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after { animation-duration:.001ms !important; transition-duration:.001ms !important; }
+  }
+</style>
 </head>
 <body>
 
@@ -334,12 +367,13 @@
   <div class="topbar-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
   <div class="topbar-title">Resi Generator</div>
   <div class="topbar-ver">Supersub v4 · 100×150mm</div>
-  <button class="theme-toggle" onclick="toggleTheme()" title="Ubah Tema">
+  <button class="theme-toggle" onclick="toggleTheme()" title="Ubah Tema" aria-label="Ubah tema (terang/gelap)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
   </button>
 </div>
 
 <div class="main">
+  <div class="form-pane">
 
   <!-- ══════════════════════════════════
        EKSPEDISI & LAYANAN
@@ -478,7 +512,7 @@
   </div>
 
   <!-- ACTION BAR -->
-  <div class="card full-col" style="padding:14px 18px">
+    <div class="card full-col action-card" style="padding:14px 18px">
     <div class="action-bar">
       <button class="btn btn-secondary" onclick="quickFill()" id="btnQuickFill" title="Isi ulang data dari sesi terakhir">Isi Lagi</button>
       <button class="btn btn-secondary" onclick="resetForm()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Reset</button>
@@ -487,6 +521,16 @@
     </div>
     <div id="resultArea"></div>
   </div>
+
+  </div><!-- /form-pane -->
+
+  <!-- LIVE PREVIEW (split layout) -->
+  <aside class="preview-pane">
+    <div class="preview-title"><span class="ico"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></span> Preview Resi</div>
+    <div class="preview-frame-wrap">
+      <iframe id="previewFrame" class="preview-frame" title="Preview lembar resi"></iframe>
+    </div>
+  </aside>
 
 </div><!-- /main -->
 
@@ -573,12 +617,69 @@ window.onload = function() {
   addProduct();
   loadProductDatabase();
   restoreFormState();
+
+  // ── A11y: toggle divs become keyboard-operable (design-system §8) ──
+  document.querySelectorAll('.eksp-btn, .pill').forEach(function(el){
+    el.setAttribute('role', 'button');
+    if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0');
+  });
+  ['resellerNama','resellerAlamat','namaPenerima','alamatPenerima'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.setAttribute('aria-required', 'true');
+  });
+
+  // Enter/Space activates a focused toggle div
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('.eksp-btn,.pill')) {
+      e.preventDefault();
+      e.target.click();
+    }
+  });
+
+  // Enter on a field still triggers preview — but not while a toggle is focused
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && !e.target.closest('.eksp-btn,.pill,.mode-btn')) {
       var btn = document.getElementById('btnPreview');
       if (btn && !btn.disabled) doPreview();
     }
   });
+
+  // ── Live preview (split layout): render the actual label into the right pane ──
+  var pvWrap = document.querySelector('.preview-frame-wrap');
+  var pvFrame = document.getElementById('previewFrame');
+  var _pvT;
+  function fitPreview() {
+    if (!pvWrap || !pvFrame) return;
+    var pane = pvWrap.closest('.preview-pane');
+    var avail = (pane ? pane.clientWidth : 360) - 32;
+    var h = parseInt(pvFrame.dataset.h || '567', 10);
+    pvFrame.style.height = h + 'px';                 // full label, no clip
+    var s = Math.min(1, avail / 378);                // 378 = label width (100mm @96dpi)
+    pvFrame.style.transformOrigin = 'top center';
+    pvFrame.style.transform = 'scale(' + s + ')';    // scale the iframe itself
+    pvWrap.style.width = (378 * s) + 'px';           // reserve scaled layout width -> no overflow
+    pvWrap.style.height = (h * s) + 'px';
+  }
+  function updatePreview() {
+    if (!pvFrame) return;
+    var d = collectData();
+    if (!(d.namaPenerima || d.produk.length)) {
+      pvFrame.srcdoc = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;font-family:sans-serif;color:#94a3b8;display:flex;align-items:center;justify-content:center;height:100vh;font-size:13px;text-align:center;padding:24px">Isi form untuk melihat preview resi</body></html>';
+      pvFrame.dataset.h = '420'; fitPreview(); return;
+    }
+    pvFrame.srcdoc = buildResiHTML(d);
+  }
+  if (pvFrame) {
+    pvFrame.addEventListener('load', function() {
+      try { pvFrame.dataset.h = pvFrame.contentDocument.body.scrollHeight; } catch (e) {}
+      fitPreview();
+    });
+    var fp = document.querySelector('.form-pane');
+    function debouncePreview() { clearTimeout(_pvT); _pvT = setTimeout(updatePreview, 120); }
+    if (fp) { fp.addEventListener('input', debouncePreview); fp.addEventListener('change', debouncePreview); fp.addEventListener('click', debouncePreview); }
+    window.addEventListener('resize', fitPreview);
+    updatePreview();
+  }
 };
 
 // ── Product Database ──────────────────────────────────────────
@@ -641,7 +742,7 @@ function addProduct() {
     '</div>' +
     '<input type="text" class="ps" placeholder="SKU / varian">' +
     '<input type="number" class="pq" placeholder="1" min="1" value="1" inputmode="numeric">' +
-    '<button class="btn-del" onclick="delProduct(\'' + id + '\')">'+ICONS.x+'</button>';
+    '<button class="btn-del" onclick="delProduct(\'' + id + '\')" title="Hapus produk" aria-label="Hapus produk">'+ICONS.x+'</button>';
   document.getElementById('productList').appendChild(div);
   initAutocomplete(div);
 }
@@ -907,19 +1008,46 @@ function buildResiHTML(d) {
     ? '<img src="' + EXPEDISI_LOGOS[d.ekspedisi] + '" class="exp-logo" alt="' + expName + '">'
     : '<div style="font-size:15px;font-weight:900">' + expName + '</div>';
 
-  var produkRows = '';
-  if (d.produk && d.produk.length > 0) {
-    d.produk.forEach(function(p) {
-      produkRows +=
-        '<tr>' +
-          '<td style="padding:6px 8px;font-size:11px;border-bottom:1px solid #000">' + (p.nama||'-') + '</td>' +
-          '<td style="padding:6px 8px;font-size:10px;text-align:center;border-bottom:1px solid #000">' + (p.sku||'-') + '</td>' +
-          '<td style="padding:6px 8px;font-size:11px;font-weight:700;text-align:center;border-bottom:1px solid #000">' + (p.qty||1) + '</td>' +
-        '</tr>';
-    });
-  } else {
-    produkRows = '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:6px;border-bottom:1px solid #000">-</td></tr>';
+  function rowsHtml(arr) {
+    if (!arr || !arr.length) return '<tr><td colspan="3" style="text-align:center;color:#aaa;padding:6px;border-bottom:1px solid #000">-</td></tr>';
+    return arr.map(function(p) {
+      return '<tr>' +
+        '<td style="padding:6px 8px;font-size:11px;border-bottom:1px solid #000">' + (p.nama||'-') + '</td>' +
+        '<td style="padding:6px 8px;font-size:10px;text-align:center;border-bottom:1px solid #000">' + (p.sku||'-') + '</td>' +
+        '<td style="padding:6px 8px;font-size:11px;font-weight:700;text-align:center;border-bottom:1px solid #000">' + (p.qty||1) + '</td>' +
+      '</tr>';
+    }).join('');
   }
+
+  function productSection(rows, caption) {
+    return '<div class="sec flow">' +
+      (caption ? '<div class="lbl">' + caption + '</div>' : '') +
+      '<table><thead><tr><th>Nama Produk</th><th style="text-align:center">SKU</th><th style="text-align:center">Qty</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table></div>';
+  }
+
+  var topHtml =
+    '<div class="hdr">' +
+      '<div class="hdr-left">' + logoSection + '</div>' +
+      '<div class="hdr-center"><span class="layanan-txt">' + (d.layanan||'-') + '</span></div>' +
+      '<div class="hdr-right">' + expLogo + '</div>' +
+    '</div>' +
+    '<div class="sec">' +
+      '<div class="lbl">Pengirim</div>' +
+      '<div class="vb">' + (d.namaPengirim||'-') + '</div>' +
+      '<div class="vn">' + (d.alamatPengirim||'-') + '</div>' +
+      '<div class="vn">Telp: ' + (d.noHpPengirim||'-') + '</div>' +
+    '</div>' +
+    '<div class="sec alt">' +
+      '<div class="lbl">Penerima</div>' +
+      '<div class="vb" style="font-size:20px;line-height:1.15">' + (d.namaPenerima||'-') + '</div>' +
+      '<div class="vn" style="font-size:12px">' + (d.alamatPenerima||'-') + '</div>' +
+      '<div class="vb">Telp: ' + (d.noHpPenerima||'-') + '</div>' +
+    '</div>' +
+    '<div class="row2">' +
+      '<div class="c1"><div class="lbl">Tanggal</div><div class="vb" style="font-size:11px">' + tgl + '</div></div>' +
+      '<div class="c2"><div class="lbl">Berat</div><div class="vb">' + (d.berat||'-') + ' Kg</div></div>' +
+    '</div>';
 
   var catatanSection = d.catatan
     ? '<div class="sec">' +
@@ -928,12 +1056,33 @@ function buildResiHTML(d) {
       '</div>'
     : '';
 
-  return '<!DOCTYPE html>' +
-  '<html><head><meta charset="UTF-8">' +
-  '<style>' +
+  var footerHtml = '<div class="ftr-print">SUPERSUB &bull; Terima Kasih Telah Berbelanja! &bull; ' + tgl + '</div>';
+
+  var prods = d.produk || [];
+  var chunks = [];
+  var idx = 0, first = true;
+  while (idx < prods.length) {
+    var size = first ? 7 : 15; first = false;
+    chunks.push(prods.slice(idx, idx + size));
+    idx += size;
+  }
+  if (chunks.length === 0) chunks.push([]);
+
+  function pageHtml(chunk, isFirst) {
+    var body = isFirst
+      ? topHtml + productSection(rowsHtml(chunk), null) + catatanSection
+      : productSection(rowsHtml(chunk), 'Lanjutan Produk');
+    return '<div class="page"><div class="page-body">' + body + '</div>' + footerHtml + '</div>';
+  }
+
+  var pagesHtml = chunks.map(function(c, i) { return pageHtml(c, i === 0); }).join('');
+
+  var styleCss =
     '* { margin:0; padding:0; box-sizing:border-box; }' +
-    'body { font-family: Arial, sans-serif; background: #fff; width: 100mm; min-height: 150mm; color:#000; }' +
-    '.wrap { width: 100mm; min-height: 150mm; display: block; }' +
+    'body { font-family: Arial, sans-serif; background: #fff; width: 100mm; color:#000; }' +
+    '.pages { }' +
+    '.page { position: relative; width: 100mm; height: 150mm; }' +
+    '.page-body { width: 100mm; height: 143mm; overflow: hidden; }' +
     '.hdr { background: #fff; border-bottom: 2px solid #000; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; padding:10px 12px; gap:10px; }' +
     '.hdr-left { justify-self:start; }' +
     '.hdr-center { justify-self:center; text-align:center; }' +
@@ -949,57 +1098,21 @@ function buildResiHTML(d) {
     '.row2 { display:flex; margin:5px 8px; border:1px solid #000; border-radius:5px; overflow:hidden; break-inside:avoid; }' +
     '.c1 { flex:1; padding:7px 12px; border-right:1px solid #000; }' +
     '.c2 { flex:1; padding:7px 12px; }' +
-    'table { width:100%; border-collapse:collapse; margin-top:5px; }' +
+    'table { width:100%; border-collapse: separate; border-spacing: 0; margin-top:5px; }' +
     'th { border-top:1px solid #000; border-bottom:1px solid #000; background:#eee; font-size:9px; font-weight:700; padding:6px 8px; text-align:left; }' +
     'tbody tr { break-inside:avoid; }' +
-    '.ftr-print { position:fixed; left:0; right:0; bottom:0; text-align:center; font-size:9px; font-weight:700; color:#000; border-top:2px solid #000; padding:5px 0; background:#fff; }' +
+    '.ftr-print { position:absolute; left:0; right:0; bottom:0; text-align:center; font-size:9px; font-weight:700; color:#000; border-top:2px solid #000; padding:4px 0; background:#fff; }' +
     '@page { size: 100mm 150mm; margin: 0; }' +
-    '@media print { .print-hint { display:none !important; } .sec, .row2, tbody tr { break-inside:avoid; } }' +
-  '</style>' +
+    '@media print { .print-hint { display:none !important; } .sec, .row2, tbody tr { break-inside:avoid; } }';
+
+  return '<!DOCTYPE html>' +
+  '<html><head><meta charset="UTF-8">' +
+  '<style>' + styleCss + '</style>' +
   '</head><body>' +
-
-  '<div class="wrap">' +
-    '<div class="hdr">' +
-      '<div class="hdr-left">' + logoSection + '</div>' +
-      '<div class="hdr-center"><span class="layanan-txt">' + (d.layanan||'-') + '</span></div>' +
-      '<div class="hdr-right">' + expLogo + '</div>' +
-    '</div>' +
-
-    '<div class="sec">' +
-      '<div class="lbl">Pengirim</div>' +
-      '<div class="vb">' + (d.namaPengirim||'-') + '</div>' +
-      '<div class="vn">' + (d.alamatPengirim||'-') + '</div>' +
-      '<div class="vn">Telp: ' + (d.noHpPengirim||'-') + '</div>' +
-    '</div>' +
-
-    '<div class="sec alt">' +
-      '<div class="lbl">Penerima</div>' +
-      '<div class="vb" style="font-size:20px;line-height:1.15">' + (d.namaPenerima||'-') + '</div>' +
-      '<div class="vn" style="font-size:12px">' + (d.alamatPenerima||'-') + '</div>' +
-      '<div class="vb">Telp: ' + (d.noHpPenerima||'-') + '</div>' +
-    '</div>' +
-
-    '<div class="row2">' +
-      '<div class="c1"><div class="lbl">Tanggal</div><div class="vb" style="font-size:11px">' + tgl + '</div></div>' +
-      '<div class="c2"><div class="lbl">Berat</div><div class="vb">' + (d.berat||'-') + ' Kg</div></div>' +
-    '</div>' +
-
-    '<div class="sec flow">' +
-      '<div class="lbl">Detail Produk</div>' +
-      '<table>' +
-        '<thead><tr><th>Nama Produk</th><th style="text-align:center">SKU</th><th style="text-align:center">Qty</th></tr></thead>' +
-        '<tbody>' + produkRows + '</tbody>' +
-      '</table>' +
-    '</div>' +
-
-    catatanSection +
-
-  '</div>' +
-
+  '<div class="pages">' + pagesHtml + '</div>' +
   '<div class="print-hint" style="text-align:center;padding:20px;">' +
     '<button onclick="window.print()" style="padding:10px 20px; font-weight:bold; cursor:pointer;">Cetak Resi</button>' +
   '</div>' +
-
   '</body></html>';
 }
 
@@ -1015,7 +1128,7 @@ function doPreview() {
     w.document.open();
     w.document.write(html);
     w.document.close();
-    setTimeout(function(){ stampPages(w); w.print(); }, 350);
+    setTimeout(function(){ w.print(); }, 350);
   } catch(e) {
     showToast('Error: ' + e.message, 'error');
   }
@@ -1024,21 +1137,7 @@ function doPreview() {
 // ── Generate PDF (sama seperti preview, browser handle print-to-PDF) ──
 function doGenerate() { doPreview(); }
 
-// Tempel 1 footer fixed (diulang otomatis tiap halaman saat print oleh browser).
-// Fixed = keluar dari flow, tidak merusak tata letak produk.
-function stampPages(w) {
-  try {
-    var months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-    var now = new Date();
-    var tgl = now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
-    var old = w.document.querySelectorAll('.ftr-print');
-    for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
-    var el = w.document.createElement('div');
-    el.className = 'ftr-print';
-    el.innerHTML = 'SUPERSUB &bull; Terima Kasih Telah Berbelanja! &bull; ' + tgl;
-    w.document.body.appendChild(el);
-  } catch(e) {}
-}
+// Pagination sudah ditangani di buildResiHTML (chunk 7 item lembar 1, 14 item lembar lanjut).
 
 // ── Reset ─────────────────────────────────────────────────────────
 function resetForm() {
