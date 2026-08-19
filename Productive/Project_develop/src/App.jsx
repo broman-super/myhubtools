@@ -220,7 +220,7 @@ function Lightbox({ url, onClose }) {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [url, onClose]);
+  }, [url]);
   if (!url) return null;
   return (
       <div
@@ -581,49 +581,11 @@ function RichTextInput({ value, onChange, placeholder, style, minHeight = 60 }) 
     }
   }, [value]);
 
-  const getOffset = (root) => {
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return null;
-    const range = sel.getRangeAt(0);
-    const pre = range.cloneRange();
-    pre.selectNodeContents(root);
-    pre.setEnd(range.endContainer, range.endOffset);
-    return pre.toString().length;
-  };
-  const setOffset = (root, offset) => {
-    if (offset == null) return;
-    let rem = offset;
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    let n;
-    while ((n = walker.nextNode())) {
-      const len = n.textContent.length;
-      if (rem <= len) {
-        const sel = window.getSelection();
-        const r = document.createRange();
-        r.setStart(n, rem);
-        r.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(r);
-        return;
-      }
-      rem -= len;
-    }
-    const sel = window.getSelection();
-    const r = document.createRange();
-    r.selectNodeContents(root);
-    r.collapse(false);
-    sel.removeAllRanges();
-    sel.addRange(r);
-  };
-
   const sync = () => {
     const root = ref.current;
     if (!root) return;
     const text = (root.innerText || "").replace(/\u00a0/g, " ");
-    const off = getOffset(root);
     last.current = text;
-    root.innerHTML = renderRich(text);
-    setOffset(root, off);
     onChange(text);
   };
 
@@ -676,18 +638,21 @@ function ConfirmProvider() {
 function Modal({ id, title, onClose, children, width = 460, onCloseAttempt }) {
   const ref = useRef(null);
   useEffect(() => {
-    const onKey = (e) => {
-      if (e.key !== "Escape") return;
-      if (onCloseAttempt) onCloseAttempt(); else onClose();
-    };
-    window.addEventListener("keydown", onKey);
     const t = setTimeout(() => {
       const el = ref.current;
       if (!el) return;
       const f = el.querySelector("input:not([type=hidden]), textarea, select") || el.querySelector("button");
       if (f) f.focus();
     }, 0);
-    return () => { window.removeEventListener("keydown", onKey); clearTimeout(t); };
+    return () => clearTimeout(t);
+  }, []);
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      if (onCloseAttempt) onCloseAttempt(); else onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, [onCloseAttempt, onClose]);
   const attemptClose = () => { if (onCloseAttempt) onCloseAttempt(); else onClose(); };
   return (
@@ -730,6 +695,8 @@ export default function App() {
   const saveTimer = useRef(null);
   const saving = useRef(false);
   const queued = useRef(null);
+  const retry = useRef(0);
+  const pendingDeletes = useRef([]);
 
   // --- Load dari Supabase (anon read) ---
   useEffect(() => {
@@ -770,9 +737,12 @@ export default function App() {
     saving.current = true;
     try {
       await syncToSupabase(batch.rows, batch.deletes || []);
+      retry.current = 0;
       setSaveStatus({ state: "saved", msg: "Tersimpan" });
+      if (queued.current === batch) queued.current = null;
     } catch (e) {
       setSaveStatus({ state: "error", msg: "Gagal simpan: " + (e && e.message ? e.message : e) });
+      if (retry.current < 3) { retry.current++; saveTimer.current = setTimeout(() => doSave(), 2500); }
     } finally {
       saving.current = false;
       if (queued.current && queued.current !== batch) doSave(); // ada edit baru, simpan lagi
@@ -784,8 +754,12 @@ export default function App() {
       skipSync.current = false;
       return;
     }
-    queued.current = { rows: projects.map((p) => ({ id: p.id, data: p })), deletes: pendingDeletes.current.slice() };
+    const deletes = pendingDeletes.current.slice();
     pendingDeletes.current = [];
+    queued.current = {
+      rows: projects.map((p) => ({ id: p.id, data: p })),
+      deletes: [...(queued.current?.deletes || []), ...deletes],
+    };
     setSaveStatus({ state: "saving", msg: "Menyimpan…" });
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => doSave(), 400);
@@ -802,7 +776,6 @@ export default function App() {
   const [activeProjectId, setActiveProjectId] = useState(null);
   const [projectModal, setProjectModal] = useState(null); // null | {} (new) | project (edit)
   const [navView, setNavView] = useState("project");
-  const pendingDeletes = useRef([]);
   const [lightboxUrl, setLightboxUrl] = useState(null);
 
   const activeProject = useMemo(
@@ -850,7 +823,9 @@ export default function App() {
     if (!p) return;
     const ok = await confirmDialog({ title: "Hapus Permanen?", message: "Project dihapus selamanya beserta foto-fotonya. Tidak bisa dikembalikan.", confirmText: "Hapus Permanen", danger: true });
     if (!ok) return;
-    flattenMilestones(p.milestones).forEach((m) => (m.checklist || []).forEach((c) => { if (c.photoUrl) try { deleteFromStorage(c.photoUrl); } catch (_) {} }));
+    await Promise.all(
+      flattenMilestones(p.milestones).flatMap((m) => (m.checklist || []).filter((c) => c.photoUrl).map((c) => deleteFromStorage(c.photoUrl).catch(() => {})))
+    );
     pendingDeletes.current.push(id);
     setProjects((prev) => prev.filter((x) => x.id !== id));
   }
@@ -1261,7 +1236,7 @@ function ProjectModal({ initial, onClose, onSave }) {
     targetReleaseDate: initial.targetReleaseDate || "",
   });
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e && e.target ? e.target.value : e }));
-  const initialSnapshot = useRef(JSON.stringify(form)).current;
+  const initialSnapshot = useRef(undefined); if (initialSnapshot.current === undefined) initialSnapshot.current = JSON.stringify(form);
   const dirty = JSON.stringify(form) !== initialSnapshot;
   const handleClose = async () => {
     if (dirty && !(await confirmDialog({ title: "Keluar?", message: "Data yang sudah diinput akan hilang.", confirmText: "Keluar", cancelText: "Batal" }))) return;
@@ -1711,7 +1686,7 @@ function MilestoneModal({ isEdit, initial, onClose, onSave }) {
     targetDate: initial?.targetDate || "",
   });
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e && e.target ? e.target.value : e }));
-  const initialSnapshot = useRef(JSON.stringify(form)).current;
+  const initialSnapshot = useRef(undefined); if (initialSnapshot.current === undefined) initialSnapshot.current = JSON.stringify(form);
   const dirty = JSON.stringify(form) !== initialSnapshot;
   const handleClose = async () => {
     if (dirty && !(await confirmDialog({ title: "Keluar?", message: "Data yang sudah diinput akan hilang.", confirmText: "Keluar", cancelText: "Batal" }))) return;
@@ -1803,7 +1778,7 @@ function ChecklistModal({ initial, onClose, onSave }) {
     }
     // Bersihkan foto lama di Storage bila diganti/dibuang (best-effort)
     if (initial && initial.photoUrl && initial.photoUrl !== photoUrl) {
-      deleteFromStorage(initial.photoUrl);
+      deleteFromStorage(initial.photoUrl).catch(() => {});
     }
     onSave({ ...form, photoUrl });
   }
@@ -1852,7 +1827,7 @@ function ChecklistModal({ initial, onClose, onSave }) {
 // ---------- Evaluation Modal ----------
 function EvaluationModal({ onClose, onSave }) {
   const [form, setForm] = useState({ score: 3, decision: "Go", comments: "" });
-  const initialSnapshot = useRef(JSON.stringify(form)).current;
+  const initialSnapshot = useRef(undefined); if (initialSnapshot.current === undefined) initialSnapshot.current = JSON.stringify(form);
   const dirty = JSON.stringify(form) !== initialSnapshot;
   const handleClose = async () => {
     if (dirty && !(await confirmDialog({ title: "Keluar?", message: "Data yang sudah diinput akan hilang.", confirmText: "Keluar", cancelText: "Batal" }))) return;
