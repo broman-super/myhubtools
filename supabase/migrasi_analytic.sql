@@ -1,7 +1,10 @@
 -- ============================================================
 -- MIGRASI ANALYTIC WEBTOOL → SUPABASE — FASE 0 (DDL + RLS)
--- Jalankan SEMUA blok ini di SQL Editor Supabase (sekali jalan).
--- Aman dijalankan ulang (DROP IF EXISTS).
+-- ⚠️ PERINGATAN: blok di bawah (baris ~8-11) menjalankan DROP TABLE ... CASCADE
+--    yang MENGHAPUS SELURUH DATA (penjualan, biaya, produk, settings).
+--    JANGAN jalankan file ini di database yang sudah berisi data produksi.
+--    Untuk sekadar menambah kolom jurnal biaya, jalankan file
+--    `migrasi_biaya_jurnal.sql` (aman, idempoten, tanpa DROP).
 -- ============================================================
 
 -- ---------- RESET (hanya untuk fase pengembangan) ----------
@@ -79,3 +82,15 @@ CREATE POLICY "allow public read" ON settings  FOR SELECT USING (true);
 
 -- TIDAK ada policy INSERT/UPDATE/DELETE untuk anon.
 -- Semua write hanya lewat GAS (service_role) yang melewati RLS.
+
+-- ============================================================
+-- 3.3b  KOLOM TAMBAHAN JURNAL BIAYA (jalankan terpisah dari blok atas)
+-- Idempoten: aman dijalankan berulang. Kolom Tetap (Tanggal, Kategori
+-- Biaya, Nominal) dipertahankan agar dashboard tidak rusak. Debit diisi
+-- sama dengan Nominal; Platform & Nama Toko diturunkan dari Keterangan.
+-- ============================================================
+ALTER TABLE biaya ADD COLUMN IF NOT EXISTS "No Bukti"          TEXT;
+ALTER TABLE biaya ADD COLUMN IF NOT EXISTS "Keterangan Jurnal" TEXT;
+ALTER TABLE biaya ADD COLUMN IF NOT EXISTS "Debit"            NUMERIC(12,2);
+ALTER TABLE biaya ADD COLUMN IF NOT EXISTS "Platform"         TEXT;
+ALTER TABLE biaya ADD COLUMN IF NOT EXISTS "Nama Toko"        TEXT;

@@ -186,6 +186,63 @@ function normalizeUploadRow_(r) {
 // ==========================================
 // ENDPOINT POST UNTUK BULK UPSERT TRANSAKSI
 // ==========================================
+// ===== BULK BIAYA: kanonisasi tanggal & dedupe key =====
+function normYMD_(s) {
+  s = String(s == null ? '' : s).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  var m = s.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})$/);
+  if (m) {
+    var y = m[3];
+    if (y.length === 2) y = (parseInt(y, 10) < 50 ? '20' : '19') + y;
+    return y + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[1]).padStart(2, '0');
+  }
+  var t = Date.parse(s);
+  if (!isNaN(t)) {
+    var d = new Date(t);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  return '';
+}
+function biayaKey_(tanggal, noBukti, keterangan, debit) {
+  return [tanggal || '', (noBukti || '').toLowerCase(), (keterangan || '').toLowerCase(), debit].join('|');
+}
+function derivePlatform_(ket) {
+  var s = (ket || '').toLowerCase();
+  if (s.indexOf('tiktok') >= 0) return 'TikTok';
+  if (s.indexOf('shopee') >= 0) return 'Shopee';
+  return '';
+}
+function deriveNamaToko_(ket) {
+  var s = (ket || '').toLowerCase();
+  if (s.indexOf('supersub') >= 0) return 'Supersub';
+  if (s.indexOf('kyx') >= 0) return 'KYX';
+  return '';
+}
+function parseNoBuktiDate_(s) {
+  s = String(s == null ? '' : s).trim();
+  if (!s) return '';
+  var raw = s.split(/[.\-/_ ]+/).filter(Boolean);
+  var year = '', month = '', day = '';
+  raw.forEach(function (tok) {
+    if (/^20\d{2}$/.test(tok)) year = tok;
+    else if (/^\d{1,2}$/.test(tok)) {
+      var n = parseInt(tok, 10);
+      if (n >= 1 && n <= 12 && !month) month = String(n).padStart(2, '0');
+      else if (n >= 1 && n <= 31 && !day) day = String(n).padStart(2, '0');
+    }
+  });
+  if (!day) {
+    var yi = raw.indexOf(year);
+    if (yi > 0 && /^\d{4,}$/.test(raw[yi - 1])) {
+      var d = parseInt(raw[yi - 1].slice(-2), 10);
+      if (d >= 1 && d <= 31) day = String(d).padStart(2, '0');
+    }
+  }
+  if (!year || !month) return '';
+  if (!day) day = '01';
+  return year + '-' + month + '-' + day;
+}
+
 function doPost(e) {
   try {
     var requestData = JSON.parse(e.postData.contents);
@@ -256,6 +313,70 @@ function doPost(e) {
         added: hasil.added || 0,
         updated: hasil.updated || 0,
         skipped: hasil.skipped || 0
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === 'bulkUpsertBiaya') {
+      var brows = requestData.rows;
+      if (!brows || !Array.isArray(brows)) {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "error",
+          message: "Data Excel kosong atau format tidak valid!"
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      try { CacheService.getScriptCache().remove('dash_data_v2'); } catch (e) {}
+
+      // Ambil baris existing untuk anti-duplikat
+      var existing = [];
+      try {
+        existing = JSON.parse(supabaseRequest_('get', '/rest/v1/biaya?select=' + encodeURIComponent('Tanggal,No Bukti,Keterangan Jurnal,Debit,Nominal')).getContentText());
+      } catch (e) { existing = []; }
+      var existKeys = {};
+      (Array.isArray(existing) ? existing : []).forEach(function (r) {
+        var et = normYMD_(r.Tanggal);
+        var deb = Number(r.Debit != null ? r.Debit : r.Nominal) || 0;
+        existKeys[biayaKey_(et, r['No Bukti'], r['Keterangan Jurnal'], deb)] = true;
+      });
+
+      var toInsert = [];
+      var skipped = 0;
+      brows.forEach(function (r) {
+        var tgl = normYMD_(r.Tanggal != null ? r.Tanggal : (r.tanggal != null ? r.tanggal : '')) || parseNoBuktiDate_(r['No Bukti']);
+        var noBukti = String((r['No Bukti'] != null ? r['No Bukti'] : (r['No. Bukti'] != null ? r['No. Bukti'] : (r['Nobukti'] != null ? r['Nobukti'] : ''))) || '').trim();
+        var ket = String((r['Keterangan Jurnal'] != null ? r['Keterangan Jurnal'] : (r['Keterangan'] != null ? r['Keterangan'] : (r.keterangan != null ? r.keterangan : ''))) || '').trim();
+        var nomRaw = r.Debit != null ? r.Debit : (r.debit != null ? r.debit : (r.Nominal != null ? r.Nominal : (r.nominal != null ? r.nominal : 0)));
+        var nom = parseFloat(String(nomRaw).replace(/[^0-9,-]/g, '').replace(/,/g, '.')) || 0;
+        if (!tgl && !noBukti && !ket) return;   // baris kosong dilewati
+        if (nom <= 0) return;                   // tanpa nominal dilewati
+        var platform = derivePlatform_(ket);
+        var namaToko = deriveNamaToko_(ket);
+        var kategori = String((r['Kategori Biaya'] != null ? r['Kategori Biaya'] : (r.kategori != null ? r.kategori : '')) || '').trim() || 'Lain-lain';
+        var key = biayaKey_(tgl, noBukti, ket, nom);
+        if (existKeys[key]) { skipped++; return; }
+        toInsert.push({
+          'Tanggal': tgl || null,
+          'Kategori Biaya': kategori,
+          'Nominal': nom,
+          'No Bukti': noBukti || null,
+          'Keterangan Jurnal': ket || null,
+          'Debit': nom,
+          'Platform': platform || null,
+          'Nama Toko': namaToko || null
+        });
+        existKeys[key] = true;
+      });
+
+      var added = 0;
+      if (toInsert.length > 0) {
+        supabaseRequest_('post', '/rest/v1/biaya', toInsert);
+        added = toInsert.length;
+      }
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        added: added,
+        updated: 0,
+        skipped: skipped
       })).setMimeType(ContentService.MimeType.JSON);
     }
 

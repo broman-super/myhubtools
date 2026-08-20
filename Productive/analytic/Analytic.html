@@ -1366,6 +1366,41 @@
         </div>
     </div>
 
+    <!-- Upload Excel Biaya Modal (Bulk) -->
+    <div id="uploadBiayaModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; flex-direction:column; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+        <div class="upload-modal-content" id="uploadBiayaModalContent" style="max-width:520px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="font-family:'Geomini','Plus Jakarta Sans'; color:var(--text); margin:0; font-size:18px;">Import Excel Biaya (Bulk)</h3>
+                <button onclick="closeBiayaUploadModal()" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1; font-weight:800;">&times;</button>
+            </div>
+            <p style="color:var(--text-muted); font-size:12px; margin-bottom:15px; font-weight:500;">
+                Unggah file Excel/CSV laporan biaya (format jurnal). Kolom dibaca: <b>No Bukti</b>, <b>Keterangan Jurnal</b>, <b>Debit</b> (Nominal), dan <b>Tanggal</b> (opsional).<br>
+                Jika kolom Tanggal kosong, tanggal diambil dari <b>No Bukti</b> (mis. <code>110202.2026.08.00008</code> → <code>2026-08-02</code>). Platform (TikTok/Shopee) &amp; Nama Toko (Supersub/KYX) otomatis ditandai dari Keterangan. Baris duplikat otomatis dilewati.
+            </p>
+            <div id="biayaDropzone" style="border:2px dashed var(--border); border-radius:16px; padding:40px 20px; text-align:center; background:var(--bg); cursor:pointer; transition:0.2s;">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="margin-bottom:12px;">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                    <polyline points="9 15 12 12 15 15"></polyline>
+                </svg>
+                <div style="font-weight:800; font-size:14px; color:var(--text); margin-bottom:4px;">Tarik &amp; Lepas File di sini</div>
+                <div style="font-size:11px; color:var(--text-muted);">atau klik untuk memilih file (.xlsx, .xls, .csv)</div>
+            </div>
+            <input type="file" id="biayaFileInput" accept=".xlsx, .xls, .csv" style="display:none;">
+            <div id="biayaPreviewBox" style="display:none; margin-top:15px;">
+                <div style="background:var(--bg); border:1px solid var(--border); border-radius:16px; padding:16px; text-align:center;">
+                    <span style="font-size:22px; font-weight:900; color:var(--text);" id="biayaTotalRows">0</span>
+                    <span style="font-size:11px; font-weight:800; color:var(--text-muted);"> BARIS VALID SIAP DIIMPORT</span>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
+                <button onclick="closeBiayaUploadModal()" style="padding:12px 20px; background:none; border:1px solid var(--border); color:var(--text-muted); border-radius:12px; font-weight:800; cursor:pointer; font-size:13px;">BATAL</button>
+                <button onclick="sendBiayaToGAS()" id="btnSubmitBiayaUpload" disabled style="padding:12px 30px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px; opacity:0.5; transition:0.2s;">KIRIM KE DATABASE</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== TAB BIAYA (Dashboard Khusus Pengeluaran) ===== -->
     <div class="bento-container" id="biayaContainer" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; grid-column:1 / -1;">
@@ -1377,6 +1412,11 @@
                 title="Catat Pengeluaran (OPEX)" style="padding:10px 14px; display:inline-flex; align-items:center; gap:6px; color:var(--primary); font-weight:800; font-size:12px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 Catat Biaya
+            </button>
+            <button class="theme-toggle" onclick="openBiayaUploadModal()"
+                title="Import Excel Biaya (Bulk)" style="padding:10px 14px; display:inline-flex; align-items:center; gap:6px; color:var(--success); font-weight:800; font-size:12px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                Import Excel
             </button>
         </div>
 
@@ -1497,7 +1537,7 @@
           circle: '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6"/></svg>',
           question: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
         };
-        const API_URL = 'https://script.google.com/macros/s/AKfycbztNBViqhtlAsnXvEUXEjh9oOktee8b-OkcWLBudQAE-WmhdcQs2bF3YxzBGz05IsQ/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxY6_O0T9TZ7KrjZrUnc__HNckzkr6F1M8sXnwp6ucxiyJfyQk_UGiZiQ5i3uJlLlentA/exec';
 
         // State pengaman proses GAS & refresh otomatis
         window.isProcessingGAS = false;
@@ -4698,6 +4738,172 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
         function isBiayaTabActive() {
             const c = document.getElementById('biayaContainer');
             return c && c.style.display !== 'none';
+        }
+
+        // ===== BULK IMPORT BIAYA (mirror penjualan, tanpa mapping UI) =====
+        let _biayaUploadRows = [];
+
+        function openBiayaUploadModal() {
+            initBiayaDropzone();
+            document.getElementById('uploadBiayaModal').style.display = 'flex';
+            resetBiayaDropzone();
+        }
+        function closeBiayaUploadModal() {
+            document.getElementById('uploadBiayaModal').style.display = 'none';
+            resetBiayaDropzone();
+        }
+        function resetBiayaDropzone() {
+            _biayaUploadRows = [];
+            const fi = document.getElementById('biayaFileInput');
+            if (fi) fi.value = '';
+            const pv = document.getElementById('biayaPreviewBox');
+            if (pv) pv.style.display = 'none';
+            const btn = document.getElementById('btnSubmitBiayaUpload');
+            if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+        }
+        function initBiayaDropzone() {
+            const dz = document.getElementById('biayaDropzone');
+            const fi = document.getElementById('biayaFileInput');
+            if (!dz || !fi) return;
+            dz.onclick = () => fi.click();
+            fi.onchange = (e) => { if (e.target.files.length) handleBiayaFileSelect(e.target.files[0]); };
+            dz.ondragover = (e) => { e.preventDefault(); dz.style.borderColor = 'var(--primary)'; };
+            dz.ondragleave = () => { dz.style.borderColor = 'var(--border)'; };
+            dz.ondrop = (e) => {
+                e.preventDefault(); dz.style.borderColor = 'var(--border)';
+                if (e.dataTransfer.files.length) { fi.files = e.dataTransfer.files; handleBiayaFileSelect(e.dataTransfer.files[0]); }
+            };
+        }
+        function excelSerialToYMD(serial) {
+            const day = Math.floor(Number(serial));
+            if (isNaN(day) || day <= 0) return '';
+            const date = new Date((day - 25569) * 86400 * 1000);
+            if (isNaN(date.getTime())) return '';
+            const y = date.getUTCFullYear(), m = String(date.getUTCMonth() + 1).padStart(2, '0'), d = String(date.getUTCDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+        function parseBiayaDate(val) {
+            if (val == null || val === '') return '';
+            if (val instanceof Date || Object.prototype.toString.call(val) === '[object Date]') {
+                const y = val.getFullYear(), m = String(val.getMonth() + 1).padStart(2, '0'), d = String(val.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            }
+            if (typeof val === 'number') return excelSerialToYMD(val);
+            let s = String(val).trim();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+            const dm = s.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})$/);
+            if (dm) {
+                let yy = dm[3]; if (yy.length === 2) yy = (parseInt(yy, 10) < 50 ? '20' : '19') + yy;
+                return `${yy}-${String(dm[2]).padStart(2, '0')}-${String(dm[1]).padStart(2, '0')}`;
+            }
+            const t = Date.parse(s);
+            if (!isNaN(t)) { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+            return '';
+        }
+        function parseBiayaNominal(val) {
+            if (val == null || val === '') return 0;
+            if (typeof val === 'number') return val;
+            let s = String(val).trim();
+            if (s.indexOf(',') >= 0 && s.indexOf('.') >= 0) {
+                s = s.replace(/\./g, '').replace(',', '.');
+            } else if (s.indexOf('.') >= 0 && s.indexOf(',') < 0) {
+                if (s.split('.').length > 2) s = s.replace(/\./g, '');
+            } else if (s.indexOf(',') >= 0 && s.indexOf('.') < 0) {
+                if (s.split(',').length > 2) s = s.replace(/,/g, '');
+                else s = s.replace(',', '.');
+            } else {
+                s = s.replace(/[^0-9.-]/g, '');
+            }
+            const n = parseFloat(s);
+            return isNaN(n) ? 0 : n;
+        }
+        function handleBiayaFileSelect(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const wb = XLSX.read(data, { type: 'array' });
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+                    if (!rows.length) return alert('File kosong.');
+                    const headers = rows[0].map(h => String(h == null ? '' : h).trim().toLowerCase());
+                    const iNo = headers.findIndex(h => h === 'no bukti' || h === 'no. bukti' || h === 'nobukti' || h === 'no buku' || h === 'bukti' || h === 'nomor' || h === 'no');
+                    const iKet = headers.findIndex(h => h === 'keterangan jurnal' || h === 'keterangan' || h === 'uraian' || h === 'desc' || h === 'description' || h === 'memo');
+                    const iDeb = headers.findIndex(h => h === 'debit' || h === 'nominal' || h === 'jumlah' || h === 'nilai' || h === 'biaya' || h === 'amount');
+                    const iDate = headers.findIndex(h => h === 'tanggal' || h === 'date' || h === 'tgl' || h === 'hari');
+                    const iCat = headers.findIndex(h => h === 'kategori biaya' || h === 'kategori' || h === 'category' || h === 'jenis');
+                    if (iNo < 0 || iKet < 0 || iDeb < 0) {
+                        return alert('Kolom tidak ditemukan. Pastikan header berisi: No Bukti, Keterangan Jurnal, Debit.');
+                    }
+                    const out = [];
+                    for (let i = 1; i < rows.length; i++) {
+                        const r = rows[i];
+                        if (!r || r.length === 0) continue;
+                        const noBukti = String(r[iNo] == null ? '' : r[iNo]).trim();
+                        const ket = String(r[iKet] == null ? '' : r[iKet]).trim();
+                        const deb = parseBiayaNominal(r[iDeb]);
+                        const tgl = iDate >= 0 ? parseBiayaDate(r[iDate]) : '';
+                        const kat = iCat >= 0 ? String(r[iCat] == null ? '' : r[iCat]).trim() : '';
+                        if (!noBukti && !ket && !tgl) continue;
+                        if (deb <= 0) continue;
+                        out.push({ Tanggal: tgl, 'No Bukti': noBukti, 'Keterangan Jurnal': ket, Debit: deb, 'Kategori Biaya': kat });
+                    }
+                    _biayaUploadRows = out;
+                    document.getElementById('biayaPreviewBox').style.display = 'block';
+                    document.getElementById('biayaTotalRows').textContent = out.length;
+                    const btn = document.getElementById('btnSubmitBiayaUpload');
+                    btn.disabled = out.length === 0;
+                    btn.style.opacity = out.length === 0 ? '0.5' : '1';
+                    if (out.length === 0) alert('Tidak ada baris valid (periksa No Bukti, Keterangan Jurnal, Debit).');
+                } catch (err) {
+                    console.error(err);
+                    alert('Gagal membaca file: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        function sendBiayaToGAS() {
+            if (!_biayaUploadRows.length) return alert('Pilih file Excel terlebih dahulu!');
+            showProcessingOverlayWithProgress('Mengunggah Biaya Bulk...', 'Menghubungkan ke server...');
+            const payload = { action: 'bulkUpsertBiaya', rows: _biayaUploadRows };
+            window.isProcessingGAS = true;
+            let currentProgress = 0, statusText = 'Menghubungkan ke server...';
+            const progressTimer = setInterval(() => {
+                if (!window.isProcessingGAS) { clearInterval(progressTimer); return; }
+                if (currentProgress < 30) { currentProgress += Math.random() * 3 + 2; statusText = 'Mengirim data biaya ke server...'; }
+                else if (currentProgress < 75) { currentProgress += Math.random() * 1.5 + 0.5; statusText = 'Data diterima! Menghubungkan ke database...'; }
+                else if (currentProgress < 95) { currentProgress += (95 - currentProgress) * 0.05; statusText = 'Menyimpan & memfilter duplikat di database...'; }
+                updateProcessingProgress(currentProgress, statusText);
+            }, 200);
+            fetch(API_URL, {
+                method: 'POST',
+                mode: 'cors',
+                redirect: 'follow',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            })
+                .then(r => { if (!r.ok) throw new Error('Status server ' + r.status); return r.json(); })
+                .then(data => {
+                    clearInterval(progressTimer);
+                    if (data.status === 'success') {
+                        updateProcessingProgress(100, 'Data tersimpan! Memperbarui dashboard...');
+                        localStorage.removeItem('intel_pro_cache_v3');
+                        closeBiayaUploadModal();
+                        syncDashboardData().then(ok => {
+                            if (ok) {
+                                const msg = `<b>Import Biaya Berhasil!</b><br>• Baris Baru: <b>${data.added}</b><br>• Baris Skip (Duplikat): <b>${data.skipped}</b>`;
+                                showSuccessOverlay('Bulk Upload Biaya Berhasil!', msg, 4000);
+                            } else {
+                                showErrorOverlay('Sinkronisasi Gagal!', 'Data biaya tersimpan, tapi dashboard gagal memuat ulang. Silakan refresh halaman.');
+                            }
+                        });
+                    } else { throw new Error(data.message || 'Gagal memproses bulk biaya'); }
+                })
+                .catch(err => {
+                    clearInterval(progressTimer);
+                    console.error(err);
+                    showErrorOverlay('Gagal Upload Biaya!', 'Terjadi kesalahan: ' + err.message);
+                });
         }
 
         function showTab(name) {
