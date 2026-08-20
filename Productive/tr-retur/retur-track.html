@@ -38,6 +38,8 @@
       background: var(--surface); overflow: hidden;
     }
 
+    .mobile-tabs { display: none; }
+
     /* ---- SEARCH INPUTS ---- */
     .search-box {
       width: 100%; padding: 8px 14px; font-size: 13px;
@@ -350,17 +352,33 @@
     }
 
     @media (max-width: 900px) {
+      .mobile-tabs {
+        display: flex; gap: 8px; padding: 10px 14px;
+        background: var(--bg); border-bottom: 1px solid var(--border);
+        position: sticky; top: 0; z-index: 30;
+      }
+      .mtab-btn {
+        flex: 1; min-height: 44px; border: 1px solid var(--border);
+        background: var(--surface); color: var(--text-muted);
+        font-weight: 600; font-size: 14px; border-radius: 9px;
+        cursor: pointer; font-family: inherit;
+      }
+      .mtab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
       .container { flex-direction: column; }
-      .panel-left, .panel-right { width: 100%; height: auto; }
-      .panel-left { padding: 20px 20px; max-height: 55vh; border-right: none; border-bottom: 1px solid var(--border); }
+      .panel-left, .panel-right {
+        width: 100%; height: auto; max-height: none; overflow: visible;
+        border-right: none; border-bottom: none; padding: 16px; display: none;
+      }
+      body[data-mtab="input"]   .panel-left  { display: flex; }
+      body[data-mtab="riwayat"] .panel-right { display: flex; }
+      .table-wrap, .table-scroll, .history-list { overflow: visible; flex-grow: 0; }
       body { flex-direction: column; overflow: auto; }
       .table-wrap { min-height: 160px; }
-      .panel-right { max-height: 45vh; padding: 20px; }
     }
 
     @media (max-width: 768px) {
-      .panel-left { padding: 14px 16px; max-height: 50vh; overflow-y: auto; }
-      .panel-right { padding: 14px 16px; max-height: 50vh; overflow-y: auto; }
+      .panel-left { padding: 14px 16px; }
+      .panel-right { padding: 14px 16px; }
       #inputResi { padding: 14px 16px; font-size: 18px; }
       .filter-btn { font-size: 12px; padding: 4px 10px; }
     }
@@ -439,7 +457,12 @@
 
   </style>
 </head>
-<body>
+<body data-mtab="input">
+
+<div class="mobile-tabs" id="mobileTabs">
+  <button type="button" class="mtab-btn active" data-tab="input">Input Retur</button>
+  <button type="button" class="mtab-btn" data-tab="riwayat">Riwayat</button>
+</div>
 
 <div class="container">
   <!-- PANEL KIRI -->
@@ -514,6 +537,17 @@
 </div>
 
 <script>
+  // ── Mobile tabs (input / riwayat) ──
+  (function () {
+    var btns = document.querySelectorAll('.mtab-btn');
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.body.setAttribute('data-mtab', b.dataset.tab);
+        btns.forEach(function (x) { x.classList.toggle('active', x === b); });
+      });
+    });
+  })();
+
   // ============================================================
   // CONFIG & GAS BRIDGE
   // ============================================================
