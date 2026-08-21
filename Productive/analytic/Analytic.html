@@ -748,6 +748,157 @@
         .step-line.active {
             background: var(--primary);
         }
+
+        /* ===== A4 PRINT (Cetak / Export PDF) — Landscape ===== */
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 10mm;
+            }
+
+            html, body {
+                background: #ffffff !important;
+                font-size: 10px;
+            }
+
+            /* Paksa kedua tab tampil (override inline display:none dari showTab) — tetap GRID agar layout 3 kolom jalan */
+            #mainContainer,
+            #biayaContainer {
+                display: grid !important;
+            }
+
+            #biayaContainer.biaya-kosong {
+                display: none !important;
+            }
+
+            /* Pemisah antar bagian (bukan header branding) */
+            #mainContainer::before,
+            #biayaContainer::before {
+                content: "";
+                display: block;
+                grid-column: 1 / -1 !important;
+                font-size: 13px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--text);
+                border-bottom: 2px solid #94a3b8;
+                padding-bottom: 4px;
+                margin-bottom: 10px;
+            }
+
+            #mainContainer::before { content: "Dashboard"; }
+            #biayaContainer::before { content: "Biaya"; }
+
+            /* Grid 3 kolom (chart tren full-width, sisanya hemat kertas) */
+            .bento-container {
+                display: grid !important;
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                gap: 10px !important;
+                align-items: start !important;
+            }
+
+            .bento-item {
+                grid-column: auto !important;
+                width: auto !important;
+                min-width: 0 !important;
+                margin: 0 !important;
+                padding: 8px 10px !important;
+                background: #ffffff !important;
+                border: 1px solid #94a3b8 !important;
+                border-radius: 8px !important;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            /* Typography ramping agar tidak buang kertas */
+            .bento-value { font-size: 16px !important; line-height: 1.1 !important; }
+            .bento-title { font-size: 10px !important; }
+            .bento-sub { font-size: 9px !important; }
+            .badge { font-size: 8px !important; padding: 2px 6px !important; }
+            .help-icon { display: none !important; }
+
+            /* Sub-header rentang tanggal (halaman pertama saja) */
+            .print-range-subheader {
+                display: block !important;
+                grid-column: 1 / -1 !important;
+                font-size: 9px;
+                font-weight: 700;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 8px;
+            }
+
+            /* Chart tren (Trend Sales & Tren Biaya) full-width; sisanya 3 kolom */
+            .col-span-12 {
+                grid-column: 1 / -1 !important;
+            }
+
+            .chart-box {
+                height: 185px !important;
+                min-height: 0 !important;
+                break-inside: avoid;
+                page-break-inside: avoid;
+                border: 1px solid #94a3b8 !important;
+                border-radius: 6px !important;
+                background: #ffffff !important;
+                padding: 4px !important;
+            }
+
+            .chart-box canvas {
+                width: 100% !important;
+                height: 100% !important;
+                display: block !important;
+            }
+
+            /* Sembunyikan chrome app (nav-bar, modal, dropzone) */
+            .nav-bar,
+            #settingsModal,
+            #uploadExcelModal,
+            #expenseModal,
+            #loginOverlay,
+            #processingOverlay,
+            #dropzone,
+            #biayaDropzone,
+            .no-print {
+                display: none !important;
+            }
+
+            /* Tabel ramping */
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                font-size: 8px !important;
+                table-layout: fixed;
+            }
+
+            th, td {
+                border: 1px solid var(--border) !important;
+                padding: 2px 4px !important;
+                color: var(--text) !important;
+                font-size: 8px !important;
+                white-space: normal !important;
+                word-break: break-word;
+            }
+
+            thead {
+                display: table-header-group;
+            }
+
+            tr {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+
+            /* Sembunyikan kontrol DataTable */
+            .dataTables_length,
+            .dataTables_filter,
+            .dataTables_paginate,
+            .dataTables_info {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 
@@ -1113,6 +1264,11 @@
                 style="background: var(--card); color: var(--text); cursor: pointer; padding: 10px 15px; border: 1px solid var(--border); border-radius: 8px; width: 100%; min-width: 220px; font-weight: 700; font-size: 12px; outline:none; text-align:center;">
             <input type="hidden" id="startDate"><input type="hidden" id="endDate">
             <input type="hidden" id="comparisonMode" value="rolling">
+            <button class="no-print" onclick="window.print()" title="Cetak / Export PDF (A4)"
+                style="background: var(--primary); color: #fff; cursor: pointer; padding: 10px 16px; border: none; border-radius: 8px; font-weight: 800; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Cetak
+            </button>
             <!-- Pill Toggle: Compare Mode -->
             <div class="compare-pill" title="Mode Komparasi: Pilih cara sistem membandingkan periode">
                 <button id="pillRolling" class="active" onclick="setCompareMode('rolling')">↩ Periode
@@ -1122,7 +1278,8 @@
         </div>
     </div>
 
-    <div class="bento-container" id="mainContainer">
+        <div class="bento-container" id="mainContainer">
+            <div id="printRangeHeader" class="print-range-subheader" style="display:none;"></div>
         <!-- ROW 1 -->
         <div class="bento-item col-span-3">
             <div class="bento-header">
@@ -3730,6 +3887,73 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
         if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
+
+        // ===== A4 PRINT (Cetak / Export PDF) =====
+        function applyPrintTheme() {
+            const prev = document.documentElement.getAttribute('data-theme') || 'light';
+            sessionStorage.setItem('printPrevTheme', prev);
+            if (prev === 'dark') document.documentElement.setAttribute('data-theme', 'light');
+            Chart.defaults.color = '#334155';
+            const all = [];
+            if (Chart.instances) Object.values(Chart.instances).forEach(function (c) { all.push(c); });
+            if (typeof charts !== 'undefined' && charts) Object.values(charts).forEach(function (c) { if (c) all.push(c); });
+            try { if (_biayaChartTren) all.push(_biayaChartTren); } catch (e) {}
+            try { if (_biayaChartKomposisi) all.push(_biayaChartKomposisi); } catch (e) {}
+            all.forEach(function (c) {
+                ['x', 'y'].forEach(function (ax) {
+                    const s = c.options.scales && c.options.scales[ax];
+                    if (s) {
+                        s.ticks = Object.assign({}, s.ticks, { color: '#334155' });
+                        if (s.grid) s.grid.color = '#e2e8f0';
+                    }
+                });
+                if (c.options.plugins && c.options.plugins.legend && c.options.plugins.legend.labels) {
+                    c.options.plugins.legend.labels.color = '#334155';
+                }
+                c._printMAR = c.options.maintainAspectRatio;
+                c.options.maintainAspectRatio = false;
+                c.update('none');
+                c.resize();
+            });
+            try { const dt = $('#dtProduk').DataTable(); sessionStorage.setItem('dtProduk_len', dt.page.len()); dt.page.len(20).draw(false); } catch (e) {}
+            try { const dt = $('#biayaTable').DataTable(); sessionStorage.setItem('biayaTable_len', dt.page.len()); dt.page.len(-1).draw(false); } catch (e) {}
+            let biayaEmpty = true;
+            try { const dtb = $('#biayaTable').DataTable(); if (dtb.rows().count() > 0) biayaEmpty = false; } catch (e) {}
+            if (biayaEmpty) { const bc = document.getElementById('biayaContainer'); if (bc) bc.classList.add('biaya-kosong'); }
+            try { const r = $('#reportrange').val() || ''; const ph = document.getElementById('printRangeHeader'); if (ph) ph.textContent = 'Periode: ' + r; } catch (e) {}
+        }
+
+        function restoreScreenTheme() {
+            const prev = sessionStorage.getItem('printPrevTheme') || 'light';
+            document.documentElement.setAttribute('data-theme', prev);
+            Chart.defaults.color = prev === 'dark' ? '#94a3b8' : '#64748b';
+            const all = [];
+            if (Chart.instances) Object.values(Chart.instances).forEach(function (c) { all.push(c); });
+            if (typeof charts !== 'undefined' && charts) Object.values(charts).forEach(function (c) { if (c) all.push(c); });
+            try { if (_biayaChartTren) all.push(_biayaChartTren); } catch (e) {}
+            try { if (_biayaChartKomposisi) all.push(_biayaChartKomposisi); } catch (e) {}
+            all.forEach(function (c) {
+                ['x', 'y'].forEach(function (ax) {
+                    const s = c.options.scales && c.options.scales[ax];
+                    if (s) {
+                        if (s.ticks) s.ticks.color = undefined;
+                        if (s.grid) s.grid.color = undefined;
+                    }
+                });
+                if (c.options.plugins && c.options.plugins.legend && c.options.plugins.legend.labels) {
+                    c.options.plugins.legend.labels.color = undefined;
+                }
+                if ('_printMAR' in c) { c.options.maintainAspectRatio = c._printMAR; delete c._printMAR; }
+                c.update('none');
+                c.resize();
+            });
+            try { $('#dtProduk').DataTable().page.len(parseInt(sessionStorage.getItem('dtProduk_len') || '10', 10)).draw(false); } catch (e) {}
+            try { $('#biayaTable').DataTable().page.len(parseInt(sessionStorage.getItem('biayaTable_len') || '10', 10)).draw(false); } catch (e) {}
+            try { const bc = document.getElementById('biayaContainer'); if (bc) bc.classList.remove('biaya-kosong'); } catch (e) {}
+        }
+
+        window.addEventListener('beforeprint', applyPrintTheme);
+        window.addEventListener('afterprint', restoreScreenTheme);
 
         // =======================================================
         // BULK IMPORT EXCEL FUNCTIONS (UPSERT LOGIC)
