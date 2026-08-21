@@ -172,7 +172,7 @@ function normalizeUploadRow_(r) {
   return {
     'Tanggal': r['Tanggal'],
     'Nomor #': v(r['Nomor #']),
-    'Tipe Transaksi': v(r['Tipe Transaksi']),
+    'Tipe Transaksi': v(r['Tipe Transaksi']) || v(r['Tipe']) || v(r['Status']) || v(r['Jenis']) || v(r['Type']),
     'Nama Pelanggan': v(r['Nama Pelanggan']),
     'Nama Kategori Pelanggan': v(r['Nama Kategori Pelanggan']),
     'Nama Barang': v(r['Nama Barang']),
