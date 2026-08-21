@@ -1537,7 +1537,7 @@
           circle: '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6"/></svg>',
           question: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
         };
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxY6_O0T9TZ7KrjZrUnc__HNckzkr6F1M8sXnwp6ucxiyJfyQk_UGiZiQ5i3uJlLlentA/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzctF4Gwi1k8TbbibTBm-RY5ni4jd0rSk3yOdqB_tKdVx5nF0RVOoS9NZRCJk35Tej4hA/exec';
 
         // State pengaman proses GAS & refresh otomatis
         window.isProcessingGAS = false;
@@ -4827,13 +4827,22 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                     const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
                     if (!rows.length) return alert('File kosong.');
                     const headers = rows[0].map(h => String(h == null ? '' : h).trim().toLowerCase());
-                    const iNo = headers.findIndex(h => h === 'no bukti' || h === 'no. bukti' || h === 'nobukti' || h === 'no buku' || h === 'bukti' || h === 'nomor' || h === 'no');
-                    const iKet = headers.findIndex(h => h === 'keterangan jurnal' || h === 'keterangan' || h === 'uraian' || h === 'desc' || h === 'description' || h === 'memo');
-                    const iDeb = headers.findIndex(h => h === 'debit' || h === 'nominal' || h === 'jumlah' || h === 'nilai' || h === 'biaya' || h === 'amount');
-                    const iDate = headers.findIndex(h => h === 'tanggal' || h === 'date' || h === 'tgl' || h === 'hari');
-                    const iCat = headers.findIndex(h => h === 'kategori biaya' || h === 'kategori' || h === 'category' || h === 'jenis');
+                    const usedCols = {};
+                    const matchHdr = (keys) => {
+                        for (let i = 0; i < headers.length; i++) {
+                            if (usedCols[i]) continue;
+                            const h = headers[i].replace(/[().\-/]/g, ' ').replace(/\s+/g, ' ').trim();
+                            for (const k of keys) { if (h.indexOf(k) >= 0) { usedCols[i] = true; return i; } }
+                        }
+                        return -1;
+                    };
+                    const iNo = matchHdr(['no bukti', 'nobukti', 'bukti', 'nomor', 'nota']);
+                    const iKet = matchHdr(['keterangan', 'uraian', 'jurnal', 'memo', 'desc', 'description']);
+                    const iCat = matchHdr(['kategori biaya', 'kategori', 'category', 'jenis']);
+                    const iDate = matchHdr(['tanggal', 'tgl', 'date', 'hari']);
+                    const iDeb = matchHdr(['debit', 'nominal', 'jumlah', 'nilai', 'amount', 'biaya']);
                     if (iNo < 0 || iKet < 0 || iDeb < 0) {
-                        return alert('Kolom tidak ditemukan. Pastikan header berisi: No Bukti, Keterangan Jurnal, Debit.');
+                        return alert('Kolom tidak ditemukan. Header terdeteksi: ' + headers.join(', ') + '\nButuh: No Bukti, Keterangan Jurnal, Debit.');
                     }
                     const out = [];
                     for (let i = 1; i < rows.length; i++) {
