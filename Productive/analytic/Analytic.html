@@ -794,7 +794,7 @@
             .bento-container {
                 display: grid !important;
                 grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-                gap: 10px !important;
+                gap: 8px !important;
                 align-items: start !important;
             }
 
@@ -803,12 +803,12 @@
                 width: auto !important;
                 min-width: 0 !important;
                 margin: 0 !important;
-                padding: 8px 10px !important;
+                padding: 6px 8px !important;
                 background: #ffffff !important;
                 border: 1px solid #94a3b8 !important;
                 border-radius: 8px !important;
-                break-inside: avoid;
-                page-break-inside: avoid;
+                break-inside: auto;
+                page-break-inside: auto;
             }
 
             /* Typography ramping agar tidak buang kertas */
@@ -830,13 +830,30 @@
                 margin-bottom: 8px;
             }
 
+            /* Kurasi print: sembunyikan panel teks (hemat kertas), pertahankan KPI + chart inti + tabel */
+            .bento-item:has(#basketIntel),
+            .bento-item:has(#opexList),
+            .bento-item:has(#rfmList),
+            .bento-item:has(#localWarningBox),
+            .bento-item:has(#biayaRankList) { display: none !important; }
+            #marginAnalysis { display: none !important; }
+            .compare-pill { display: none !important; }
+            div:has(> #biayaChartKomposisi) { height: 120px !important; }
+
             /* Chart tren (Trend Sales & Tren Biaya) full-width; sisanya 3 kolom */
             .col-span-12 {
                 grid-column: 1 / -1 !important;
             }
+            /* Trend chart diperkecil agar tidak makan tempat */
+            .col-span-12 .chart-box { height: 90px !important; }
+
+            /* Top Produk (tabel 20 baris) dipasangkan 2/3 di kanan Market Share (1/3): side-by-side */
+            .bento-item:has(#dtProduk) {
+                grid-column: span 2 !important;
+            }
 
             .chart-box {
-                height: 185px !important;
+                height: 120px !important;
                 min-height: 0 !important;
                 break-inside: avoid;
                 page-break-inside: avoid;
@@ -865,13 +882,18 @@
                 display: none !important;
             }
 
-            /* Tabel ramping */
+            /* Tabel ramping — BOLEH terpotong antar halaman agar halaman terisi penuh (strategi: tabel potong, chart utuh) */
             table {
                 width: 100% !important;
                 border-collapse: collapse !important;
                 font-size: 8px !important;
                 table-layout: fixed;
+                break-inside: auto !important;
             }
+
+            /* Wrapper tabel di layar pakai overflow-x:auto — di print wajib jadi visible,
+               kalau tidak tabel dianggap monolitik & tidak bisa dipecah halaman (penyebab gap setengah halaman). */
+            .bento-item div[style*="overflow-x"] { overflow: visible !important; }
 
             th, td {
                 border: 1px solid var(--border) !important;
