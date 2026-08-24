@@ -170,7 +170,7 @@ function normalizeUploadRow_(r) {
   var q = parseInt(String(r['Kuantitas'] == null ? '' : r['Kuantitas']).replace(/[^0-9]/g, ''), 10);
   var h = parseFloat(String(r['Total Harga'] == null ? '' : r['Total Harga']).replace(/[^0-9,-]/g, '').replace(/,/g, '.'));
   return {
-    'Tanggal': r['Tanggal'],
+    'Tanggal': normYMD_(r['Tanggal']) || r['Tanggal'],
     'Nomor #': v(r['Nomor #']),
     'Tipe Transaksi': v(r['Tipe Transaksi']) || v(r['Tipe']) || v(r['Status']) || v(r['Jenis']) || v(r['Type']),
     'Nama Pelanggan': v(r['Nama Pelanggan']),
@@ -192,9 +192,16 @@ function normYMD_(s) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
   var m = s.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})$/);
   if (m) {
-    var y = m[3];
+    var p1 = parseInt(m[1], 10), p2 = parseInt(m[2], 10), y = m[3];
     if (y.length === 2) y = (parseInt(y, 10) < 50 ? '20' : '19') + y;
-    return y + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[1]).padStart(2, '0');
+    var day, month;
+    if (p1 > 12 && p2 <= 12) { day = p1; month = p2; }        // D/M (angka pertama >12 → hari)
+    else if (p2 > 12 && p1 <= 12) { month = p1; day = p2; }   // M/D (angka kedua >12 → bulan di depan)
+    else { day = p1; month = p2; }                             // ambigu → default D/M (id-ID)
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      return y + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+    }
+    return '';
   }
   var t = Date.parse(s);
   if (!isNaN(t)) {

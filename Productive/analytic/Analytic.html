@@ -835,7 +835,10 @@
             .bento-item:has(#opexList),
             .bento-item:has(#rfmList),
             .bento-item:has(#localWarningBox),
-            .bento-item:has(#biayaRankList) { display: none !important; }
+            .bento-item:has(#biayaRankList),
+            .bento-item:has(#kpiGoldenDay),
+            .bento-item:has(#chartMargin),
+            .bento-item:has(#chartHari) { display: none !important; }
             #marginAnalysis { display: none !important; }
             .compare-pill { display: none !important; }
             div:has(> #biayaChartKomposisi) { height: 120px !important; }
@@ -851,6 +854,13 @@
             .bento-item:has(#dtProduk) {
                 grid-column: span 2 !important;
             }
+
+            /* Paksa semua kolom #dtProduk tampil di print (termasuk Momentum) —
+               tidak bergantung pada JS Responsive: !important mengalahkan inline display:none milik Responsive. */
+            #dtProduk th, #dtProduk td { display: table-cell !important; }
+            #dtProduk tr.child,
+            #dtProduk th.dtr-control,
+            #dtProduk td.dtr-control { display: none !important; }
 
             .chart-box {
                 height: 120px !important;
@@ -885,11 +895,14 @@
             /* Tabel ramping — BOLEH terpotong antar halaman agar halaman terisi penuh (strategi: tabel potong, chart utuh) */
             table {
                 width: 100% !important;
+                max-width: 100% !important;
                 border-collapse: collapse !important;
                 font-size: 8px !important;
-                table-layout: fixed;
+                table-layout: fixed !important;
                 break-inside: auto !important;
             }
+            /* Paksa muat: batalkan width piksel yg diset DataTables inline + pastikan fixed layout menang atas .dataTable */
+            table.dataTable { table-layout: fixed !important; width: 100% !important; max-width: 100% !important; }
 
             /* Wrapper tabel di layar pakai overflow-x:auto — di print wajib jadi visible,
                kalau tidak tabel dianggap monolitik & tidak bisa dipecah halaman (penyebab gap setengah halaman). */
@@ -902,11 +915,17 @@
                 font-size: 8px !important;
                 white-space: normal !important;
                 word-break: break-word;
+                width: auto !important;
+                min-width: 0 !important;
             }
 
             thead {
                 display: table-header-group;
             }
+
+            /* Sembunyikan kolom kontrol "+" DataTables Responsive (dinonaktifkan saat print) */
+            table.dataTable td.dtr-control,
+            table.dataTable th.dtr-control { display: none !important; }
 
             tr {
                 break-inside: avoid;
@@ -1716,7 +1735,7 @@
           circle: '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6"/></svg>',
           question: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
         };
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyqDbVZfRqAiG3w5ellmT-z6z-iiPygNeGfFmSGIxfnb2Pbmc9FUdk_nXUn0mTVOHN5Aw/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxnimtzIJk1Ty0REYKIc_1U7eGZ1PvkAzUbBTromGQli0dWzmqllEZ4g2cpFg9QEvkprw/exec';
 
         // State pengaman proses GAS & refresh otomatis
         window.isProcessingGAS = false;
@@ -3461,6 +3480,7 @@
             if (charts['tren']) charts['tren'].destroy();
             charts['tren'] = new Chart(ctxTren, {
                 type: 'line',
+                plugins: [ChartDataLabels],
                 data: {
                     labels: tA.map(x => x.label),
                     datasets: [
@@ -3472,6 +3492,7 @@
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
+                    layout: { padding: { left: 46, right: 46, top: 22, bottom: 22 } },
                     scales: {
                         x: { grid: { display: false } },
                         y: { display: false }
@@ -3502,6 +3523,26 @@
                         zoom: {
                             zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
                             pan: { enabled: true, mode: 'x' }
+                        },
+                        datalabels: {
+                            display: false, // aktif hanya saat print lewat applyPrintTheme
+                            formatter: function (val, ctx) {
+                                var di = ctx.datasetIndex;
+                                if (di === 2) return '';
+                                if (val == null || val === 0) return '';
+                                return (di === 0 ? 'ini ' : 'lalu ') + (val / 1000000).toFixed(1) + 'M';
+                            },
+                            font: { size: 11, weight: 'bold', family: 'Inter, system-ui, sans-serif' },
+                            color: '#ffffff',
+                            backgroundColor: function (ctx) {
+                                return ctx.datasetIndex === 0 ? 'rgba(37,99,235,0.92)' : 'rgba(100,116,139,0.92)';
+                            },
+                            borderRadius: 4,
+                            padding: { top: 2, bottom: 2, left: 5, right: 5 },
+                            anchor: function (ctx) { return ctx.datasetIndex === 0 ? 'end' : 'start'; },
+                            align: function (ctx) { return ctx.datasetIndex === 0 ? 'top' : 'bottom'; },
+                            clamp: false,
+                            offset: 5
                         }
                     }
                 }
@@ -3921,6 +3962,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             if (typeof charts !== 'undefined' && charts) Object.values(charts).forEach(function (c) { if (c) all.push(c); });
             try { if (_biayaChartTren) all.push(_biayaChartTren); } catch (e) {}
             try { if (_biayaChartKomposisi) all.push(_biayaChartKomposisi); } catch (e) {}
+            try { if (typeof charts !== 'undefined' && charts && charts['tren']) { charts['tren'].options.plugins.datalabels.display = true; } } catch (e) {}
             all.forEach(function (c) {
                 ['x', 'y'].forEach(function (ax) {
                     const s = c.options.scales && c.options.scales[ax];
@@ -3938,6 +3980,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                 c.resize();
             });
             try { const dt = $('#dtProduk').DataTable(); sessionStorage.setItem('dtProduk_len', dt.page.len()); dt.page.len(20).draw(false); } catch (e) {}
+            try { const dt = $('#dtProduk').DataTable(); if (dt.responsive) { dt.responsive.disable(); dt.columns.adjust().draw(false); } } catch (e) {}
             try { const dt = $('#biayaTable').DataTable(); sessionStorage.setItem('biayaTable_len', dt.page.len()); dt.page.len(-1).draw(false); } catch (e) {}
             let biayaEmpty = true;
             try { const dtb = $('#biayaTable').DataTable(); if (dtb.rows().count() > 0) biayaEmpty = false; } catch (e) {}
@@ -3954,6 +3997,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             if (typeof charts !== 'undefined' && charts) Object.values(charts).forEach(function (c) { if (c) all.push(c); });
             try { if (_biayaChartTren) all.push(_biayaChartTren); } catch (e) {}
             try { if (_biayaChartKomposisi) all.push(_biayaChartKomposisi); } catch (e) {}
+            try { if (typeof charts !== 'undefined' && charts && charts['tren']) { charts['tren'].options.plugins.datalabels.display = false; } } catch (e) {}
             all.forEach(function (c) {
                 ['x', 'y'].forEach(function (ax) {
                     const s = c.options.scales && c.options.scales[ax];
@@ -3970,6 +4014,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                 c.resize();
             });
             try { $('#dtProduk').DataTable().page.len(parseInt(sessionStorage.getItem('dtProduk_len') || '10', 10)).draw(false); } catch (e) {}
+            try { const dt = $('#dtProduk').DataTable(); if (dt.responsive) { dt.responsive.enable(); dt.columns.adjust().draw(false); } } catch (e) {}
             try { $('#biayaTable').DataTable().page.len(parseInt(sessionStorage.getItem('biayaTable_len') || '10', 10)).draw(false); } catch (e) {}
             try { const bc = document.getElementById('biayaContainer'); if (bc) bc.classList.remove('biaya-kosong'); } catch (e) {}
         }
@@ -4217,9 +4262,13 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
 
             const dmyMatch = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
             if (dmyMatch) {
-                const d = parseInt(dmyMatch[1], 10);
-                const m = parseInt(dmyMatch[2], 10);
+                const a = parseInt(dmyMatch[1], 10);
+                const b = parseInt(dmyMatch[2], 10);
                 const y = parseInt(dmyMatch[3], 10);
+                let d, m;
+                if (a > 12 && b <= 12) { d = a; m = b; }        // D/M (angka pertama >12 → hari)
+                else if (b > 12 && a <= 12) { m = a; d = b; }   // M/D (angka kedua >12 → bulan di depan)
+                else { d = a; m = b; }                           // ambigu → default D/M (id-ID)
                 if (d >= 1 && d <= 31 && m >= 1 && m <= 12) {
                     return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
                 }
@@ -4259,9 +4308,15 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             const parts = str.split(/[^0-9]/);
             const nums = parts.map(p => parseInt(p, 10)).filter(n => !isNaN(n));
             if (nums.length >= 3) {
+                // D/M/Y
                 if (nums[0] >= 1 && nums[0] <= 31 && nums[1] >= 1 && nums[1] <= 12 && nums[2] > 1000) {
                     return `${nums[2]}-${String(nums[1]).padStart(2, '0')}-${String(nums[0]).padStart(2, '0')}`;
                 }
+                // M/D/Y (bulan di depan, angka kedua boleh >12)
+                if (nums[0] >= 1 && nums[0] <= 12 && nums[1] >= 1 && nums[1] <= 31 && nums[2] > 1000) {
+                    return `${nums[2]}-${String(nums[0]).padStart(2, '0')}-${String(nums[1]).padStart(2, '0')}`;
+                }
+                // Y/M/D
                 if (nums[0] > 1000 && nums[1] >= 1 && nums[1] <= 12 && nums[2] >= 1 && nums[2] <= 31) {
                     return `${nums[0]}-${String(nums[1]).padStart(2, '0')}-${String(nums[2]).padStart(2, '0')}`;
                 }
