@@ -2648,6 +2648,7 @@
             // Cache TIDAK ditampilkan duluan — front-end baru dibuka setelah semuanya load sempurna.
             let memoriLama = DATA_SOURCE === 'supabase' ? null : localStorage.getItem("intel_pro_cache_v3");
             let syncing = true;
+            let dataMentah = null; // payload getSalesData (mode GAS) untuk label Data Terkini
 
             if (ls) ls.style.display = 'flex';
             if (document.getElementById('inputExpenseDate')) {
@@ -2679,7 +2680,7 @@
                     setStage(0, 'done');
 
                     setStage(1, 'active', 'Mengambil data transaksi dari backend...');
-                    let dataMentah = await res.json();
+                    dataMentah = await res.json();
                     setStage(1, 'done');
 
                     // Pre-fill target input if available
@@ -2696,9 +2697,33 @@
                 }
 
                 syncing = false;
-                if(syncStatus) syncStatus.innerText = "Data Terkini";
                 setupDatePicker();
                 await prosesData();
+                if (syncStatus) {
+                    let iso = null;
+                    if (DATA_SOURCE === 'supabase') {
+                        const lo = (__rekapSupabaseData && __rekapSupabaseData.lastOrder) || {};
+                        for (const k in lo) {
+                            const v = String(lo[k] || '').slice(0, 10);
+                            if (v && (iso === null || v > iso)) iso = v; // ISO YYYY-MM-DD compares chronologically
+                        }
+                    } else if (Array.isArray(dataMentah?.transaksi)) {
+                        for (const r of dataMentah.transaksi) {
+                            const tipe = String(r['Tipe Transaksi'] || '').toLowerCase();
+                            if (!(tipe.includes('penjualan') || tipe.includes('faktur') || tipe.includes('sales'))) continue;
+                            const s = String(r['Tanggal'] || '').slice(0, 10);
+                            if (!s) continue;
+                            if (iso === null || s > iso) iso = s;
+                        }
+                    }
+                    if (iso) {
+                        const p = iso.split('-').map(Number);
+                        const dt = new Date(p[0], p[1] - 1, p[2]); // local, avoid UTC off-by-one
+                        syncStatus.innerText = 'Data Terkini ' + dt.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+                    } else {
+                        syncStatus.innerText = 'Data Terkini';
+                    }
+                }
                 if (DATA_SOURCE === 'supabase' && !__rekapSupabaseData) throw new Error('Data Supabase tidak tersedia (koneksi gagal / tanpa cache).');
                 unlock();
             } catch (e) {
