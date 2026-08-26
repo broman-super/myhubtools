@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "active_work_id": "analytic-data-terkini",
+  "works": {
+    "analytic-data-terkini": {
+      "work_id": "analytic-data-terkini",
+      "active_plan": ".omo/plans/analytic-data-terkini.md",
+      "plan_name": "analytic-data-terkini",
+      "session_ids": ["codex:start-work-analytic-data-terkini"],
+      "status": "completed",
+      "worktree_path": null
+    }
+  }
+}
