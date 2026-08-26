@@ -31,6 +31,7 @@
             --danger: #ef4444;
             --danger-light: #fee2e2;
             --warning: #f59e0b;
+            --warning-strong: #92400e;
             --warning-light: #fef3c7;
             --border: #e2e8f0;
             --text: #0f172a;
@@ -39,6 +40,7 @@
         }
 
         [data-theme="dark"] {
+            color-scheme: dark;
             --bg: #0f172a;
             --card: #1e293b;
             --primary: #ff3b3b;
@@ -48,6 +50,7 @@
             --danger: #ef4444;
             --danger-light: rgba(239, 68, 68, 0.2);
             --warning: #f59e0b;
+            --warning-strong: #fbbf24;
             --warning-light: rgba(245, 158, 11, 0.2);
             --border: #334155;
             --text: #f8fafc;
@@ -57,6 +60,7 @@
 
         html {
             min-width: 360px;
+            color-scheme: light;
         }
 
         body {
@@ -460,6 +464,49 @@
 
         table.dataTable tbody tr:hover {
             background-color: var(--accent);
+        }
+
+        /* daterangepicker (CDN) — ikut tema gelap */
+        [data-theme="dark"] .daterangepicker,
+        [data-theme="dark"] .daterangepicker .calendar-table {
+            background: var(--card);
+            border-color: var(--border);
+        }
+
+        [data-theme="dark"] .daterangepicker th,
+        [data-theme="dark"] .daterangepicker td,
+        [data-theme="dark"] .daterangepicker .ranges li {
+            color: var(--text);
+        }
+
+        [data-theme="dark"] .daterangepicker td.off,
+        [data-theme="dark"] .daterangepicker td.off.in-range,
+        [data-theme="dark"] .daterangepicker td.off.end-date {
+            background: var(--bg);
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .daterangepicker td.available:hover,
+        [data-theme="dark"] .daterangepicker .ranges li:hover {
+            background: var(--border);
+        }
+
+        [data-theme="dark"] .daterangepicker .ranges li.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        [data-theme="dark"] .daterangepicker td.active,
+        [data-theme="dark"] .daterangepicker td.active:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        [data-theme="dark"] .daterangepicker select,
+        [data-theme="dark"] .daterangepicker input[type="text"] {
+            background: var(--accent);
+            color: var(--text);
+            border-color: var(--border);
         }
 
         table.dataTable thead th {
@@ -3205,7 +3252,7 @@
                             <div style="font-size:14px; font-weight:900; color:#fff;">${UPT} <span style="font-size:10px;">pcs</span></div>
                         </div>
                     </div>
-                    <div style="background:#fee2e2; padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; border-left:4px solid var(--danger);">
+                    <div style="background:var(--danger-light); padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; border-left:4px solid var(--danger);">
                         <div style="font-size:10px; font-weight:800; color:var(--danger);">CAC (BIAYA AKUISISI)</div>
                         <div style="font-size:14px; font-weight:900; color:var(--danger);">${formatRp(CAC)}</div>
                     </div>
@@ -3230,8 +3277,8 @@
 
                     let badge = "";
                     if (daysAgo > 14) badge = `<span class="tag-warn" style="display:inline-block; margin-top:4px;">AWAS KABUR (${daysAgo}H)</span>`;
-                    else if (f >= 3) badge = `<span class="tag-success" style="display:inline-flex; align-items:center; gap:4px; margin-top:4px; font-weight:900; color:var(--primary); background:#e2e8f0;">${ICONS.crown} SULTAN (${f}x)</span>`;
-                    else badge = `<span style="background:#f1f5f9; color:#64748b; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:800; display:inline-block; margin-top:4px;">AKTIF</span>`;
+                    else if (f >= 3) badge = `<span class="tag-success" style="display:inline-flex; align-items:center; gap:4px; margin-top:4px; font-weight:900; color:var(--primary); background:var(--accent);">${ICONS.crown} SULTAN (${f}x)</span>`;
+                    else badge = `<span style="background:var(--accent); color:var(--text-muted); padding:4px 8px; border-radius:6px; font-size:10px; font-weight:800; display:inline-block; margin-top:4px;">AKTIF</span>`;
 
                     rfmHtml += `<div class="item-row" style="border-bottom:1px solid var(--border); padding:8px 0; display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; flex-direction:column; gap:2px; max-width:60%;">
@@ -3257,8 +3304,8 @@
 
                     let badge = "";
                     if (daysAgo > 14) badge = `<span class="tag-warn" style="display:inline-block; margin-top:4px;">AWAS KABUR (${daysAgo}H)</span>`;
-                    else if (f >= 3) badge = `<span class="tag-success" style="display:inline-flex; align-items:center; gap:4px; margin-top:4px; font-weight:900; color:var(--primary); background:#e2e8f0;">${ICONS.crown} SULTAN (${f}x)</span>`;
-                    else badge = `<span style="background:#f1f5f9; color:#64748b; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:800; display:inline-block; margin-top:4px;">AKTIF</span>`;
+                    else if (f >= 3) badge = `<span class="tag-success" style="display:inline-flex; align-items:center; gap:4px; margin-top:4px; font-weight:900; color:var(--primary); background:var(--accent);">${ICONS.crown} SULTAN (${f}x)</span>`;
+                    else badge = `<span style="background:var(--accent); color:var(--text-muted); padding:4px 8px; border-radius:6px; font-size:10px; font-weight:800; display:inline-block; margin-top:4px;">AKTIF</span>`;
 
                     rfmHtml += `<div class="item-row" style="border-bottom:1px solid var(--border); padding:8px 0; display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; flex-direction:column; gap:2px; max-width:60%;">
@@ -3286,7 +3333,7 @@
 
                 if (document.getElementById('vipInsight')) {
                     document.getElementById('vipInsight').innerHTML = `
-                    <div style="background:#fee2e2; border-left:4px solid var(--danger); padding:10px 12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="background:var(--danger-light); border-left:4px solid var(--danger); padding:10px 12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; flex-direction:column;">
                             <span style="font-size:10px; font-weight:800; color:var(--danger); display:inline-flex; align-items:center; gap:4px;">${ICONS.warning} RISIKO CHURN (>14 HARI)</span>
                             <span style="font-size:12px; font-weight:700; color:#0f172a;">${totalKabur} Pelanggan Awas Kabur</span>
@@ -3669,19 +3716,19 @@
             // === CEK 1: TARGET PROJECTION ===
             if (proyPct < 100 && achPct < 100) {
                 let shortfall = TARGET_SALES - runRate;
-                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:10px 12px; background:#fee2e2; border-radius:8px; border-left:4px solid #ef4444; line-height:1.6;">${ICONS.alert} <b>WASPADA GAGAL TARGET:</b> Laju ${formatRp(dailyVelocity)}/hari hanya akan menghasilkan <b>${formatRp(runRate)}</b> di akhir periode. Shortfall: <b style="color:#b91c1c;">-${formatRp(shortfall)}</b>. Segera Push Iklan & Follow-Up!</div>`);
+                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:10px 12px; background:var(--danger-light); border-radius:8px; border-left:4px solid var(--danger); line-height:1.6;">${ICONS.alert} <b>WASPADA GAGAL TARGET:</b> Laju ${formatRp(dailyVelocity)}/hari hanya akan menghasilkan <b>${formatRp(runRate)}</b> di akhir periode. Shortfall: <b style="color:var(--danger);">-${formatRp(shortfall)}</b>. Segera Push Iklan & Follow-Up!</div>`);
             } else if (proyPct >= 100 && achPct < 100) {
                 warnings.push(`<div style="color:#065f46; font-size:12px; padding:10px 12px; background:#d1fae5; border-radius:8px; border-left:4px solid #059669; line-height:1.6;">${ICONS.star} <b>PROYEKSI AMAN:</b> Laju ${formatRp(dailyVelocity)}/hari, proyeksi ${formatRp(runRate)}. Pertahankan ritme!</div>`);
             }
 
             // === CEK 2: RUGI ===
             if (netProfit < 0 && netSales > 0) {
-                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:#fee2e2; border-radius:8px; border-left:4px solid #ef4444;"><b>RUGI BANDAR:</b> Biaya operasional menggerus laba. Net Margin: ${(netProfit / netSales * 100).toFixed(1)}%.</div>`);
+                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; border-left:4px solid var(--danger);"><b>RUGI BANDAR:</b> Biaya operasional menggerus laba. Net Margin: ${(netProfit / netSales * 100).toFixed(1)}%.</div>`);
             }
 
             // === CEK 3: RETUR TINGGI ===
             if (lossRate > 5) {
-                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:#fee2e2; border-radius:8px; border-left:4px solid #ef4444;"><b>RETUR KRITIS:</b> Loss rate ${lossRate.toFixed(1)}% — Di atas ambang 5%. Cek kualitas produk & packing!</div>`);
+                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; border-left:4px solid var(--danger);"><b>RETUR KRITIS:</b> Loss rate ${lossRate.toFixed(1)}% — Di atas ambang 5%. Cek kualitas produk & packing!</div>`);
             }
 
             // === CEK 4: DOMINASI RESELLER TUNGGAL ===
@@ -3689,7 +3736,7 @@
             if (urRes.length > 0 && netSales > 0) {
                 let topResellerShare = (urRes[0][1] / netSales) * 100;
                 if (topResellerShare > 40) {
-                    warnings.push(`<div style="color:#92400e; font-size:12px; padding:8px 12px; background:#fef3c7; border-radius:8px; border-left:4px solid #f59e0b;"><b>KONSENTRASI RISIKO:</b> ${topResellerShare.toFixed(1)}% omzet bergantung pada 1 reseller (<b>${urRes[0][0]}</b>). Diversifikasi segera!</div>`);
+                    warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; border-left:4px solid var(--warning);"><b>KONSENTRASI RISIKO:</b> ${topResellerShare.toFixed(1)}% omzet bergantung pada 1 reseller (<b>${urRes[0][0]}</b>). Diversifikasi segera!</div>`);
                 }
             }
 
@@ -3699,11 +3746,11 @@
                 let qtyGrowth = (netQtySkrg - netQtyLalu) / netQtyLalu * 100;
                 let aovGrowth = aovLalu > 0 ? (aovSkrg - aovLalu) / aovLalu * 100 : 0;
                 if (salesGrowth > 0 && qtyGrowth < -5) {
-                    warnings.push(`<div style="color:#92400e; font-size:12px; padding:8px 12px; background:#fef3c7; border-radius:8px; border-left:4px solid #f59e0b;"><b>VOLUME MENYUSUT:</b> Omzet naik ${salesGrowth.toFixed(1)}% tapi QTY turun ${Math.abs(qtyGrowth).toFixed(1)}%. Anda tertolong kenaikan harga rata-rata (AOV +${aovGrowth.toFixed(1)}%). Waspada — volume pelanggan sedang menipis!</div>`);
+                    warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; border-left:4px solid var(--warning);"><b>VOLUME MENYUSUT:</b> Omzet naik ${salesGrowth.toFixed(1)}% tapi QTY turun ${Math.abs(qtyGrowth).toFixed(1)}%. Anda tertolong kenaikan harga rata-rata (AOV +${aovGrowth.toFixed(1)}%). Waspada — volume pelanggan sedang menipis!</div>`);
                 } else if (salesGrowth < -5 && qtyGrowth > 0) {
-                    warnings.push(`<div style="color:#92400e; font-size:12px; padding:8px 12px; background:#fef3c7; border-radius:8px; border-left:4px solid #f59e0b;"><b>HARGA RATA-RATA TURUN:</b> QTY naik ${qtyGrowth.toFixed(1)}% tapi omzet turun ${Math.abs(salesGrowth).toFixed(1)}%. AOV drop ${Math.abs(aovGrowth).toFixed(1)}%. Cek apakah ada diskon berlebihan atau pergeseran ke produk murah!</div>`);
+                    warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; border-left:4px solid var(--warning);"><b>HARGA RATA-RATA TURUN:</b> QTY naik ${qtyGrowth.toFixed(1)}% tapi omzet turun ${Math.abs(salesGrowth).toFixed(1)}%. AOV drop ${Math.abs(aovGrowth).toFixed(1)}%. Cek apakah ada diskon berlebihan atau pergeseran ke produk murah!</div>`);
                 } else if (salesGrowth < -5 && qtyGrowth < -5) {
-                    warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:#fee2e2; border-radius:8px; border-left:4px solid #ef4444;"><b>DOUBLE DROP:</b> Omzet turun ${Math.abs(salesGrowth).toFixed(1)}% DAN QTY turun ${Math.abs(qtyGrowth).toFixed(1)}%. Ini sinyal perlambatan permintaan yang serius. Segera audit semua channel!</div>`);
+                    warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; border-left:4px solid var(--danger);"><b>DOUBLE DROP:</b> Omzet turun ${Math.abs(salesGrowth).toFixed(1)}% DAN QTY turun ${Math.abs(qtyGrowth).toFixed(1)}%. Ini sinyal perlambatan permintaan yang serius. Segera audit semua channel!</div>`);
                 }
             }
 
@@ -3716,11 +3763,11 @@
                 let cac = totalOpex / totalCust;
                 let avgMarginPerCust = netProfit / totalCust;
                 if (cac > avgMarginPerCust && avgMarginPerCust > 0) {
-                    warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:#fee2e2; border-radius:8px; border-left:4px solid #ef4444;"><b>IKLAN BERDARAH (CAC > MARGIN):</b> Biaya akuisisi ${formatRp(cac)}/pelanggan melampaui margin rata-rata ${formatRp(avgMarginPerCust)}/pelanggan. Evaluasi efisiensi iklan sekarang!</div>`);
+                    warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; border-left:4px solid var(--danger);"><b>IKLAN BERDARAH (CAC > MARGIN):</b> Biaya akuisisi ${formatRp(cac)}/pelanggan melampaui margin rata-rata ${formatRp(avgMarginPerCust)}/pelanggan. Evaluasi efisiensi iklan sekarang!</div>`);
                 } else if (cac > 0 && avgMarginPerCust > 0) {
                     let cacRatio = (cac / avgMarginPerCust * 100).toFixed(0);
                     if (cacRatio > 60) {
-                        warnings.push(`<div style="color:#92400e; font-size:12px; padding:8px 12px; background:#fef3c7; border-radius:8px; border-left:4px solid #f59e0b;"><b>CAC MENDEKATI KRITIS:</b> Biaya akuisisi ${formatRp(cac)}/pelanggan = ${cacRatio}% dari margin. Pantau ketat, jangan tambah spend iklan tanpa menaikkan konversi!</div>`);
+                        warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; border-left:4px solid var(--warning);"><b>CAC MENDEKATI KRITIS:</b> Biaya akuisisi ${formatRp(cac)}/pelanggan = ${cacRatio}% dari margin. Pantau ketat, jangan tambah spend iklan tanpa menaikkan konversi!</div>`);
                     }
                 }
             }
@@ -3733,7 +3780,7 @@
                         let drop = (v - vLalu) / vLalu * 100;
                         if (drop < -25) {
                             let shareKat = (v / (netSales || 1) * 100).toFixed(1);
-                            warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:#fee2e2; border-radius:8px; border-left:4px solid #ef4444;"><b>KATEGORI AMBLES — ${kat}:</b> Anjlok ${Math.abs(drop).toFixed(1)}% vs periode lalu (Porsi saat ini: ${shareKat}%). Segera investigasi: harga bersaing? Stok kosong? Kompetitor masuk?</div>`);
+                            warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; border-left:4px solid var(--danger);"><b>KATEGORI AMBLES — ${kat}:</b> Anjlok ${Math.abs(drop).toFixed(1)}% vs periode lalu (Porsi saat ini: ${shareKat}%). Segera investigasi: harga bersaing? Stok kosong? Kompetitor masuk?</div>`);
                         }
                     }
                 });
@@ -3750,16 +3797,16 @@
                     let worstShare = (worstDay[1] / totalHariOmzet * 100).toFixed(1);
                     let expectedShare = (100 / 7).toFixed(1);
                     if (parseFloat(worstShare) < parseFloat(expectedShare) * 0.4) {
-                        warnings.push(`<div style="color:#92400e; font-size:12px; padding:8px 12px; background:#fef3c7; border-radius:8px; border-left:4px solid #f59e0b;"><b>HARI MATI — ${worstDay[0]}:</b> Hanya menyumbang ${worstShare}% omzet (vs rata-rata ${expectedShare}%). Manfaatkan dengan flash sale / push notif khusus hari ${worstDay[0]}! Golden day: <b>${goldenDay[0]} (${goldenShare}%)</b>.</div>`);
+                        warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; border-left:4px solid var(--warning);"><b>HARI MATI — ${worstDay[0]}:</b> Hanya menyumbang ${worstShare}% omzet (vs rata-rata ${expectedShare}%). Manfaatkan dengan flash sale / push notif khusus hari ${worstDay[0]}! Golden day: <b>${goldenDay[0]} (${goldenShare}%)</b>.</div>`);
                     }
                 }
             }
 
             // === CEK 9 (B4): CHURN VALUE ALERT ===
             if (churnCount > 3) {
-                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:#fee2e2; border-radius:8px; border-left:4px solid #ef4444;"><b>CHURN URGENT — ${churnCount} Pelanggan Hilang:</b> Potensi omzet tertahan <b>${formatRp(churnOmzet)}</b>. Hubungi mereka hari ini dengan penawaran eksklusif!</div>`);
+                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; border-left:4px solid var(--danger);"><b>CHURN URGENT — ${churnCount} Pelanggan Hilang:</b> Potensi omzet tertahan <b>${formatRp(churnOmzet)}</b>. Hubungi mereka hari ini dengan penawaran eksklusif!</div>`);
             } else if (churnCount > 0) {
-                warnings.push(`<div style="color:#92400e; font-size:12px; padding:8px 12px; background:#fef3c7; border-radius:8px; border-left:4px solid #f59e0b;"><b>PANTAU CHURN — ${churnCount} Pelanggan >14 Hari:</b> Potensi omzet ${formatRp(churnOmzet)} sedang tidur. Follow-up sebelum benar-benar kabur!</div>`);
+                warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; border-left:4px solid var(--warning);"><b>PANTAU CHURN — ${churnCount} Pelanggan >14 Hari:</b> Potensi omzet ${formatRp(churnOmzet)} sedang tidur. Follow-up sebelum benar-benar kabur!</div>`);
             }
 
             if (warnings.length === 0) {
