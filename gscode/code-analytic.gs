@@ -225,6 +225,17 @@ function deriveNamaToko_(ket) {
   if (s.indexOf('kyx') >= 0) return 'KYX';
   return '';
 }
+function deriveBiayaKategoriFromKet_(ket) {
+  var s = String(ket || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  var n = s.replace(/[^a-z0-9]/g, '');
+  if (!s) return 'Lain-lain';
+  if (n.indexOf('topup') !== -1 && s.indexOf('saldo') !== -1 && s.indexOf('iklan') !== -1 && n.indexOf('tiktok') !== -1 && s.indexOf('supersub') !== -1) return 'TOPUP SALDO IKLAN TIKTOK SUPERSUB';
+  if (s.indexOf('iklan') !== -1 && s.indexOf('shopee') !== -1 && s.indexOf('kyx') !== -1) return 'IKLAN SHOPEE KYX';
+  if (s.indexOf('iklan') !== -1 && s.indexOf('shopee') !== -1 && s.indexOf('supersub') !== -1) return 'IKLAN SHOPEE SUPERSUB';
+  if (s.indexOf('iklan') !== -1 && n.indexOf('tiktok') !== -1 && s.indexOf('kyx') !== -1) return 'IKLAN TIKTOK KYX';
+  if (s.indexOf('iklan') !== -1 && n.indexOf('tiktok') !== -1 && s.indexOf('supersub') !== -1) return 'IKLAN TIKTOK SUPERSUB';
+  return 'Lain-lain';
+}
 function parseNoBuktiDate_(s) {
   s = String(s == null ? '' : s).trim();
   if (!s) return '';
@@ -358,7 +369,13 @@ function doPost(e) {
         if (nom <= 0) return;                   // tanpa nominal dilewati
         var platform = derivePlatform_(ket);
         var namaToko = deriveNamaToko_(ket);
-        var kategori = String((r['Kategori Biaya'] != null ? r['Kategori Biaya'] : (r.kategori != null ? r.kategori : '')) || '').trim() || 'Lain-lain';
+        var kategoriRaw = String((r['Kategori Biaya'] != null ? r['Kategori Biaya'] : (r.kategori != null ? r.kategori : '')) || '').trim();
+        var kategoriUp = kategoriRaw.toUpperCase();
+        var kategori = kategoriRaw;
+        if (!kategoriUp || kategoriUp.indexOf('LAIN') !== -1) {
+          kategori = deriveBiayaKategoriFromKet_(ket) || 'Lain-lain';
+        }
+        if (!kategori) kategori = 'Lain-lain';
         var key = biayaKey_(tgl, noBukti, ket, nom);
         if (existKeys[key]) { skipped++; return; }
         toInsert.push({
