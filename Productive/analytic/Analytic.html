@@ -5528,11 +5528,40 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             }
         }
 
+        function deriveBiayaSubKat_(ket) {
+            const s = String(ket || '').toLowerCase().replace(/\s+/g, ' ').trim();
+            if (!s) return 'LAIN-LAIN';
+            // 5 filter spesifik user (prioritas tertinggi, case-insensitive)
+            if (s.includes('topup') && s.includes('saldo') && s.includes('iklan') && s.includes('tiktok') && s.includes('supersub')) return 'TOPUP SALDO IKLAN TIKTOK SUPERSUB';
+            if (s.includes('iklan') && s.includes('shopee') && s.includes('kyx')) return 'IKLAN SHOPEE KYX';
+            if (s.includes('iklan') && s.includes('shopee') && s.includes('supersub')) return 'IKLAN SHOPEE SUPERSUB';
+            if (s.includes('iklan') && s.includes('tiktok') && s.includes('kyx')) return 'IKLAN TIKTOK KYX';
+            if (s.includes('iklan') && s.includes('tiktok') && s.includes('supersub')) return 'IKLAN TIKTOK SUPERSUB';
+            if (s.includes('listrik')) return 'LISTRIK';
+            if (s.includes('air') || s.includes('pdam')) return 'AIR';
+            if (s.includes('bensin') || s.includes('solar') || s.includes('bbm') || s.includes('bahan bakar')) return 'BBM';
+            if (s.includes('parkir')) return 'PARKIR';
+            if (s.includes('tol')) return 'TOL';
+            if (s.includes('gaji') || s.includes('upah') || s.includes('honor') || s.includes('thr')) return 'GAJI';
+            if (s.includes('sewa') || s.includes('kontrak') || s.includes('kos')) return 'SEWA';
+            if (s.includes('iklan') || s.includes('ads') || s.includes('promosi') || s.includes('endorse')) return 'IKLAN';
+            if (s.includes('fee') || s.includes('komisi') || s.includes('jasa')) return 'FEE/JASA';
+            if (s.includes('atk') || s.includes('alat tulis') || s.includes('fotocopy') || s.includes('print')) return 'ATK';
+            if (s.includes('transport') || s.includes('ojek') || s.includes('grab') || s.includes('gojek') || s.includes('travel')) return 'TRANSPORT';
+            if (s.includes('makan') || s.includes('konsumsi') || s.includes('catering')) return 'KONSUMSI';
+            if (s.includes('pulsa') || s.includes('kuota') || s.includes('internet') || s.includes('wifi')) return 'PULSA/INTERNET';
+            if (s.includes('service') || s.includes('servis') || s.includes('bengkel') || s.includes('perbaikan')) return 'SERVICE';
+            if (s.includes('pajak') || s.includes('retribusi')) return 'PAJAK';
+            const words = s.replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length > 2).slice(0, 2);
+            if (words.length) return words.join(' ').toUpperCase().slice(0, 24);
+            return s.split(/\s+/).slice(0, 2).join(' ').toUpperCase().slice(0, 24) || 'LAIN-LAIN';
+        }
+
         function drawBiaya() {
             const sum = (arr) => arr.reduce((a, r) => a + (parseFloat(r['Nominal']) || 0), 0);
             _biayaTotalCur = sum(_biayaRowsCur || []);
             const totalPrev = sum(_biayaRowsPrev || []);
-            const agg = (arr) => { const m = {}; (arr || []).forEach(r => { const k = String(r['Kategori Biaya'] || '').trim().toUpperCase(); if (!k) return; m[k] = (m[k] || 0) + (parseFloat(r['Nominal']) || 0); }); return m; };
+            const agg = (arr) => { const m = {}; (arr || []).forEach(r => { let k = String(r['Kategori Biaya'] || '').trim().toUpperCase(); const ket = String(r['Keterangan Jurnal'] || r['Keterangan'] || '').trim(); if (!k || k === 'LAIN-LAIN' || k === 'LAINNYA' || k === 'LAIN LAIN' || k === 'LAINLAIN') { const sub = deriveBiayaSubKat_(ket); k = sub || 'LAIN-LAIN'; } if (!k) return; m[k] = (m[k] || 0) + (parseFloat(r['Nominal']) || 0); }); return m; };
             _biayaAggPrev = agg(_biayaRowsPrev);
             _biayaCatCur = Object.entries(agg(_biayaRowsCur)).sort((a, b) => b[1] - a[1]);
             _biayaDaily = buildBiayaDaily();
