@@ -918,12 +918,16 @@
                 border-radius: 6px !important;
                 background: #ffffff !important;
                 padding: 4px !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
 
             .chart-box canvas {
                 width: 100% !important;
                 height: 100% !important;
                 display: block !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
 
             /* Sembunyikan chrome app (nav-bar, modal, dropzone) */
@@ -5126,7 +5130,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
         let _biayaGran = 'daily', _biayaDaily = null, _biayaCatCur = [], _biayaAggPrev = {}, _biayaTotalCur = 0;
         let _biayaChartTren = null, _biayaChartKomposisi = null, _biayaDataTable = null;
         let _editBiayaId = null;
-        const _BIYA_PALETTE = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#64748b'];
+        const _BIYA_PALETTE = ['#a855f7', '#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#64748b'];
 
         function isBiayaTabActive() {
             const c = document.getElementById('biayaContainer');
