@@ -1640,11 +1640,23 @@
                 </div>
                 <div style="margin-top:12px; max-height:220px; overflow:auto; border:1px solid var(--border); border-radius:12px;">
                     <table style="width:100%; font-size:11px; border-collapse:collapse;">
-                        <thead style="position:sticky; top:0; background:var(--accent);"><tr><th style="padding:8px; text-align:left; color:var(--text-muted);">No Bukti</th><th style="padding:8px; text-align:left; color:var(--text-muted);">Keterangan</th><th style="padding:8px; text-align:left; color:var(--text-muted);">Kategori →</th><th style="padding:8px; text-align:right; color:var(--text-muted);">Nominal</th></tr></thead>
+                        <thead style="position:sticky; top:0; background:var(--accent);"><tr><th style="padding:8px; text-align:left; color:var(--text-muted);">No Bukti</th><th style="padding:8px; text-align:left; color:var(--text-muted);">Keterangan</th><th style="padding:8px; text-align:left; color:var(--text-muted);">Kategori →</th><th style="padding:8px; text-align:left; color:var(--text-muted);">Alasan</th><th style="padding:8px; text-align:right; color:var(--text-muted);">Nominal</th></tr></thead>
                         <tbody id="biayaPreviewTableBody"></tbody>
                     </table>
                 </div>
                 <div style="font-size:10px; color:var(--text-muted); margin-top:6px; text-align:center;" id="biayaPreviewInfo"></div>
+            </div>
+            <div id="biayaMappingBox" style="display:none; margin-top:15px; background:var(--bg); border:1px solid var(--border); border-radius:16px; padding:16px;">
+                <div style="font-size:12px; font-weight:800; color:var(--danger); margin-bottom:10px;">Header tidak terdeteksi otomatis — pilih kolom manual:</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <label style="font-size:11px; color:var(--text);">No Bukti <select id="mapNoBukti" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text);"></select></label>
+                    <label style="font-size:11px; color:var(--text);">Keterangan Jurnal <span style="color:var(--danger);">*</span> <select id="mapKeterangan" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text);"></select></label>
+                    <label style="font-size:11px; color:var(--text);">Debit/Nominal <span style="color:var(--danger);">*</span> <select id="mapDebit" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text);"></select></label>
+                    <label style="font-size:11px; color:var(--text);">Tanggal (opsional) <select id="mapTanggal" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text);"></select></label>
+                    <label style="font-size:11px; color:var(--text);">Kategori Biaya (opsional) <select id="mapKategori" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text);"></select></label>
+                </div>
+                <button onclick="applyBiayaMapping()" style="margin-top:12px; width:100%; padding:10px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer;">TERAPKAN MAPPING</button>
+                <div style="font-size:10px; color:var(--text-muted); margin-top:6px; text-align:center;">Header terdeteksi: <span id="biayaDetectedHeaders"></span></div>
             </div>
             <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
                 <button onclick="closeBiayaUploadModal()" style="padding:12px 20px; background:none; border:1px solid var(--border); color:var(--text-muted); border-radius:12px; font-weight:800; cursor:pointer; font-size:13px;">BATAL</button>
@@ -1789,7 +1801,7 @@
           circle: '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6"/></svg>',
           question: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
         };
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxnimtzIJk1Ty0REYKIc_1U7eGZ1PvkAzUbBTromGQli0dWzmqllEZ4g2cpFg9QEvkprw/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbx0nXcbD-V2KdPUgvPmwWuU6VwQPautDL3V_7_95jvfAAxmkT9qj2cWPs912KEXY6o9Fw/exec';
 
         // State pengaman proses GAS & refresh otomatis
         window.isProcessingGAS = false;
@@ -5139,6 +5151,8 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             if (fi) fi.value = '';
             const pv = document.getElementById('biayaPreviewBox');
             if (pv) pv.style.display = 'none';
+            const mp = document.getElementById('biayaMappingBox');
+            if (mp) mp.style.display = 'none';
             const tb = document.getElementById('biayaPreviewTableBody');
             if (tb) tb.innerHTML = '';
             const info = document.getElementById('biayaPreviewInfo');
@@ -5211,7 +5225,19 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                     const ws = wb.Sheets[wb.SheetNames[0]];
                     const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
                     if (!rows.length) return alert('File kosong.');
-                    const headers = rows[0].map(h => String(h == null ? '' : h).trim().toLowerCase());
+                    let headerRowIdx = 0;
+                    let headers = rows[0].map(h => String(h == null ? '' : h).trim().toLowerCase());
+                    // cari baris header yang sebenarnya (skip judul merge di atas)
+                    for (let r = 0; r < Math.min(5, rows.length); r++) {
+                        const cand = rows[r].map(h => String(h == null ? '' : h).trim().toLowerCase());
+                        const candStr = cand.join(' ');
+                        if ((candStr.includes('keterangan') || candStr.includes('bukti') || candStr.includes('debit') || candStr.includes('nominal')) && cand.filter(Boolean).length >= 3) {
+                            headerRowIdx = r;
+                            headers = cand;
+                            break;
+                        }
+                        if (r === 0) headers = cand;
+                    }
                     const usedCols = {};
                     const matchHdr = (keys) => {
                         for (let i = 0; i < headers.length; i++) {
@@ -5222,15 +5248,19 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                         return -1;
                     };
                     const iNo = matchHdr(['no bukti', 'nobukti', 'bukti', 'nomor', 'nota']);
-                    const iKet = matchHdr(['keterangan', 'uraian', 'jurnal', 'memo', 'desc', 'description']);
+                    const iKet = matchHdr(['keterangan jurnal', 'keterangan', 'uraian', 'memo', 'desc', 'description']);
                     const iCat = matchHdr(['kategori biaya', 'kategori', 'category', 'jenis']);
                     const iDate = matchHdr(['tanggal', 'tgl', 'date', 'hari']);
                     const iDeb = matchHdr(['debit', 'nominal', 'jumlah', 'nilai', 'amount', 'biaya']);
                     if (iNo < 0 || iKet < 0 || iDeb < 0) {
-                        return alert('Kolom tidak ditemukan. Header terdeteksi: ' + headers.join(', ') + '\nButuh: No Bukti, Keterangan Jurnal, Debit.');
+                        window._biayaRawRows = rows;
+                        window._biayaHeaderRowIdx = headerRowIdx;
+                        window._biayaHeaders = headers;
+                        showBiayaMappingBox(headers, {iNo, iKet, iDeb, iCat, iDate});
+                        return;
                     }
                     const out = [];
-                    for (let i = 1; i < rows.length; i++) {
+                    for (let i = headerRowIdx + 1; i < rows.length; i++) {
                         const r = rows[i];
                         if (!r || r.length === 0) continue;
                         const noBukti = String(r[iNo] == null ? '' : r[iNo]).trim();
@@ -5238,13 +5268,14 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                         const deb = parseBiayaNominal(r[iDeb]);
                         const tgl = iDate >= 0 ? parseBiayaDate(r[iDate]) : '';
                         let kat = iCat >= 0 ? String(r[iCat] == null ? '' : r[iCat]).trim() : '';
+                        const katBefore = kat;
                         const katUp = kat.toUpperCase();
                         if (!katUp || katUp.includes('LAIN')) {
                             kat = deriveBiayaSubKat_(ket) || 'LAIN-LAIN';
                         }
                         if (!noBukti && !ket && !tgl) continue;
                         if (deb <= 0) continue;
-                        out.push({ Tanggal: tgl, 'No Bukti': noBukti, 'Keterangan Jurnal': ket, Debit: deb, 'Kategori Biaya': kat });
+                        out.push({ Tanggal: tgl, 'No Bukti': noBukti, 'Keterangan Jurnal': ket, Debit: deb, 'Kategori Biaya': kat, _katBefore: katBefore, _alasan: getBiayaDeriveReason_(ket, katBefore) });
                     }
                     _biayaUploadRows = out;
                     document.getElementById('biayaPreviewBox').style.display = 'block';
@@ -5253,9 +5284,14 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                     const info = document.getElementById('biayaPreviewInfo');
                     if (tb) {
                         const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                        tb.innerHTML = out.slice(0,8).map(r=> `<tr style="border-top:1px solid var(--border);"><td style="padding:6px 8px; color:var(--text);">${esc(r['No Bukti'])}</td><td style="padding:6px 8px; color:var(--text); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${esc(r['Keterangan Jurnal'])}">${esc(r['Keterangan Jurnal'])}</td><td style="padding:6px 8px; font-weight:800; color:var(--primary);">${esc(r['Kategori Biaya'])}</td><td style="padding:6px 8px; text-align:right; color:var(--text);">${r.Debit.toLocaleString('id-ID')}</td></tr>`).join('') || '<tr><td colspan="4" style="padding:10px; text-align:center; color:var(--text-muted);">-</td></tr>';
+                        tb.innerHTML = out.slice(0,8).map(r=> { const alasan = r._alasan || getBiayaDeriveReason_(r['Keterangan Jurnal'], r._katBefore || ''); return `<tr style="border-top:1px solid var(--border);"><td style="padding:6px 8px; color:var(--text);">${esc(r['No Bukti'])}</td><td style="padding:6px 8px; color:var(--text); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${esc(r['Keterangan Jurnal'])}">${esc(r['Keterangan Jurnal'])}</td><td style="padding:6px 8px; font-weight:800; color:var(--primary);">${esc(r['Kategori Biaya'])}</td><td style="padding:6px 8px; color:var(--text-muted); font-size:10px;">${esc(alasan)}</td><td style="padding:6px 8px; text-align:right; color:var(--text);">${r.Debit.toLocaleString('id-ID')}</td></tr>`; }).join('') || '<tr><td colspan="5" style="padding:10px; text-align:center; color:var(--text-muted);">-</td></tr>';
                     }
-                    if (info) info.textContent = out.length > 8 ? `Menampilkan 8 dari ${out.length} baris` : '';
+                    if (info) {
+                        const cnt = {};
+                        out.forEach(r=>{ const k=r['Kategori Biaya']||'LAIN-LAIN'; cnt[k]=(cnt[k]||0)+1; });
+                        const ringkas = Object.entries(cnt).map(([k,c])=> `${k}: ${c}`).join(' · ');
+                        info.textContent = (out.length > 8 ? `Menampilkan 8 dari ${out.length} baris — ` : '') + ringkas;
+                    }
                     const btn = document.getElementById('btnSubmitBiayaUpload');
                     btn.disabled = out.length === 0;
                     btn.style.opacity = out.length === 0 ? '0.5' : '1';
@@ -5266,6 +5302,85 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                 }
             };
             reader.readAsArrayBuffer(file);
+        }
+        function showBiayaMappingBox(headers, idxMap) {
+            const box = document.getElementById('biayaMappingBox');
+            const det = document.getElementById('biayaDetectedHeaders');
+            if (det) det.textContent = headers.join(' | ') || '(kosong)';
+            const fill = (id, selIdx) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.innerHTML = '';
+                const empty = document.createElement('option');
+                empty.value = -1;
+                empty.textContent = '-- Kosong / Skip --';
+                el.appendChild(empty);
+                headers.forEach((h,i)=>{
+                    const o = document.createElement('option');
+                    o.value = i;
+                    o.textContent = `${String.fromCharCode(65+i)}: ${h || '(kosong)'}`;
+                    if (i === selIdx) o.selected = true;
+                    el.appendChild(o);
+                });
+                if (selIdx < 0) empty.selected = true;
+            };
+            fill('mapNoBukti', idxMap.iNo);
+            fill('mapKeterangan', idxMap.iKet);
+            fill('mapDebit', idxMap.iDeb);
+            fill('mapTanggal', idxMap.iDate);
+            fill('mapKategori', idxMap.iCat);
+            if (box) box.style.display = 'block';
+            document.getElementById('biayaPreviewBox').style.display = 'none';
+            const btn = document.getElementById('btnSubmitBiayaUpload');
+            if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+        }
+        function applyBiayaMapping() {
+            const getIdx = id => {
+                const el = document.getElementById(id);
+                const v = el ? parseInt(el.value,10) : -1;
+                return isNaN(v) ? -1 : v;
+            };
+            const iNo = getIdx('mapNoBukti');
+            const iKet = getIdx('mapKeterangan');
+            const iDeb = getIdx('mapDebit');
+            const iDate = getIdx('mapTanggal');
+            const iCat = getIdx('mapKategori');
+            if (iKet < 0 || iDeb < 0) return alert('Pilih minimal Keterangan Jurnal dan Debit/Nominal');
+            const rows = window._biayaRawRows;
+            const headerRowIdx = window._biayaHeaderRowIdx || 0;
+            const out = [];
+            for (let i = headerRowIdx + 1; i < rows.length; i++) {
+                const r = rows[i];
+                if (!r || r.length === 0) continue;
+                const noBukti = iNo >=0 ? String(r[iNo] == null ? '' : r[iNo]).trim() : '';
+                const ket = iKet >=0 ? String(r[iKet] == null ? '' : r[iKet]).trim() : '';
+                const deb = iDeb >=0 ? parseBiayaNominal(r[iDeb]) : 0;
+                const tgl = iDate >=0 ? parseBiayaDate(r[iDate]) : '';
+                let kat = iCat >=0 ? String(r[iCat] == null ? '' : r[iCat]).trim() : '';
+                const katBefore = kat;
+                const katUp = kat.toUpperCase();
+                if (!katUp || katUp.includes('LAIN')) {
+                    kat = deriveBiayaSubKat_(ket) || 'LAIN-LAIN';
+                }
+                if (!noBukti && !ket && !tgl) continue;
+                if (deb <= 0) continue;
+                out.push({ Tanggal: tgl, 'No Bukti': noBukti, 'Keterangan Jurnal': ket, Debit: deb, 'Kategori Biaya': kat, _katBefore: katBefore, _alasan: getBiayaDeriveReason_(ket, katBefore) });
+            }
+            document.getElementById('biayaMappingBox').style.display = 'none';
+            window._biayaUploadRows = out;
+            document.getElementById('biayaPreviewBox').style.display = 'block';
+            document.getElementById('biayaTotalRows').textContent = out.length;
+            const tb = document.getElementById('biayaPreviewTableBody');
+            const info = document.getElementById('biayaPreviewInfo');
+            if (tb) {
+                const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                tb.innerHTML = out.slice(0,8).map(r=> { const alasan = r._alasan || getBiayaDeriveReason_(r['Keterangan Jurnal'], r._katBefore || ''); return `<tr style="border-top:1px solid var(--border);"><td style="padding:6px 8px; color:var(--text);">${esc(r['No Bukti'])}</td><td style="padding:6px 8px; color:var(--text); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${esc(r['Keterangan Jurnal'])}">${esc(r['Keterangan Jurnal'])}</td><td style="padding:6px 8px; font-weight:800; color:var(--primary);">${esc(r['Kategori Biaya'])}</td><td style="padding:6px 8px; color:var(--text-muted); font-size:10px;">${esc(alasan)}</td><td style="padding:6px 8px; text-align:right; color:var(--text);">${r.Debit.toLocaleString('id-ID')}</td></tr>`; }).join('') || '<tr><td colspan="5" style="padding:10px; text-align:center; color:var(--text-muted);">-</td></tr>';
+            }
+            if (info) info.textContent = out.length > 8 ? `Menampilkan 8 dari ${out.length} baris` : '';
+            const btn = document.getElementById('btnSubmitBiayaUpload');
+            btn.disabled = out.length === 0;
+            btn.style.opacity = out.length === 0 ? '0.5' : '1';
+            if (out.length === 0) alert('Tidak ada baris valid (periksa No Bukti, Keterangan Jurnal, Debit).');
         }
         function sendBiayaToGAS() {
             if (!_biayaUploadRows.length) return alert('Pilih file Excel terlebih dahulu!');
@@ -5530,16 +5645,35 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
         }
 
         function deriveBiayaSubKat_(ket) {
-            const s = String(ket || '').toLowerCase().replace(/\s+/g, ' ').trim();
+            const raw = String(ket || '');
+            const s = raw.toLowerCase().replace(/\s+/g, ' ').trim();
             const n = s.replace(/[^a-z0-9]/g, '');
             if (!s) return 'LAIN-LAIN';
-            // hanya 5 kategori iklan — selain itu tetap Lain-lain (toleran hyphen/spasi: Top-up, Tik Tok)
-            if (n.includes('topup') && s.includes('saldo') && s.includes('iklan') && n.includes('tiktok') && s.includes('supersub')) return 'TOPUP SALDO IKLAN TIKTOK SUPERSUB';
-            if (s.includes('iklan') && s.includes('shopee') && s.includes('kyx')) return 'IKLAN SHOPEE KYX';
-            if (s.includes('iklan') && s.includes('shopee') && s.includes('supersub')) return 'IKLAN SHOPEE SUPERSUB';
-            if (s.includes('iklan') && n.includes('tiktok') && s.includes('kyx')) return 'IKLAN TIKTOK KYX';
-            if (s.includes('iklan') && n.includes('tiktok') && s.includes('supersub')) return 'IKLAN TIKTOK SUPERSUB';
+            // hanya 5 kategori iklan — selain itu tetap Lain-lain (toleran hyphen/spasi/titik, tidak peduli urutan)
+            const has = w => n.includes(w);
+            if (has('topup') && has('saldo') && has('iklan') && has('tiktok') && has('supersub')) return 'TOPUP SALDO IKLAN TIKTOK SUPERSUB';
+            if (has('iklan') && has('shopee') && has('kyx')) return 'IKLAN SHOPEE KYX';
+            if (has('iklan') && has('shopee') && has('supersub')) return 'IKLAN SHOPEE SUPERSUB';
+            if (has('iklan') && has('tiktok') && has('kyx')) return 'IKLAN TIKTOK KYX';
+            if (has('iklan') && has('tiktok') && has('supersub')) return 'IKLAN TIKTOK SUPERSUB';
             return 'LAIN-LAIN';
+        }
+        function getBiayaDeriveReason_(ket, katBefore) {
+            const s = String(ket || '').toLowerCase().replace(/\s+/g, ' ').trim();
+            const n = s.replace(/[^a-z0-9]/g, '');
+            const katUp = String(katBefore || '').trim().toUpperCase();
+            if (katUp && !katUp.includes('LAIN')) return 'Manual: ' + katBefore;
+            if (!s) return 'Keterangan kosong → Lain-lain';
+            const has = w => n.includes(w);
+            const topupOk = has('topup') && has('saldo') && has('iklan') && has('tiktok') && has('supersub');
+            if (topupOk) return '5 kata topup terpenuhi';
+            if (has('iklan') && has('shopee') && has('kyx')) return 'iklan+shopee+kyx';
+            if (has('iklan') && has('shopee') && has('supersub')) return 'iklan+shopee+supersub';
+            if (has('iklan') && has('tiktok') && has('kyx')) return 'iklan+tiktok+kyx';
+            if (has('iklan') && has('tiktok') && has('supersub')) return 'iklan+tiktok+supersub';
+            // debug: sebutkan token yang terbaca
+            const toks = ['topup','saldo','iklan','tiktok','supersub','shopee','kyx'].filter(w=>has(w)).join(',') || 'tidak ada';
+            return `Tidak ada keyword 5 → Lain-lain (ket:"${String(ket).slice(0,30)}" n:"${n.slice(0,30)}" has:[${toks}])`;
         }
 
         function renderBiayaTable() {

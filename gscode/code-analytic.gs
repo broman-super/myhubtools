@@ -229,11 +229,11 @@ function deriveBiayaKategoriFromKet_(ket) {
   var s = String(ket || '').toLowerCase().replace(/\s+/g, ' ').trim();
   var n = s.replace(/[^a-z0-9]/g, '');
   if (!s) return 'Lain-lain';
-  if (n.indexOf('topup') !== -1 && s.indexOf('saldo') !== -1 && s.indexOf('iklan') !== -1 && n.indexOf('tiktok') !== -1 && s.indexOf('supersub') !== -1) return 'TOPUP SALDO IKLAN TIKTOK SUPERSUB';
-  if (s.indexOf('iklan') !== -1 && s.indexOf('shopee') !== -1 && s.indexOf('kyx') !== -1) return 'IKLAN SHOPEE KYX';
-  if (s.indexOf('iklan') !== -1 && s.indexOf('shopee') !== -1 && s.indexOf('supersub') !== -1) return 'IKLAN SHOPEE SUPERSUB';
-  if (s.indexOf('iklan') !== -1 && n.indexOf('tiktok') !== -1 && s.indexOf('kyx') !== -1) return 'IKLAN TIKTOK KYX';
-  if (s.indexOf('iklan') !== -1 && n.indexOf('tiktok') !== -1 && s.indexOf('supersub') !== -1) return 'IKLAN TIKTOK SUPERSUB';
+  if (n.indexOf('topup') !== -1 && n.indexOf('saldo') !== -1 && n.indexOf('iklan') !== -1 && n.indexOf('tiktok') !== -1 && n.indexOf('supersub') !== -1) return 'TOPUP SALDO IKLAN TIKTOK SUPERSUB';
+  if (n.indexOf('iklan') !== -1 && n.indexOf('shopee') !== -1 && n.indexOf('kyx') !== -1) return 'IKLAN SHOPEE KYX';
+  if (n.indexOf('iklan') !== -1 && n.indexOf('shopee') !== -1 && n.indexOf('supersub') !== -1) return 'IKLAN SHOPEE SUPERSUB';
+  if (n.indexOf('iklan') !== -1 && n.indexOf('tiktok') !== -1 && n.indexOf('kyx') !== -1) return 'IKLAN TIKTOK KYX';
+  if (n.indexOf('iklan') !== -1 && n.indexOf('tiktok') !== -1 && n.indexOf('supersub') !== -1) return 'IKLAN TIKTOK SUPERSUB';
   return 'Lain-lain';
 }
 function parseNoBuktiDate_(s) {
