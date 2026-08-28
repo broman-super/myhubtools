@@ -854,6 +854,10 @@
                 background: #ffffff !important;
                 border: 1px solid #94a3b8 !important;
                 border-radius: 8px !important;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            .bento-container {
                 break-inside: auto;
                 page-break-inside: auto;
             }
@@ -930,15 +934,21 @@
                 print-color-adjust: exact;
             }
 
-            /* Sembunyikan chrome app (nav-bar, modal, dropzone) */
+            /* Sembunyikan chrome app (nav-bar, modal, dropzone) + tombol aksi yang tidak perlu di cetak */
             .nav-bar,
             #settingsModal,
             #uploadExcelModal,
+            #uploadBiayaModal,
             #expenseModal,
             #loginOverlay,
             #processingOverlay,
             #dropzone,
             #biayaDropzone,
+            #biayaMappingBox,
+            #biayaPreviewBox,
+            button[onclick*="openBiayaUploadModal"],
+            button[onclick*="bukaModalBiaya"],
+            button[title*="Import Excel"],
             .no-print {
                 display: none !important;
             }
