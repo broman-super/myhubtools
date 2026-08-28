@@ -1340,7 +1340,7 @@
                 </svg>
             </button>
             <button class="theme-toggle" onclick="document.getElementById('uploadExcelModal').style.display='flex'"
-                title="Import Excel Penjualan (Bulk)" style="padding: 8px 10px; color: var(--success);">
+                title="Import Excel Penjualan (Bulk)" aria-label="Import Excel Penjualan (Bulk) — Faktur/Retur" style="padding: 8px 10px; color: var(--success);">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -1686,16 +1686,18 @@
                 <span style="font-family:'Geomini','Plus Jakarta Sans'; color:var(--text); font-size:18px; font-weight:800;">DASHBOARD BIAYA (OPEX)</span>
                 <span class="help-icon" data-static-tooltip="Seluruh angka di tab ini dihitung dari baris tabel 'biaya' di database pada rentang tanggal aktif. Mode komparasi membandingkan dengan rentang periode sebelumnya.">?</span>
             </div>
-            <button class="theme-toggle" onclick="bukaModalBiaya()"
-                title="Catat Pengeluaran (OPEX)" style="padding:10px 14px; display:inline-flex; align-items:center; gap:6px; color:var(--primary); font-weight:800; font-size:12px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                Catat Biaya
-            </button>
-            <button class="theme-toggle" onclick="openBiayaUploadModal()"
-                title="Import Excel Biaya (Bulk)" style="padding:10px 14px; display:inline-flex; align-items:center; gap:6px; color:var(--success); font-weight:800; font-size:12px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                Import Excel
-            </button>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <button class="theme-toggle" onclick="bukaModalBiaya()"
+                    title="Catat Pengeluaran (OPEX)" style="padding:10px 14px; display:inline-flex; align-items:center; gap:6px; background:var(--warning); color:#fff; border:none; font-weight:800; font-size:12px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Catat Biaya
+                </button>
+                <button class="theme-toggle" onclick="openBiayaUploadModal()"
+                    title="Upload Bulk Biaya — Keterangan Jurnal → Kategori" aria-label="Upload Bulk Biaya — Keterangan Jurnal → Kategori" style="padding:10px 14px; display:inline-flex; align-items:center; gap:6px; background:var(--warning); color:#fff; border:none; font-weight:800; font-size:12px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-size="9" font-weight="800" fill="currentColor" stroke="none">Rp</text></svg>
+                    Upload Biaya
+                </button>
+            </div>
         </div>
 
         <!-- ROW 1: KPI BIAYA -->
