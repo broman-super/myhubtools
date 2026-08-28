@@ -1815,7 +1815,7 @@
           circle: '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6"/></svg>',
           question: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
         };
-        const API_URL = 'https://script.google.com/macros/s/AKfycbx0nXcbD-V2KdPUgvPmwWuU6VwQPautDL3V_7_95jvfAAxmkT9qj2cWPs912KEXY6o9Fw/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyEwtf2FBZ3FNh3BgFVVZukeH_hmMg0fftBOiYZFhUvqx8Ph3y0h9GtSWdpzE61pDt3VQ/exec';
 
         // State pengaman proses GAS & refresh otomatis
         window.isProcessingGAS = false;
@@ -5213,6 +5213,22 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             if (!isNaN(t)) { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
             return '';
         }
+        function parseNoBuktiDate(val) {
+            const s = String(val || '').trim();
+            if (!s) return '';
+            const parts = s.split(/[.\-/_ ]+/).filter(Boolean);
+            let y = '', m = '', d = '';
+            for (const p of parts) {
+                if (/^20\d{2}$/.test(p)) y = p;
+                else if (/^\d{1,2}$/.test(p)) {
+                    const n = parseInt(p, 10);
+                    if (n >= 1 && n <= 12 && !m) m = String(n).padStart(2, '0');
+                    else if (n >= 1 && n <= 31 && !d) d = String(n).padStart(2, '0');
+                }
+            }
+            if (y && m && d) return `${y}-${m}-${d}`;
+            return '';
+        }
         function parseBiayaNominal(val) {
             if (val == null || val === '') return 0;
             if (typeof val === 'number') return val;
@@ -5280,7 +5296,8 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                         const noBukti = String(r[iNo] == null ? '' : r[iNo]).trim();
                         const ket = String(r[iKet] == null ? '' : r[iKet]).trim();
                         const deb = parseBiayaNominal(r[iDeb]);
-                        const tgl = iDate >= 0 ? parseBiayaDate(r[iDate]) : '';
+                        let tgl = iDate >= 0 ? parseBiayaDate(r[iDate]) : '';
+                        if (!tgl && iNo >= 0) tgl = parseNoBuktiDate(String(r[iNo] || ''));
                         let kat = iCat >= 0 ? String(r[iCat] == null ? '' : r[iCat]).trim() : '';
                         const katBefore = kat;
                         const katUp = kat.toUpperCase();
@@ -5369,7 +5386,8 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                 const noBukti = iNo >=0 ? String(r[iNo] == null ? '' : r[iNo]).trim() : '';
                 const ket = iKet >=0 ? String(r[iKet] == null ? '' : r[iKet]).trim() : '';
                 const deb = iDeb >=0 ? parseBiayaNominal(r[iDeb]) : 0;
-                const tgl = iDate >=0 ? parseBiayaDate(r[iDate]) : '';
+                let tgl = iDate >=0 ? parseBiayaDate(r[iDate]) : '';
+                if (!tgl && iNo >=0) tgl = parseNoBuktiDate(String(r[iNo] || ''));
                 let kat = iCat >=0 ? String(r[iCat] == null ? '' : r[iCat]).trim() : '';
                 const katBefore = kat;
                 const katUp = kat.toUpperCase();
