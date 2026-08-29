@@ -1,136 +1,81 @@
-# Update Plan — RND Roadmap Tracker (Next Phase)
+# Update Plan — Webtools Analytic: Dashboard Biaya ROAS/ROI
 
-Tanggal: 2026-08-13
+Tanggal: 2026-08-27
+Status: Build — Opsi B + L1 + D1 (disepakati)
 
-> Isi sebelumnya (log Taskschedule) dihapus — diganti rencana pengembangan RND Roadmap Tracker.
+> File lama dikosongkan — diganti rencana Analytic Biaya ROAS/ROI per jawaban user 2026-08-27.
 
-## Cara Pakai Checkpoint
-- Tiap fitur punya milestone bernomor (Mx.y). Centang `[x]` bila sudah.
-- Kalau lagi sibuk di tempat lain lalu balik: cari baris **`Lanjutan:`** di tiap fitur → itu pekerjaan berikutnya yang belum kelar. Jangan mulai dari nol.
+## Keputusan Kunci (dari diskusi)
 
----
+- **Opsi B:** ROAS pecah Shopee / Tiktok / Total (bukan cuma Total)
+- **Biaya Iklan = hanya Supersub** (KYX tidak masuk). `Iklan Generik` belum ada → `Biaya Iklan = 5 kategori baru saja` tanpa `IKLAN` generik
+- **TOPUP SALDO IKLAN TIKTOK SUPERSUB → masuk Tiktok** (bukan Total saja)
+- **ROI = ROI Iklan** (`Laba Bersih ÷ Biaya Iklan`)
+- **Label eksplisit:** `Omzet Kotor` vs `Omzet Bersih` — user setuju
+- **Layout L1:** 2 baris bento 4 kolom (8 kartu kecil) — paling rapi tanpa FAQ
+- **Dropdown D1:** 1 dropdown global di header `DASHBOARD BIAYA` — `Omzet Kotor | Omzet Bersih` ganti semua ROAS/ROI
+- **Warna ROAS/ROI:** diserahkan — harus mudah terbaca (success/danger/warning)
 
-## Fitur 1: Foto Bukti Nyata (Simpan ke Supabase)
-**Status:** ✅ Selesai (pivot dari Google Drive)  |  **Lanjutan:** `git push` lalu tes
-- Tujuan: item checklist punya foto asli; thumbnail langsung tampil.
-- **Pivot:** awalnya rencana upload ke Google Drive, tapi izin Drive berulang gagal ("Akses ditolak: DriveApp.") walau sudah grant scope & deploy baru. Maka foto **dikompresi di client** lalu **diupload ke Supabase Storage** (bucket `roadmap-photos`, public) lewat GAS `action:'uploadStorage'`; yang disimpan di jsonb hanyalah **URL**-nya. DB tetap kecil & payload sync ringan. Kapasitas Storage free = 1 GB (terpisah dari DB 500 MB).
+## Definisi (kunci anti abu-abu)
 
-### M1.1 — Backend GAS `uploadPhoto` (DIBATALKAN)
-- [ ] Upload ke Drive dibatalkan (izin gagal). `uploadPhoto` di GAS tetap ada tapi tidak dipakai frontend.
+- `Omzet Kotor` = `Total Penjualan` (sebelum retur, sebelum HPP) — `sum Penjualan`
+- `Omzet Bersih` = `Penjualan − Retur` — `__lastNetSales` (sudah ada, belum potong HPP)
+- `Laba Bersih` = `Omzet Bersih − HPP − Total Biaya` — sudah ada
+- `Biaya Iklan Shopee` = `IKLAN SHOPEE SUPERSUB` (hanya Supersub, KYX diabaikan)
+- `Biaya Iklan Tiktok` = `IKLAN TIKTOK SUPERSUB` + `TOPUP SALDO IKLAN TIKTOK SUPERSUB`
+- `Biaya Iklan Total` = Shopee + Tiktok
+- `ROAS Shopee` = `Omzet Shopee ÷ Biaya Iklan Shopee` (x)
+- `ROAS Tiktok` = `Omzet Tiktok ÷ Biaya Iklan Tiktok` (x)
+- `ROAS Total` = `Omzet (sesuai dropdown) ÷ Biaya Iklan Total` (x)
+- `ROI Iklan` = `Laba Bersih ÷ Biaya Iklan Total ×100%` (%)
+- `Omzet Shopee/Tiktok` diambil dari `rekap_dashboard` (`rekapMarketplace` / `marketplace` per marketplace)
+- `Lain-lain` = `Kategori Biaya` kosong/`LAIN*` → `deriveBiayaSubKat_(Keterangan)` hanya 5 kategori iklan, selain itu tetap `Lain-lain` — tooltip `?` di header Biaya jelaskan.
 
-### M1.2 — Frontend (`src/App.jsx`)
-- [x] `ChecklistModal`: input file + preview + `resizeImageFile` (canvas → JPEG 0.7, max 1024px)
-- [x] Foto diupload ke Supabase Storage, `photoUrl` menyimpan URL-nya (bukan base64)
-- [x] `MilestoneNode` & `ReportView`: render `<img>` thumbnail bila `photoUrl` ada (klik → full)
-- [x] Rebuild dist + commit (`c745f77`)
+## Scope
 
----
+- `Productive/analytic/Analytic.html` saja (frontend). `gscode` tidak perlu (hitung di frontend, data sudah ada).
+- Tidak ubah DB/Supabase, tidak ubah upload flow (sudah fix header anti-gagal + preview debug).
+- Dark mode + print tetap `display:none` untuk kartu baru.
 
-## Fitur 2: Filter & Search Project di Dashboard
-**Status:** ✅ Selesai  |  **Lanjutan:** — (selesai)
-- Tujuan: cari project by nama/kode/kategori + filter by status. Client-side, tanpa backend.
+## Layout L1 — 2 Baris Bento (8 Kartu Kecil)
 
-### M2.1 — Dashboard (`src/App.jsx`)
-- [x] Tambah input search (filter nama/kode/kategori/deskripsi + milestone/checklist title, case-insensitive, live)
-- [x] Tambah chip filter status (Semua/Ideation/On Track/At Risk/Done)
-- [x] Filter client-side pada array `projects` (sudah di-memory)
-- [x] Rebuild dist + commit
+Baris 1 (4 kartu): `Omzet Bersih (dropdown)` | `Biaya Iklan Total` | `ROAS Total` | `ROI Iklan`
+Baris 2 (4 kartu): `ROAS Shopee` | `ROAS Tiktok` | `Laba Bersih` | `OPEX Ratio` (existing, tetap)
 
----
+- Tetap pakai `bento-container` grid yang sudah ada — tambah 1 `bento-container` baru atau sisip di `biayaContainer` sebelum `biayaChartTren`.
+- Kartu pakai `bento-item col-span-3` (4 kolom) biar 4 per baris, `bento-value` + `bento-sub` + `help-icon` tooltip rumus.
 
-## Fitur 3: Export Roadmap ke PDF / CSV
-**Status:** ✅ Selesai  |  **Lanjutan:** — (selesai)
-- Tujuan: unduh seluruh roadmap.
+## Dropdown D1 — Omzet Kotor vs Bersih
 
-### M3.1 — CSV (native, tanpa lib)
-- [x] Flatten project → milestone → checklist jadi baris
-- [x] Download via `Blob` + `URL.createObjectURL` (BOM UTF-8)
-- [x] Tombol "Export CSV" di dashboard (export semua project aktif)
+- Lokasi: header `DASHBOARD BIAYA` sebelah kanan, sebelum `Catat Biaya`/`Upload Biaya` — `select` kecil `Pilih Omzet: [Omzet Kotor ▼]` / `[Omzet Bersih ▼]`
+- State: `localStorage.biaya_omzet_mode = 'kotor'|'bersih'` (default `bersih` biar kompatibel lama)
+- Helper `getOmzetForRoas(market, mode)`:
+  - `kotor` → `sum Penjualan` per marketplace dari `rawDataTransaksi` / `rekap` (sebelum retur)
+  - `bersih` → `__lastNetSales` per marketplace (sudah ada) atau `Omzet Bersih` global
+- `onchange` → `drawBiaya()` → semua `ROAS*` re-render, simpan `localStorage`.
 
-### M3.2 — PDF
-- [x] Print via window baru berisi HTML rapi + `window.print()` (zero-dep, tanpa jspdf)
-- [x] Tombol "Export PDF" di dashboard (popup izinkan)
-- [x] Bonus: tombol Export CSV/PDF juga di dalam project view (per-project)
+## Warna ROAS/ROI (mudah terbaca)
 
----
+- `ROAS >= 1.0` / `ROI >= 0%` → `var(--success)` hijau `#10b981`
+- `ROAS < 1.0` / `ROI < 0%` → `var(--danger)` merah `#ef4444`
+- `ROAS 1.0–1.5` → `var(--warning)` amber `#f59e0b` (opsional, biar tidak cuma hijau/merah)
+- Nilai format: `ROAS 3.2x`, `ROI 24.5%` — `font-weight:800`, `help-icon` tooltip `ROAS = Omzet ÷ Biaya Iklan`.
 
-## Ringkasan Milestone
-| ID | Fitur | Status |
-|----|-------|--------|
-| M1.1 | GAS `uploadPhoto` (Drive) | ❌ dibatalkan (izin gagal) |
-| M1.2 | Frontend foto (thumbnail + lightbox + hapus) | ✅ selesai |
-| M2.1 | Filter & search dashboard (+ highlight) | ✅ selesai |
-| M3.1 | Export CSV | ✅ selesai |
-| M3.2 | Export PDF (+ per-project) | ✅ selesai |
+## Tooltip/Legend Lain-lain
 
----
+- Header `DASHBOARD BIAYA` tambah `?` kedua: `Lain-lain = Kategori kosong/LAIN* → derive dari Keterangan Jurnal hanya 5 frasa iklan, selain itu tetap Lain-lain.`
+- Di bawah rank list tambah legend kecil `Lain-lain: ...` kalau ada.
 
-## Rincian Update (Final)
+## Langkah Eksekusi
 
-**Arsitektur**
-- React + Vite, build single-file `dist/index.html` (live di reynahub.web.io `#productive/rnd-roadmap`).
-- Data: Supabase UNITOOLS (`rnd_roadmap`), anon **read-only**; tulis lewat **GAS bridge** (`service_role`) agar key tidak terekspos. CORS `text/plain` (tanpa preflight).
-- Simpan **optimistic** + debounce 400ms.
+1. `Analytic.html` — tambah `<select id="biayaOmzetMode">` di header biaya + helper `getOmzetForRoas` + `localStorage` load/save
+2. `Analytic.html` — tambah agregasi `Biaya Iklan` per marketplace (Supersub-only) di `drawBiaya()` + hitung `ROAS*`/`ROI Iklan` + render 8 kartu KPI baru (L1)
+3. `Analytic.html` — tambah tooltip `Lain-lain` + legend + warna `success/danger` di kartu ROAS/ROI
+4. Verifikasi: `file://` preview — ganti dropdown `Kotor↔Bersih` → ROAS ganti; dark mode; `Ctrl+P` kartu baru tidak ikut cetak (`no-print`); `Lain-lain` tooltip muncul
 
-**1. Foto Bukti (per checklist item)** — `c745f77`, `863b5eb`, `f6f2c88`
-- Kompresi di client, lalu **upload ke Supabase Storage** (bucket `roadmap-photos`); DB hanya simpan **URL** (pivot dari Google Drive karena izin gagal).
-- Thumbnail 48px (milestone), 28px (laporan), preview 260px (modal).
-- Klik thumbnail → **lightbox** in-app (× / Esc / klik luar).
-- Tombol **Hapus foto** di modal checklist.
+## Verifikasi
 
-**2. Search & Filter** — `d8e159a`, `fd6854b`
-- Search live, case-insensitive: nama/kode/deskripsi project **+** judul milestone/checklist.
-- **Highlight** kata cocok (kuning) di kartu dashboard.
-- Chip filter status (Semua / Ideation / On Track / At Risk / Done).
-- Dropdown **sorting**: Default / Status / Target Rilis / Progress.
-
-**3. Export** — `01e13bf`, `18fc5b6`, `853ac68`
-- **CSV** native (Blob, BOM UTF-8), flatten project→milestone→checklist.
-- **PDF** via window baru (HTML rapi + `window.print()`), zero-dep.
-- Dari **dashboard** (seluruh roadmap) & **project view** (per-project).
-
-**4. Dashboard** — `de6f4d1`
-- 4 kartu ringkasan status + **donut progress keseluruhan** (persen + `done/total` checklist).
-- Panel peringatan overdue/upcoming.
-
-**5. UX / Bug-fix** — `a7ad0de`, `61aa54d`
-- Modal **remount per item** (`key`) → tiap checklist/project/milestone simpan datanya sendiri (fix state-bleed antar-item).
-- Badge **"Tersimpan" auto-hide 3 detik**; **"Gagal"** tetap.
-
-**6. Polish lanjutan (Phase 9–11)**
-- Date Picker popup responsif (`right:0; width:100%; minWidth:230`) — match lebar field, tidak overflow tepi modal.
-- Konfirmasi keluar modal bila sudah input: `Modal` pakai prop `onCloseAttempt` (X / klik backdrop / Esc / tombol Batal) + `window.confirm` cegah kehilangan input.
-- Search + highlight kuning di tab Roadmap Project Detail (`milestoneMatchesSearch` + `filterMilestoneTree`, rekursif ke anak & checklist).
-
-**Catatan**
-- Menghapus project/item = foto ikut dihapus dari Storage (GAS `deleteStorage` best-effort); DB hanya simpan URL.
-- Deploy: `src/config.js` → `GAS_SCRIPT_URL`; ubah config = rebuild + `git push`.
-- Foto butuh **bucket Storage `roadmap-photos` (Public)** di Supabase + **redeploy GAS** (update deployment) agar action `uploadStorage`/`deleteStorage` live.
-
----
-
-## Polish (tahapan)
-- [x] **Phase 1 — Custom Date Picker**: `DatePicker` (kalender popover styled + ikon) ganti `<input type="date">` di Project & Milestone modal.
-- [x] **Phase 2 — Konfirmasi hapus** milestone & checklist (`window.confirm` sebelum hapus).
-- [x] **Phase 3 — Badge "Lewat Target"** merah di kartu dashboard bila ada milestone overdue.
-- [x] **Phase 4 — Esc + klik backdrop tutup modal** (backdrop sudah ada) + auto-focus field pertama.
-- [x] **Phase 5 — Drag-and-drop gambar** di modal checklist (zona drop + petunjuk).
-- [x] **Phase 6 — Thumbnail foto** di PDF export (`openPrintableReport`).
-- [x] **Phase 7 — Skeleton loading** saat fetch awal (ganti teks "Memuat…").
-- [x] **Phase 8 — Indikator "ada foto"** (ter-cover oleh thumbnail 48px di timeline & 28px di laporan).
-- [x] **Phase 9 — Fix Date Picker**: popup kalender di-render via portal ke `document.body` dengan `position:fixed` (koordinat viewport) + auto-buka-ke-atas bila dekat bawah layar, sehingga tidak lagi kepotong `overflow` modal. Lebar mengikuti field (`minWidth:230`). Reposisi otomatis saat scroll/resize.
-- [x] **Phase 10 — Konfirmasi keluar modal**: `Modal` dapat prop `onCloseAttempt`; X / klik backdrop / Esc / tombol **Batal** cek "dirty" lalu `window.confirm` sebelum tutup (cegah kehilangan input). Berlaku di Project, Milestone, Checklist, Evaluation modal.
-- [x] **Phase 11 — Search di Project Detail** (tab Roadmap): input cari milestone/checklist (rekursif, termasuk anak) + highlight kuning; helper `milestoneMatchesSearch` & `filterMilestoneTree`.
-- [x] **Phase 12 — Selaraskan style ke design-system webtools**: import `src/styles/design-system.css` (token) saja; font via Google Fonts `Plus Jakarta Sans` (link di `index.html`) agar dist tetap ringan (~212 KB). `C`/`R`/shadow dipetakan ke `var(--*)` (aksen merah brand, radius/shadow/shared). Wrapper jadi scroll-container (`100dvh` + `overflowY:auto`) karena `design-system.css` kunci `body{overflow:hidden}`. Catatan: font display `Geomini` (heading) fallback ke Plus Jakarta Sans di build ringan ini.
-
-## Bugfix (pasca review agent — static review semua fitur)
-- [x] **H1 — null-guard `flattenMilestones(nodes = [])`**: cegah crash `Cannot iterate undefined` bila `project.milestones` kosong/null (row lama/manual).
-- [x] **H2 — fallback `MILESTONE_STATUS[node.status]`** (default `Belum mulai`) di `MilestoneNode` & `ReportView` (App.jsx:1345, 1703).
-- [x] **H3 — fallback `PROJECT_STATUS[...status]`** (default `Ideation`) di dashboard & detail (App.jsx:1001, 1116).
-- [x] **M1 — Esc Date Picker tidak nutup modal induk**: listener keydown Date Picker pakai capture phase (`addEventListener(..., true)`) + `stopPropagation` sehingga Esc hanya menutup kalender, bukan modal (cegah hilang input form).
-- [x] **L2 — timezone `upcomingMilestones`**: pakai `parseYMD` (lokal) bukan `new Date(YYYY-MM-DD)` (UTC) → hindari off-by-one.
-- [x] **L4 — status "Tersimpan"** baru di-set setelah `await syncToSupabase` (bukan optimis di awal) → tidak flash saved lalu error.
-- [x] **L5 — laporan cetak project terarsip kosong**: filter `!p.archived` dilewati bila ekspor hanya 1 project (detail).
-- [x] **CRITICAL — Date Picker bikin layar blank putih**: `DatePicker` memanggil `onChange(nilai)` (string), tapi helper `set` di modal Project & Milestone membaca `e.target.value` → `TypeError: Cannot read 'target' of undefined` saat pilih tanggal. `set` diubah terima event maupun nilai mentah (`e && e.target ? e.target.value : e`).
-- [ ] **M2 — hapus foto Storage**: `deleteFromStorage` mengirim URL lengkap ke GAS `deleteStorage`; perlu verifikasi GAS bisa parse URL tersebut (atau simpan object name). Belum diubah (kontrak backend).
-- [ ] **M3 — Lightbox+Modal**: Esc tutup keduanya; `onClose` lightbox dibuat tiap render (listener churn). Minor, belum diubah.
+- `Omzet Kotor` vs `Bersih`切换 → `ROAS Shopee/Tiktok/Total` berubah sesuai
+- `Biaya Iklan` hanya hitung `SUPERSUB` + `TOPUP` → `KYX` tidak masuk (cek via preview debug `Alasan`)
+- `ROI Iklan` = `Laba Bersih ÷ Biaya Iklan`
+- Dark mode & print tidak bocor

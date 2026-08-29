@@ -1684,9 +1684,15 @@
         <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; grid-column:1 / -1;">
             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                 <span style="font-family:'Geomini','Plus Jakarta Sans'; color:var(--text); font-size:18px; font-weight:800;">DASHBOARD BIAYA (OPEX)</span>
-                <span class="help-icon" data-static-tooltip="Seluruh angka di tab ini dihitung dari baris tabel 'biaya' di database pada rentang tanggal aktif. Mode komparasi membandingkan dengan rentang periode sebelumnya.">?</span>
+                <span class="help-icon" data-static-tooltip="Seluruh angka di tab ini dihitung dari baris tabel 'biaya' di database pada rentang tanggal aktif. Mode komparasi membandingkan dengan rentang periode sebelumnya. Lain-lain = Kategori kosong/LAIN* → derive dari Keterangan Jurnal hanya 5 frasa iklan (shopee/tiktok/kyx/supersub/topup), selain itu tetap Lain-lain.">?</span>
             </div>
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <label style="font-size:11px; font-weight:700; color:var(--text-muted); display:flex; align-items:center; gap:6px;">Omzet:
+                    <select id="biayaOmzetMode" style="padding:6px 10px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text); font-weight:700; font-size:11px;">
+                        <option value="bersih">Omzet Bersih</option>
+                        <option value="kotor">Omzet Kotor</option>
+                    </select>
+                </label>
                 <button class="theme-toggle" onclick="bukaModalBiaya()"
                     title="Catat Pengeluaran (OPEX)" style="padding:10px 14px; display:inline-flex; align-items:center; gap:6px; background:var(--warning); color:#fff; border:none; font-weight:800; font-size:12px;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -1737,6 +1743,84 @@
             <div id="biayaKpiTopCatShare" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">0% dari total biaya</div>
         </div>
 
+        <!-- ROW 1B: OMZET + BIAYA IKLAN + ROAS/ROI (L1) -->
+        <div class="bento-item col-span-3">
+            <div class="bento-header">
+                <div class="bento-title">OMZET <span id="biayaKpiOmzetLabel">BERSIH</span> <span class="help-icon" data-static-tooltip="Omzet Bersih = Penjualan − Retur. Omzet Kotor = Penjualan saja. Pilih via dropdown di header.">?</span></div>
+                <div class="badge primary">OMZET</div>
+            </div>
+            <div class="bento-value" id="biayaKpiOmzet">Rp 0</div>
+            <div id="biayaKpiOmzetInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">-</div>
+        </div>
+        <div class="bento-item col-span-3">
+            <div class="bento-header">
+                <div class="bento-title">BIAYA IKLAN <span class="help-icon" data-static-tooltip="Total Biaya Iklan = IKLAN SHOPEE SUPERSUB + IKLAN TIKTOK SUPERSUB + TOPUP (hanya Supersub, KYX tidak masuk).">?</span></div>
+                <div class="badge primary">IKLAN</div>
+            </div>
+            <div class="bento-value" id="biayaKpiIklan">Rp 0</div>
+            <div id="biayaKpiIklanInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">-</div>
+        </div>
+        <div class="bento-item col-span-3">
+            <div class="bento-header">
+                <div class="bento-title">ROAS TOTAL <span class="help-icon" data-static-tooltip="ROAS = Omzet (sesuai dropdown) ÷ Biaya Iklan">?</span></div>
+                <div class="badge primary">ROAS</div>
+            </div>
+            <div class="bento-value" id="biayaKpiRoasTotal">0.0x</div>
+            <div id="biayaKpiRoasTotalInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">-</div>
+        </div>
+        <div class="bento-item col-span-3">
+            <div class="bento-header">
+                <div class="bento-title">ROI IKLAN <span class="help-icon" data-static-tooltip="ROI Iklan = Laba Bersih ÷ Biaya Iklan ×100%">?</span></div>
+                <div class="badge primary">ROI</div>
+            </div>
+            <div class="bento-value" id="biayaKpiRoiIklan">0%</div>
+            <div id="biayaKpiRoiIklanInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">-</div>
+        </div>
+        <div class="bento-item col-span-3">
+            <div class="bento-header">
+                <div class="bento-title">SHOPEE <span class="help-icon" data-static-tooltip="ROAS = Omzet ÷ Biaya Iklan | ROI = Laba ÷ Biaya Iklan">?</span></div>
+                <div class="badge primary">SHOPEE</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                <div>
+                    <div style="font-size:10px; font-weight:700; color:var(--text-muted);">ROAS</div>
+                    <div class="bento-value" id="biayaKpiRoasShopee" style="font-size:18px;">0.0x</div>
+                    <div id="biayaKpiRoasShopeeInfo" style="font-size:10px; font-weight:700; color:var(--text-muted);">-</div>
+                </div>
+                <div style="border-top:1px solid var(--border); padding-top:6px;">
+                    <div style="font-size:10px; font-weight:700; color:var(--text-muted);">ROI</div>
+                    <div style="font-size:14px; font-weight:800;" id="biayaKpiRoiShopee">0%</div>
+                    <div id="biayaKpiRoiShopeeInfo" style="font-size:10px; font-weight:700; color:var(--text-muted);">-</div>
+                </div>
+            </div>
+        </div>
+        <div class="bento-item col-span-3">
+            <div class="bento-header">
+                <div class="bento-title">TIKTOK <span class="help-icon" data-static-tooltip="ROAS = Omzet ÷ Biaya Iklan | ROI = Laba ÷ Biaya Iklan">?</span></div>
+                <div class="badge primary">TIKTOK</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                <div>
+                    <div style="font-size:10px; font-weight:700; color:var(--text-muted);">ROAS</div>
+                    <div class="bento-value" id="biayaKpiRoasTiktok" style="font-size:18px;">0.0x</div>
+                    <div id="biayaKpiRoasTiktokInfo" style="font-size:10px; font-weight:700; color:var(--text-muted);">-</div>
+                </div>
+                <div style="border-top:1px solid var(--border); padding-top:6px;">
+                    <div style="font-size:10px; font-weight:700; color:var(--text-muted);">ROI</div>
+                    <div style="font-size:14px; font-weight:800;" id="biayaKpiRoiTiktok">0%</div>
+                    <div id="biayaKpiRoiTiktokInfo" style="font-size:10px; font-weight:700; color:var(--text-muted);">-</div>
+                </div>
+            </div>
+        </div>
+        <div class="bento-item col-span-3">
+            <div class="bento-header">
+                <div class="bento-title"><span id="biayaKpiLabaLabel">LABA BERSIH</span> <span class="help-icon" data-static-tooltip="Laba = Omzet (sesuai dropdown) − HPP − Total Biaya">?</span></div>
+                <div class="badge primary">LABA</div>
+            </div>
+            <div class="bento-value" id="biayaKpiLaba">Rp 0</div>
+            <div id="biayaKpiLabaInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">-</div>
+        </div>
+
         <!-- ROW 2: TREN BIAYA + OMSET -->
         <div class="bento-item col-span-12">
             <div class="bento-header">
@@ -1763,6 +1847,7 @@
                 <div class="bento-title">RANKING KATEGORI <span class="help-icon" data-static-tooltip="Urutan kategori berdasarkan total biaya, dengan selisih terhadap periode sebelumnya.">?</span></div>
             </div>
             <div id="biayaRankList" style="display:flex; flex-direction:column; gap:8px;"></div>
+            <div style="font-size:10px; color:var(--text-muted); margin-top:10px; padding:8px; background:var(--accent); border-radius:8px;">Lain-lain = Kategori kosong/LAIN* → derive dari Keterangan Jurnal hanya 5 frasa iklan (SHOPEE/TIKTOK/KYX/SUPERSUB/TOPUP), selain itu tetap Lain-lain.</div>
         </div>
 
         <!-- ROW 4: TABEL PER-ENTRI -->
@@ -3090,8 +3175,12 @@
 
             let netSales = (dSkrg.sales || 0) - (dSkrg.retur || 0);
             __lastNetSales = netSales;
+            __lastGrossSales = dSkrg.sales || 0;
+            __lastCogs = dSkrg.cogs || 0;
+            __lastGrossCogs = dSkrg.cogs || 0; // TODO: grossCogs ideally salesQty*avgHPP, fallback to net cogs (limitation documented)
             let grossProfit = netSales - dSkrg.cogs;
             let netProfit = grossProfit - totalBiaya;
+            __lastNetProfit = netProfit;
 
             let netMargin = netSales > 0 ? (netProfit / netSales) * 100 : 0;
             let opexRatio = netSales > 0 ? (totalBiaya / netSales) * 100 : 0;
@@ -5143,6 +5232,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
         let _biayaChartTren = null, _biayaChartKomposisi = null, _biayaDataTable = null;
         let _editBiayaId = null;
         const _BIYA_PALETTE = ['#a855f7', '#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#64748b'];
+        let __lastNetSales = 0, __lastGrossSales = 0, __lastCogs = 0, __lastGrossCogs = 0, __lastNetProfit = 0;
 
         function isBiayaTabActive() {
             const c = document.getElementById('biayaContainer');
@@ -5705,9 +5795,25 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             if (has('iklan') && has('shopee') && has('supersub')) return 'iklan+shopee+supersub';
             if (has('iklan') && has('tiktok') && has('kyx')) return 'iklan+tiktok+kyx';
             if (has('iklan') && has('tiktok') && has('supersub')) return 'iklan+tiktok+supersub';
-            // debug: sebutkan token yang terbaca
-            const toks = ['topup','saldo','iklan','tiktok','supersub','shopee','kyx'].filter(w=>has(w)).join(',') || 'tidak ada';
-            return `Tidak ada keyword 5 → Lain-lain (ket:"${String(ket).slice(0,30)}" n:"${n.slice(0,30)}" has:[${toks}])`;
+            return 'Tidak ada keyword 5 → Lain-lain';
+        }
+        function getBiayaOmzetMode_() {
+            const raw = localStorage.getItem('biaya_omzet_mode') || 'bersih';
+            const saved = (raw === 'kotor' || raw === 'bersih') ? raw : 'bersih';
+            const el = document.getElementById('biayaOmzetMode');
+            if (el) {
+                if (!el.dataset.bound) {
+                    el.value = saved;
+                    el.dataset.bound = '1';
+                    el.addEventListener('change', () => {
+                        const v = el.value === 'kotor' ? 'kotor' : 'bersih';
+                        localStorage.setItem('biaya_omzet_mode', v);
+                        drawBiaya();
+                    });
+                }
+                return el.value === 'kotor' ? 'kotor' : 'bersih';
+            }
+            return saved;
         }
 
         function renderBiayaTable() {
@@ -5763,6 +5869,92 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             const top = _biayaCatCur[0];
             document.getElementById('biayaKpiTopCat').textContent = top ? top[0] : '—';
             document.getElementById('biayaKpiTopCatShare').textContent = (top && _biayaTotalCur > 0 ? (top[1] / _biayaTotalCur * 100) : 0).toFixed(1) + '% dari total biaya';
+
+            // === ROAS/ROI — Opsi B (Supersub-only) + Dropdown Kotor/Bersih ===
+            const omzetMode = getBiayaOmzetMode_();
+            const omzetLabel = document.getElementById('biayaKpiOmzetLabel');
+            if (omzetLabel) omzetLabel.textContent = omzetMode === 'kotor' ? 'KOTOR' : 'BERSIH';
+            const labaLabel = document.getElementById('biayaKpiLabaLabel');
+            if (labaLabel) labaLabel.textContent = omzetMode === 'kotor' ? 'LABA KOTOR' : 'LABA BERSIH';
+            // Biaya Iklan Supersub-only (KYX tidak masuk)
+            const biayaIklanShopee = (_biayaCatCur.find(([k]) => k === 'IKLAN SHOPEE SUPERSUB') || [null,0])[1];
+            const biayaIklanTiktok = ((_biayaCatCur.find(([k]) => k === 'IKLAN TIKTOK SUPERSUB') || [null,0])[1] + (_biayaCatCur.find(([k]) => k === 'TOPUP SALDO IKLAN TIKTOK SUPERSUB') || [null,0])[1]);
+            const biayaIklanTotal = biayaIklanShopee + biayaIklanTiktok;
+            // Omzet per marketplace — pakai rekap jika ada, fallback ke net/gross proporsional
+            const getOmzet = (market) => {
+                const mode = omzetMode;
+                const totalNet = typeof __lastNetSales === 'number' ? __lastNetSales : 0;
+                const totalGross = typeof __lastGrossSales === 'number' ? __lastGrossSales : totalNet;
+                if (market === 'total') {
+                    return mode === 'kotor' ? totalGross : totalNet;
+                }
+                // untuk shopee/tiktok, coba rekap dulu lalu skala sesuai mode
+                try {
+                    const r = (typeof __rekapSupabaseData !== 'undefined' && __rekapSupabaseData) ? __rekapSupabaseData : null;
+                    if (r && r.marketplace) {
+                        let sumBersih = 0;
+                        let found = false;
+                        Object.entries(r.marketplace).forEach(([k,v])=>{
+                            const kl = String(k).toLowerCase();
+                            if (kl.includes(market)) { sumBersih += (typeof v === 'number' ? v : parseFloat(v)||0); found = true; }
+                        });
+                        if (found) {
+                            if (mode === 'kotor' && totalNet > 0 && totalGross > 0) {
+                                // skala proporsional kotor/bersih dari total
+                                return sumBersih * (totalGross / totalNet);
+                            }
+                            return sumBersih;
+                        }
+                    }
+                    if (r && r.omzetByMarket) {
+                        const v = r.omzetByMarket[market] || 0;
+                        if (mode === 'kotor' && totalNet > 0 && totalGross > 0 && v > 0) return v * (totalGross / totalNet);
+                        return v;
+                    }
+                } catch(e) {}
+                // fallback: jika rekap tidak ada, kembalikan 0 (jangan tebak proporsi dari biaya)
+                return 0;
+            };
+            const omzetTotal = getOmzet('total');
+            const omzetShopee = getOmzet('shopee');
+            const omzetTiktok = getOmzet('tiktok');
+            const labaBersih = typeof __lastNetProfit === 'number' ? __lastNetProfit : 0;
+            const cogs = typeof __lastCogs === 'number' ? __lastCogs : 0;
+            const grossCogs = typeof __lastGrossCogs === 'number' ? __lastGrossCogs : cogs;
+            const labaForRoi = omzetMode === 'kotor' ? ((typeof __lastGrossSales === 'number' ? __lastGrossSales : 0) - grossCogs - _biayaTotalCur) : labaBersih;
+            // hitung ROAS/ROI — per marketplace ROI pakai laba proporsional omzet
+            const roasTotal = biayaIklanTotal > 0 ? (omzetTotal / biayaIklanTotal) : 0;
+            const roasShopee = biayaIklanShopee > 0 ? (omzetShopee / biayaIklanShopee) : 0;
+            const roasTiktok = biayaIklanTiktok > 0 ? (omzetTiktok / biayaIklanTiktok) : 0;
+            const roiIklan = biayaIklanTotal > 0 ? (labaForRoi / biayaIklanTotal * 100) : 0;
+            const labaShopee = omzetTotal > 0 ? (labaForRoi * (omzetShopee / omzetTotal)) : 0;
+            const labaTiktok = omzetTotal > 0 ? (labaForRoi * (omzetTiktok / omzetTotal)) : 0;
+            const roiShopee = biayaIklanShopee > 0 ? (labaShopee / biayaIklanShopee * 100) : 0;
+            const roiTiktok = biayaIklanTiktok > 0 ? (labaTiktok / biayaIklanTiktok * 100) : 0;
+            // update KPI baru
+            const setKpi = (id, val, infoId, infoTxt, color) => {
+                const el = document.getElementById(id);
+                const infoEl = document.getElementById(infoId);
+                if (el) { el.textContent = val; el.style.color = color || 'var(--text)'; }
+                if (infoEl) infoEl.textContent = infoTxt;
+            };
+            const fmtRoas = v => v > 0 ? v.toFixed(1) + 'x' : '—';
+            const fmtRoi = v => (v > 0 ? '+' : '') + v.toFixed(1) + '%';
+            const colRoas = v => v >= 1.5 ? 'var(--success)' : (v >= 1.0 ? 'var(--warning)' : 'var(--danger)');
+            const colRoi = v => v >= 0 ? 'var(--success)' : 'var(--danger)';
+            setKpi('biayaKpiOmzet', fmtRpBiaya(omzetTotal), 'biayaKpiOmzetInfo', omzetMode === 'kotor' ? 'Omzet Kotor (Penjualan)' : 'Omzet Bersih (Penjualan − Retur)', 'var(--text)');
+            setKpi('biayaKpiIklan', fmtRpBiaya(biayaIklanTotal), 'biayaKpiIklanInfo', `Shopee ${fmtRpBiaya(biayaIklanShopee)} · Tiktok ${fmtRpBiaya(biayaIklanTiktok)}`, 'var(--text)');
+            setKpi('biayaKpiRoasTotal', fmtRoas(roasTotal), 'biayaKpiRoasTotalInfo', `Omzet ${omzetMode} ÷ Biaya Iklan`, colRoas(roasTotal));
+            setKpi('biayaKpiRoiIklan', fmtRoi(roiIklan), 'biayaKpiRoiIklanInfo', `Laba ${omzetMode === 'kotor' ? 'Kotor' : 'Bersih'} ÷ Biaya Iklan`, colRoi(roiIklan));
+            setKpi('biayaKpiRoasShopee', fmtRoas(roasShopee), 'biayaKpiRoasShopeeInfo', `Omzet Shopee ${fmtRpBiaya(omzetShopee)}`, colRoas(roasShopee));
+            setKpi('biayaKpiRoasTiktok', fmtRoas(roasTiktok), 'biayaKpiRoasTiktokInfo', `Omzet Tiktok ${fmtRpBiaya(omzetTiktok)}`, colRoas(roasTiktok));
+            setKpi('biayaKpiRoiShopee', fmtRoi(roiShopee), 'biayaKpiRoiShopeeInfo', `Laba ${fmtRpBiaya(labaShopee)}`, colRoi(roiShopee));
+            setKpi('biayaKpiRoiTiktok', fmtRoi(roiTiktok), 'biayaKpiRoiTiktokInfo', `Laba ${fmtRpBiaya(labaTiktok)}`, colRoi(roiTiktok));
+            const roiShopeeEl = document.getElementById('biayaKpiRoiShopee');
+            if (roiShopeeEl) roiShopeeEl.style.color = colRoi(roiShopee);
+            const roiTiktokEl = document.getElementById('biayaKpiRoiTiktok');
+            if (roiTiktokEl) roiTiktokEl.style.color = colRoi(roiTiktok);
+            setKpi('biayaKpiLaba', fmtRpBiaya(labaForRoi), 'biayaKpiLabaInfo', (labaForRoi >=0 ? 'Laba ' : 'Rugi ') + (omzetMode === 'kotor' ? 'Kotor' : 'Bersih'), labaForRoi >=0 ? 'var(--success)' : 'var(--danger)');
 
             renderBiayaTren();
             renderBiayaKomposisi();
