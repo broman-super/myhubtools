@@ -1814,7 +1814,7 @@
         </div>
         <div class="bento-item col-span-3">
             <div class="bento-header">
-                <div class="bento-title"><span id="biayaKpiLabaLabel">LABA BERSIH</span> <span class="help-icon" data-static-tooltip="Laba = Omzet (sesuai dropdown) − HPP − Total Biaya">?</span></div>
+                <div class="bento-title"><span id="biayaKpiLabaLabel">LABA BERSIH</span> <span class="help-icon" data-static-tooltip="Bersih = Omzet Bersih (Penjualan − Retur) − HPP − Biaya | Kotor = Omzet Kotor (Penjualan) − HPP − Biaya. Bersih identik dengan Dashboard Penjualan.">?</span></div>
                 <div class="badge primary">LABA</div>
             </div>
             <div class="bento-value" id="biayaKpiLaba">Rp 0</div>
@@ -2170,10 +2170,15 @@
             if (!sel) return;
             const prev = sel.value;
             const cats = new Set();
-            Object.keys(r.kategori || {}).forEach(k => { if (k && k !== 'UMUM') cats.add(k); });
-            Object.keys(r.kategoriLalu || {}).forEach(k => { if (k && k !== 'UMUM') cats.add(k); });
+            Object.keys(r.kategori || {}).forEach(k => { if (k && !k.includes('KYX')) cats.add(k); });
+            Object.keys(r.kategoriLalu || {}).forEach(k => { if (k && !k.includes('KYX')) cats.add(k); });
             sel.innerHTML = '<option value="ALL">SEMUA KATEGORI</option>';
-            Array.from(cats).sort().forEach(k => sel.add(new Option(k, k)));
+            const sorted = Array.from(cats).sort((a,b) => {
+                if (a === 'UMUM') return 1;
+                if (b === 'UMUM') return -1;
+                return a.localeCompare(b);
+            });
+            sorted.forEach(k => sel.add(new Option(k, k)));
             if (prev && Array.from(sel.options).some(o => o.value === prev)) sel.value = prev;
         }
 
@@ -2255,7 +2260,8 @@
         }
 
         function isResellerKategori(kat) {
-            return !!(kat && kat !== 'ALL' && kat.toUpperCase().includes('RESELLER'));
+            const u = String(kat || '').toUpperCase();
+            return !!(kat && kat !== 'ALL' && (u.includes('RESELLER') || u.includes('KYX')));
         }
 
         function buildTopPelangganForKat(katFilter, gStart, gEnd, limit) {
@@ -2292,8 +2298,8 @@
             sel.style.display = '';
             // sourceMap = mode supabase: daftar top reseller langsung dari RPC (rawDataTransaksi kosong)
             const topList = sourceMap
-                ? Object.entries(sourceMap).sort((a, b) => b[1] - a[1]).slice(0, 10)
-                : buildTopPelangganForKat(katFilter, gStart, gEnd, 10);
+                ? Object.entries(sourceMap).sort((a, b) => b[1] - a[1]).slice(0, 50)
+                : buildTopPelangganForKat(katFilter, gStart, gEnd, 50);
             sel.innerHTML = '<option value="ALL">SEMUA RESELLER</option>';
             topList.forEach(([nama, omzet]) => {
                 sel.add(new Option(nama + ' — ' + formatRp(omzet), nama));
@@ -2404,9 +2410,9 @@
                     parsedNilai: angkaAman,
                     parsedQty: qtyAman,
                     tipeLow: (b['Tipe Transaksi'] || b['Tipe'] || '').toString().toLowerCase(),
-                    katUp: (b['Nama Kategori Pelanggan'] || b['Kategori Pelanggan'] || b['Nama Kategori P'] || 'UMUM').toString().toUpperCase(),
+                    katUp: (b['Nama Kategori Pelanggan'] || b['Kategori Pelanggan'] || b['Nama Kategori P'] || 'UMUM').toString().trim().toUpperCase(),
                     prodUp: prodUp,
-                    namaPelanggan: b['Nama Pelanggan'] || b['Pelanggan'] || 'Tanpa Nama',
+                    namaPelanggan: (b['Nama Pelanggan'] || b['Pelanggan'] || 'Tanpa Nama').toString().trim(),
                     statusLow: (b['Status'] || b['Status Transaksi'] || b['Status Pembayaran'] || '').toString().toLowerCase(),
                     seriesKode: infoProduk.seriesKode,
                     seriesNama: infoProduk.seriesNama,
@@ -2451,7 +2457,12 @@
             if (selectProduk) {
                 const prevKat = selectProduk.value;
                 selectProduk.innerHTML = '<option value="ALL">SEMUA KATEGORI</option>';
-                katUnik.forEach(k => { if (k && k !== 'UMUM') selectProduk.add(new Option(k, k)); });
+                const sortedKat = [...katUnik].sort((a,b) => {
+                    if (a === 'UMUM') return 1;
+                    if (b === 'UMUM') return -1;
+                    return a.localeCompare(b);
+                });
+                sortedKat.forEach(k => { if (k && !k.includes('KYX')) selectProduk.add(new Option(k, k)); });
                 if (prevKat && Array.from(selectProduk.options).some(o => o.value === prevKat)) {
                     selectProduk.value = prevKat;
                 }
@@ -3031,10 +3042,11 @@
                     let qty = b.parsedQty || 0;
                     let hppTotalBaris = b.totalHpp || 0;
 
-                    let kat = b.katUp; let pel = b.namaPelanggan; let prod = b.prodUp;
+                    let kat = b.katUp; let pel = String(b.namaPelanggan || '').trim(); let prod = b.prodUp;
                     let seri = b.seriesKode;
-                    const passKatFilter = (filterKatProduk === 'ALL' || kat === filterKatProduk);
-                    const passPelFilter = (!isResellerKategori(filterKatProduk) || filterPelReseller === 'ALL' || pel === filterPelReseller);
+                    const isResellerFilter = String(filterKatProduk||'').toUpperCase().includes('RESELLER') || String(filterKatProduk||'').toUpperCase().includes('KYX');
+                    const passKatFilter = (filterKatProduk === 'ALL' || kat === filterKatProduk || (isResellerFilter && (kat.includes('RESELLER') || kat.includes('KYX'))));
+                    const passPelFilter = (!isResellerKategori(filterKatProduk) || filterPelReseller === 'ALL' || pel.toUpperCase() === String(filterPelReseller || '').trim().toUpperCase());
                     const passProductFilter = passKatFilter && passPelFilter;
 
                     if (isPenjualan && !isBatal && isDateInRange(d, gStart, gEnd)) {
@@ -3476,6 +3488,15 @@
                     return [k, v];
                 }).sort((a, b) => b[1]._netSales - a[1]._netSales).slice(0, 100); // Sort by Net Sales (Bersih Retur)
                 let table = initDtProdukTable();
+                if (pArr.length === 0) {
+                    table.clear().draw();
+                    const tb = document.getElementById('dtProduk');
+                    if (tb) {
+                        const tbody = tb.querySelector('tbody');
+                        if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted)">Tidak Ditemukan Top Produk Di Periode ini</td></tr>';
+                    }
+                    return;
+                }
                 table.clear();
                 let newRows = [];
                 pArr.forEach((item, r) => {

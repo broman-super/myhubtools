@@ -30,8 +30,8 @@ t AS (
     lower(coalesce(tr."Tipe Transaksi", '')) AS tipe,
     coalesce(nullif(tr."Total Harga", 0), nullif(tr."Penjualan", 0), 0)::numeric AS nilai,
     coalesce(tr."Kuantitas", 0)::int AS qty,
-    coalesce(nullif(upper(tr."Nama Kategori Pelanggan"), ''), 'UMUM') AS kat,
-    coalesce(nullif(tr."Nama Pelanggan", ''), 'Tanpa Nama') AS pel,
+    coalesce(nullif(upper(trim(tr."Nama Kategori Pelanggan")), ''), 'UMUM') AS kat,
+    trim(coalesce(tr."Nama Pelanggan", 'Tanpa Nama')) AS pel,
     upper(trim(coalesce(tr."Nama Barang", ''))) AS prod,
     coalesce(pk."HPP", 0)::numeric AS hpp,
     coalesce(nullif(pk."Kode Series", ''), 'LAINNYA') AS seri
@@ -49,13 +49,16 @@ tx AS (
     (t.tipe LIKE '%retur%' OR t.tipe LIKE '%kembali%') AS is_retur,
     (t.tipe LIKE '%faktur%' OR t.tipe LIKE '%penjualan%' OR t.tipe LIKE '%sales%'
      OR NOT (t.tipe LIKE '%retur%' OR t.tipe LIKE '%kembali%')) AS is_penjualan,
-    -- passProductFilter (Analytic.html L2317-2319)
-    (p_kat_filter = 'ALL' OR p_kat_filter IS NULL OR t.kat = p_kat_filter)
+    -- passProductFilter (Analytic.html L2317-2319) — RESELLER/KYX longgar: filter RESELLER tangkap semua RESELLER* dan KYX*
+    (p_kat_filter = 'ALL' OR p_kat_filter IS NULL OR t.kat = p_kat_filter
+      OR (upper(p_kat_filter) LIKE '%RESELLER%' AND (t.kat LIKE '%RESELLER%' OR t.kat LIKE '%KYX%'))
+      OR (upper(p_kat_filter) LIKE '%KYX%' AND t.kat LIKE '%KYX%'))
     AND (
       p_kat_filter IS NULL OR p_kat_filter = 'ALL'
-      OR upper(p_kat_filter) NOT LIKE '%RESELLER%'
+      OR upper(p_kat_filter) NOT LIKE '%RESELLER%' AND upper(p_kat_filter) NOT LIKE '%KYX%'
       OR p_pel_filter IS NULL OR p_pel_filter = 'ALL'
-      OR t.pel = p_pel_filter
+      OR trim(t.pel) = trim(p_pel_filter)
+      OR upper(trim(t.pel)) = upper(trim(p_pel_filter))
     ) AS pass
   FROM t
 ),
@@ -242,13 +245,13 @@ SELECT jsonb_build_object(
   'reseller', coalesce((
     SELECT jsonb_object_agg(pel, v) FROM (
       SELECT pel, sum(nilai) AS v
-      FROM tx WHERE NOT is_retur AND d BETWEEN p_start AND p_end AND kat LIKE '%RESELLER%' GROUP BY pel
+      FROM tx WHERE NOT is_retur AND d BETWEEN p_start AND p_end AND (kat LIKE '%RESELLER%' OR kat LIKE '%KYX%') GROUP BY pel
     ) g
   ), '{}'::jsonb),
   'marketplace', coalesce((
     SELECT jsonb_object_agg(pel, v) FROM (
       SELECT pel, sum(nilai) AS v
-      FROM tx WHERE NOT is_retur AND d BETWEEN p_start AND p_end AND kat NOT LIKE '%RESELLER%' GROUP BY pel
+      FROM tx WHERE NOT is_retur AND d BETWEEN p_start AND p_end AND kat NOT LIKE '%RESELLER%' AND kat NOT LIKE '%KYX%' GROUP BY pel
     ) g
   ), '{}'::jsonb),
   'kontributor', coalesce((
