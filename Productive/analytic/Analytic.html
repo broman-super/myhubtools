@@ -805,7 +805,7 @@
 
             html, body {
                 background: #ffffff !important;
-                font-size: 10px;
+                font-size: 8px;
             }
 
             /* Paksa kedua tab tampil (override inline display:none dari showTab) — tetap GRID agar layout 3 kolom jalan */
@@ -837,23 +837,23 @@
             #mainContainer::before { content: "Dashboard"; }
             #biayaContainer::before { content: "Biaya"; }
 
-            /* Grid 3 kolom (chart tren full-width, sisanya hemat kertas) */
-            .bento-container {
+            /* Grid 1 kolom biaya di print (chart tren + komposisi + ranking semua satu kolom) */
+            #biayaContainer .bento-container {
                 display: grid !important;
-                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-                gap: 8px !important;
+                grid-template-columns: 1fr !important;
+                gap: 6px !important;
                 align-items: start !important;
             }
 
             .bento-item {
-                grid-column: auto !important;
-                width: auto !important;
+                grid-column: 1 / -1 !important;
+                width: 100% !important;
                 min-width: 0 !important;
                 margin: 0 !important;
-                padding: 6px 8px !important;
+                padding: 4px !important;
                 background: #ffffff !important;
                 border: 1px solid #94a3b8 !important;
-                border-radius: 8px !important;
+                border-radius: 6px !important;
                 break-inside: avoid;
                 page-break-inside: avoid;
             }
@@ -861,6 +861,10 @@
                 break-inside: auto;
                 page-break-inside: auto;
             }
+
+            /* Chart-box ukuran kecil di print 1 kolom */
+            .chart-box { height: 180px !important; min-height: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .chart-box.large { min-height: 200px !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
             /* Typography ramping agar tidak buang kertas */
             .bento-value { font-size: 16px !important; line-height: 1.1 !important; }
@@ -1465,6 +1469,23 @@
             <div id="kpiOpexDetail" style="margin-top:auto; font-size:12px; font-weight:600; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
                 <span>Biaya: Rp 0 | Margin: 0%</span><span class="help-icon static"
                     data-static-tooltip="Margin = (Laba Bersih ÷ Omzet Bersih) × 100%. CAC = (Total Biaya Opex) ÷ (Jumlah Pelanggan Baru / Transaksi Perdana).">?</span>
+            </div>
+        </div>
+
+        <div class="bento-item col-span-3">
+            <div class="bento-header">
+                <div class="bento-title">PIUTANG <span class="help-icon" data-static-tooltip="Piutang = Omzet Bersih di 7 hari terakhir (proxy payout marketplace). Lunas = Omzet Bersih − Piutang. Retur Faktur tersendiri.">?</span></div>
+                <div class="badge primary">PIUTANG</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+                <div class="bento-value" id="kpiPiutang" style="color:var(--warning)">Rp 0</div>
+                <span class="help-icon static"
+                    data-static-tooltip="Piutang = Omzet Bersih 7 hari terakhir (proxy).">?</span>
+            </div>
+            <div id="kpiPiutangVs" style="font-size:12px; font-weight:800; display:flex; gap:6px; color:var(--text-muted); margin-bottom:12px;">
+            </div>
+            <div id="kpiPiutangDetail" style="margin-top:auto; font-size:12px; font-weight:600; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+                <span>Lunas: Rp 0 | Retur: Rp 0</span><span class="help-icon static" data-static-tooltip="Lunas = Omzet − Piutang − Retur">?</span>
             </div>
         </div>
 
@@ -3193,6 +3214,13 @@
             let grossProfit = netSales - dSkrg.cogs;
             let netProfit = grossProfit - totalBiaya;
             __lastNetProfit = netProfit;
+            // Piutang proxy 7 hari (karena template tanpa Status Pembayaran)
+            const totalDaysForPiutang = Math.max(1, Math.round((gEnd - gStart) / 86400000) + 1);
+            const piutangDays = Math.min(7, totalDaysForPiutang);
+            const piutangVal = netSales * (piutangDays / totalDaysForPiutang);
+            const lunasVal = netSales - piutangVal;
+            __lastPiutang = piutangVal;
+            __lastLunas = lunasVal;
 
             let netMargin = netSales > 0 ? (netProfit / netSales) * 100 : 0;
             let opexRatio = netSales > 0 ? (totalBiaya / netSales) * 100 : 0;
@@ -3343,6 +3371,10 @@
                 let CAC = pelBaruBulanIni > 0 ? totalBiaya / pelBaruBulanIni : 0;
 
                 if (document.getElementById('kpiOpexDetail')) document.getElementById('kpiOpexDetail').innerHTML = `<div>Margin: ${netMargin.toFixed(1)}% | Biaya: ${formatRp(totalBiaya)}</div><div>CAC: <b style="color:var(--danger)">${formatRp(CAC)}/plg</b></div>`;
+
+                if (document.getElementById('kpiPiutang')) document.getElementById('kpiPiutang').innerText = formatRp(piutangVal);
+                if (document.getElementById('kpiPiutangVs')) document.getElementById('kpiPiutangVs').innerHTML = `<span class="help-icon" data-tooltip="Piutang = Omzet Bersih 7 hari terakhir (proxy payout).">?</span> ${piutangVal > 0 ? ((piutangVal/netSales*100).toFixed(1)+'% dari Omzet') : '0%'}`;
+                if (document.getElementById('kpiPiutangDetail')) document.getElementById('kpiPiutangDetail').innerHTML = `<span>Lunas: ${formatRp(lunasVal)} | Retur: ${formatRp(dSkrg.retur)}</span>`;
 
                 let maxHari = Object.keys(rekapHari).reduce((a, b) => rekapHari[a] > rekapHari[b] ? a : b, '-');
                 if (document.getElementById('kpiGoldenDay')) document.getElementById('kpiGoldenDay').innerText = rekapHari[maxHari] > 0 ? `${maxHari} · ${formatRp(rekapHari[maxHari])}` : '-';
@@ -5253,7 +5285,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
         let _biayaChartTren = null, _biayaChartKomposisi = null, _biayaDataTable = null;
         let _editBiayaId = null;
         const _BIYA_PALETTE = ['#a855f7', '#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#64748b'];
-        let __lastNetSales = 0, __lastGrossSales = 0, __lastCogs = 0, __lastGrossCogs = 0, __lastNetProfit = 0;
+        let __lastNetSales = 0, __lastGrossSales = 0, __lastCogs = 0, __lastGrossCogs = 0, __lastNetProfit = 0, __lastPiutang = 0, __lastLunas = 0;
 
         function isBiayaTabActive() {
             const c = document.getElementById('biayaContainer');
