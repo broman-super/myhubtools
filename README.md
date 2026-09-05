@@ -13,10 +13,9 @@ index.html          SPA Shell (landing + workspace + sidebar + iframe router)
   ├── src/
   │   ├── core/router.js              Hash-based routing (#/productive/planner)
   │   ├── core/theme-manager.js       Theme toggle + postMessage sync
-  │   ├── core/iframe-communicator.js Shell ↔ iframe communication
   │   ├── components/tool-card.js     Bento card renderer
   │   ├── app.js                      Main app init
-  │   └── styles/                     CSS (tools.css, design-system.css, components.css, utilities.css)
+  │   └── styles/                     CSS (tools.css, design-system.css, components.css)
   ├── Productive/
   │   ├── Task/taskschedule.html      Team Planner + Calendar + Timeline + Print
   │   ├── analytic/Analytic.html      SAS Analytic Dashboard

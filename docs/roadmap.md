@@ -135,7 +135,6 @@ Backend & frontend code complete. Menunggu deploy & test.
 | `index.html` (shell) | `tools.css`, `design-system.css`, `components.css` |
 | `router.js` | None |
 | `theme-manager.js` | None |
-| `iframe-communicator.js` | None |
 | `tool-card.js` | None |
 | `app.js` | All `src/core/*`, `src/components/*` |
 

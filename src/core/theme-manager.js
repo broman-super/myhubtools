@@ -61,5 +61,3 @@ class ThemeManager {
 
   getTheme() { return this.currentTheme; }
 }
-
-if (typeof module !== 'undefined') module.exports = { ThemeManager };

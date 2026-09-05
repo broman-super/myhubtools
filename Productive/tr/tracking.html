@@ -2848,13 +2848,6 @@
       loadAuditDashboard(p.start, p.end);
     }
 
-    function syncGlobalDate(value) {
-      var spvInput = document.getElementById('filter-start');
-      if (spvInput) spvInput.value = value;
-      var auditInput = document.getElementById('audit-date-picker');
-      if (auditInput) auditInput.value = value;
-    }
-
     function switchAuditSubTab(subTabId) {
       var aPane = document.getElementById('audit-sub-pane-analytics');
       var sPane = document.getElementById('audit-sub-pane-system');

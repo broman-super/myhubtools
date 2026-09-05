@@ -4,8 +4,7 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/src/styles/design-system.css',
-  '/src/styles/components.css',
-  '/src/styles/utilities.css'
+  '/src/styles/components.css'
 ];
 
 self.addEventListener('install', (event) => {

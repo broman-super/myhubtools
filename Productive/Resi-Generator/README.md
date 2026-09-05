@@ -23,12 +23,12 @@ Generator label & resi cetak (A6) berbasis web: pilih eksedisi, logo perusahaan,
 ### 2.1 Data (client)
 | Sumber | Isi | Catatan |
 |---|---|---|
-| `expedisi.js` | `EXPEDISI_LOGOS` + `EXPEDISI_FALLBACK` | logo b64 tiap ekspedisi |
+| `expedisi.js` | `EXPEDISI_LOGOS` | logo b64 tiap ekspedisi |
 | `logo.js` | `COMPANY_LOGO_BASE64` (1 baris, sangat panjang) | logo perusahaan |
 | `Logo/*.png` | file logo ekspedisi | alternatif b64 |
 | `products.json` | katalog produk | pakai di dropdown |
 
-- `EXPEDISI_FALLBACK` dipakai **hanya jika `expedisi.js` gagal load** (render teks, bukan logo) — fallback graceful, jadi jangan hapus.
+- `EMBEDDED_EXPEDISI` (inline di `Index.html`) dipakai sebagai **fallback** jika `expedisi.js` gagal load — render teks, bukan logo. Jangan hapus.
 
 ### 2.2 Script load (WAJIB semua `defer`)
 - `logo.js` → `expedisi.js` (urutan didefinisikan di HTML, semua `defer`).
@@ -52,7 +52,6 @@ Generator label & resi cetak (A6) berbasis web: pilih eksedisi, logo perusahaan,
 ### 3.1 Tambah ekspedisi — 3 tempat
 1. Gambar logo → taruh di `Logo/<NAME>.png` (atau encode ke b64).
 2. Set di `EXPEDISI_LOGOS` (`expedisi.js`).
-3. (Opsional) tambahkan ke `EXPEDISI_FALLBACK` agar konsisten saat offline.
 
 ### 3.2 Print = popup, bukan PDF
 - `window.open(...)` popup diisi HTML ringkas lalu `w.print()`.
