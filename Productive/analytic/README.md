@@ -38,7 +38,7 @@ Dashboard analitik penjualan real-time berbasis **Google Sheets + Google Apps Sc
 ### 2.2 Hub & Shell
 - Router: `#productive/analytic` → `Productive/analytic/Analytic.html` (`src/core/router.js`). Hash TIDAK berubah walau path folder berubah.
 - Dimuat sebagai iframe → **CSS/JS tidak bocor antar-tool**.
-- Tema via `postMessage` (`src/core/iframe-communicator.js`): hub minta child ganti tema → tool menukar CSS variables. **Jangan ganti nama variabel** (`--primary`, `--card`, `--accent`, `--border`, `--text`, `--danger`, `--success`, `--warning`).
+- Tema via `postMessage` (`src/app.js`): hub minta child ganti tema → tool menukar CSS variables. **Jangan ganti nama variabel** (`--primary`, `--card`, `--accent`, `--border`, `--text`, `--danger`, `--success`, `--warning`).
 - Service worker `src/sw.js` cache versi `reynahub-v4` (route `/Productive/`, strategi **network-first**). Setelah edit file ini, bump versi cache.
 
 ### 2.3 Dependency (CDN, versi ter-pin)
@@ -115,7 +115,8 @@ Jangan "perbaiki" preset jadi anchor `refEnd` semua — itu keputusan user (defa
 
 ### 3.5 🟡 Responsif
 - `html`/`body` `min-width:360px` + `body { overflow-x:auto }` (kunci minimum layar HP).
-- Nav & `#reportrange` punya breakpoint 1200px (wrap) dan 768px (kolom).
+- Breakpoint: **1280px** (KPI `col-span-3→6`, `col-span-4→6`, `col-span-8→12`, header/nav `flex-wrap`), **768px** (nav kolom, `#reportrange` & pill full-width, kartu tetap 2-up), **640px** (semua kartu full-width, padding card 18px, `#rfmList` 1 kolom, baris detail KPI `flex-wrap` anti-overlap, tinggi chart trend dikecilkan).
+- `.bento-container` `max-width:1440px` + `margin:0 auto` (desktop tidak melebar tak terkendali).
 - Uji di lebar sempit setelah mengubah struktur; jangan hapus breakpoint karena "tidak kelihatan masalah" di layar lebar.
 
 ### 3.6 🟡 DataTables `dtProduk`

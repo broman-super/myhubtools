@@ -83,7 +83,7 @@
 ## 6. UI/UX & Tema
 - **Design tokens** `src/styles/design-system.css` (`--bg`, `--card`, `--primary`, `--border`, `--text`, `--success`, `--danger`, `--warning`, `--warning-strong`) + `color-scheme: light/dark` untuk native controls
 - **Dark mode** `data-theme="dark"` + daterangepicker dark override + DataTables dark
-- **Bento grid** 12 kolom, `min-width:360px`, `overflow-x:auto`, breakpoint 1200px/768px
+- **Bento grid** 12 kolom, `max-width:1440px` center, `min-width:360px`, `overflow-x:auto`, breakpoint 1280px/768px/640px
 - **Tooltip** global `#kpiTip` `position:fixed` z-2147483000, flip otomatis
 - **Loading** 3-dot roadmap `setStage(0..2)` tanpa spinner
 

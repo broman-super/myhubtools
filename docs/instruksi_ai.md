@@ -29,13 +29,12 @@ REYNAHUB_SYS adalah workspace hub internal — satu halaman shell yang menampung
 - **`index.html`** — SPA shell, landing page + workspace + sidebar + iframe router
 - **`src/core/router.js`** — Hash-based router: `#productive/planner` → file path
 - **`src/core/theme-manager.js`** — Dark/light theme, persists to localStorage, cross-frame sync
-- **`src/core/iframe-communicator.js`** — postMessage bridge: shell ↔ iframe
+- **`src/app.js`** — postMessage bridge shell ↔ iframe + main init, event listeners, nav logic
 - **`src/components/tool-card.js`** — Bento card renderer, defines tool list
 - **`src/app.js`** — Main init, event listeners, navigation logic
 - **`src/styles/tools.css`** — Global styles, font baseline, utility classes
 - **`src/styles/design-system.css`** — CSS custom properties (design tokens), dark mode
 - **`src/styles/components.css`** — Reusable component styles (cards, modals, etc.)
-- **`src/styles/utilities.css`** — Utility classes
 
 ### Tools
 - Setiap tool di folder `Productive/` (atau `Doc/`, `Resi-Generator/`, dll.)
@@ -95,7 +94,7 @@ REYNAHUB_SYS adalah workspace hub internal — satu halaman shell yang menampung
 ### File yang Jarang Ubah
 - `src/core/router.js` — hanya ubah saat menambah tool baru
 - `src/core/theme-manager.js` — stable
-- `src/core/iframe-communicator.js` — stable
+- `src/app.js` — stable
 
 ---
 

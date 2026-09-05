@@ -51,5 +51,3 @@ class ReynaHubRouter {
     return map[clean] || '';
   }
 }
-
-if (typeof module !== 'undefined') module.exports = { ReynaHubRouter };

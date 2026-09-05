@@ -120,14 +120,12 @@ project-root/
 │   ├── sw.js                      # Service worker (opsional, untuk caching)
 │   ├── core/
 │   │   ├── router.js              # Hash-based routing (#/kategori/nama-tool)
-│   │   ├── theme-manager.js       # Toggle tema + sinkronisasi via postMessage
-│   │   └── iframe-communicator.js # Komunikasi shell ↔ iframe tool
+│   │   └── theme-manager.js       # Toggle tema + sinkronisasi via postMessage
 │   ├── components/
 │   │   └── tool-card.js           # Komponen card Bento di grid dashboard
 │   └── styles/
 │       ├── design-system.css      # Design token (CSS custom properties)
 │       ├── components.css         # Komponen UI reusable
-│       ├── utilities.css          # Utility class
 │       └── tools.css              # Font baseline global + utility tool
 ├── <kategori>/<nama-tool>/        # Tiap tool: folder sendiri, dimuat via iframe
 │   ├── index.html (atau nama lain)

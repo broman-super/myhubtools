@@ -82,7 +82,6 @@ description: Kitab desain REYNAHUB/UNITOOLS. Gunakan saat: UI/UX, CSS, styling, 
 - `src/styles/design-system.css` — token utama.
 - `src/styles/components.css` — komponen hub (pakai token).
 - `src/styles/tools.css` — font loader + baseline (token font ada di design-system).
-- `src/styles/utilities.css` — utilitas gap/padding/typography.
 - Tool masing-masing `<style>` — target migrasi token (gradual).
 
 ---

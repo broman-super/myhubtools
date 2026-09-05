@@ -121,5 +121,3 @@ var ToolCard = {
     }
   }
 };
-
-if (typeof module !== 'undefined') module.exports = { ToolCard };

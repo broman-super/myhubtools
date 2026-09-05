@@ -156,7 +156,8 @@
             display: grid;
             grid-template-columns: repeat(12, 1fr);
             gap: 24px;
-            max-width: 100%;
+            max-width: 1440px;
+            margin: 0 auto;
         }
 
         .bento-item {
@@ -199,14 +200,22 @@
             grid-column: span 3;
         }
 
-        @media (max-width: 1200px) {
+        @media (max-width: 1280px) {
             .col-span-3 {
                 grid-column: span 6;
             }
 
-            .col-span-8,
             .col-span-4 {
+                grid-column: span 6;
+            }
+
+            .col-span-8 {
                 grid-column: span 12;
+            }
+
+            .bento-header {
+                flex-wrap: wrap;
+                gap: 8px;
             }
 
             .nav-bar {
@@ -225,19 +234,6 @@
         }
 
         @media (max-width: 768px) {
-            .bento-container {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-
-            .col-span-12,
-            .col-span-8,
-            .col-span-6,
-            .col-span-4,
-            .col-span-3 {
-                grid-column: span 1;
-            }
-
             body {
                 padding: 16px;
             }
@@ -264,6 +260,66 @@
 
             .compare-pill button {
                 flex: 1;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .bento-container {
+                grid-template-columns: repeat(12, 1fr);
+                gap: 16px;
+            }
+
+            .col-span-12,
+            .col-span-8,
+            .col-span-6,
+            .col-span-4,
+            .col-span-3 {
+                grid-column: span 12;
+            }
+
+            body {
+                padding: 12px;
+            }
+
+            .bento-item {
+                padding: 18px;
+            }
+
+            .nav-bar h1 {
+                font-size: 18px;
+                gap: 8px;
+            }
+
+            #syncStatus {
+                display: none;
+            }
+
+            #rfmList {
+                grid-template-columns: 1fr !important;
+            }
+
+            .chart-box {
+                min-height: 220px !important;
+            }
+
+            .chart-box.large {
+                min-height: 280px !important;
+            }
+
+            #biayaChartTren {
+                height: 220px !important;
+            }
+
+            .kpi-avg-row,
+            #kpiSalesVs,
+            #kpiReturVs,
+            #kpiNetVs,
+            #kpiPiutangVs,
+            #kpiOpexDetail,
+            #kpiPiutangDetail,
+            #kpiSalesGap {
+                flex-wrap: wrap;
+                gap: 4px 8px;
             }
         }
 
@@ -1409,7 +1465,7 @@
             <div class="progress-bg">
                 <div class="progress-fill" id="kpiSalesProgress" style="width:0%;"></div>
             </div>
-            <div
+            <div class="kpi-avg-row"
                 style="display:flex; justify-content:space-between; align-items:center; font-size:10px; font-weight:800; color:var(--text-muted);">
                 <span style="display:inline-flex; align-items:center;"><span id="kpiSalesPct">0%</span><span
                         class="help-icon static"
@@ -2801,7 +2857,7 @@
             const STAGES = ['Menghubungkan server', 'Mengambil data', 'Menyiapkan dashboard'];
             const dots = [];
             const lines = [];
-            (function buildRoadmap() {
+            (function () {
                 if (!roadmapEl) return;
                 roadmapEl.innerHTML = '';
                 STAGES.forEach(function (name, i) {
