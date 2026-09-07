@@ -25,7 +25,7 @@ Terminal scanning barcode untuk pencatatan & pemantauan paket retur, dengan auto
 1. **Hosted di GAS** → pakai `google.script.run` (native).
 2. **Hosted di GitHub/hub** → `fetch` ke `GAS_URL`, `POST` `text/plain;charset=utf-8`, body `JSON.stringify({ function, args })`, **timeout 30s via AbortController**.
 
-- `GAS_URL` = `AKfycbyO3jhASx3FW8B1CnBDqVteg-D4NzjdqHYsvw1XPfkAQrBVW4gI_tc44GVzg3mW33ag8A/exec` (baris 520).
+- `GAS_URL` = `AKfycbx2cU-R0KL9HW_0RJQ2I4AkNSdea-F9NFB1XUQbCT1Dz9cNVI7ULnI477szUH--DHFNCQ/exec` (baris 554).
 - Response diharapkan `{ success, result }` atau `{ error }`.
 - **Jangan ganti `text/plain`** (menghindari CORS preflight).
 
@@ -55,7 +55,7 @@ Terminal scanning barcode untuk pencatatan & pemantauan paket retur, dengan auto
 Link `google.script.run` vs fetch memakai pengecekan `typeof google !== "undefined"` — saat deploy di GAS, `doGet` yang salah/rusak bikin tool ikut gagal di embed GAS.
 
 ### 3.3 Ekspedisi — dua sumber regex
-Daftar ekspedisi ada di `getExpeditionConfig()` (GS). HTML boleh render daftar, tapi **sumber kebenaran = GS**. Tambah ekspedisi baru di GS dan cek urutan regex (yang lebih spesifik dulu, e.g. `SPX` sebelum generic `0[0-9]`).
+Daftar ekspedisi & regex baku ada di `getExpeditionConfig()` (GS) — **default kode selalu menang** untuk nama ekspedisi standar (J&T, Sicepat, Shopee Xpress, dst.), jadi deploy lama dengan regex basi (mis. J&T tanpa `JY`/`JD`/`JX`, atau `SPX` tertimpa `Sicepat`) otomatis ter-fix tanpa edit sheet. Isi sheet `Ekspedisi` hanya **menambah** ekspedisi baru (nama yang tidak ada di default). Perhatian: jika ingin mengubah regex ekspedisi standar, ubah **kode**, bukan sel — isi sheet untuk nama standar diabaikan.
 
 ### 3.4 Update status by row
 `updateTrackingStatus(rowNum, status)` memakai **nomor baris di sheet** — sensitif terhadap hapus/sisip baris. Jangan ubah posisi kolom "Status" di sheet tanpa mengubah logika backend.

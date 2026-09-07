@@ -551,7 +551,7 @@
   // ============================================================
   // CONFIG & GAS BRIDGE
   // ============================================================
-  var GAS_URL = "https://script.google.com/macros/s/AKfycbyO3jhASx3FW8B1CnBDqVteg-D4NzjdqHYsvw1XPfkAQrBVW4gI_tc44GVzg3mW33ag8A/exec";
+  var GAS_URL = "https://script.google.com/macros/s/AKfycbx2cU-R0KL9HW_0RJQ2I4AkNSdea-F9NFB1XUQbCT1Dz9cNVI7ULnI477szUH--DHFNCQ/exec";
 
   var GAS = {
     call: function(fnName, args, onSuccess, onFailure) {
@@ -631,7 +631,7 @@
   elInput.addEventListener("keydown", function(e) {
     if (e.key === "Enter") {
       e.preventDefault();
-      var resi = this.value.trim();
+      var resi = this.value.trim().toUpperCase();
       if (resi) { processScan(resi); this.value = ""; }
     }
   });

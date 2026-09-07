@@ -45,6 +45,41 @@ function getOrCreateSheet_() {
   return sheet;
 }
 
+// Self-check prefix-learning (jalankan sekali sebagai fungsi GAS setelah deploy):
+// REQUIRE hitungPrefix_(rows) mengenali JY dari contoh manual. Jalankan via Run > demoLookupExpedition_.
+function demoLookupExpedition_() {
+  var sample = [
+    ['JY10001', 'J&T'], ['JY10002', 'J&T'], ['SPX9000', 'Shopee Xpress'], ['SP9001', 'Sicepat']
+  ];
+  var JY = applyLookup_(sample, 'JY10099');
+  var SPX = applyLookup_(sample, 'SPX7777');
+  var SP = applyLookup_(sample, 'SP1234');
+  if (JY !== 'J&T') throw new Error('lookupExpedition JY gagal: ' + JY);
+  if (SPX !== 'Shopee Xpress') throw new Error('lookupExpedition SPX gagal: ' + SPX);
+  if (SP !== 'Sicepat') throw new Error('lookupExpedition SP gagal: ' + SP);
+  Logger.log('demoLookupExpedition_ OK');
+}
+
+function applyLookup_(rows, resi) {
+  var key = String(resi).toUpperCase().trim();
+  var prefix = (key.match(/^[A-Z]+/) || [""])[0] || "";
+  var prefixCount = {};
+  rows.forEach(function(x) {
+    var r = String(x[0]).toUpperCase().trim();
+    var e = String(x[1] || "").trim();
+    var p = (r.match(/^[A-Z]+/) || [""])[0] || "";
+    if (!p || !e) return;
+    if (!prefixCount[p]) prefixCount[p] = {};
+    prefixCount[p][e] = (prefixCount[p][e] || 0) + 1;
+  });
+  if (prefix && prefixCount[prefix]) {
+    var best = null, n = -1;
+    for (var e in prefixCount[prefix]) if (prefixCount[prefix][e] > n) { n = prefixCount[prefix][e]; best = e; }
+    return best;
+  }
+  return "";
+}
+
 function getColumnMap_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(SHEET_NAME);
@@ -81,6 +116,21 @@ function parseToStandardDate_(value) {
 
 // === EXPEDITION CONFIG ===
 var EXP_SHEET = "Ekspedisi";
+var EXP_DEFAULTS = [
+  ["JNE", "JNE"],
+  ["J&T", "JT|JD|JY|JX|JP"],
+  ["Shopee Xpress", "SPX|SX"],
+  ["Sicepat", "SP|SI"],
+  ["AnterAja", "AA"],
+  ["Ninja", "NV|NI|NINJA"],
+  ["Pos Indonesia", "RP|RO|RC|POS"],
+  ["Tiki", "TI"],
+  ["Wahana", "WH"],
+  ["Lion Parcel", "LP"],
+  ["Paxel", "PX"],
+  ["GoSend", "GO"],
+  ["GrabExpress", "GR|GRAB"]
+];
 
 function getExpeditionConfig() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -89,43 +139,68 @@ function getExpeditionConfig() {
     sheet = ss.insertSheet(EXP_SHEET);
     sheet.getRange(1, 1, 1, 2).setValues([["Nama", "Regex"]]);
     sheet.setFrozenRows(1);
-    var defaults = [
-      ["JNE", "JP|JNE"],
-      ["J&T", "JT|JD"],
-      ["Sicepat", "SP|SI"],
-      ["AnterAja", "AA"],
-      ["Ninja", "NV|NI|NINJA"],
-      ["Pos Indonesia", "RP|RO|RC|POS"],
-      ["Tiki", "TI"],
-      ["Wahana", "WH"],
-      ["Shopee Xpress", "SPX|SX"],
-      ["Lion Parcel", "LP"],
-      ["Paxel", "PX"],
-      ["GoSend", "GO"],
-      ["GrabExpress", "GR|GRAB"]
-    ];
-    sheet.getRange(2, 1, defaults.length, 2).setValues(defaults);
-    return defaults.map(function(r) { return { name: r[0], regex: r[1] }; });
+    sheet.getRange(2, 1, EXP_DEFAULTS.length, 2).setValues(EXP_DEFAULTS);
   }
+  // Default kode selalu menang untuk nama baku (deploy lama yang regex-nya basi
+  // otomatis ter-fix, mis. J&T tanpa JY/JD/JX). Isi sheet menambah ekspedisi baru.
+  var extra = {};
   var data = sheet.getDataRange().getValues();
-  var result = [];
   for (var i = 1; i < data.length; i++) {
-    var name = String(data[i][0] || "").trim();
-    var regex = String(data[i][1] || "").trim();
-    if (name && regex) result.push({ name: name, regex: regex });
+    var n = String(data[i][0] || "").trim();
+    var r = String(data[i][1] || "").trim();
+    if (n && r) extra[n] = r;
+  }
+  var result = EXP_DEFAULTS.map(function(d) { return { name: d[0], regex: d[1] }; });
+  var seen = {};
+  EXP_DEFAULTS.forEach(function(d) { seen[d[0]] = true; });
+  for (var name in extra) {
+    if (!seen[name]) result.push({ name: name, regex: extra[name] });
   }
   return result;
 }
 
 // === LOOKUP EXPEDITION ===
+// 1) Exact match (huruf besar) dengan baris riwayat — resi yang sama pernah di-scan.
+// 2) Prefix-learning: bila resi baru, ambil awalan huruf (mis. "JY", "SPX", "CM")
+//    dari baris yang SUDAH diklasifikasi manual di sheet, kembalikan ekspedisi
+//    yang paling sering dipakai untuk awalan itu. Tie → baris paling baru.
 function lookupExpedition(resi) {
   try {
     var sheet = getOrCreateSheet_();
     var data = sheet.getDataRange().getValues();
+    var key = String(resi || "").toUpperCase().trim();
+    if (!key) return "";
+    var prefix = (key.match(/^[A-Z]+/) || [""])[0] || "";
+
+    var exactSeen = {};
+    var prefixCount = {};
+    var prefixAge = {};
+    var rows = [];
     for (var i = 1; i < data.length; i++) {
-      if (String(data[i][0]) === String(resi)) {
-        return String(data[i][1] || "");
+      var r = String(data[i][0] || "").toUpperCase().trim();
+      var e = String(data[i][1] || "").trim();
+      if (!r || !e) continue;
+      rows.push({ r: r, e: e, idx: i });
+    }
+    // exact match — paling baru menang
+    rows.forEach(function(x) { exactSeen[x.r] = x.e; });
+    if (exactSeen[key]) return exactSeen[key];
+
+    // prefix — pakai contoh dengan awalan huruf sama
+    rows.forEach(function(x) {
+      var p = (x.r.match(/^[A-Z]+/) || [""])[0] || "";
+      if (!p) return;
+      if (!prefixCount[p]) { prefixCount[p] = {}; prefixAge[p] = 0; }
+      prefixCount[p][x.e] = (prefixCount[p][x.e] || 0) + 1;
+      prefixAge[p] = Math.max(prefixAge[p], x.idx);
+    });
+    if (prefix && prefixCount[prefix]) {
+      var counts = prefixCount[prefix];
+      var best = null, bestN = -1;
+      for (var e in counts) {
+        if (counts[e] > bestN) { bestN = counts[e]; best = e; }
       }
+      if (best) return best;
     }
   } catch (e) { Logger.log('lookupExpedition error: ' + String(e)); }
   return "";
