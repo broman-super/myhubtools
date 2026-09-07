@@ -950,7 +950,7 @@
       else if (resi.startsWith("SPX")) kurir = "Shopee Express";
       else if (resi.startsWith("CM") || resi.match(/^[0-9]{15}$/)) kurir = "JNE";
       else if (resi.startsWith("IDS")) kurir = "ID Express";
-      else if (resi.startsWith("JP") || resi.startsWith("JX") || resi.startsWith("JT") || resi.startsWith("JY")) kurir = "J&T";
+      else if (resi.startsWith("JP") || resi.startsWith("JX") || resi.startsWith("JT") || resi.startsWith("JY") || resi.startsWith("JD")) kurir = "J&T";
       else if (resi.startsWith("00")) kurir = "SiCepat";
 
       if (!dataPengiriman[kurir]) dataPengiriman[kurir] = [];
