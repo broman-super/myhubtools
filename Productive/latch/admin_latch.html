@@ -4,51 +4,12 @@
     <link rel="stylesheet" href="../../src/styles/tools.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>LATCH — Link Attach</title>
-<meta name="description" content="Gudang kumpulan link — LATCH by Supersub">
+<title>LATCH — Admin Dashboard</title>
+<meta name="description" content="Admin dashboard LATCH by Supersub">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231a1a1e'/%3E%3Ctext x='16' y='22' font-family='Helvetica,Arial,sans-serif' font-size='16' font-weight='700' fill='white' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
-<!-- ============ FRAGMENT: PUBLIC VIEW ============ -->
-<div id="fragment-public" style="display:none">
-  <div class="topbar">
-    <div class="brand" data-feather-brand></div>
-    <div class="topbar-actions">
-      <button class="icon-btn raised pressable" id="btnAdminSwitch" title="Admin"><i data-feather="lock"></i></button>
-      <button class="icon-btn raised pressable" id="themeToggle" title="Tema"><i data-feather="moon"></i></button>
-    </div>
-  </div>
-
-  <div class="atm-card">
-    <div>
-      <div class="atm-title">LATCH</div>
-      <div class="atm-tagline">LINK ATTACH by Supersub</div>
-    </div>
-    <div>
-      <hr class="atm-divider">
-      <div class="atm-footer-row">
-        <div class="atm-announce"><i data-feather="volume-2" style="width:14px;height:14px;flex-shrink:0"></i><span id="announceText">Selamat datang di LATCH.</span></div>
-        <div class="atm-clock"><i data-feather="clock" style="width:12px;height:12px"></i><span id="clockText">--:--</span></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="search-bar raised" id="searchBar">
-    <i data-feather="search"></i>
-    <input type="text" id="searchInput" placeholder="Cari link..." autocomplete="off">
-    <span class="search-hint">Ctrl+K</span>
-  </div>
-
-  <div class="tabs" id="tabsWrap"></div>
-
-  <div class="sort-row" id="sortToggle"></div>
-
-  <div class="link-grid" id="linkGrid"></div>
-
-  <div id="loadMoreSentinel" style="height:1px"></div>
-</div>
 
 <!-- ============ FRAGMENT: ADMIN DASHBOARD ============ -->
 <div id="fragment-admin" style="display:none">
@@ -235,7 +196,7 @@
   <div class="toast-wrap" id="toastWrap"></div>
   <button class="back-to-top raised pressable hidden" id="backToTop"><i data-feather="arrow-up"></i></button>
   <footer class="app-footer">
-    LATCH — Link Attach · dibuat dengan Supabase sebagai database
+    LATCH Admin — Link Attach · dibuat dengan Supabase sebagai database
   </footer>
 </div>
 
