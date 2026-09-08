@@ -43,6 +43,8 @@
 
   <div class="tabs" id="tabsWrap"></div>
 
+  <div class="sort-row" id="sortToggle"></div>
+
   <div class="link-grid" id="linkGrid"></div>
 
   <div id="loadMoreSentinel" style="height:1px"></div>
@@ -102,6 +104,10 @@
       <div class="field">
         <label for="fieldCategory">Kategori</label>
         <select id="fieldCategory"></select>
+      </div>
+      <div class="field">
+        <label for="fieldDescription">Deskripsi (opsional)</label>
+        <textarea id="fieldDescription" rows="2" placeholder="Keterangan singkat link"></textarea>
       </div>
       <div class="field">
         <label for="fieldBadge">Badge</label>
@@ -229,7 +235,7 @@
   <div class="toast-wrap" id="toastWrap"></div>
   <button class="back-to-top raised pressable hidden" id="backToTop"><i data-feather="arrow-up"></i></button>
   <footer class="app-footer">
-    LATCH — Link Attach · dibuat dengan Google Sheets sebagai database
+    LATCH — Link Attach · dibuat dengan Supabase sebagai database
   </footer>
 </div>
 

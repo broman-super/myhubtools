@@ -1,15 +1,17 @@
 /* ==========================================================================
-   LATCH — Link Attach — app.js
+   LATCH — Link Attach — app.js (Supabase edition)
    Vanilla JS, no build step. IIFE modules, loaded in dependency order.
    ========================================================================== */
 
 /* ---------------------------------------------------------------------- *
  * 0. CONFIG
- *    Ganti API_URL dengan URL Web App Google Apps Script kamu setelah
- *    deploy (lihat DEPLOY_GUIDE.md). Kosongkan untuk mode demo (localStorage).
+ *    Ganti SUPABASE_URL / SUPABASE_ANON_KEY dari Dashboard Supabase
+ *    > Project Settings > API. Jalankan latch_schema.sql dulu.
+ *    Kosongkan SUPABASE_URL untuk mode demo (localStorage).
  * ---------------------------------------------------------------------- */
 const CONFIG = {
-  API_URL: "https://script.google.com/macros/s/AKfycbwHxK9RHMPXuqlOmucA0GyHwzc33A6WsGeUAD0iwtaGVBSihAQaUeyg_Q7UUn7cULnp/exec",
+  SUPABASE_URL: "https://iyraamxkrygtzsqkvnqz.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5cmFhbXhrcnlndHpzcWt2bnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MDE3NTQsImV4cCI6MjEwMjA3Nzc1NH0.g9naRe6CJaZ-FIZHjUkVx_62GZlxVFixQbIUzDF3M7s",
   BATCH_SIZE: 24,
   LOAD_TIMEOUT_MS: 15000,
   APP_NAME: "LATCH"
@@ -158,6 +160,7 @@ const state = (() => {
     config: { announcement: "", pinHash: "" },
     activeCategory: "all",
     query: "",
+    sortMode: "latest",      // 'latest' | 'popular'
     visibleCount: CONFIG.BATCH_SIZE,
     isAdmin: false,
     adminPin: "",
@@ -196,14 +199,14 @@ const storage = (() => {
       { id: "cat_notes", name: "Notes", icon: "edit-3", order: 2 }
     ];
     const links = [
-      { id: utils.uid(), title: "React Documentation", url: "https://react.dev", category: "cat_dev", badge: "core", createdAt: new Date().toISOString(), order: 0 },
-      { id: utils.uid(), title: "MDN Web Docs", url: "https://developer.mozilla.org", category: "cat_docs", badge: "daily", createdAt: new Date().toISOString(), order: 1 },
-      { id: utils.uid(), title: "Google Apps Script", url: "https://developers.google.com/apps-script", category: "cat_dev", badge: "hot", createdAt: new Date().toISOString(), order: 2 },
-      { id: utils.uid(), title: "Catatan Rapat Q3", url: "https://docs.google.com/document/d/example", category: "cat_notes", badge: "", createdAt: new Date().toISOString(), order: 3 }
+      { id: utils.uid(), title: "React Documentation", url: "https://react.dev", category: "cat_dev", badge: "core", description: "", clickCount: 0, createdAt: new Date().toISOString(), order: 0 },
+      { id: utils.uid(), title: "MDN Web Docs", url: "https://developer.mozilla.org", category: "cat_docs", badge: "daily", description: "", clickCount: 0, createdAt: new Date().toISOString(), order: 1 },
+      { id: utils.uid(), title: "Google Apps Script", url: "https://developers.google.com/apps-script", category: "cat_dev", badge: "hot", description: "", clickCount: 0, createdAt: new Date().toISOString(), order: 2 },
+      { id: utils.uid(), title: "Catatan Rapat Q3", url: "https://docs.google.com/document/d/example", category: "cat_notes", badge: "", description: "", clickCount: 0, createdAt: new Date().toISOString(), order: 3 }
     ];
     set("categories", cats);
     set("links", links);
-    set("config", { announcement: "Ini mode demo (localStorage). Set API_URL di app.js untuk pakai Google Sheets.", pin: "1234" });
+    set("config", { announcement: "Ini mode demo (localStorage). Set SUPABASE_URL di app.js untuk pakai Supabase.", pin: "1234" });
     set("demo_seeded", true);
   }
 
@@ -211,37 +214,64 @@ const storage = (() => {
 })();
 
 /* ---------------------------------------------------------------------- *
- * 4. DB — data layer. Uses Apps Script Web App if CONFIG.API_URL is set,
+ * 4. DB — data layer. Uses Supabase REST if CONFIG.SUPABASE_URL is set,
  *    otherwise falls back to localStorage demo mode.
  * ---------------------------------------------------------------------- */
 const db = (() => {
-  const useRemote = !!CONFIG.API_URL;
+  const useRemote = !!CONFIG.SUPABASE_URL;
 
-  async function apiGet(action, params = {}) {
-    const url = new URL(CONFIG.API_URL);
-    url.searchParams.set("action", action);
-    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-    const res = await fetch(url.toString(), { method: "GET" });
-    if (!res.ok) throw new Error("Network error " + res.status);
-    return res.json();
+  function skipRemote() {
+    return CONFIG.SUPABASE_URL.indexOf("XXXXXXXX") !== -1 || !CONFIG.SUPABASE_ANON_KEY;
   }
 
-  async function apiPost(action, payload = {}) {
-    // text/plain avoids CORS preflight against Apps Script Web Apps
-    const res = await fetch(CONFIG.API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action, ...payload })
+  function sb(path, options = {}) {
+    const url = CONFIG.SUPABASE_URL + "/rest/v1/" + path;
+    const opts = {
+      method: options.method || "GET",
+      headers: {
+        "apikey": CONFIG.SUPABASE_ANON_KEY,
+        "Authorization": "Bearer " + CONFIG.SUPABASE_ANON_KEY,
+        "Prefer": "return=representation",
+        "Content-Type": "application/json"
+      }
+    };
+    if (options.headers) Object.assign(opts.headers, options.headers);
+    if (options.body) opts.body = JSON.stringify(options.body);
+    return fetch(url, opts).then(async res => {
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error("Supabase " + res.status + " " + path + ": " + text);
+      }
+      return res.status === 204 ? null : res.json();
     });
-    if (!res.ok) throw new Error("Network error " + res.status);
-    return res.json();
+  }
+
+  // PostgREST increment via arithmetic string (supported natively):
+  // PATCH {"click_count": "click_count + 1"} increments the column server-side.
+  function intIncrement(column) {
+    return column + " + 1";
   }
 
   async function getData() {
-    if (useRemote) {
-      const json = await apiGet("getData");
-      if (!json.ok) throw new Error(json.error || "Gagal memuat data");
-      return json.data;
+    if (useRemote && !skipRemote()) {
+      const [links, categories, configRows] = await Promise.all([
+        sb("latch_links?select=*&order=sort_order.asc"),
+        sb("latch_categories?select=*&order=sort_order.asc"),
+        sb("latch_config?select=*")
+      ]).catch(e => { throw e; });
+      const config = {};
+      (configRows || []).forEach(r => { config[r.key] = r.value; });
+      // Supabase returns snake_case columns; normalize for the app.
+      const normLinks = (links || []).map(l => ({
+        id: l.id, title: l.title, url: l.url, category: l.category_id,
+        badge: l.badge || "", description: l.description || "",
+        clickCount: l.click_count || 0, order: l.sort_order || 0,
+        createdAt: l.created_at || ""
+      }));
+      const normCats = (categories || []).map(c => ({
+        id: c.id, name: c.name, icon: c.icon || "folder", order: c.sort_order || 0
+      }));
+      return { links: normLinks, categories: normCats, config };
     }
     storage.seedDemoData();
     return {
@@ -252,19 +282,40 @@ const db = (() => {
   }
 
   async function login(pin) {
-    if (useRemote) {
-      const json = await apiPost("login", { pin });
-      return !!json.ok;
+    if (useRemote && !skipRemote()) {
+      const rows = await sb("latch_config?key=eq.pin&select=value");
+      const stored = rows && rows[0] ? rows[0].value : "";
+      return String(pin) === String(stored);
     }
     const cfg = storage.get("config", { pin: "1234" });
     return String(pin) === String(cfg.pin);
   }
 
+  function toRow(link) {
+    return {
+      id: link.id,
+      title: link.title,
+      url: link.url,
+      category_id: link.category || null,
+      badge: link.badge || "",
+      description: link.description || "",
+      click_count: link.clickCount || 0,
+      sort_order: link.order ?? 0
+    };
+  }
+
   async function addLink(link, pin) {
-    if (useRemote) {
-      const json = await apiPost("addLink", { link, pin });
-      if (!json.ok) throw new Error(json.error);
-      return json.data;
+    if (useRemote && !skipRemote()) {
+      // Tambah di urutan paling akhir (sort_order = count saat ini).
+      const count = await sb("latch_links?select=id");
+      const newLink = {
+        ...link,
+        id: utils.uid(),
+        createdAt: new Date().toISOString(),
+        order: (count || []).length
+      };
+      const rows = await sb("latch_links", { method: "POST", body: toRow(newLink) });
+      return rows && rows[0] ? normLink(rows[0]) : newLink;
     }
     const links = storage.get("links", []);
     const newLink = { ...link, id: utils.uid(), createdAt: new Date().toISOString(), order: links.length };
@@ -273,11 +324,20 @@ const db = (() => {
     return newLink;
   }
 
+  function normLink(l) {
+    return {
+      id: l.id, title: l.title, url: l.url, category: l.category_id,
+      badge: l.badge || "", description: l.description || "",
+      clickCount: l.click_count || 0, order: l.sort_order || 0,
+      createdAt: l.created_at || ""
+    };
+  }
+
   async function updateLink(link, pin) {
-    if (useRemote) {
-      const json = await apiPost("updateLink", { link, pin });
-      if (!json.ok) throw new Error(json.error);
-      return json.data;
+    if (useRemote && !skipRemote()) {
+      const { id, ...rest } = link;
+      await sb("latch_links?id=eq." + encodeURIComponent(id), { method: "PATCH", body: toRow(rest) });
+      return link;
     }
     const links = storage.get("links", []);
     const idx = links.findIndex(l => l.id === link.id);
@@ -287,9 +347,8 @@ const db = (() => {
   }
 
   async function deleteLink(id, pin) {
-    if (useRemote) {
-      const json = await apiPost("deleteLink", { id, pin });
-      if (!json.ok) throw new Error(json.error);
+    if (useRemote && !skipRemote()) {
+      await sb("latch_links?id=eq." + encodeURIComponent(id), { method: "DELETE" });
       return true;
     }
     storage.set("links", storage.get("links", []).filter(l => l.id !== id));
@@ -297,9 +356,8 @@ const db = (() => {
   }
 
   async function deleteLinks(ids, pin) {
-    if (useRemote) {
-      const json = await apiPost("deleteLinks", { ids, pin });
-      if (!json.ok) throw new Error(json.error);
+    if (useRemote && !skipRemote()) {
+      await sb("latch_links?id=in.(" + ids.map(encodeURIComponent).join(",") + ")", { method: "DELETE" });
       return true;
     }
     const set_ = new Set(ids);
@@ -308,9 +366,11 @@ const db = (() => {
   }
 
   async function reorderLinks(orderedIds, pin) {
-    if (useRemote) {
-      const json = await apiPost("reorderLinks", { orderedIds, pin });
-      if (!json.ok) throw new Error(json.error);
+    if (useRemote && !skipRemote()) {
+      // Setiap id di-patch dengan sort_order = posisinya.
+      await Promise.all(orderedIds.map((id, i) =>
+        sb("latch_links?id=eq." + encodeURIComponent(id), { method: "PATCH", body: { sort_order: i } })
+      ));
       return true;
     }
     const links = storage.get("links", []);
@@ -322,10 +382,10 @@ const db = (() => {
   }
 
   async function addCategory(name, icon, pin) {
-    if (useRemote) {
-      const json = await apiPost("addCategory", { name, icon, pin });
-      if (!json.ok) throw new Error(json.error);
-      return json.data;
+    if (useRemote && !skipRemote()) {
+      const cat = { id: utils.uid(), name, icon: icon || "folder", order: 0 };
+      const rows = await sb("latch_categories", { method: "POST", body: { id: cat.id, name, icon: icon || "folder", sort_order: cat.order } });
+      return rows && rows[0] ? { id: rows[0].id, name: rows[0].name, icon: rows[0].icon, order: rows[0].sort_order } : cat;
     }
     const cats = storage.get("categories", []);
     const cat = { id: utils.uid(), name, icon: icon || "folder", order: cats.length };
@@ -335,9 +395,8 @@ const db = (() => {
   }
 
   async function deleteCategory(id, pin) {
-    if (useRemote) {
-      const json = await apiPost("deleteCategory", { id, pin });
-      if (!json.ok) throw new Error(json.error);
+    if (useRemote && !skipRemote()) {
+      await sb("latch_categories?id=eq." + encodeURIComponent(id), { method: "DELETE" });
       return true;
     }
     storage.set("categories", storage.get("categories", []).filter(c => c.id !== id));
@@ -345,10 +404,12 @@ const db = (() => {
   }
 
   async function updateCategory(id, name, icon, pin) {
-    if (useRemote) {
-      const json = await apiPost("updateCategory", { id, name, icon, pin });
-      if (!json.ok) throw new Error(json.error);
-      return json.data;
+    if (useRemote && !skipRemote()) {
+      const body = {};
+      if (name !== undefined) body.name = name;
+      if (icon !== undefined) body.icon = icon;
+      const rows = await sb("latch_categories?id=eq." + encodeURIComponent(id), { method: "PATCH", body });
+      return rows && rows[0] ? { id: rows[0].id, name: rows[0].name, icon: rows[0].icon, order: rows[0].sort_order } : { id, name, icon };
     }
     const cats = storage.get("categories", []);
     const idx = cats.findIndex(c => c.id === id);
@@ -359,10 +420,40 @@ const db = (() => {
   }
 
   async function importCsv(rows, pin) {
-    if (useRemote) {
-      const json = await apiPost("importCsv", { rows, pin });
-      if (!json.ok) throw new Error(json.error);
-      return json.data;
+    if (useRemote && !skipRemote()) {
+      const existingCats = await sb("latch_categories?select=*");
+      const cats = (existingCats || []).reduce((acc, c) => {
+        acc[c.name.toLowerCase()] = c;
+        return acc;
+      }, {});
+      let createdCats = [];
+      const linksRows = [];
+      rows.forEach((r, i) => {
+        const [title, url, categoryName, badge] = r;
+        if (!title || !url) return;
+        let catId = null;
+        if (categoryName) {
+          const key = String(categoryName).toLowerCase();
+          if (!cats[key]) {
+            const nc = { id: utils.uid(), name: categoryName, icon: "folder", sort_order: createdCats.length + (existingCats || []).length };
+            createdCats.push({ id: nc.id, name: nc.name, icon: "folder", sort_order: nc.sort_order });
+            cats[key] = { id: nc.id, name: nc.name, icon: "folder" };
+          }
+          catId = cats[key].id;
+        }
+        linksRows.push({
+          id: utils.uid(), title, url, category_id: catId,
+          badge: (badge || "").toLowerCase(), description: "",
+          click_count: 0, sort_order: i
+        });
+      });
+      if (createdCats.length) {
+        await Promise.all(createdCats.map(c => sb("latch_categories", { method: "POST", body: c })));
+      }
+      if (linksRows.length) {
+        await sb("latch_links", { method: "POST", body: linksRows });
+      }
+      return { imported: linksRows.length };
     }
     const links = storage.get("links", []);
     const cats = storage.get("categories", []);
@@ -379,6 +470,7 @@ const db = (() => {
         id: utils.uid(), title, url,
         category: cat ? cat.id : "",
         badge: (badge || "").toLowerCase(),
+        description: "",
         createdAt: new Date().toISOString(),
         order: order++
       });
@@ -388,9 +480,29 @@ const db = (() => {
     return { imported: rows.length };
   }
 
+  // Baru: tambah penghitung klik (popularity).
+  async function incrementClick(id) {
+    if (useRemote && !skipRemote()) {
+      // click_count = click_count + 1 via header Prefer=return=minimal tidak
+      // memberi body; pakai header count trick: set via JSON {"click_count":1}.
+      // PostgREST mendukung increment lewat operator array.
+      const path = "latch_links?id=eq." + encodeURIComponent(id);
+      await sb(path, {
+        method: "PATCH",
+        headers: { "Prefer": "return=minimal" },
+        body: { click_count: intIncrement("click_count") }
+      });
+      return;
+    }
+    const links = storage.get("links", []);
+    const idx = links.findIndex(l => l.id === id);
+    if (idx > -1) links[idx].clickCount = (links[idx].clickCount || 0) + 1;
+    storage.set("links", links);
+  }
+
   return {
     useRemote, getData, login, addLink, updateLink, deleteLink, deleteLinks,
-    reorderLinks, addCategory, deleteCategory, updateCategory, importCsv
+    reorderLinks, addCategory, deleteCategory, updateCategory, importCsv, incrementClick
   };
 })();
 
@@ -398,8 +510,6 @@ const db = (() => {
  * 5. LAYOUT — inline fragment loader
  * ---------------------------------------------------------------------- */
 const layout = (() => {
-  // Cache each fragment's HTML once, then remove the template nodes from the
-  // DOM entirely so their child element IDs never collide with rendered copies.
   const cache = {};
   let cached = false;
 
@@ -415,36 +525,41 @@ const layout = (() => {
     cached = true;
   }
 
-  const mountedFlags = {};
   function mountModals() {
     cacheFragments();
-    ["fragment-modals", "fragment-footer"].forEach(fragId => {
-      if (!mountedFlags[fragId]) {
-        const wrapper = document.createElement("div");
-        wrapper.innerHTML = cache[fragId] || "";
-        while (wrapper.firstChild) document.body.appendChild(wrapper.firstChild);
-        mountedFlags[fragId] = true;
-      }
-    });
-  }
-
-  function showMode(mode) {
-    cacheFragments();
-    mountModals();
     const app = document.getElementById("app");
+    if (app) {
+      // Drawer, sheet, modals, loading overlay, toast & back-to-top are
+      // appended AFTER the container so they overlay full-viewport.
+      const modals = document.createElement("div");
+      modals.innerHTML = cache["fragment-modals"] || "";
+      while (modals.firstChild) app.appendChild(modals.firstChild);
+      const footer = document.createElement("div");
+      footer.innerHTML = cache["fragment-footer"] || "";
+      while (footer.firstChild) app.appendChild(footer.firstChild);
+    }
+  }
+
+  // Injects a fragment's cached HTML into #app. Called once per mode switch.
+  function showMode(mode) {
+    const app = document.getElementById("app");
+    if (!app) return;
+    // Hapus fragment mode sebelumnya (public/admin) — sisakan overlay, modal & footer.
+    const guard = app.querySelector("#overlayBg");
+    let child = app.firstChild;
+    while (child && child !== guard) {
+      const next = child.nextSibling;
+      app.removeChild(child);
+      child = next;
+    }
     const fragId = mode === "admin" ? "fragment-admin" : "fragment-public";
-    app.innerHTML = cache[fragId] || "";
-    app.classList.remove("mode-fade");
-    void app.offsetWidth;
-    app.classList.add("mode-fade");
-    if (typeof feather !== "undefined") feather.replace();
-    document.querySelectorAll("[data-feather-brand]").forEach(el => {
-      el.innerHTML = `<i data-feather="link-2" style="width:14px;height:14px"></i> ${CONFIG.APP_NAME}`;
-    });
+    const holder = document.createElement("div");
+    holder.innerHTML = cache[fragId] || "";
+    while (holder.firstChild) app.insertBefore(holder.firstChild, guard || null);
     if (typeof feather !== "undefined") feather.replace();
   }
 
-  return { showMode, mountModals };
+  return { mountModals, showMode };
 })();
 
 /* ---------------------------------------------------------------------- *
@@ -561,12 +676,17 @@ const view = (() => {
   function iconUrl(url) { return utils.favIcon(url); }
 
   function filteredLinks() {
-    const { links, activeCategory, query } = state._data;
-    let list = links.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const { links, activeCategory, query, sortMode } = state._data;
+    let list = links.slice();
     if (activeCategory !== "all") list = list.filter(l => l.category === activeCategory);
     if (query.trim()) {
       const q = query.trim().toLowerCase();
-      list = list.filter(l => l.title.toLowerCase().includes(q) || l.url.toLowerCase().includes(q));
+      list = list.filter(l => (l.title || "").toLowerCase().includes(q) || (l.url || "").toLowerCase().includes(q));
+    }
+    if (sortMode === "popular") {
+      list.sort((a, b) => (b.clickCount || 0) - (a.clickCount || 0) || (a.order ?? 0) - (b.order ?? 0));
+    } else {
+      list.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     }
     return list;
   }
@@ -591,6 +711,27 @@ const view = (() => {
         renderTabs();
         renderGrid();
       });
+    });
+  }
+
+  function renderSortToggle() {
+    const wrap = document.getElementById("sortToggle");
+    if (!wrap) return;
+    const mode = state.get("sortMode");
+    const icon = mode === "popular" ? "trending-up" : "clock";
+    const label = mode === "popular" ? "Populer" : "Terbaru";
+    wrap.innerHTML = `
+      <span class="sort-status"><i data-feather="${icon}"></i><span>${label}</span></span>
+      <button class="sort-btn" data-sort="${mode === "popular" ? "latest" : "popular"}" title="Ubah urutan">
+        <i data-feather="${mode === "popular" ? "clock" : "trending-up"}"></i>
+      </button>`;
+    if (typeof feather !== "undefined") feather.replace();
+    wrap.querySelector(".sort-btn").addEventListener("click", () => {
+      const next = state.get("sortMode") === "popular" ? "latest" : "popular";
+      state.set("sortMode", next);
+      state.set("visibleCount", CONFIG.BATCH_SIZE);
+      renderSortToggle();
+      renderGrid();
     });
   }
 
@@ -619,9 +760,10 @@ const view = (() => {
     grid.innerHTML = visible.map((l, i) => `
       <div class="link-card raised ${badgeClass(l.badge)}" data-url="${utils.esc(l.url)}" style="animation-delay:${(i % 12) * 50}ms">
         <div class="link-icon"><img src="${iconUrl(l.url)}" alt="" loading="lazy" onerror="this.style.display='none'"></div>
-        <a class="link-body" href="${utils.esc(l.url)}" target="_blank" rel="noopener noreferrer">
+        <a class="link-body" href="${utils.esc(l.url)}" target="_blank" rel="noopener noreferrer" data-click="${utils.esc(l.id)}">
           <div class="link-title">${utils.esc(l.title)}</div>
-          <div class="link-meta">${utils.relTime(l.createdAt)}</div>
+          ${l.description ? `<div class="link-desc">${utils.esc(l.description)}</div>` : ""}
+          <div class="link-meta">${utils.relTime(l.createdAt)}${(l.clickCount || 0) > 0 ? ` · <span class="link-clicks"><i data-feather="mouse-pointer" style="width:10px;height:10px"></i> ${l.clickCount}</span>` : ""}</div>
         </a>
         <button class="copy-btn pressable" data-copy="${utils.esc(l.url)}" title="Salin link"><i data-feather="copy"></i></button>
       </div>`).join("");
@@ -633,6 +775,17 @@ const view = (() => {
         e.preventDefault(); e.stopPropagation();
         const ok = await utils.copy(btn.dataset.copy);
         components.toast(ok ? "Link disalin" : "Gagal menyalin link", { variant: ok ? "success" : "error" });
+      });
+    });
+
+    // Increment click counter ketika link diklik.
+    grid.querySelectorAll(".link-body[data-click]").forEach(a => {
+      a.addEventListener("click", () => {
+        const id = a.dataset.click;
+        db.incrementClick(id).catch(() => {});
+        // Update state lokal supaya counter tampil tanpa refresh penuh.
+        const links = state.get("links").map(l => l.id === id ? { ...l, clickCount: (l.clickCount || 0) + 1 } : l);
+        state.set("links", links);
       });
     });
 
@@ -685,6 +838,7 @@ const view = (() => {
   function renderAll() {
     renderAnnouncement();
     renderTabs();
+    renderSortToggle();
     renderGrid();
     bindSearch();
     startClock();
@@ -748,7 +902,7 @@ const dashboard = (() => {
     const selected = state.get("selectedIds").has(link.id);
     return `
       <div class="dash-row raised" data-id="${utils.esc(link.id)}" draggable="true">
-        <div class="dash-grip"><input type="checkbox" class="checkbox row-check" ${selected ? "checked" : ""}> ⠿</div>
+        <div class="dash-grip"><input type="checkbox" class="checkbox row-check" ${selected ? "checked" : ""}><span class="drag-handle">⠿</span></div>
         <div><label>Judul</label><input type="text" class="row-title" value="${utils.esc(link.title)}"></div>
         <div><label>URL</label><input type="text" class="row-url" value="${utils.esc(link.url)}"></div>
         <div>
@@ -758,6 +912,8 @@ const dashboard = (() => {
         <div><label>Waktu</label><span style="font-size:12px;color:var(--text-tertiary)">${utils.relTime(link.createdAt)}</span></div>
         <div class="row-actions">
           <span class="save-hint"><button class="row-save" title="Simpan"><i data-feather="save"></i></button></span>
+          <button class="row-move row-up mobile-only" title="Naik"><i data-feather="chevron-up"></i></button>
+          <button class="row-move row-down mobile-only" title="Turun"><i data-feather="chevron-down"></i></button>
           <button class="row-copy" title="Salin"><i data-feather="copy"></i></button>
           <button class="row-delete" title="Hapus"><i data-feather="trash-2"></i></button>
         </div>
@@ -828,6 +984,22 @@ const dashboard = (() => {
       row.querySelector(".row-delete").addEventListener("click", () => {
         confirmDelete(id);
       });
+
+      // Mobile reorder buttons (up/down)
+      const moveHandler = async (dir) => {
+        const links = state.get("links").slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        const idx = links.findIndex(l => l.id === id);
+        const target = idx + dir;
+        if (target < 0 || target >= links.length) return;
+        [links[idx], links[target]] = [links[target], links[idx]];
+        links.forEach((l, i) => l.order = i);
+        state.set("links", links);
+        renderMain();
+        try { await db.reorderLinks(links.map(l => l.id), state.get("adminPin")); }
+        catch (e) { components.toast("Gagal menyimpan urutan", { variant: "error" }); }
+      };
+      row.querySelector(".row-up")?.addEventListener("click", () => moveHandler(-1));
+      row.querySelector(".row-down")?.addEventListener("click", () => moveHandler(1));
 
       row.querySelector(".row-check").addEventListener("change", (e) => {
         const sel = state.get("selectedIds");
@@ -901,6 +1073,7 @@ const dashboard = (() => {
     document.getElementById("fieldId").value = "";
     document.getElementById("fieldTitle").value = "";
     document.getElementById("fieldUrl").value = "";
+    document.getElementById("fieldDescription").value = "";
     document.getElementById("fieldBadge").value = "";
     document.getElementById("fieldCategory").innerHTML = categoryOptionsHtml(null);
     components.openDrawer("linkDrawer");
@@ -910,6 +1083,7 @@ const dashboard = (() => {
     document.getElementById("fieldId").value = link.id;
     document.getElementById("fieldTitle").value = link.title;
     document.getElementById("fieldUrl").value = link.url;
+    document.getElementById("fieldDescription").value = link.description || "";
     document.getElementById("fieldBadge").value = link.badge || "";
     document.getElementById("fieldCategory").innerHTML = categoryOptionsHtml(link.category);
     components.openDrawer("linkDrawer");
@@ -920,6 +1094,7 @@ const dashboard = (() => {
     const title = document.getElementById("fieldTitle").value.trim();
     const url = document.getElementById("fieldUrl").value.trim();
     const category = document.getElementById("fieldCategory").value;
+    const description = document.getElementById("fieldDescription").value.trim();
     const badge = document.getElementById("fieldBadge").value;
     if (!title || !url) {
       components.toast("Judul dan URL wajib diisi", { variant: "error" });
@@ -927,12 +1102,12 @@ const dashboard = (() => {
     }
     try {
       if (id) {
-        const link = { ...state.get("links").find(l => l.id === id), title, url, category, badge };
+        const link = { ...state.get("links").find(l => l.id === id), title, url, category, badge, description };
         await db.updateLink(link, state.get("adminPin"));
         state.set("links", state.get("links").map(l => l.id === id ? link : l));
         components.toast("Link diperbarui", { variant: "success" });
       } else {
-        const newLink = await db.addLink({ title, url, category, badge }, state.get("adminPin"));
+        const newLink = await db.addLink({ title, url, category, badge, description }, state.get("adminPin"));
         state.set("links", [...state.get("links"), newLink]);
         components.toast("Link ditambahkan", { variant: "success" });
       }
@@ -1052,10 +1227,11 @@ const dashboard = (() => {
     }
   }
 
+  // Admin: klik selesai → reset seluruh tampilan admin.
   function exportCsv() {
     const cats = new Map(state.get("categories").map(c => [c.id, c.name]));
-    const rows = [["Title", "URL", "Category", "Badge"]];
-    state.get("links").forEach(l => rows.push([l.title, l.url, cats.get(l.category) || "", l.badge || ""]));
+    const rows = [["Title", "URL", "Category", "Badge", "Description"]];
+    state.get("links").forEach(l => rows.push([l.title, l.url, cats.get(l.category) || "", l.badge || "", l.description || ""]));
     utils.downloadFile(`latch-export-${Date.now()}.csv`, utils.csvBuild(rows));
     components.toast("File CSV diunduh", { variant: "success" });
   }
@@ -1132,6 +1308,7 @@ const theme = (() => {
  * 10. APP — init orchestrator
  * ---------------------------------------------------------------------- */
 const app = (() => {
+  const IS_ADMIN_PAGE = /admin_latch\.html/.test(location.pathname);
   function bindPublicEvents() {
     document.getElementById("btnAdminSwitch")?.addEventListener("click", () => {
       if (state.get("isAdmin")) switchMode("admin");
@@ -1232,6 +1409,10 @@ const app = (() => {
   }
 
   function switchMode(mode) {
+    if (IS_ADMIN_PAGE && mode === "public") {
+      location.href = "latch.html";
+      return;
+    }
     state.set("mode", mode);
     view.stopClock();
     layout.showMode(mode);
@@ -1243,7 +1424,7 @@ const app = (() => {
       view.renderAll();
     }
     bindGlobalModalEvents();
-    location.hash = mode === "admin" ? "#admin" : "";
+    if (!IS_ADMIN_PAGE) location.hash = mode === "admin" ? "#admin" : "";
   }
 
   function bindKeyboardShortcuts() {
@@ -1311,8 +1492,11 @@ const app = (() => {
     await loadData();
     components.hideLoadingOverlay();
 
-    const startMode = (location.hash === "#admin" && state.get("isAdmin")) ? "admin" : "public";
+    const startMode = IS_ADMIN_PAGE
+      ? "admin"
+      : ((location.hash === "#admin" && state.get("isAdmin")) ? "admin" : "public");
     switchMode(startMode);
+    if (IS_ADMIN_PAGE && !state.get("isAdmin")) components.openModal("loginModal");
     bindKeyboardShortcuts();
   }
 
