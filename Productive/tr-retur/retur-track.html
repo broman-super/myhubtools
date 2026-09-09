@@ -314,6 +314,11 @@
       font-weight: 500;
     }
 
+    .item-no {
+      font-size: 11px; color: var(--text-muted); white-space: nowrap;
+      font-variant-numeric: tabular-nums; min-width: 20px;
+    }
+
     .item-operator {
       font-size: 12px; color: var(--text); white-space: nowrap;
       font-weight: 500; background: var(--surface); padding: 2px 8px; border-radius: 4px;
@@ -485,10 +490,11 @@
         <table id="stagingTable">
           <thead>
             <tr>
-              <th style="width:18%">Tanggal</th>
-              <th style="width:17%">Operator</th>
-              <th style="width:25%">Ekspedisi</th>
-              <th style="width:30%">Nomor Resi</th>
+              <th style="width:8%">No.</th>
+              <th style="width:16%">Tanggal</th>
+              <th style="width:14%">Operator</th>
+              <th style="width:24%">Ekspedisi</th>
+              <th style="width:28%">Nomor Resi</th>
               <th style="width:10%"></th>
             </tr>
           </thead>
@@ -520,7 +526,7 @@
       <button class="filter-btn" data-filter="today" onclick="loadHistory('today', this)">Hari Ini</button>
       <button class="filter-btn" data-filter="7days" onclick="loadHistory('7days', this)">7 Hari</button>
       <button class="filter-btn" data-filter="30days" onclick="loadHistory('30days', this)">1 Bulan</button>
-      <a class="filter-btn btn-db" href="https://docs.google.com/spreadsheets/d/1ZsvtLM8tLrdJKRlR0NobBPxmq0DQG52vNU6p83PdhqI/edit?usp=sharing" target="_blank" rel="noopener">
+      <a class="filter-btn btn-db" href="https://supabase.com/dashboard/project/iyraamxkrygtzsqkvnqz/editor/retur_tracking" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
         Lihat Database
       </a>
@@ -549,49 +555,218 @@
   })();
 
   // ============================================================
-  // CONFIG & GAS BRIDGE
+  // CONFIG & SUPABASE BRIDGE (REST langsung, tanpa GAS)
   // ============================================================
-  var GAS_URL = "https://script.google.com/macros/s/AKfycbx2cU-R0KL9HW_0RJQ2I4AkNSdea-F9NFB1XUQbCT1Dz9cNVI7ULnI477szUH--DHFNCQ/exec";
+  var CONFIG = {
+    SUPABASE_URL: "https://iyraamxkrygtzsqkvnqz.supabase.co",
+    SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5cmFhbXhrcnlndHpzcWt2bnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MDE3NTQsImV4cCI6MjEwMjA3Nzc1NH0.g9naRe6CJaZ-FIZHjUkVx_62GZlxVFixQbIUzDF3M7s"
+  };
 
-  var GAS = {
-    call: function(fnName, args, onSuccess, onFailure) {
-      args = args || [];
-      var native = (typeof google !== "undefined" && google.script && google.script.run);
-      if (native) {
-        var r = google.script.run;
-        if (onSuccess) r.withSuccessHandler(onSuccess);
-        if (onFailure) r.withFailureHandler(onFailure);
-        r[fnName].apply(null, args);
-      } else {
-        if (!GAS_URL) { if (onFailure) onFailure(new Error("GAS_URL belum dikonfigurasi")); return; }
-        var controller = new AbortController();
-        var tid = setTimeout(function() { controller.abort(); }, 30000);
-        fetch(GAS_URL, {
-          method: "POST",
-          mode: "cors",
-          redirect: "follow",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ function: fnName, args: args }),
-          signal: controller.signal
-        })
-          .then(function(r) {
-            clearTimeout(tid);
-            if (!r.ok) throw new Error("HTTP " + r.status);
-            return r.text();
-          })
-          .then(function(text) {
-            clearTimeout(tid);
-            var data = JSON.parse(text);
-            if (data.error) throw new Error(data.error);
-            if (data.success === false) throw new Error(data.message || "Gagal");
-            if (onSuccess) onSuccess(data.result);
-          })
-          .catch(function(err) {
-            clearTimeout(tid);
-            console.error("[GAS] fetch gagal:", err);
-            if (onFailure) onFailure(err);
-          });
+  // Default ekspedisi — kode selalu menang; tabel retur_expeditions hanya menambah.
+  var EXP_DEFAULTS = [
+    ["JNE", "JNE"],
+    ["J&T", "JT|JD|JY|JX|JP"],
+    ["Shopee Xpress", "SPX|SX"],
+    ["Sicepat", "SP|SI"],
+    ["AnterAja", "AA"],
+    ["Ninja", "NV|NI|NINJA"],
+    ["Pos Indonesia", "RP|RO|RC|POS"],
+    ["Tiki", "TI"],
+    ["Wahana", "WH"],
+    ["Lion Parcel", "LP"],
+    ["Paxel", "PX"],
+    ["GoSend", "GO"],
+    ["GrabExpress", "GR|GRAB"]
+  ];
+
+  function sb(path, options) {
+    options = options || {};
+    var opts = {
+      method: options.method || "GET",
+      headers: {
+        "apikey": CONFIG.SUPABASE_ANON_KEY,
+        "Authorization": "Bearer " + CONFIG.SUPABASE_ANON_KEY,
+        "Prefer": "return=representation",
+        "Content-Type": "application/json"
       }
+    };
+    if (options.body) opts.body = JSON.stringify(options.body);
+    var url = CONFIG.SUPABASE_URL.replace(/\/+$/, "") + "/rest/v1/" + path;
+    return fetch(url, opts).then(function(res) {
+      if (!res.ok) {
+        return res.text().then(function(t) { throw new Error("Supabase " + res.status + " " + path + ": " + t); });
+      }
+      return res.status === 204 ? null : res.json();
+    });
+  }
+
+  var allRowsCache = null;
+
+  function fmt2(n) { return (n < 10 ? "0" : "") + n; }
+  function toDateStr(t) { return t.getFullYear() + "-" + fmt2(t.getMonth() + 1) + "-" + fmt2(t.getDate()); }
+  function toTimeStr(t) { return fmt2(t.getHours()) + ":" + fmt2(t.getMinutes()) + ":" + fmt2(t.getSeconds()); }
+
+  // Tarik SEMUA baris retur_tracking via paginasi (REST max 1000/request).
+  function fetchAllRows(force) {
+    if (allRowsCache && !force) return Promise.resolve(allRowsCache);
+    var CHUNK = 1000, all = [];
+    function baca(offset) {
+      var p = new URLSearchParams({ select: "*", order: "id.desc", limit: CHUNK, offset: offset });
+      return sb("retur_tracking?" + p.toString()).then(function(rows) {
+        all.push.apply(all, rows || []);
+        if (rows && rows.length === CHUNK) return baca(offset + CHUNK);
+        allRowsCache = all;
+        return all;
+      });
+    }
+    return baca(0);
+  }
+
+  function dbGetExpeditionConfig() {
+    return sb("retur_expeditions?select=nama,regex&order=nama.asc").then(function(extras) {
+      var seen = {};
+      var result = EXP_DEFAULTS.map(function(d) { seen[d[0]] = true; return { name: d[0], regex: d[1] }; });
+      (extras || []).forEach(function(x) {
+        if (!seen[x.nama]) result.push({ name: x.nama, regex: x.regex || "" });
+      });
+      return result;
+    });
+  }
+
+  // Exact match (resi sama pernah scan) + prefix-learning, mirror GS lama.
+  function dbLookupExpedition(resi) {
+    var key = String(resi || "").toUpperCase().trim();
+    if (!key) return Promise.resolve("");
+    var prefix = (key.match(/^[A-Z]+/) || [""])[0] || "";
+    return fetchAllRows().then(function(rows) {
+      var exactSeen = null;
+      var prefixCount = {};
+      rows.forEach(function(x) {
+        var r = String(x.resi || "").toUpperCase().trim();
+        var e = String(x.ekspedisi || "").trim();
+        if (!r || !e) return;
+        if (r === key && exactSeen === null) exactSeen = e;
+        var p = (r.match(/^[A-Z]+/) || [""])[0] || "";
+        if (!p) return;
+        prefixCount[p] = prefixCount[p] || {};
+        prefixCount[p][e] = (prefixCount[p][e] || 0) + 1;
+      });
+      if (exactSeen) return exactSeen;
+      if (prefix && prefixCount[prefix]) {
+        var best = null, n = -1;
+        var counts = prefixCount[prefix];
+        for (var e in counts) if (counts[e] > n) { n = counts[e]; best = e; }
+        if (best) return best;
+      }
+      return "";
+    });
+  }
+
+  function dbSubmitBatch(stagingData) {
+    var now = new Date();
+    var rows = stagingData.map(function(d) {
+      var t = d.timestamp ? new Date(Number(d.timestamp)) : now;
+      return {
+        resi: d.resi || "",
+        ekspedisi: d.ekspedisi || "",
+        waktu_scan: toTimeStr(t),
+        tanggal: toDateStr(t),
+        operator: d.operator || "",
+        status: "Pending"
+      };
+    });
+    if (rows.length === 0) return Promise.resolve({ success: true });
+    return sb("retur_tracking", { method: "POST", body: rows }).then(function() {
+      allRowsCache = null;
+      return { success: true };
+    });
+  }
+
+  function dbGetTrackingHistory(filter) {
+    var months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+    var now = new Date();
+    var today = toDateStr(now);
+    var d7 = new Date(now); d7.setDate(d7.getDate() - 7);
+    var d30 = new Date(now); d30.setDate(d30.getDate() - 30);
+    var str7 = toDateStr(d7), str30 = toDateStr(d30);
+
+    return fetchAllRows().then(function(rows) {
+      var groupsMap = {};
+      rows.forEach(function(r) {
+        var resi = String(r.resi || "").trim();
+        if (!resi) return;
+        var rowDate = String(r.tanggal || "").trim();
+        if (!rowDate) return;
+        if (filter === "today" && rowDate !== today) return;
+        if (filter === "7days" && rowDate < str7) return;
+        if (filter === "30days" && rowDate < str30) return;
+
+        var d = new Date(rowDate + "T12:00:00");
+        var label = d.getDate() + " " + months[d.getMonth()] + " " + d.getFullYear();
+        var sortKey = parseInt(rowDate.replace(/-/g, ""), 10);
+        if (!groupsMap[label]) groupsMap[label] = { label: label, summary: "", total: 0, items: [], sortKey: sortKey };
+        groupsMap[label].items.push({
+          id: r.id,
+          resi: resi,
+          ekspedisi: String(r.ekspedisi || "").trim(),
+          tanggal: rowDate,
+          waktu: String(r.waktu_scan || "").trim(),
+          operator: String(r.operator || "").trim(),
+          status: String(r.status || "Pending")
+        });
+      });
+
+      var groups = Object.keys(groupsMap).sort(function(a, b) {
+        return groupsMap[b].sortKey - groupsMap[a].sortKey;
+      }).map(function(key) {
+        var g = groupsMap[key];
+        g.total = g.items.length;
+        var pending = g.items.filter(function(it) { return it.status === "Pending"; }).length;
+        var parts = [];
+        if (pending > 0) parts.push(pending + " pending");
+        var expCount = {};
+        g.items.forEach(function(it) { expCount[it.ekspedisi] = (expCount[it.ekspedisi] || 0) + 1; });
+        var expStr = Object.keys(expCount).sort().map(function(k) { return k + ":" + expCount[k]; }).join(" ");
+        parts.push(expStr);
+        g.summary = parts.join(" — ");
+        return g;
+      });
+
+      return { success: true, groups: groups };
+    });
+  }
+
+  function dbUpdateTrackingStatus(id, status) {
+    return sb("retur_tracking?id=eq." + encodeURIComponent(id), {
+      method: "PATCH",
+      body: { status: status }
+    }).then(function() {
+      loadedHistory.forEach(function(g) {
+        g.items.forEach(function(it) { if (it.id === id) it.status = status; });
+      });
+      updatePendingBadge();
+      return { success: true };
+    });
+  }
+
+  // Bridge: API lama (GAS.call) → fungsi Supabase baru.
+  var DB = {
+    _fns: {
+      getExpeditionConfig: dbGetExpeditionConfig,
+      lookupExpedition: dbLookupExpedition,
+      submitBatchData: dbSubmitBatch,
+      getTrackingHistory: dbGetTrackingHistory,
+      updateTrackingStatus: dbUpdateTrackingStatus
+    },
+    call: function(fnName, args, onSuccess, onFailure) {
+      var fn = DB._fns[fnName];
+      if (!fn) { if (onFailure) onFailure(new Error("Fungsi tidak dikenal: " + fnName)); return; }
+      fn.apply(null, args || []).then(function(result) {
+        if (onSuccess) onSuccess(result);
+      }).catch(function(err) {
+        console.error("[DB] " + fnName + " gagal:", err);
+        if (onFailure) onFailure(err);
+      });
     }
   };
 
@@ -619,7 +794,7 @@
 
   window.onload = function() {
     focusInput();
-    GAS.call("getExpeditionConfig", [], function(r) { configEkspedisi = r || []; });
+    DB.call("getExpeditionConfig", [], function(r) { configEkspedisi = r || []; });
     loadHistory("all", document.querySelector('.filter-btn.active'));
   };
 
@@ -648,7 +823,7 @@
     // Tanya backend → pasti akurat
     addStaging(resi, "UNKNOWN");
     renderTable();
-    GAS.call("lookupExpedition", [resi], function(result) {
+    DB.call("lookupExpedition", [resi], function(result) {
       if (result && result !== "") {
         expeditionCache[resi] = result;
         updateStagingExpedition(resi, result);
@@ -722,6 +897,7 @@ filtered.forEach(function(d) {
     var operator = d.operator || '';
 
         tr.innerHTML =
+          '<td style="color:#999;font-size:13px;font-variant-numeric:tabular-nums">' + (filtered.indexOf(d) + 1) + '</td>' +
           '<td style="color:#999;font-size:13px">' + tanggal + '</td>' +
           '<td>' + operator + '</td>' +
           '<td>' + expCell + '</td>' +
@@ -784,7 +960,7 @@ filtered.forEach(function(d) {
 
     var btn = document.getElementById("btnSubmit");
     btn.innerText = "MENGIRIM..."; btn.disabled = true;
-    GAS.call("submitBatchData", [stagingData], function() {
+    DB.call("submitBatchData", [stagingData], function() {
       stagingData = []; renderTable();
       loadHistory(currentFilter, document.querySelector('.filter-btn.active'));
       btn.innerText = "Proses Ke Database"; btn.disabled = false;
@@ -804,7 +980,7 @@ filtered.forEach(function(d) {
 
     elHistory.innerHTML = '<div class="history-loading">Memuat riwayat...</div>';
 
-    GAS.call("getTrackingHistory", [filter], function(res) {
+    DB.call("getTrackingHistory", [filter], function(res) {
       if (!res.success) {
         loadedHistory = [];
         updatePendingBadge();
@@ -910,6 +1086,7 @@ filtered.forEach(function(d) {
         opGroups[opKey].push(item);
       });
       var opKeys = Object.keys(opGroups).sort();
+      var itemNo = 0;
       opKeys.forEach(function(opKey) {
         var opItems = opGroups[opKey];
         var opHeader = document.createElement("div");
@@ -918,6 +1095,7 @@ filtered.forEach(function(d) {
         detail.appendChild(opHeader);
 
         opItems.forEach(function(item) {
+          itemNo++;
           var statusClass = item.status === "Valid" ? " status-valid" : item.status === "Error" ? " status-error" : "";
           var doneActive = item.status === "Valid" ? " active" : "";
           var errActive = item.status === "Error" ? " active" : "";
@@ -925,13 +1103,14 @@ filtered.forEach(function(d) {
           var div = document.createElement("div");
           div.className = "history-item" + statusClass;
           div.innerHTML =
+            '<span class="item-no">' + itemNo + '</span>' +
             '<span class="item-tanggal">' + item.tanggal + '</span>' +
             '<span class="item-operator">' + (item.operator || '—') + '</span>' +
             '<span class="item-resi">' + item.resi + '</span>' +
             '<button class="btn-copy" onclick="copyResi(this,\'' + item.resi + '\')">' + COPY_ICON_SVG + '</button>' +
             '<div class="item-actions">' +
-              '<button class="btn-status btn-done' + doneActive + '" onclick="markStatus(' + item.row + ',\'Valid\',this)" title="Valid">&#10003;</button>' +
-              '<button class="btn-status btn-err' + errActive + '" onclick="markStatus(' + item.row + ',\'Error\',this)" title="Error">&#10007;</button>' +
+              '<button class="btn-status btn-done' + doneActive + '" onclick="markStatus(' + item.id + ',\'Valid\',this)" title="Valid">&#10003;</button>' +
+              '<button class="btn-status btn-err' + errActive + '" onclick="markStatus(' + item.id + ',\'Error\',this)" title="Error">&#10007;</button>' +
             '</div>';
           detail.appendChild(div);
         });
@@ -944,22 +1123,28 @@ filtered.forEach(function(d) {
   }
 
   function toggleGroup(headerEl) {
-    var detail = headerEl.nextElementSibling;
     var isOpen = headerEl.classList.contains("open");
+
+    elHistory.querySelectorAll(".history-header.open").forEach(function(h) {
+      if (h !== headerEl) {
+        h.classList.remove("open");
+        h.nextElementSibling.classList.remove("show");
+      }
+    });
 
     if (isOpen) {
       headerEl.classList.remove("open");
-      detail.classList.remove("show");
+      headerEl.nextElementSibling.classList.remove("show");
     } else {
       headerEl.classList.add("open");
-      detail.classList.add("show");
+      headerEl.nextElementSibling.classList.add("show");
     }
   }
 
   // ============================================================
   // STATUS UPDATE
   // ============================================================
-  function markStatus(rowNum, status, btnEl) {
+  function markStatus(id, status, btnEl) {
     var item = btnEl.closest(".history-item");
     var allBtns = item.querySelectorAll(".btn-status");
 
@@ -982,12 +1167,12 @@ filtered.forEach(function(d) {
     // Update local loadedHistory status
     loadedHistory.forEach(function(g) {
       g.items.forEach(function(it) {
-        if (it.row === rowNum) it.status = status;
+        if (it.id === id) it.status = status;
       });
     });
     updatePendingBadge();
 
-    GAS.call("updateTrackingStatus", [rowNum, status], function() {}, function() {});
+    DB.call("updateTrackingStatus", [id, status], function() {}, function() {});
   }
 </script>
     <script>

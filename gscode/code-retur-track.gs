@@ -297,9 +297,10 @@ function getTrackingHistory(filter) {
       var dateObj = new Date(rowDate + "T12:00:00");
       var months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
       var label = dateObj.getDate() + " " + months[dateObj.getMonth()] + " " + dateObj.getFullYear();
+      var sortKey = parseInt(rowDate.replace(/-/g, ""), 10);
 
       if (!groupsMap[label]) {
-        groupsMap[label] = { label: label, summary: "", total: 0, items: [] };
+        groupsMap[label] = { label: label, summary: "", total: 0, items: [], sortKey: sortKey };
       }
       groupsMap[label].items.push({
         row: i + 1,
@@ -313,9 +314,7 @@ function getTrackingHistory(filter) {
     }
 
     var groups = Object.keys(groupsMap).sort(function(a, b) {
-      var da = new Date(a.replace(/(\d+)\s+(\w+)\s+(\d+)/, "$1 $2 $3"));
-      var db = new Date(b.replace(/(\d+)\s+(\w+)\s+(\d+)/, "$1 $2 $3"));
-      return db - da;
+      return groupsMap[b].sortKey - groupsMap[a].sortKey;
     }).map(function(key) {
       var g = groupsMap[key];
       g.total = g.items.length;
