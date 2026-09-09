@@ -870,24 +870,34 @@ const dashboard = (() => {
     const active = state.get("dashActiveCategory");
     const navList = document.getElementById("dashNavList");
     const sheetList = document.getElementById("sheetCategoryList");
-    const itemsHtml = groups.map(g => `
-      <div class="dash-nav-item ${active === g.cat.id ? "active" : ""}" data-jump="${utils.esc(g.cat.id)}">
-        <span><i data-feather="${g.cat.icon || "folder"}" style="width:13px;height:13px;margin-right:6px;vertical-align:-2px"></i>${utils.esc(g.cat.name)}</span>
-        <span>${g.items.length}</span>
-      </div>`).join("");
-    if (navList) navList.innerHTML = itemsHtml;
+    const row = (id, name, icon, count) => `
+      <div class="dash-nav-item ${active === id ? "active" : ""}" data-jump="${utils.esc(id)}">
+        <span><i data-feather="${icon}" style="width:13px;height:13px;margin-right:6px;vertical-align:-2px"></i>${utils.esc(name)}</span>
+        <span>${count}</span>
+      </div>`;
+    const sheetRow = (id, name, icon, count) => `
+      <div class="sheet-item ${active === id ? "active" : ""}" data-jump="${utils.esc(id)}">
+        <span><i data-feather="${icon}" style="width:14px;height:14px;margin-right:8px;vertical-align:-2px"></i>${utils.esc(name)}</span>
+        <span>${count}</span>
+      </div>`;
+    const navHtml = [
+      row("all", "All Kategori", "layers", state.get("links").length),
+      ...groups.map(g => row(g.cat.id, g.cat.name, g.cat.icon || "folder", g.items.length))
+    ].join("");
+    if (navList) navList.innerHTML = navHtml;
     if (sheetList) {
-      sheetList.innerHTML = groups.map(g => `
-        <div class="sheet-item" data-jump="${utils.esc(g.cat.id)}">
-          <span><i data-feather="${g.cat.icon || "folder"}" style="width:14px;height:14px;margin-right:8px;vertical-align:-2px"></i>${utils.esc(g.cat.name)}</span>
-          <span>${g.items.length}</span>
-        </div>`).join("");
+      sheetList.innerHTML = [
+        sheetRow("all", "All Kategori", "layers", state.get("links").length),
+        ...groups.map(g => sheetRow(g.cat.id, g.cat.name, g.cat.icon || "folder", g.items.length))
+      ].join("");
     }
     if (typeof feather !== "undefined") feather.replace();
     document.querySelectorAll("[data-jump]").forEach(el => {
       el.addEventListener("click", () => {
-        const target = document.getElementById("cat-group-" + (el.dataset.jump || "none"));
-        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+        const val = el.dataset.jump;
+        if (val === "all") state.set("dashActiveCategory", null);
+        else state.set("dashActiveCategory", val);
+        renderAll();
         components.closeSheet("categorySheet");
       });
     });
@@ -902,7 +912,7 @@ const dashboard = (() => {
     const selected = state.get("selectedIds").has(link.id);
     return `
       <div class="dash-row raised" data-id="${utils.esc(link.id)}" draggable="true">
-        <div class="dash-grip"><input type="checkbox" class="checkbox row-check" ${selected ? "checked" : ""}><span class="drag-handle">⠿</span></div>
+        <div class="dash-grip"><span class="drag-handle" title="Seret untuk urutkan"><i data-feather="more-vertical"></i></span><input type="checkbox" class="checkbox row-check" ${selected ? "checked" : ""}></div>
         <div><label>Judul</label><input type="text" class="row-title" value="${utils.esc(link.title)}"></div>
         <div><label>URL</label><input type="text" class="row-url" value="${utils.esc(link.url)}"></div>
         <div>
@@ -923,7 +933,8 @@ const dashboard = (() => {
   function renderMain() {
     const main = document.getElementById("dashMain");
     if (!main) return;
-    const groups = groupedLinks();
+    const activeCat = state.get("dashActiveCategory");
+    const groups = groupedLinks().filter(g => activeCat === null || g.cat.id === activeCat);
     if (!groups.length) {
       main.innerHTML = `<div class="empty-state">
         <div class="empty-icon inset"><i data-feather="inbox"></i></div>
@@ -969,6 +980,9 @@ const dashboard = (() => {
           const links = state.get("links").map(l => l.id === id ? updated : l);
           state.set("links", links);
           row.classList.remove("dirty");
+          row.classList.remove("saved");
+          void row.offsetWidth; /* restart animasi */
+          row.classList.add("saved");
           components.toast("Perubahan disimpan", { variant: "success" });
           renderNav();
         } catch (e) {
@@ -1007,8 +1021,12 @@ const dashboard = (() => {
         updateBulkBar();
       });
 
-      row.addEventListener("dragstart", () => { dragSrcId = id; row.style.opacity = "0.4"; });
-      row.addEventListener("dragend", () => { row.style.opacity = "1"; });
+      row.addEventListener("dragstart", (e) => {
+        if (e.target.closest("input, select, button, .dash-head")) { e.preventDefault(); return; }
+        dragSrcId = id; row.style.opacity = "0.4";
+        row.classList.add("dragging");
+      });
+      row.addEventListener("dragend", () => { row.style.opacity = "1"; row.classList.remove("dragging"); });
       row.addEventListener("dragover", (e) => e.preventDefault());
       row.addEventListener("drop", async (e) => {
         e.preventDefault();
@@ -1416,6 +1434,13 @@ const app = (() => {
     state.set("mode", mode);
     view.stopClock();
     layout.showMode(mode);
+    const appEl = document.getElementById("app");
+    if (appEl) {
+      appEl.classList.toggle("admin-wide", mode === "admin");
+      appEl.classList.remove("mode-fade");
+      void appEl.offsetWidth; /* restart animasi fade */
+      appEl.classList.add("mode-fade");
+    }
     if (mode === "admin") {
       bindAdminEvents();
       dashboard.renderAll();
