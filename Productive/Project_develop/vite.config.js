@@ -1,5 +1,7 @@
+import path from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 
 // base './' supaya asset relatif.
@@ -8,7 +10,12 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 // sekaligus tetap jalan bila di-serve via http/https.
 export default defineConfig({
   base: './',
-  plugins: [react(), viteSingleFile()],
+  plugins: [react(), tailwindcss(), viteSingleFile()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
   build: {
     outDir: 'dist',
     assetsInlineLimit: 100000000,

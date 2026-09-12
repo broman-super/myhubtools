@@ -32,6 +32,21 @@
     // Render cards
     ToolCard.renderAll();
 
+    // Badge RND Roadmap: angka notifikasi dibaca dari localStorage (ditulis oleh tool)
+    var updateRndBadge = function() {
+      var badge = document.getElementById('badge-rnd-roadmap');
+      if (!badge) return;
+      var n = parseInt(localStorage.getItem('rnd-alert-count') || '0', 10) || 0;
+      if (n > 0) {
+        badge.textContent = n > 99 ? '99+' : String(n);
+        badge.removeAttribute('hidden');
+      } else {
+        badge.setAttribute('hidden', '');
+      }
+    };
+    updateRndBadge();
+    setInterval(updateRndBadge, 5000);
+
     // Theme — use ThemeManager singleton, migrate old key
     if (localStorage.getItem('theme') && !localStorage.getItem('reynahub-theme')) {
       localStorage.setItem('reynahub-theme', localStorage.getItem('theme'));

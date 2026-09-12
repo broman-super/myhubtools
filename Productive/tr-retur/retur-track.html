@@ -344,6 +344,19 @@
     .btn-err:hover { color: var(--accent); background: #fff5f5; border-color: var(--accent); }
     .btn-err.active { color: #fff; background: var(--accent); border-color: var(--accent); }
 
+    /* State proses DB: tombol redup + spinner kecil dalam tombol */
+    .btn-status.btn-busy {
+      opacity: .6; cursor: progress;
+      background: var(--surface); border-color: var(--border);
+    }
+    .btn-busy .btn-spin {
+      display: inline-block; width: .75em; height: .75em; margin-right: .3em;
+      border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%;
+      animation: btn-spin .6s linear infinite;
+    }
+    @keyframes btn-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .btn-busy .btn-spin { animation: none; } }
+
     /* Status visual */
     .history-item.status-valid { opacity: 0.45; }
     .history-item.status-valid .item-resi { text-decoration: line-through; }
@@ -750,6 +763,23 @@
   }
 
   // Bridge: API lama (GAS.call) → fungsi Supabase baru.
+  // ============================================================
+  // DB
+  // ============================================================
+  function lockBtn(btn) {
+    if (!btn) return;
+    btn.dataset.busyOrig = btn.innerHTML;
+    btn.disabled = true;
+    btn.classList.add("btn-busy");
+    btn.innerHTML = '<span class="btn-spin"></span>' + btn.dataset.busyOrig;
+  }
+  function unlockBtn(btn) {
+    if (!btn) return;
+    btn.disabled = false;
+    btn.classList.remove("btn-busy");
+    if (btn.dataset.busyOrig) { btn.innerHTML = btn.dataset.busyOrig; delete btn.dataset.busyOrig; }
+  }
+
   var DB = {
     _fns: {
       getExpeditionConfig: dbGetExpeditionConfig,
@@ -1147,22 +1177,36 @@ filtered.forEach(function(d) {
   function markStatus(id, status, btnEl) {
     var item = btnEl.closest(".history-item");
     var allBtns = item.querySelectorAll(".btn-status");
+    var prevStatus;
+
+    // Simpan status lama utk rollback bila DB gagal
+    loadedHistory.forEach(function(g) {
+      g.items.forEach(function(it) {
+        if (it.id === id) prevStatus = it.status;
+      });
+    });
 
     // Toggle: kalau sudah aktif, balikkan ke Pending
     if (btnEl.classList.contains("active")) {
       status = "Pending";
     }
 
-    allBtns.forEach(function(b) { b.classList.remove("active"); });
-    item.classList.remove("status-valid", "status-error");
+    // Kunci kedua tombol biar tidak dobel-klik selama PATCH
+    allBtns.forEach(lockBtn);
 
-    if (status === "Valid") {
-      btnEl.classList.add("active");
-      item.classList.add("status-valid");
-    } else if (status === "Error") {
-      btnEl.classList.add("active");
-      item.classList.add("status-error");
+    function applyStatus(s) {
+      allBtns.forEach(function(b) { b.classList.remove("active"); });
+      item.classList.remove("status-valid", "status-error");
+      if (s === "Valid") {
+        btnEl.classList.add("active");
+        item.classList.add("status-valid");
+      } else if (s === "Error") {
+        btnEl.classList.add("active");
+        item.classList.add("status-error");
+      }
     }
+
+    applyStatus(status);
 
     // Update local loadedHistory status
     loadedHistory.forEach(function(g) {
@@ -1172,7 +1216,21 @@ filtered.forEach(function(d) {
     });
     updatePendingBadge();
 
-    DB.call("updateTrackingStatus", [id, status], function() {}, function() {});
+    DB.call("updateTrackingStatus", [id, status], function() {
+      allBtns.forEach(unlockBtn);
+    }, function(err) {
+      allBtns.forEach(unlockBtn);
+      // Rollback ke status sebelum klik
+      loadedHistory.forEach(function(g) {
+        g.items.forEach(function(it) {
+          if (it.id === id) it.status = prevStatus;
+        });
+      });
+      applyStatus(prevStatus);
+      updatePendingBadge();
+      console.error("[markStatus] Gagal update status:", err);
+      alert("Gagal memperbarui status: " + (err.message || err));
+    });
   }
 </script>
     <script>

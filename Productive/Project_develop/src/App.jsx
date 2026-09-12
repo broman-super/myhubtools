@@ -2,51 +2,87 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { createPortal } from "react-dom";
 import {
   Plus, Calendar, ChevronDown, ChevronRight, Pencil, Trash2, Camera, CheckCircle2,
-  Circle, AlertTriangle, X, ArrowLeft, TrendingUp, Archive, Star, FolderKanban, RotateCcw,
-  ClipboardList, LayoutGrid, Download, Printer
+  Circle, AlertTriangle, ArrowLeft, TrendingUp, Archive, Star, FolderKanban, RotateCcw,
+  ClipboardList, LayoutGrid, Download, Printer, Copy, Bell
 } from "lucide-react";
 import { loadProjects, syncToSupabase, uploadToStorage, deleteFromStorage } from "./supabase.js";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogHeader, DialogTitle, DialogPortal, DialogOverlay } from "@/components/ui/dialog";
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction, AlertDialogPortal } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 // ---------- Design tokens — diselaraskan ke design-system.css (REYNAHUB/UNITOOLS) ----------
 const C = {
-  canvasSoft: "var(--bg)",
-  surface: "var(--surface)",
+  canvasSoft: "var(--background)",
+  surface: "var(--card)",
+  surface2: "var(--muted)",
   hairline: "var(--border)",
-  ink: "var(--text)",
-  inkSecondary: "var(--text)",
-  inkMuted: "var(--muted)",
-  inkFaint: "#a39e98", // tidak ada token faint di shared; pertahankan
-  primary: "var(--primary)",        // aksen merah brand webtools
-  primaryActive: "var(--primary-light)",
-  secondary: "#213183",             // navy logo RND (sub-brand)
-  onPrimary: "#ffffff",
-  sky: "#62aef0", purple: "#d6b6f6", purpleDeep: "#391c57", pink: "#ff64c8",
-  orange: "var(--warning)", orangeDeep: "#793400",
-  teal: "#2a9d99", green: "var(--success)", brown: "#523410",
+  ink: "var(--foreground)",
+  inkSecondary: "var(--muted-foreground)",
+  inkMuted: "var(--muted-foreground)",
+  inkFaint: "var(--muted-foreground)",
+  primary: "var(--primary)",
+  primaryActive: "var(--primary)",
+  secondary: "var(--primary)",
+  onPrimary: "var(--primary-foreground)",
+  danger: "var(--destructive)",
+  dangerLight: "color-mix(in oklch, var(--destructive) 12%, var(--card))",
+  sky: "oklch(0.72 0.09 255)", purple: "oklch(0.72 0.16 305)", purpleDeep: "oklch(0.42 0.13 300)", pink: "oklch(0.72 0.17 340)",
+  orange: "var(--warning)", orangeDeep: "oklch(0.47 0.14 65)",
+  teal: "oklch(0.7 0.12 190)", green: "var(--success)", brown: "oklch(0.48 0.07 70)",
 };
 
-const R = { xs: 4, sm: "var(--radius-md)", md: "var(--radius-sm)", lg: "var(--radius-bento)", xl: "var(--radius-bento)", full: "var(--radius-full)" };
+const R = { xs: "var(--radius-sm)", sm: "var(--radius-md)", md: "var(--radius-md)", lg: "var(--radius-lg)", xl: "var(--radius-xl)", full: "var(--radius-full)" };
 
 const shadow1 = "var(--shadow-sm)";
 const shadow2 = "var(--shadow-md)";
 
 // ---------- Status config ----------
 const PROJECT_STATUS = {
-  Ideation: { label: "Ideation", bg: C.purple, fg: C.purpleDeep },
-  "On Track": { label: "On Track", bg: "#c9f2d3", fg: "#0b5e1e" },
-  "At Risk": { label: "At Risk", bg: "#ffe0c2", fg: C.orangeDeep },
-  Done: { label: "Done", bg: "#cfe6ff", fg: "#0b3a63" },
+  Ideation: { label: "Ideation", bg: "color-mix(in oklch, oklch(0.72 0.16 305) 13%, var(--card))", fg: "oklch(0.42 0.13 300)" },
+  "On Track": { label: "On Track", bg: "color-mix(in oklch, oklch(0.62 0.17 155) 13%, var(--card))", fg: "oklch(0.45 0.13 155)" },
+  "At Risk": { label: "At Risk", bg: "color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))", fg: "oklch(0.47 0.14 65)" },
+  Done: { label: "Done", bg: "color-mix(in oklch, var(--primary) 13%, var(--card))", fg: "oklch(0.45 0.11 250)" },
 };
 const MILESTONE_STATUS = {
-  "Belum mulai": { label: "Belum mulai", bg: "#eeeeec", fg: C.inkMuted },
-  Berjalan: { label: "Berjalan", bg: "#cfe6ff", fg: "#0b3a63" },
-  Selesai: { label: "Selesai", bg: "#c9f2d3", fg: "#0b5e1e" },
+  "Belum mulai": { label: "Belum mulai", bg: "var(--muted)", fg: "var(--muted-foreground)" },
+  Berjalan: { label: "Berjalan", bg: "color-mix(in oklch, var(--primary) 13%, var(--card))", fg: "oklch(0.45 0.11 250)" },
+  Selesai: { label: "Selesai", bg: "color-mix(in oklch, oklch(0.62 0.17 155) 13%, var(--card))", fg: "oklch(0.45 0.13 155)" },
+};
+const PRIORITY_META = {
+  P1: { label: "P1", bg: "color-mix(in oklch, oklch(0.577 0.245 27.325) 13%, var(--card))", fg: "oklch(0.47 0.14 65)" },
+  P2: { label: "P2", bg: "color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))", fg: "oklch(0.47 0.14 65)" },
+  P3: { label: "P3", bg: "color-mix(in oklch, oklch(0.72 0.09 255) 13%, var(--card))", fg: "oklch(0.4 0.1 250)" },
 };
 
 // ---------- helpers: id + tree ops ----------
 let idCounter = 1000;
 const nid = () => `id-${idCounter++}`;
 const todayStr = () => new Date().toISOString().slice(0, 10);
+
+// ---------- helpers: template + duplikasi (localStorage, personal) ----------
+function loadTemplates() {
+  try { return JSON.parse(localStorage.getItem("rnd-templates")) || []; } catch { return []; }
+}
+function saveTemplates(list) {
+  try { localStorage.setItem("rnd-templates", JSON.stringify(list)); } catch { /* abaikan */ }
+}
+function cloneNodeClean(n) {
+  return {
+    ...n, id: nid(), status: "Belum mulai", completedAt: null,
+    evaluations: (n.evaluations || []).map((e) => ({ ...e, id: nid(), createdAt: "" })),
+    checklist: (n.checklist || []).map((c) => ({ ...c, id: nid(), isCompleted: false, completedAt: null, photoUrl: "", hasPhoto: false })),
+    children: (n.children || []).map((ch) => cloneNodeClean(ch)),
+  };
+}
+function instantiateMilestones(list) {
+  return (list || []).map((n) => cloneNodeClean(n));
+}
 
 // Kompres gambar di browser agar payload kecil (hindari timeout GAS)
 async function resizeImageFile(file) {
@@ -109,6 +145,13 @@ function findNode(nodes, id) {
     }
   }
   return null;
+}
+function flattenDepth(nodes = [], depth = 0, out = []) {
+  for (const n of nodes) {
+    out.push({ node: n, depth });
+    if (n.children?.length) flattenDepth(n.children, depth + 1, out);
+  }
+  return out;
 }
 function collectPhotoUrls(node, acc = []) {
   (node.checklist || []).forEach((c) => { if (c.photoUrl) acc.push(c.photoUrl); });
@@ -342,7 +385,7 @@ function DatePicker({ value, onChange, style }) {
                 onClick={() => pick(d)}
                 onMouseEnter={(e) => { if (!isSel(d)) e.currentTarget.style.background = C.canvasSoft; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                style={{ border: "none", borderRadius: R.sm, padding: "6px 0", fontSize: 12, cursor: "pointer", background: isSel(d) ? C.primary : "transparent", color: isSel(d) ? "#fff" : C.ink }}
+                style={{ border: "none", borderRadius: R.sm, padding: "6px 0", fontSize: 12, cursor: "pointer", background: isSel(d) ? C.primary : "transparent", color: isSel(d) ? "var(--primary-foreground)" : C.ink }}
               >{d}</button>
             ))}
           </div>
@@ -380,6 +423,66 @@ function upcomingMilestones(project) {
     return d >= today && d <= in7;
   });
 }
+// Status tampilan project bila autoStatus aktif (display-only, tidak menulis status tersimpan).
+function effectiveStatus(p) {
+  if (!p || !p.autoStatus) return p ? p.status : "Ideation";
+  const all = flattenMilestones(p.milestones || []);
+  const allDone = all.length > 0 && all.every((m) => m.status === "Selesai");
+  const anyOverdue = all.some((m) => m.targetDate && m.targetDate < todayStr() && m.status !== "Selesai");
+  if (allDone) return "Done";
+  if (anyOverdue) return "At Risk";
+  return p.status;
+}
+// Daftar peringatan seluruh project aktif (untuk bel notifikasi + badge hub).
+function allAlerts(projects) {
+  const out = [];
+  projects.filter((p) => !p.archived && !p.trashedAt).forEach((p) => {
+    overdueMilestones(p).forEach((m) => out.push({ project: p, milestone: m, kind: "overdue", key: p.id + ":" + m.id + ":overdue" }));
+    upcomingMilestones(p).forEach((m) => out.push({ project: p, milestone: m, kind: "upcoming", key: p.id + ":" + m.id + ":upcoming" }));
+  });
+  return out;
+}
+// Ringkasan mingguan seluruh project aktif.
+function weeklySummary(projects) {
+  const active = projects.filter((p) => !p.archived && !p.trashedAt);
+  const now = new Date();
+  const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
+  const in2w = new Date(now); in2w.setDate(now.getDate() + 14);
+  const sum = { active: active.length, doneProjects: 0, atRisk: 0, overdue: 0, upcoming: 0, doneThisWeek: 0, doneTotal: 0, itemsTotal: 0 };
+  active.forEach((p) => {
+    const st = effectiveStatus(p);
+    if (st === "Done") sum.doneProjects++;
+    if (st === "At Risk") sum.atRisk++;
+    flattenMilestones(p.milestones).forEach((m) => {
+      const ca = m.completedAt ? new Date(m.completedAt) : null;
+      if (m.status === "Selesai") {
+        sum.doneTotal++;
+        if (ca && ca.getTime() >= weekAgo.getTime()) sum.doneThisWeek++;
+      }
+      if (m.targetDate && m.targetDate < todayStr() && m.status !== "Selesai") sum.overdue++;
+      if (m.targetDate && m.status !== "Selesai") {
+        const d = parseYMD(m.targetDate);
+        if (d && d.getTime() >= now.getTime() - 86400000 && d.getTime() <= in2w.getTime()) sum.upcoming++;
+      }
+      (m.checklist || []).forEach((c) => {
+        sum.itemsTotal++;
+        if (c.isCompleted) sum.doneTotal++;
+      });
+    });
+  });
+  return sum;
+}
+// Waktu relatif untuk log aktivitas.
+function relTime(iso) {
+  const t = new Date(iso);
+  if (isNaN(t)) return "";
+  const diff = Date.now() - t.getTime();
+  if (diff < 60000) return "baru saja";
+  if (diff < 3600000) return Math.floor(diff / 60000) + " mnt lalu";
+  if (diff < 86400000) return Math.floor(diff / 3600000) + " jam lalu";
+  if (diff < 7 * 86400000) return Math.floor(diff / 86400000) + " hari lalu";
+  return t.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+}
 
 // ---------- seed data ----------
 function seedData() {
@@ -391,6 +494,7 @@ function seedData() {
       category: "IoT / Consumer",
       description: "Toples penyimpanan bahan makanan dengan sensor berat dan notifikasi stok habis.",
       status: "On Track",
+      priority: "P1",
       startDate: "2026-03-01",
       targetReleaseDate: "2026-11-15",
       archived: false,
@@ -441,6 +545,7 @@ function seedData() {
       category: "Material / Sustainability",
       description: "Kemasan makanan biodegradable berbahan dasar limbah pertanian lokal.",
       status: "At Risk",
+      priority: "P2",
       startDate: "2026-01-10",
       targetReleaseDate: "2026-07-01",
       archived: false,
@@ -504,7 +609,7 @@ function Badge({ bg, fg, children, icon }) {
 
 function ProgressBar({ pct, color = C.primary }) {
   return (
-    <div style={{ background: "#ececea", borderRadius: R.full, height: 6, width: "100%", overflow: "hidden" }}>
+    <div style={{ background: "var(--muted)", borderRadius: R.full, height: 6, width: "100%", overflow: "hidden" }}>
       <div style={{ background: color, height: "100%", width: `${pct}%`, borderRadius: R.full, transition: "width .3s" }} />
     </div>
   );
@@ -512,61 +617,39 @@ function ProgressBar({ pct, color = C.primary }) {
 
 function IconButton({ onClick, title, children, danger }) {
   return (
-    <button
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon-sm"
       onClick={onClick}
       title={title}
-      style={{
-        background: "transparent", border: "none", cursor: "pointer", padding: 6,
-        borderRadius: R.md, color: danger ? "#b3261e" : C.inkMuted, display: "flex", alignItems: "center",
-      }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = danger ? "#fdeceb" : "#efeeec")}
-      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+      className={cn(danger && "text-destructive hover:text-destructive dark:hover:text-destructive")}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
-function PrimaryButton({ onClick, children, style, type = "button" }) {
+function PrimaryButton({ onClick, children, style, type = "button", ...rest }) {
   return (
-    <button
-      type={type}
-      onClick={onClick}
-      style={{
-        background: C.primary, color: C.onPrimary, border: "none", borderRadius: R.full,
-        padding: "10px 18px", fontSize: 14, fontWeight: 500, cursor: "pointer",
-        display: "inline-flex", alignItems: "center", gap: 6, ...style,
-      }}
-      onMouseDown={(e) => (e.currentTarget.style.background = C.primaryActive)}
-      onMouseUp={(e) => (e.currentTarget.style.background = C.primary)}
-    >
+    <Button type={type} onClick={onClick} {...rest} style={style}>
       {children}
-    </button>
+    </Button>
   );
 }
 
-function SecondaryButton({ onClick, children, style }) {
+function SecondaryButton({ onClick, children, style, type = "button", ...rest }) {
   return (
-    <button
-      onClick={onClick}
-      style={{
-        background: C.surface, color: C.ink, border: `1px solid ${C.hairline}`, borderRadius: R.md,
-        padding: "8px 14px", fontSize: 14, fontWeight: 500, cursor: "pointer",
-        display: "inline-flex", alignItems: "center", gap: 6, ...style,
-      }}
-    >
+    <Button type={type} variant="outline" onClick={onClick} {...rest} style={style}>
       {children}
-    </button>
+    </Button>
   );
 }
 
 function FieldLabel({ children }) {
-  return <label style={{ fontSize: 13, fontWeight: 600, color: C.inkSecondary, marginBottom: 4, display: "block" }}>{children}</label>;
+  return <Label className="mb-1 block text-xs/relaxed font-medium text-foreground">{children}</Label>;
 }
-const inputStyle = {
-  width: "100%", boxSizing: "border-box", background: C.surface, color: C.ink, fontSize: 14,
-  border: "1px solid #dddddd", borderRadius: R.xs, padding: "8px 10px", outline: "none",
-};
+const inputCls = "h-8 w-full min-w-0 rounded-md border border-input bg-input/20 px-2 text-sm text-foreground transition-colors outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 dark:bg-input/30";
 
 // Editor teks cerdas: menyimpan plain text (markdown ringkas), menampilkan bold/bullet/quote secara live.
 function RichTextInput({ value, onChange, placeholder, style, minHeight = 60 }) {
@@ -597,7 +680,8 @@ function RichTextInput({ value, onChange, placeholder, style, minHeight = 60 }) 
       data-placeholder={placeholder}
       onInput={sync}
       onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); document.execCommand("insertText", false, "\n"); sync(); } }}
-      style={{ ...inputStyle, minHeight, resize: "vertical", overflowY: "auto", lineHeight: 1.5 }}
+      style={{ minHeight, resize: "vertical", overflowY: "auto", lineHeight: 1.5 }}
+      className={inputCls}
     />
   );
 }
@@ -616,71 +700,54 @@ function ConfirmProvider() {
   const close = (val) => { if (dlg) { dlg.resolve(val); setDlg(null); } };
   useEffect(() => {
     if (!dlg) return;
-    const onKey = (e) => { if (e.key === "Escape") close(false); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); close(false); } };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, [dlg]);
   if (!dlg) return null;
   return (
-    <div className="rnd-overlay" style={{ position: "fixed", inset: 0, background: "rgba(23,23,23,0.4)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }} onMouseDown={(e) => { if (e.target === e.currentTarget) close(false); }}>
-      <div className="rnd-pop rnd-confirm" role="alertdialog" aria-modal="true">
-        {dlg.title && <h3 className="rnd-confirm-title">{dlg.title}</h3>}
-        {dlg.message && <p className="rnd-confirm-msg">{dlg.message}</p>}
-        <div className="rnd-confirm-actions">
-          <SecondaryButton onClick={() => close(false)}>{dlg.cancelText || "Batal"}</SecondaryButton>
-          <button onClick={() => close(true)} className={dlg.danger ? "rnd-btn-danger" : "rnd-btn-primary"}>{dlg.confirmText || "Ya"}</button>
-        </div>
-      </div>
-    </div>
+    <AlertDialog open onOpenChange={(open) => { if (!open) close(false); }}>
+      <AlertDialogPortal>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            {dlg.title && <AlertDialogTitle>{dlg.title}</AlertDialogTitle>}
+            {dlg.message && <AlertDialogDescription>{dlg.message}</AlertDialogDescription>}
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => close(false)}>{dlg.cancelText || "Batal"}</AlertDialogCancel>
+            <AlertDialogAction variant={dlg.danger ? "destructive" : "default"} onClick={() => close(true)}>{dlg.confirmText || "Ya"}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialogPortal>
+    </AlertDialog>
   );
 }
 
 function Modal({ id, title, onClose, children, width = 460, onCloseAttempt }) {
-  const ref = useRef(null);
+  const attemptClose = useCallback(() => { if (onCloseAttempt) onCloseAttempt(); else onClose(); }, [onCloseAttempt, onClose]);
   useEffect(() => {
-    const t = setTimeout(() => {
-      const el = ref.current;
-      if (!el) return;
-      const f = el.querySelector("input:not([type=hidden]), textarea, select") || el.querySelector("button");
-      if (f) f.focus();
-    }, 0);
-    return () => clearTimeout(t);
-  }, []);
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key !== "Escape") return;
-      if (onCloseAttempt) onCloseAttempt(); else onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onCloseAttempt, onClose]);
-  const attemptClose = () => { if (onCloseAttempt) onCloseAttempt(); else onClose(); };
+    const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); attemptClose(); } };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [attemptClose]);
   return (
-      <div
-        className="rnd-overlay"
-        style={{
-          position: "fixed", inset: 0, background: "rgba(23,23,23,0.35)", zIndex: 50,
-          display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
-        }}
-        onClick={attemptClose}
-      >
-        <div
-          ref={ref}
+    <Dialog open onOpenChange={(open) => { if (!open) attemptClose(); }}>
+      <DialogPortal>
+        <DialogOverlay onClick={attemptClose} />
+        <DialogPrimitive.Popup
           id={id}
-          className="rnd-pop"
-          style={{
-            background: C.surface, borderRadius: R.lg, boxShadow: shadow2, width, maxWidth: "100%",
-            maxHeight: "88vh", overflowY: "auto", padding: 24,
-          }}
-          onClick={(e) => e.stopPropagation()}
+          data-slot="dialog-content"
+          className="max-h-[86vh] overflow-y-auto p-5"
+          style={{ maxWidth: width }}
+          onClick={(e) => { if (e.target === e.currentTarget) attemptClose(); }}
         >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: C.ink, margin: 0, letterSpacing: "-0.25px" }}>{title}</h3>
-          <IconButton onClick={attemptClose} title="Tutup"><X size={18} /></IconButton>
-        </div>
-        {children}
-      </div>
-    </div>
+          <DialogHeader>
+            <DialogTitle className="text-sm/relaxed font-medium">{title}</DialogTitle>
+          </DialogHeader>
+          {children}
+        </DialogPrimitive.Popup>
+      </DialogPortal>
+    </Dialog>
   );
 }
 
@@ -697,6 +764,7 @@ export default function App() {
   const queued = useRef(null);
   const retry = useRef(0);
   const pendingDeletes = useRef([]);
+  const deletingRef = useRef(false);
 
   // --- Load dari Supabase (anon read) ---
   useEffect(() => {
@@ -777,10 +845,33 @@ export default function App() {
   const [projectModal, setProjectModal] = useState(null); // null | {} (new) | project (edit)
   const [navView, setNavView] = useState("project");
   const [lightboxUrl, setLightboxUrl] = useState(null);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [seenAlerts, setSeenAlerts] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("rnd-seen-alerts")) || []; } catch { return []; }
+  });
+
+  const notifAlerts = useMemo(() => allAlerts(projects), [projects]);
+  const unseenAlerts = useMemo(() => {
+    const seenSet = new Set(seenAlerts);
+    return notifAlerts.filter((a) => !seenSet.has(a.key));
+  }, [notifAlerts, seenAlerts]);
+  // Badge hub & hitung belum dibaca: tulis angka ke localStorage (dibaca shell hub).
+  useEffect(() => {
+    try { localStorage.setItem("rnd-alert-count", String(unseenAlerts.length)); } catch { /* abaikan */ }
+  }, [unseenAlerts.length]);
+  function markAllRead() {
+    const keys = notifAlerts.map((a) => a.key);
+    setSeenAlerts(keys);
+    try { localStorage.setItem("rnd-seen-alerts", JSON.stringify(keys)); } catch { /* abaikan */ }
+  }
 
   const activeProject = useMemo(
     () => projects.find((p) => p.id === activeProjectId) || null,
     [projects, activeProjectId]
+  );
+  const allTags = useMemo(
+    () => [...new Set(projects.filter((p) => p.tags && p.tags.length).flatMap((p) => p.tags))].sort((a, b) => a.localeCompare(b)),
+    [projects]
   );
 
   function openProject(id) {
@@ -793,12 +884,22 @@ export default function App() {
   }
   function saveProject(data) {
     if (data.id) {
-      setProjects((prev) => prev.map((p) => (p.id === data.id ? { ...p, ...data } : p)));
+      setProjects((prev) => prev.map((p) => {
+        if (p.id !== data.id) return p;
+        const before = JSON.stringify([p.name, p.code, p.category, p.description, p.status, p.priority, p.tags, p.startDate, p.targetReleaseDate, p.autoStatus]);
+        const after = JSON.stringify([data.name, data.code, data.category, data.description, data.status, data.priority, data.tags, data.startDate, data.targetReleaseDate, data.autoStatus]);
+        const next = { ...p, ...data };
+        if (before === after) return next;
+        return { ...next, history: [{ id: nid(), at: new Date().toISOString(), type: "ubah", text: "Data proyek diperbarui" }, ...(next.history || [])].slice(0, 100) };
+      }));
     } else {
       const newProj = {
-        id: (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : nid(), milestones: [], archived: false,
+        id: (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : nid(), archived: false,
+        milestones: data.milestones && data.milestones.length ? data.milestones : [],
         name: data.name, code: data.code, category: data.category, description: data.description,
         status: data.status, startDate: data.startDate, targetReleaseDate: data.targetReleaseDate,
+        priority: data.priority || "", tags: data.tags || [],
+        history: [{ id: nid(), at: new Date().toISOString(), type: "ubah", text: data.milestones && data.milestones.length ? "Project dibuat dari template" : "Project dibuat" }],
       };
       setProjects((prev) => [...prev, newProj]);
     }
@@ -807,9 +908,29 @@ export default function App() {
   function archiveProject(id) {
     setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, archived: !p.archived } : p)));
   }
+  function duplicateProject(p) {
+    const dup = JSON.parse(JSON.stringify(p));
+    dup.id = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : nid();
+    dup.name = (p.name || "Project") + " (salinan)";
+    dup.status = "Ideation";
+    dup.startDate = todayStr();
+    dup.targetReleaseDate = "";
+    dup.archived = false;
+    dup.trashedAt = null;
+    dup.history = [{ id: nid(), at: new Date().toISOString(), type: "ubah", text: "Project dibuat dari duplikat" }];
+    dup.milestones = (dup.milestones || []).map((n) => cloneNodeClean(n));
+    setProjects((prev) => [...prev, dup]);
+  }
   function updateProject(id, patch) {
     setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
   }
+  const logActivity = useCallback((projectId, text, type = "ubah") => {
+    setProjects((prev) => prev.map((p) => {
+      if (p.id !== projectId) return p;
+      const entry = { id: nid(), at: new Date().toISOString(), type, text };
+      return { ...p, history: [entry, ...(p.history || [])].slice(0, 100) };
+    }));
+  }, []);
   async function trashProject(id) {
     const ok = await confirmDialog({ title: "Buang ke Trash?", message: "Project dipindahkan ke Trash dan otomatis dihapus permanen setelah 14 hari.", confirmText: "Buang" });
     if (!ok) return;
@@ -819,15 +940,21 @@ export default function App() {
     updateProject(id, { trashedAt: null });
   }
   async function permanentDeleteProject(id) {
+    if (deletingRef.current) return;
     const p = projects.find((x) => x.id === id);
     if (!p) return;
     const ok = await confirmDialog({ title: "Hapus Permanen?", message: "Project dihapus selamanya beserta foto-fotonya. Tidak bisa dikembalikan.", confirmText: "Hapus Permanen", danger: true });
     if (!ok) return;
-    await Promise.all(
-      flattenMilestones(p.milestones).flatMap((m) => (m.checklist || []).filter((c) => c.photoUrl).map((c) => deleteFromStorage(c.photoUrl).catch(() => {})))
-    );
-    pendingDeletes.current.push(id);
-    setProjects((prev) => prev.filter((x) => x.id !== id));
+    deletingRef.current = true;
+    try {
+      await Promise.all(
+        flattenMilestones(p.milestones).flatMap((m) => (m.checklist || []).filter((c) => c.photoUrl).map((c) => deleteFromStorage(c.photoUrl).catch(() => {})))
+      );
+      pendingDeletes.current.push(id);
+      setProjects((prev) => prev.filter((x) => x.id !== id));
+    } finally {
+      deletingRef.current = false;
+    }
   }
   function updateProjectMilestones(projectId, updater) {
     setProjects((prev) =>
@@ -875,12 +1002,6 @@ export default function App() {
         .rnd-pop { animation: rnd-pop .22s cubic-bezier(.2,.8,.3,1) both; }
         .rnd-rise { animation: rnd-rise .38s ease both; }
         .rnd-toast { animation: rnd-toast .25s cubic-bezier(.2,.8,.3,1) both; }
-        .rnd-confirm { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-bento); box-shadow: var(--shadow-md); padding: 22px; width: 380px; max-width: 100%; }
-        .rnd-confirm-title { font-size: 16px; font-weight: 700; margin: 0 0 8px; color: var(--text); }
-        .rnd-confirm-msg { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.5; }
-        .rnd-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
-        .rnd-btn-primary { background: var(--primary); color: #fff; border: none; border-radius: var(--radius-full); padding: 9px 18px; font-size: 14px; font-weight: 500; cursor: pointer; }
-        .rnd-btn-danger { background: #c0392b; color: #fff; border: none; border-radius: var(--radius-full); padding: 9px 18px; font-size: 14px; font-weight: 500; cursor: pointer; }
         button { transition: background .15s ease, transform .08s ease; }
         button:active { transform: scale(.97); }
         @media (prefers-reduced-motion: reduce) {
@@ -896,9 +1017,9 @@ export default function App() {
           style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}
         >
           <div style={{ width: 28, height: 28, borderRadius: R.md, background: C.secondary, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <LayoutGrid size={16} color="#fff" />
+            <LayoutGrid size={16} color="var(--primary-foreground)" />
           </div>
-          <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: "-0.25px" }}>RND Roadmap Tracker</span>
+          <span style={{ fontWeight: 600, fontSize: 14, letterSpacing: "normal" }}>RND Roadmap Tracker</span>
         </div>
         {view === "project" && activeProject && (
           <>
@@ -906,7 +1027,48 @@ export default function App() {
             <span style={{ fontSize: 14, color: C.inkMuted }}>{activeProject.name}</span>
           </>
         )}
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center" }}>
+          <div style={{ position: "relative" }}>
+            <Button variant="ghost" size="icon-sm" onClick={() => setNotifOpen((o) => !o)} title="Notifikasi">
+              <Bell size={16} />
+              {unseenAlerts.length > 0 && (
+                <span style={{ position: "absolute", top: -2, right: -2, minWidth: 16, height: 16, borderRadius: R.full, background: "oklch(0.577 0.245 27.325)", color: "#fff", fontSize: 10, fontWeight: 700, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>
+                  {unseenAlerts.length > 99 ? "99+" : unseenAlerts.length}
+                </span>
+              )}
+            </Button>
+          </div>
+        </div>
       </div>
+
+      {notifOpen && (
+        <>
+          <div style={{ position: "fixed", inset: 0, zIndex: 390, background: "transparent" }} onClick={() => setNotifOpen(false)} />
+          <div id="rnd-notif-panel" style={{ position: "fixed", top: 64, right: 20, zIndex: 400, width: 340, maxWidth: "92vw", maxHeight: "70vh", overflowY: "auto", background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, boxShadow: shadow2, padding: 14 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>Notifikasi</h3>
+              <button onClick={markAllRead} style={{ border: "none", background: "none", color: C.primary, fontSize: 12, fontWeight: 600, cursor: "pointer", padding: 0 }}>Tandai semua sudah dibaca</button>
+            </div>
+            {unseenAlerts.length === 0 ? (
+              <div style={{ fontSize: 13, color: C.inkMuted, padding: "10px 0" }}>Tidak ada notifikasi baru. 👍</div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {unseenAlerts.map((a) => (
+                  <div key={a.key} onClick={() => { openProject(a.project.id); setNotifOpen(false); }} style={{ cursor: "pointer", padding: "9px 11px", borderRadius: R.sm, background: a.kind === "overdue" ? "color-mix(in oklch, oklch(0.75 0.15 65) 8%, var(--card))" : "var(--muted)" }}>
+                    <div style={{ fontSize: 13 }}>
+                      <span style={{ fontWeight: 600 }}>{a.project.name}</span>
+                      <span style={{ color: C.inkMuted }}> — {a.milestone.title}</span>
+                    </div>
+                    <Badge bg={a.kind === "overdue" ? "color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))" : "color-mix(in oklch, var(--primary) 13%, var(--card))"} fg={a.kind === "overdue" ? "oklch(0.47 0.14 65)" : "oklch(0.45 0.11 250)"}>
+                      {a.kind === "overdue" ? `Lewat target: ${a.milestone.targetDate}` : `Target: ${a.milestone.targetDate}`}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
         <div style={{ maxWidth: 1320, margin: "0 auto", padding: "28px 24px 64px" }}>
         {view === "dashboard" && (
@@ -921,6 +1083,7 @@ export default function App() {
             onTrash={trashProject}
             onRecover={recoverProject}
             onPermanentDelete={permanentDeleteProject}
+            onDuplicate={duplicateProject}
           />
         )}
         {view === "project" && activeProject && (
@@ -928,6 +1091,8 @@ export default function App() {
             project={activeProject}
             onBack={backToDashboard}
             onEditProject={() => setProjectModal(activeProject)}
+            allProjects={projects}
+            onLog={logActivity}
             updateMilestones={(updater) => updateProjectMilestones(activeProject.id, updater)}
           />
         )}
@@ -939,12 +1104,13 @@ export default function App() {
           initial={projectModal}
           onClose={() => setProjectModal(null)}
           onSave={saveProject}
+          allTags={allTags}
         />
       )}
       <Lightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
       <ConfirmProvider />
       {saveStatus.state !== "idle" && (
-        <div className="rnd-toast" style={{ position: "fixed", top: 76, right: 20, zIndex: 300, fontSize: 13, fontWeight: 600, padding: "10px 14px", borderRadius: R.md, boxShadow: shadow2, background: saveStatus.state === "error" ? "#ffe0c2" : saveStatus.state === "saved" ? "#c9f2d3" : "#f6f5f4", color: saveStatus.state === "error" ? C.orangeDeep : saveStatus.state === "saved" ? "#0b5e1e" : C.inkMuted, whiteSpace: "nowrap" }}>
+        <div className="rnd-toast" style={{ position: "fixed", top: 76, right: 20, zIndex: 300, fontSize: 13, fontWeight: 600, padding: "10px 14px", borderRadius: R.md, boxShadow: shadow2, background: saveStatus.state === "error" ? "color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))" : saveStatus.state === "saved" ? "color-mix(in oklch, oklch(0.62 0.17 155) 13%, var(--card))" : "var(--muted)", color: saveStatus.state === "error" ? "oklch(0.47 0.14 65)" : saveStatus.state === "saved" ? "oklch(0.45 0.13 155)" : "var(--muted-foreground)", whiteSpace: "nowrap" }}>
           {saveStatus.state === "error" ? "⚠ " : saveStatus.state === "saved" ? "✓ " : ""}{saveStatus.msg}
         </div>
       )}
@@ -954,9 +1120,64 @@ export default function App() {
 }
 
 // ---------- Dashboard ----------
-function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEditProject, onArchive, onTrash, onRecover, onPermanentDelete }) {
+// ---------- Ringkasan mingguan ----------
+function WeeklyPanel({ projects }) {
+  const s = weeklySummary(projects);
+  const now = new Date();
+  const monday = new Date(now); monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+  const fmt = (d) => d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
+  const items = [
+    { label: "Project aktif", value: s.active, color: C.primary },
+    { label: "Project selesai", value: s.doneProjects, color: C.green },
+    { label: "At risk", value: s.atRisk, color: "oklch(0.47 0.14 65)" },
+    { label: "Lewat target", value: s.overdue, color: "oklch(0.47 0.14 65)" },
+    { label: "Target 14 hari", value: s.upcoming, color: "oklch(0.55 0.16 250)" },
+    { label: "Selesai minggu ini", value: s.doneThisWeek, color: C.green },
+    { label: "Total selesai", value: s.doneTotal + "/" + s.itemsTotal, color: C.inkSecondary },
+  ];
+  const copyWeekly = () => {
+    const lines = [
+      "RINGKASAN MINGGUAN RND ROADMAP",
+      fmt(monday) + " – " + fmt(sunday) + " " + sunday.getFullYear(),
+      "----------------------------------",
+      "Project aktif          : " + s.active,
+      "Project selesai        : " + s.doneProjects,
+      "Project at risk        : " + s.atRisk,
+      "Tahapan lewat target   : " + s.overdue,
+      "Target dalam 14 hari   : " + s.upcoming,
+      "Selesai minggu ini     : " + s.doneThisWeek,
+      "Total selesai          : " + s.doneTotal + "/" + s.itemsTotal,
+    ].join("\n");
+    try { navigator.clipboard.writeText(lines); } catch (_) {}
+  };
+  return (
+    <div id="rnd-weekly" style={{ background: "var(--card)", border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: "14px 16px", marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>Ringkasan Mingguan</div>
+          <div style={{ fontSize: 11.5, color: C.inkMuted }}>{fmt(monday)} – {fmt(sunday)} {sunday.getFullYear()} · seluruh project aktif</div>
+        </div>
+        <button onClick={copyWeekly} className={C.btnSecondary} style={{ padding: "6px 12px", fontSize: 12 }} title="Salin ringkasan sebagai teks">
+          <Copy size={13} /> Salin Ringkasan
+        </button>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10 }}>
+        {items.map((it) => (
+          <div key={it.label} style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.md, padding: "10px 12px" }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: it.color, lineHeight: 1.1 }}>{it.value}</div>
+            <div style={{ fontSize: 11.5, color: C.inkMuted, marginTop: 2 }}>{it.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEditProject, onArchive, onTrash, onRecover, onPermanentDelete, onDuplicate }) {
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [tagFilter, setTagFilter] = useState([]);
   const [sort, setSort] = useState("default");
   const DASH_FILTERS = [
     { key: "all", label: "Semua" },
@@ -968,9 +1189,10 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
   const STATUS_ORDER = { "Ideation": 0, "On Track": 1, "At Risk": 2, "Done": 3 };
   const comparators = {
     default: () => 0,
-    status: (a, b) => ((STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99)) || (a.name || "").localeCompare(b.name || ""),
+    status: (a, b) => ((STATUS_ORDER[STAT_EFF[a.id]] ?? 99) - (STATUS_ORDER[STAT_EFF[b.id]] ?? 99)) || (a.name || "").localeCompare(b.name || ""),
     target: (a, b) => (a.targetReleaseDate || "9999-99-99").localeCompare(b.targetReleaseDate || "9999-99-99"),
     progress: (a, b) => projectChecklistStats(b).pct - projectChecklistStats(a).pct,
+    priority: (a, b) => ((({ P1: 0, P2: 1, P3: 2 })[a.priority] ?? 3) - (({ P1: 0, P2: 1, P3: 2 })[b.priority] ?? 3)) || (a.name || "").localeCompare(b.name || ""),
   };
   const NAV = [
     { key: "project", label: "Project", icon: <FolderKanban size={15} /> },
@@ -992,12 +1214,16 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
     archive: projects.filter((p) => p.archived && !p.trashedAt).length,
     trash: projects.filter((p) => p.trashedAt).length,
   };
-  const needle = q.trim().toLowerCase();
+  const STAT_EFF = Object.fromEntries(projects.map((p) => [p.id, effectiveStatus(p)]));
+  const allTags = [...new Set(projects.filter((p) => p.tags && p.tags.length).flatMap((p) => p.tags))].sort((a, b) => a.localeCompare(b));
+  const toggleTag = (t) => setTagFilter((cur) => (cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t]));
   const visible = projects
     .filter(inView)
-    .filter((p) => statusFilter === "all" || p.status === statusFilter)
+    .filter((p) => statusFilter === "all" || STAT_EFF[p.id] === statusFilter)
+    .filter((p) => tagFilter.length === 0 || tagFilter.every((t) => (p.tags || []).includes(t)))
     .filter((p) => {
-      if (!needle) return true;
+      if (!q) return true;
+      const needle = (q || "").trim().toLowerCase();
       if ((p.name || "").toLowerCase().includes(needle)) return true;
       if ((p.code || "").toLowerCase().includes(needle)) return true;
       if ((p.description || "").toLowerCase().includes(needle)) return true;
@@ -1008,7 +1234,7 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
     }).slice().sort(comparators[sort] || comparators.default);
 
   const counts = { Ideation: 0, "On Track": 0, "At Risk": 0, Done: 0 };
-  projects.filter((p) => !p.archived && !p.trashedAt).forEach((p) => { counts[p.status] = (counts[p.status] || 0) + 1; });
+  projects.filter((p) => !p.archived && !p.trashedAt).forEach((p) => { counts[STAT_EFF[p.id]] = (counts[STAT_EFF[p.id]] || 0) + 1; });
   let totalItems = 0, doneItems = 0;
   projects.filter((p) => !p.archived && !p.trashedAt).forEach((p) => {
     flattenMilestones(p.milestones).forEach((m) => (m.checklist || []).forEach((c) => { totalItems++; if (c.isCompleted) doneItems++; }));
@@ -1027,29 +1253,27 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
       <div style={{ flex: 1, minWidth: 0 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-0.625px", margin: "0 0 4px" }}>Dashboard</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 600, letterSpacing: "normal", margin: "0 0 4px" }}>Dashboard</h1>
           <p style={{ fontSize: 14, color: C.inkMuted, margin: 0 }}>Ringkasan progres produk baru Divisi R&D.</p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button
+          <SecondaryButton
             onClick={() => downloadCsv("rnd-roadmap.csv", buildRoadmapCsv(projects.filter((p) => !p.archived && !p.trashedAt)))}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 14px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, color: C.ink, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-          ><Download size={16} /> Export CSV</button>
-          <button
+          ><Download size={16} /> Export CSV</SecondaryButton>
+          <SecondaryButton
             onClick={() => openPrintableReport(projects.filter((p) => !p.archived && !p.trashedAt))}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 14px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, color: C.ink, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-          ><Printer size={16} /> Export PDF</button>
+          ><Printer size={16} /> Export PDF</SecondaryButton>
           <PrimaryButton onClick={onNewProject}><Plus size={16} /> Project Baru</PrimaryButton>
         </div>
       </div>
 
       {/* Search & filter */}
       <div id="rnd-toolbar" style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-        <input
+        <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Cari project, milestone, atau checklist…"
-          style={{ flex: "1 1 240px", minWidth: 200, padding: "9px 12px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, fontSize: 13, color: C.ink, outline: "none" }}
+          className="h-8 min-w-[200px] flex-1 basis-[240px]"
         />
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {DASH_FILTERS.map((f) => (
@@ -1060,24 +1284,50 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
                 padding: "7px 12px", borderRadius: R.full, fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
                 border: `1px solid ${statusFilter === f.key ? C.primary : C.hairline}`,
                 background: statusFilter === f.key ? C.primary : C.surface,
-                color: statusFilter === f.key ? "#fff" : C.inkSecondary,
+                color: statusFilter === f.key ? "var(--primary-foreground)" : C.inkSecondary,
               }}
             >
               {f.label}
             </button>
           ))}
         </div>
+        {allTags.length > 0 && (
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ fontSize: 12, color: C.inkMuted }}>Tag:</span>
+            {allTags.map((t) => {
+              const active = tagFilter.includes(t);
+              return (
+                <button
+                  key={t}
+                  onClick={() => toggleTag(t)}
+                  style={{
+                    padding: "4px 10px", borderRadius: R.full, fontSize: 11.5, fontWeight: 600, cursor: "pointer",
+                    border: `1px solid ${active ? C.primary : C.hairline}`,
+                    background: active ? C.primary : C.surface,
+                    color: active ? "var(--primary-foreground)" : C.inkSecondary,
+                  }}
+                >
+                  {t}
+                </button>
+              );
+            })}
+          </div>
+        )}
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value)}
-          style={{ padding: "8px 10px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, fontSize: 13, color: C.ink, cursor: "pointer" }}
+          className={cn(inputCls, "h-8 w-auto cursor-pointer")}
         >
           <option value="default">Urutkan: Default</option>
           <option value="status">Status</option>
           <option value="target">Target Rilis</option>
           <option value="progress">Progress</option>
+          <option value="priority">Prioritas</option>
         </select>
       </div>
+
+      {/* Ringkasan mingguan */}
+      <WeeklyPanel projects={projects} />
 
       {/* Status summary + overall progress */}
       <div id="rnd-summary" style={{ display: "flex", gap: 16, marginBottom: 20, flexWrap: "wrap", alignItems: "stretch" }}>
@@ -1088,7 +1338,7 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
                 <span style={{ width: 9, height: 9, borderRadius: R.full, background: cfg.fg, flexShrink: 0 }} />
                 <span style={{ fontSize: 12.5, color: C.inkMuted, fontWeight: 500 }}>{cfg.label}</span>
               </div>
-              <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.5px", lineHeight: 1.1 }}>{counts[key] || 0}</div>
+              <div style={{ fontSize: 30, fontWeight: 600, letterSpacing: "normal", lineHeight: 1.1 }}>{counts[key] || 0}</div>
             </div>
           ))}
         </div>
@@ -1109,19 +1359,19 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-        <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>{navView === "trash" ? "Project di Trash" : navView === "archive" ? "Project Diarsipkan" : "Semua Project"}</h3>
+        <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{navView === "trash" ? "Project di Trash" : navView === "archive" ? "Project Diarsipkan" : "Semua Project"}</h3>
       </div>
 
       {visible.length === 0 && (
         <div style={{ background: C.surface, border: `1px dashed ${C.hairline}`, borderRadius: R.lg, padding: 40, textAlign: "center", color: C.inkMuted, fontSize: 14 }}>
-          {needle ? `Tidak ada hasil untuk "${q}".` : navView === "trash" ? "Belum ada project di Trash." : navView === "archive" ? "Belum ada project yang diarsipkan." : "Belum ada project. Tambahkan project baru untuk mulai melacak roadmap."}
+          {q ? `Tidak ada hasil untuk "${q}".` : navView === "trash" ? "Belum ada project di Trash." : navView === "archive" ? "Belum ada project yang diarsipkan." : "Belum ada project. Tambahkan project baru untuk mulai melacak roadmap."}
         </div>
       )}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
         {visible.map((p, i) => {
           const stats = projectChecklistStats(p);
-          const cfg = PROJECT_STATUS[p.status] || PROJECT_STATUS["Ideation"];
+          const cfg = PROJECT_STATUS[STAT_EFF[p.id]] || PROJECT_STATUS["Ideation"];
           return (
           <div
             key={p.id}
@@ -1131,10 +1381,13 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
           >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
                 <Badge bg={cfg.bg} fg={cfg.fg}>{cfg.label}</Badge>
+                {p.priority && PRIORITY_META[p.priority] && (
+                  <Badge bg={PRIORITY_META[p.priority].bg} fg={PRIORITY_META[p.priority].fg}>{PRIORITY_META[p.priority].label}</Badge>
+                )}
                 {p.trashedAt ? (
-                  <Badge bg="#ffe0c2" fg={C.orangeDeep}>Trash · {daysLeft(p)} hari</Badge>
+                  <Badge bg="color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))" fg="oklch(0.47 0.14 65)">Trash · {daysLeft(p)} hari</Badge>
                 ) : overdueMilestones(p).length > 0 && (
-                  <Badge bg="#ffe0c2" fg={C.orangeDeep}>Lewat Target</Badge>
+                  <Badge bg="color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))" fg="oklch(0.47 0.14 65)">Lewat Target</Badge>
                 )}
                 <div style={{ display: "flex", gap: 2 }} onClick={(e) => e.stopPropagation()}>
                   {navView === "trash" ? (
@@ -1145,15 +1398,26 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
                   ) : (
                     <>
                       <IconButton title="Edit" onClick={() => onEditProject(p)}><Pencil size={14} /></IconButton>
+                      <IconButton title="Duplikat" onClick={() => onDuplicate(p)}><Copy size={14} /></IconButton>
                       <IconButton title={p.archived ? "Aktifkan" : "Arsipkan"} onClick={() => onArchive(p.id)}><Archive size={14} /></IconButton>
                       <IconButton title="Buang ke Trash" onClick={() => onTrash(p.id)}><Trash2 size={14} /></IconButton>
                     </>
                   )}
                 </div>
               </div>
-              <h4 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 2px", letterSpacing: "-0.25px" }}>{highlightMatch(p.name, q)}</h4>
+              <h4 style={{ fontSize: 14, fontWeight: 600, margin: "0 0 2px", letterSpacing: "normal" }}>{highlightMatch(p.name, q)}</h4>
               <p style={{ fontSize: 12, color: C.inkFaint, margin: "0 0 10px" }}>{p.code} · {p.category}</p>
               <p style={{ fontSize: 13, color: C.inkSecondary, margin: "0 0 14px", lineHeight: 1.4, minHeight: 34 }}>{highlightMatch(p.description, q)}</p>
+              {(p.tags || []).length > 0 && (
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 10 }}>
+                  {(p.tags || []).slice(0, 3).map((t) => (
+                    <span key={t} style={{ background: "var(--muted)", color: "var(--muted-foreground)", borderRadius: R.full, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>{t}</span>
+                  ))}
+                  {(p.tags || []).length > 3 && (
+                    <span style={{ background: "var(--muted)", color: "var(--muted-foreground)", borderRadius: R.full, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>+{(p.tags || []).length - 3}</span>
+                  )}
+                </div>
+              )}
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: C.inkMuted, marginBottom: 4 }}>
                 <span>Progress checklist</span>
                 <span style={{ fontWeight: 600, color: C.ink }}>{stats.pct}%</span>
@@ -1167,7 +1431,7 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
       </div>
       <aside id="rnd-sidebar" style={{ flex: "0 0 248px", position: "sticky", top: 72, display: "flex", flexDirection: "column", gap: 16 }}>
         <div style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 14 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.inkMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.5px" }}>Navigasi</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: C.inkMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.5px" }}>Navigasi</div>
           <nav style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {NAV.map((n) => (
               <button
@@ -1178,11 +1442,11 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
                   padding: "9px 11px", borderRadius: R.md, border: "none", cursor: "pointer",
                   fontSize: 13, fontWeight: 600, textAlign: "left",
                   background: navView === n.key ? C.primary : "transparent",
-                  color: navView === n.key ? "#fff" : C.ink,
+                  color: navView === n.key ? "var(--primary-foreground)" : C.ink,
                 }}
               >
                 <span style={{ display: "flex", alignItems: "center", gap: 9 }}>{n.icon}{n.label}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, opacity: 0.85 }}>{navCounts[n.key]}</span>
+                <span style={{ fontSize: 12, fontWeight: 600, opacity: 0.85 }}>{navCounts[n.key]}</span>
               </button>
             ))}
           </nav>
@@ -1191,7 +1455,7 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
           <div style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 18, boxShadow: shadow1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <AlertTriangle size={16} color={C.orangeDeep} />
-              <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>Panel Peringatan</h3>
+              <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>Panel Peringatan</h3>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {alerts.map((a, i) => (
@@ -1200,7 +1464,7 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
                   onClick={() => onOpen(a.project.id)}
                   style={{
                     display: "flex", flexDirection: "column", gap: 6, cursor: "pointer",
-                    padding: "9px 11px", borderRadius: R.sm, background: a.kind === "overdue" ? "#fff4ec" : "#f6f5f4",
+                    padding: "9px 11px", borderRadius: R.sm, background: a.kind === "overdue" ? "color-mix(in oklch, oklch(0.75 0.15 65) 8%, var(--card))" : "var(--muted)",
                   }}
                 >
                   <div style={{ fontSize: 13 }}>
@@ -1208,8 +1472,8 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
                     <span style={{ color: C.inkMuted }}> — {a.milestone.title}</span>
                   </div>
                   <Badge
-                    bg={a.kind === "overdue" ? "#ffe0c2" : "#cfe6ff"}
-                    fg={a.kind === "overdue" ? C.orangeDeep : "#0b3a63"}
+                    bg={a.kind === "overdue" ? "color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))" : "color-mix(in oklch, var(--primary) 13%, var(--card))"}
+                    fg={a.kind === "overdue" ? "oklch(0.47 0.14 65)" : "oklch(0.45 0.11 250)"}
                   >
                     {a.kind === "overdue" ? `Lewat target: ${a.milestone.targetDate}` : `Target: ${a.milestone.targetDate}`}
                   </Badge>
@@ -1223,8 +1487,32 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
   );
 }
 
+// ---------- Template selector (dipakai saat Project Baru) ----------
+function TemplateSelector({ onLoad }) {
+  const templates = loadTemplates();
+  const [sel, setSel] = useState("");
+  if (templates.length === 0) return null;
+  const apply = () => {
+    const t = templates.find((x) => x.id === sel);
+    if (!t) return;
+    onLoad(instantiateMilestones(t.milestones));
+  };
+  return (
+    <div style={{ marginTop: 4 }}>
+      <FieldLabel>Buat dari Template (opsional)</FieldLabel>
+      <div style={{ display: "flex", gap: 6 }}>
+        <select className={cn(inputCls, "cursor-pointer flex-1")} value={sel} onChange={(e) => setSel(e.target.value)}>
+          <option value="">Pilih template struktur…</option>
+          {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </select>
+        <Button type="button" variant="outline" onClick={apply} className="h-8">Terapkan</Button>
+      </div>
+    </div>
+  );
+}
+
 // ---------- Project Modal ----------
-function ProjectModal({ initial, onClose, onSave }) {
+function ProjectModal({ initial, onClose, onSave, allTags = [] }) {
   const [form, setForm] = useState({
     id: initial.id || null,
     name: initial.name || "",
@@ -1232,10 +1520,24 @@ function ProjectModal({ initial, onClose, onSave }) {
     category: initial.category || "",
     description: initial.description || "",
     status: initial.status || "Ideation",
+    priority: initial.priority || "",
+    tags: initial.tags || [],
+    autoStatus: !!initial.autoStatus,
+    milestones: initial.milestones || [],
     startDate: initial.startDate || todayStr(),
     targetReleaseDate: initial.targetReleaseDate || "",
   });
+  const [tagInput, setTagInput] = useState("");
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e && e.target ? e.target.value : e }));
+  function addTagFromInput() {
+    const t = tagInput.trim();
+    if (!t) return;
+    if (!form.tags.includes(t)) setForm((f) => ({ ...f, tags: [...f.tags, t] }));
+    setTagInput("");
+  }
+  function addTag(t) { if (!form.tags.includes(t)) setForm((f) => ({ ...f, tags: [...f.tags, t] })); }
+  function removeTag(t) { setForm((f) => ({ ...f, tags: f.tags.filter((x) => x !== t) })); }
+  const tagSuggestions = allTags.filter((t) => !form.tags.includes(t)).slice(0, 8);
   const initialSnapshot = useRef(undefined); if (initialSnapshot.current === undefined) initialSnapshot.current = JSON.stringify(form);
   const dirty = JSON.stringify(form) !== initialSnapshot;
   const handleClose = async () => {
@@ -1251,18 +1553,43 @@ function ProjectModal({ initial, onClose, onSave }) {
       >
         <div>
           <FieldLabel>Nama Produk</FieldLabel>
-          <input style={inputStyle} value={form.name} onChange={set("name")} placeholder="mis. SmartJar — Toples Pintar IoT" required />
+          <Input value={form.name} onChange={set("name")} placeholder="mis. SmartJar — Toples Pintar IoT" required className="h-8" />
         </div>
         <div style={{ display: "flex", gap: 12 }}>
           <div style={{ flex: 1 }}>
             <FieldLabel>Kode / SKU</FieldLabel>
-            <input style={inputStyle} value={form.code} onChange={set("code")} placeholder="SJ-001" />
+            <Input value={form.code} onChange={set("code")} placeholder="SJ-001" className="h-8" />
           </div>
           <div style={{ flex: 1 }}>
             <FieldLabel>Kategori</FieldLabel>
-            <input style={inputStyle} value={form.category} onChange={set("category")} placeholder="IoT / Consumer" />
+            <Input value={form.category} onChange={set("category")} placeholder="IoT / Consumer" className="h-8" />
           </div>
         </div>
+        <div>
+          <FieldLabel>Tag (opsional, beberapa)</FieldLabel>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
+            {form.tags.map((t) => (
+              <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: R.full, fontSize: 12, fontWeight: 600, background: "color-mix(in oklch, var(--primary) 13%, var(--card))", color: "oklch(0.45 0.11 250)" }}>
+                {t}
+                <button type="button" onClick={() => removeTag(t)} aria-label={"Hapus tag " + t} style={{ border: "none", background: "none", cursor: "pointer", fontSize: 14, lineHeight: 1, color: "inherit", padding: 0 }}>×</button>
+              </span>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <Input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTagFromInput(); } }} placeholder="Ketik tag lalu Enter…" className="h-8 flex-1" />
+            <Button type="button" variant="outline" onClick={addTagFromInput} className="h-8">Tambah</Button>
+          </div>
+          {tagSuggestions.length > 0 && (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
+              {tagSuggestions.map((t) => (
+                <button key={t} type="button" onClick={() => addTag(t)} style={{ border: `1px solid ${C.hairline}`, background: C.surface, color: C.inkSecondary, borderRadius: R.full, padding: "2px 8px", fontSize: 11, cursor: "pointer" }}>+ {t}</button>
+              ))}
+            </div>
+          )}
+        </div>
+        {!initial.id && (
+          <TemplateSelector onLoad={(milestones) => setForm((f) => ({ ...f, milestones }))} />
+        )}
         <div>
           <FieldLabel>Deskripsi Singkat</FieldLabel>
           <RichTextInput value={form.description} onChange={(v) => setForm((f) => ({ ...f, description: v }))} placeholder="Tulis deskripsi… Gunakan **tebal**, - atau + untuk bullet, > untuk kutipan." />
@@ -1279,32 +1606,57 @@ function ProjectModal({ initial, onClose, onSave }) {
         </div>
         <div>
           <FieldLabel>Status</FieldLabel>
-          <select style={inputStyle} value={form.status} onChange={set("status")}>
+          <select className={cn(inputCls, "cursor-pointer")} value={form.status} onChange={set("status")}>
             {Object.keys(PROJECT_STATUS).map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
+          <div>
+            <FieldLabel>Prioritas</FieldLabel>
+            <select className={cn(inputCls, "cursor-pointer")} value={form.priority || ""} onChange={set("priority")}>
+              <option value="">Tidak ada</option>
+              {Object.keys(PRIORITY_META).map((p) => <option key={p} value={p}>{p} — {p === "P1" ? "Tinggi" : p === "P2" ? "Sedang" : "Rendah"}</option>)}
+            </select>
+</div>
+          <label style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: C.inkSecondary, cursor: "pointer" }}>
+            <input type="checkbox" checked={form.autoStatus} onChange={(e) => setForm((f) => ({ ...f, autoStatus: e.target.checked }))} style={{ marginTop: 2 }} />
+            <span>Status otomatis: semua tahapan selesai → <b>Done</b>; ada tahapan lewat target belum selesai → <b>At Risk</b>.</span>
+          </label>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
             <SecondaryButton onClick={handleClose}>Batal</SecondaryButton>
             <PrimaryButton type="submit">Simpan</PrimaryButton>
-        </div>
+          </div>
       </form>
     </Modal>
   );
 }
 
 // ---------- Project Detail ----------
-function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
+function ProjectDetail({ project, onBack, onEditProject, updateMilestones, allProjects = [], onLog }) {
   const [tab, setTab] = useState("roadmap"); // roadmap | laporan
   const [milestoneModal, setMilestoneModal] = useState(null); // {parentId, edit?}
   const [checklistModal, setChecklistModal] = useState(null); // {milestoneId, edit?}
   const [evalModal, setEvalModal] = useState(null); // {milestoneId}
   const [msQ, setMsQ] = useState("");
+  const [tplMsg, setTplMsg] = useState("");
+  const tplTimer = useRef(null);
+  function saveAsTemplate() {
+    const existing = loadTemplates();
+    const name = project.name || "Template";
+    const list = [{ id: nid(), name, savedAt: new Date().toISOString(), milestones: JSON.parse(JSON.stringify(project.milestones)) }];
+    const merged = existing.filter((t) => t.name !== name).concat(list);
+    saveTemplates(merged);
+    setTplMsg("Template \u201C" + name + "\u201D disimpan.");
+    onLog("Project disimpan sebagai template: " + name);
+    if (tplTimer.current) clearTimeout(tplTimer.current);
+    tplTimer.current = setTimeout(() => setTplMsg(""), 3000);
+  }
   const msNeedle = msQ.trim().toLowerCase();
   const visibleMilestones = msNeedle
     ? filterMilestoneTree(project.milestones, (m) => milestoneMatchesSearch(m, msNeedle))
     : project.milestones;
   const stats = projectChecklistStats(project);
-  const cfg = PROJECT_STATUS[project.status] || PROJECT_STATUS["Ideation"];
+  const effStatus = effectiveStatus(project);
+  const cfg = PROJECT_STATUS[effStatus] || PROJECT_STATUS["Ideation"];
   const overdue = overdueMilestones(project);
 
   function addMilestone(parentId, data) {
@@ -1315,6 +1667,7 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
     };
     updateMilestones((ms) => addChildToTree(ms, parentId, node));
     setMilestoneModal(null);
+    onLog("Tahapan ditambahkan: " + node.title);
   }
   function editMilestone(id, data) {
     updateMilestones((ms) => mapTree(ms, id, (n) => ({
@@ -1322,10 +1675,14 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
       targetDate: data.targetDate, completedAt: data.status === "Selesai" ? (n.completedAt || todayStr()) : null,
     })));
     setMilestoneModal(null);
+    onLog("Tahapan diperbarui: " + (data.title || ""));
   }
   function deleteMilestone(id) {
     const node = findNode(project.milestones, id);
-    if (node) collectPhotoUrls(node).forEach((u) => { try { deleteFromStorage(u); } catch (_) {} });
+    if (node) {
+      collectPhotoUrls(node).forEach((u) => { try { deleteFromStorage(u); } catch (_) {} });
+      onLog("Tahapan dihapus: " + (node.title || ""));
+    }
     updateMilestones((ms) => removeFromTree(ms, id));
   }
   function addChecklist(milestoneId, data) {
@@ -1336,6 +1693,7 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
       }],
     })));
     setChecklistModal(null);
+    onLog("Item checklist ditambahkan: " + (data.title || ""));
   }
   function editChecklist(milestoneId, itemId, data) {
     updateMilestones((ms) => mapTree(ms, milestoneId, (n) => ({
@@ -1346,8 +1704,12 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
       } : c),
     })));
     setChecklistModal(null);
+    onLog("Item checklist diperbarui: " + (data.title || ""));
   }
   function toggleChecklist(milestoneId, itemId) {
+    const tNode = findNode(project.milestones, milestoneId);
+    const tItem = (tNode?.checklist || []).find((c) => c.id === itemId);
+    if (tItem) onLog((tItem.isCompleted ? "Item ditandai belum selesai: " : "Item ditandai selesai: ") + (tItem.title || ""));
     updateMilestones((ms) => mapTree(ms, milestoneId, (n) => ({
       ...n,
       checklist: (n.checklist || []).map((c) => c.id === itemId ? {
@@ -1356,17 +1718,44 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
     })));
   }
   function deleteChecklist(milestoneId, itemId) {
-    updateMilestones((ms) => mapTree(ms, milestoneId, (n) => {
-      const item = (n.checklist || []).find((c) => c.id === itemId);
-      if (item && item.photoUrl) deleteFromStorage(item.photoUrl);
-      return { ...n, checklist: (n.checklist || []).filter((c) => c.id !== itemId) };
-    }));
+    const dNode = findNode(project.milestones, milestoneId);
+    const dItem = (dNode?.checklist || []).find((c) => c.id === itemId);
+    if (dItem) {
+      if (dItem.photoUrl) deleteFromStorage(dItem.photoUrl);
+      onLog("Item checklist dihapus: " + (dItem.title || ""));
+    }
+    updateMilestones((ms) => mapTree(ms, milestoneId, (n) => ({
+      ...n, checklist: (n.checklist || []).filter((c) => c.id !== itemId),
+    })));
   }
+  function importChecklistItems(milestoneId, items) {
+    const existingTitles = new Set(flattenMilestones(project.milestones).find((m) => m.id === milestoneId)?.checklist?.map((c) => c.title) || []);
+    const fresh = items.filter((it) => !existingTitles.has(it.title)).map((it) => ({
+      id: nid(), title: it.title, notes: it.notes || "", isCompleted: false, completedAt: null, photoUrl: "",
+    }));
+    if (fresh.length === 0) return;
+    updateMilestones((ms) => mapTree(ms, milestoneId, (n) => ({ ...n, checklist: [...(n.checklist || []), ...fresh] })));
+    onLog(fresh.length + " item checklist disalin dari sumber lain");
+  }
+  const importSources = useMemo(() => {
+    const out = [];
+    loadTemplates().forEach((tpl) => {
+      const items = flattenMilestones(tpl.milestones).flatMap((m) => (m.checklist || []).map((c) => ({ title: c.title, notes: c.notes })));
+      if (items.length) out.push({ id: "tpl:" + tpl.id, label: tpl.name + " (template)", items });
+    });
+    allProjects.filter((p) => p.id !== project.id && !p.archived && !p.trashedAt).forEach((p) => {
+      flattenMilestones(p.milestones).filter((m) => (m.checklist || []).length).forEach((m) => {
+        out.push({ id: "pj:" + p.id + ":" + m.id, label: p.name + " — " + m.title, items: (m.checklist || []).map((c) => ({ title: c.title, notes: c.notes })) });
+      });
+    });
+    return out;
+  }, [allProjects, project.id, project.milestones]);
   function addEvaluation(milestoneId, data) {
     updateMilestones((ms) => mapTree(ms, milestoneId, (n) => ({
       ...n, evaluations: [{ id: nid(), score: data.score, decision: data.decision, comments: data.comments, createdAt: todayStr() }, ...(n.evaluations || [])],
     })));
     setEvalModal(null);
+    onLog("Evaluasi ditambahkan (" + (data.decision || "") + ", skor " + data.score + "/5)");
   }
 
   return (
@@ -1379,29 +1768,34 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
             <Badge bg={cfg.bg} fg={cfg.fg}>{cfg.label}</Badge>
+            {project.autoStatus && effStatus !== project.status && (
+              <Badge bg="color-mix(in oklch, var(--primary) 13%, var(--card))" fg="oklch(0.45 0.11 250)" icon={<AlertTriangle size={11} />}>
+                Auto: {effStatus}
+              </Badge>
+            )}
             <span style={{ fontSize: 12, color: C.inkFaint }}>{project.code} · {project.category}</span>
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.5px", margin: "0 0 6px" }}>{project.name}</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 600, letterSpacing: "normal", margin: "0 0 6px" }}>{project.name}</h1>
           <div style={{ fontSize: 14, color: C.inkSecondary, margin: 0, maxWidth: 620 }} dangerouslySetInnerHTML={{ __html: renderRich(project.description) }} />
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <button
+          <SecondaryButton
             onClick={() => downloadCsv(`${project.code || "project"}-roadmap.csv`, buildRoadmapCsv([project]))}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, color: C.ink, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-          ><Download size={14} /> CSV</button>
-          <button
+          ><Download size={14} /> CSV</SecondaryButton>
+          <SecondaryButton
             onClick={() => openPrintableReport([project])}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, color: C.ink, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-          ><Printer size={14} /> PDF</button>
+          ><Printer size={14} /> PDF</SecondaryButton>
           <SecondaryButton onClick={onEditProject}><Pencil size={14} /> Edit Project</SecondaryButton>
+          <SecondaryButton onClick={saveAsTemplate}><ClipboardList size={14} /> Simpan Template</SecondaryButton>
         </div>
       </div>
+      {tplMsg && <div style={{ fontSize: 12, color: "oklch(0.45 0.13 155)", fontWeight: 600, margin: "-10px 0 12px" }}>{tplMsg}</div>}
 
       <div id="rnd-detail-stats" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
         <div style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 16 }}>
           <p style={{ fontSize: 12, color: C.inkMuted, margin: "0 0 6px" }}>Progress Checklist</p>
           <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 8 }}>
-            <span style={{ fontSize: 22, fontWeight: 700 }}>{stats.pct}%</span>
+            <span style={{ fontSize: 22, fontWeight: 600 }}>{stats.pct}%</span>
             <span style={{ fontSize: 12, color: C.inkFaint }}>({stats.done}/{stats.total} item)</span>
           </div>
           <ProgressBar pct={stats.pct} />
@@ -1410,40 +1804,30 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
           <p style={{ fontSize: 12, color: C.inkMuted, margin: "0 0 6px" }}>Tahapan Overdue</p>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {overdue.length > 0 && <AlertTriangle size={16} color={C.orangeDeep} />}
-            <span style={{ fontSize: 22, fontWeight: 700, color: overdue.length ? C.orangeDeep : C.ink }}>{overdue.length}</span>
+            <span style={{ fontSize: 22, fontWeight: 600, color: overdue.length ? "oklch(0.47 0.14 65)" : C.ink }}>{overdue.length}</span>
           </div>
         </div>
         <div style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 16 }}>
           <p style={{ fontSize: 12, color: C.inkMuted, margin: "0 0 6px" }}>Target Rilis</p>
-          <span style={{ fontSize: 16, fontWeight: 700 }}>{project.targetReleaseDate || "—"}</span>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>{project.targetReleaseDate || "—"}</span>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div id="rnd-detail-tabs" style={{ display: "flex", gap: 4, marginBottom: 16, borderBottom: `1px solid ${C.hairline}` }}>
-        {[["roadmap", "Roadmap"], ["laporan", "Laporan Detail"]].map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            style={{
-              background: "none", border: "none", cursor: "pointer", padding: "10px 4px", marginRight: 20,
-              fontSize: 14, fontWeight: 600, color: tab === key ? C.primary : C.inkMuted,
-              borderBottom: tab === key ? `2px solid ${C.primary}` : "2px solid transparent",
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {tab === "roadmap" && (
-        <>
+      {/* Tabs (shadcn) */}
+      <Tabs value={tab} onValueChange={(v) => setTab(v || "roadmap")} style={{ marginBottom: 16 }}>
+        <TabsList variant="line">
+          <TabsTrigger value="roadmap" className="min-w-24">Roadmap</TabsTrigger>
+          <TabsTrigger value="timeline" className="min-w-24">Timeline</TabsTrigger>
+          <TabsTrigger value="aktivitas" className="min-w-24">Aktivitas</TabsTrigger>
+          <TabsTrigger value="laporan" className="min-w-24">Laporan Detail</TabsTrigger>
+        </TabsList>
+        <TabsContent value="roadmap" className="mt-4">
           <div id="rnd-roadmap-toolbar" style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
-            <input
+            <Input
               value={msQ}
               onChange={(e) => setMsQ(e.target.value)}
               placeholder="Cari tahapan atau checklist…"
-              style={{ flex: "1 1 200px", minWidth: 160, padding: "9px 12px", borderRadius: R.md, border: `1px solid ${C.hairline}`, background: C.surface, fontSize: 13, color: C.ink, outline: "none" }}
+              className="h-8 min-w-[160px] flex-1 basis-[200px]"
             />
             <PrimaryButton onClick={() => setMilestoneModal({ parentId: null })}><Plus size={16} /> Tambah Tahapan</PrimaryButton>
           </div>
@@ -1472,10 +1856,17 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
               ))}
             </div>
           )}
-        </>
-      )}
-
-      {tab === "laporan" && <ReportView project={project} />}
+        </TabsContent>
+        <TabsContent value="timeline" className="mt-4">
+          <TimelineView project={project} />
+        </TabsContent>
+        <TabsContent value="aktivitas" className="mt-4">
+          <ActivityPanel history={project.history || []} onLog={onLog} />
+        </TabsContent>
+        <TabsContent value="laporan" className="mt-4">
+          <ReportView project={project} />
+        </TabsContent>
+      </Tabs>
 
       {milestoneModal && (
         <MilestoneModal
@@ -1490,6 +1881,8 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
         <ChecklistModal
           key={checklistModal.edit ? "edit-" + checklistModal.edit.id : "add-" + checklistModal.milestoneId}
           initial={checklistModal.edit}
+          sources={importSources}
+          onImport={(items) => importChecklistItems(checklistModal.milestoneId, items)}
           onClose={() => setChecklistModal(null)}
           onSave={(data) => checklistModal.edit
             ? editChecklist(checklistModal.milestoneId, checklistModal.edit.id, data)
@@ -1510,19 +1903,19 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones }) {
 function TimelineDot({ status, isOverdue, size = 28 }) {
   const isDone = status === "Selesai";
   const isActive = status === "Berjalan";
-  const ring = isOverdue ? "0 0 0 3px #ffe0c2" : "none";
+  const ring = isOverdue ? "0 0 0 3px color-mix(in oklch, oklch(0.75 0.15 65) 18%, transparent)" : "none";
   return (
     <div
       style={{
         width: size, height: size, borderRadius: R.full, flexShrink: 0,
         display: "flex", alignItems: "center", justifyContent: "center",
         background: isDone ? C.green : isActive ? C.primary : C.surface,
-        border: `2px solid ${isDone ? C.green : isActive ? C.primary : "#c9c6c0"}`,
+        border: `2px solid ${isDone ? C.green : isActive ? C.primary : "var(--border)"}`,
         boxShadow: ring, zIndex: 1,
       }}
     >
-      {isDone && <CheckCircle2 size={size - 12} color="#fff" strokeWidth={2.5} />}
-      {isActive && <div style={{ width: size - 18, height: size - 18, borderRadius: R.full, background: "#fff" }} />}
+      {isDone && <CheckCircle2 size={size - 12} color="var(--primary-foreground)" strokeWidth={2.5} />}
+      {isActive && <div style={{ width: size - 18, height: size - 18, borderRadius: R.full, background: "var(--primary-foreground)" }} />}
     </div>
   );
 }
@@ -1551,16 +1944,16 @@ function MilestoneNode({ node, depth, isLast, q = "", onAddChild, onEdit, onDele
 
       {/* Content column */}
       <div style={{ flex: 1, minWidth: 0, paddingBottom: isLast ? 0 : depth === 0 ? 24 : 16 }}>
-        <div style={{ background: C.surface, border: `1px solid ${isOverdue ? "#f0c49a" : C.hairline}`, borderRadius: R.lg, padding: depth === 0 ? 16 : 12 }}>
+        <div style={{ background: C.surface, border: `1px solid ${isOverdue ? "color-mix(in oklch, oklch(0.75 0.15 65) 25%, var(--border))" : C.hairline}`, borderRadius: R.lg, padding: depth === 0 ? 16 : 12 }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
             <IconButton onClick={() => setOpen((o) => !o)} title="Buka/tutup">
               {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
             </IconButton>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
-                <span style={{ fontSize: depth === 0 ? 16 : 14, fontWeight: 700 }}>{highlightMatch(node.title, q)}</span>
+                <span style={{ fontSize: depth === 0 ? 15 : 14, fontWeight: 600 }}>{highlightMatch(node.title, q)}</span>
                 <Badge bg={st.bg} fg={st.fg}>{st.label}</Badge>
-                {isOverdue && <Badge bg="#ffe0c2" fg={C.orangeDeep} icon={<AlertTriangle size={11} />}>Overdue</Badge>}
+                {isOverdue && <Badge bg="color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))" fg="oklch(0.47 0.14 65)" icon={<AlertTriangle size={11} />}>Overdue</Badge>}
               </div>
               {node.description && <div style={{ fontSize: 13, color: C.inkMuted, margin: "0 0 6px" }} dangerouslySetInnerHTML={{ __html: renderRich(node.description) }} />}
               <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 12, color: C.inkFaint, flexWrap: "wrap" }}>
@@ -1636,7 +2029,7 @@ function MilestoneNode({ node, depth, isLast, q = "", onAddChild, onEdit, onDele
                     {node.evaluations.map((ev) => (
                       <div key={ev.id} style={{ padding: "8px 10px", borderRadius: R.sm, background: C.canvasSoft }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
-                          <Badge bg={ev.decision === "Go" ? "#c9f2d3" : "#ffe0c2"} fg={ev.decision === "Go" ? "#0b5e1e" : C.orangeDeep}>{ev.decision}</Badge>
+<Badge bg={ev.decision === "Go" ? "color-mix(in oklch, oklch(0.62 0.17 155) 13%, var(--card))" : "color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))"} fg={ev.decision === "Go" ? "oklch(0.45 0.13 155)" : "oklch(0.47 0.14 65)"}>{ev.decision}</Badge>
                           <span style={{ fontSize: 12, color: C.inkMuted }}>Skor {ev.score}/5</span>
                           <span style={{ fontSize: 11, color: C.inkFaint }}>· {ev.createdAt}</span>
                         </div>
@@ -1697,7 +2090,7 @@ function MilestoneModal({ isEdit, initial, onClose, onSave }) {
       <form onSubmit={(e) => { e.preventDefault(); if (!form.title.trim()) return; onSave(form); }} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div>
           <FieldLabel>Judul Tahapan</FieldLabel>
-          <input style={inputStyle} value={form.title} onChange={set("title")} placeholder="mis. Prototyping" required />
+          <Input value={form.title} onChange={set("title")} placeholder="mis. Prototyping" required className="h-8" />
         </div>
         <div>
           <FieldLabel>Deskripsi</FieldLabel>
@@ -1706,7 +2099,7 @@ function MilestoneModal({ isEdit, initial, onClose, onSave }) {
         <div style={{ display: "flex", gap: 12 }}>
           <div style={{ flex: 1 }}>
             <FieldLabel>Status</FieldLabel>
-            <select style={inputStyle} value={form.status} onChange={set("status")}>
+            <select className={cn(inputCls, "cursor-pointer")} value={form.status} onChange={set("status")}>
               {Object.keys(MILESTONE_STATUS).map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
@@ -1725,7 +2118,7 @@ function MilestoneModal({ isEdit, initial, onClose, onSave }) {
 }
 
 // ---------- Checklist Modal ----------
-function ChecklistModal({ initial, onClose, onSave }) {
+function ChecklistModal({ initial, onClose, onSave, sources = [], onImport }) {
   const { viewPhoto } = useLightbox();
   const [form, setForm] = useState({
     title: initial?.title || "",
@@ -1737,8 +2130,27 @@ function ChecklistModal({ initial, onClose, onSave }) {
   const [preview, setPreview] = useState(initial?.photoUrl || "");
   const [busy, setBusy] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [importSrc, setImportSrc] = useState("");
+  const [importChecked, setImportChecked] = useState([]);
 
   const set = (k) => (e) => { setForm((f) => ({ ...f, [k]: e && e.target ? e.target.value : e })); setDirty(true); };
+
+  function pickSource(id) {
+    setImportSrc(id);
+    const src = sources.find((s) => s.id === id);
+    setImportChecked(src ? src.items.map((it, i) => i) : []);
+  }
+  function toggleChecked(i) {
+    setImportChecked((cur) => (cur.includes(i) ? cur.filter((x) => x !== i) : [...cur, i]));
+  }
+  function doImport() {
+    const src = sources.find((s) => s.id === importSrc);
+    if (!src) return;
+    const items = importChecked.map((i) => src.items[i]);
+    if (items.length) onImport(items);
+    onClose();
+  }
 
   function pickFile(f) {
     if (!f) return;
@@ -1759,28 +2171,27 @@ function ChecklistModal({ initial, onClose, onSave }) {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!form.title.trim()) return;
-    let photoUrl = form.photoUrl;
-    if (file) {
-      setBusy(true);
-      try {
+    setBusy(true);
+    try {
+      let photoUrl = form.photoUrl;
+      if (file) {
         // Kompres di client, lalu upload ke Supabase Storage lewat GAS (DB hanya simpan URL)
         const dataUrl = await resizeImageFile(file);
         const r = await uploadToStorage(dataUrl, file.name, "image/jpeg");
         if (r && r.photoUrl) photoUrl = r.photoUrl;
-      } catch (err) {
-        setBusy(false);
-        alert("Gagal upload foto: " + (err && err.message ? err.message : err));
-        return;
+      } else if (!preview) {
+        photoUrl = "";
       }
+      // Bersihkan foto lama di Storage bila diganti/dibuang (best-effort)
+      if (initial && initial.photoUrl && initial.photoUrl !== photoUrl) {
+        deleteFromStorage(initial.photoUrl).catch(() => {});
+      }
+      onSave({ ...form, photoUrl });
+    } catch (err) {
+      alert("Gagal upload foto: " + (err && err.message ? err.message : err));
+    } finally {
       setBusy(false);
-    } else if (!preview) {
-      photoUrl = "";
     }
-    // Bersihkan foto lama di Storage bila diganti/dibuang (best-effort)
-    if (initial && initial.photoUrl && initial.photoUrl !== photoUrl) {
-      deleteFromStorage(initial.photoUrl).catch(() => {});
-    }
-    onSave({ ...form, photoUrl });
   }
 
   return (
@@ -1788,11 +2199,41 @@ function ChecklistModal({ initial, onClose, onSave }) {
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div>
           <FieldLabel>Judul Item</FieldLabel>
-          <input style={inputStyle} value={form.title} onChange={set("title")} placeholder="mis. Uji akurasi sensor" required />
+          <Input value={form.title} onChange={set("title")} placeholder="mis. Uji akurasi sensor" required className="h-8" />
         </div>
+        {!initial && sources.length > 0 && (
+          <div>
+            <button type="button" onClick={() => setShowImport((s) => !s)} style={{ background: "none", border: "none", color: C.primary, fontSize: 12, fontWeight: 600, cursor: "pointer", padding: 0 }}>
+              {showImport ? "− Tutup salin dari checklist lain" : "+ Salin dari checklist lain / template"}
+            </button>
+            {showImport && (
+              <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8, border: `1px solid ${C.hairline}`, borderRadius: R.md, padding: 10 }}>
+                <select className={cn(inputCls, "cursor-pointer")} value={importSrc} onChange={(e) => pickSource(e.target.value)}>
+                  <option value="">Pilih sumber…</option>
+                  {sources.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+                </select>
+                {importSrc && (() => {
+                  const src = sources.find((s) => s.id === importSrc);
+                  return src ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 150, overflowY: "auto" }}>
+                      {src.items.map((it, i) => (
+                        <label key={i} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: C.inkSecondary, cursor: "pointer" }}>
+                          <input type="checkbox" checked={importChecked.includes(i)} onChange={() => toggleChecked(i)} /> {it.title}
+                        </label>
+                      ))}
+                    </div>
+                  ) : null;
+                })()}
+                <Button type="button" variant="outline" onClick={doImport} className="h-8" disabled={!importSrc || importChecked.length === 0}>
+                  Salin {importChecked.length > 0 ? importChecked.length + " item" : ""}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
         <div>
           <FieldLabel>Catatan</FieldLabel>
-          <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 56 }} value={form.notes} onChange={set("notes")} />
+          <Textarea className="min-h-14 resize-y" value={form.notes} onChange={set("notes")} />
         </div>
         <div>
           <FieldLabel>Foto Bukti</FieldLabel>
@@ -1839,7 +2280,7 @@ function EvaluationModal({ onClose, onSave }) {
         <div>
           <FieldLabel>Skor Kelayakan (1–5)</FieldLabel>
           <input type="range" min={1} max={5} value={form.score} onChange={(e) => setForm((f) => ({ ...f, score: Number(e.target.value) }))} style={{ width: "100%" }} />
-          <div style={{ textAlign: "center", fontSize: 14, fontWeight: 700, color: C.primary }}>{form.score}/5</div>
+          <div style={{ textAlign: "center", fontSize: 14, fontWeight: 600, color: C.primary }}>{form.score}/5</div>
         </div>
         <div>
           <FieldLabel>Keputusan</FieldLabel>
@@ -1851,7 +2292,7 @@ function EvaluationModal({ onClose, onSave }) {
                 style={{
                   flex: 1, padding: "8px 0", borderRadius: R.md, cursor: "pointer", fontSize: 13, fontWeight: 600,
                   border: `1px solid ${form.decision === d ? C.primary : C.hairline}`,
-                  background: form.decision === d ? "#e6f1fb" : C.surface,
+                  background: form.decision === d ? "color-mix(in oklch, var(--primary) 8%, var(--card))" : C.surface,
                   color: form.decision === d ? C.primary : C.inkMuted,
                 }}
               >{d}</button>
@@ -1871,6 +2312,127 @@ function EvaluationModal({ onClose, onSave }) {
   );
 }
 
+// ---------- Activity log / komentar ----------
+function ActivityPanel({ history, onLog }) {
+  const [comment, setComment] = useState("");
+  const submit = () => {
+    const text = comment.trim();
+    if (!text) return;
+    onLog(text, "komentar");
+    setComment("");
+  };
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, background: "var(--card)", border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 14 }}>
+        <textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) submit(); }}
+          placeholder="Tulis komentar aktivitas… (Ctrl+Enter untuk kirim)"
+          rows={2}
+          style={{ width: "100%", font: "inherit", fontSize: 13, resize: "vertical", background: "transparent", border: "none", outline: "none", color: C.ink }}
+        />
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <button onClick={submit} className={C.btnPrimary} style={{ padding: "7px 16px", fontSize: 13 }}>Kirim Komentar</button>
+        </div>
+      </div>
+      {history.length === 0 ? (
+        <div style={{ background: "var(--card)", border: `1px dashed ${C.hairline}`, borderRadius: R.lg, padding: 32, textAlign: "center", color: C.inkMuted, fontSize: 13 }}>
+          Belum ada aktivitas tercatat di project ini.
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {history.map((h) => (
+            <div key={h.id} style={{ background: h.type === "komentar" ? "color-mix(in oklch, var(--primary) 6%, var(--card))" : "var(--card)", border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: "10px 12px", display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, color: C.ink, lineHeight: 1.45 }}>{h.text}</div>
+                <div style={{ fontSize: 11, color: C.inkFaint, marginTop: 2 }}>{relTime(h.at)}</div>
+              </div>
+              <Badge bg={h.type === "komentar" ? "color-mix(in oklch, var(--primary) 13%, var(--card))" : h.type === "hapus" ? "color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))" : "var(--muted)"}
+                     fg={h.type === "komentar" ? "oklch(0.45 0.11 250)" : h.type === "hapus" ? "oklch(0.47 0.14 65)" : C.inkMuted}>
+                {h.type === "komentar" ? "Komentar" : h.type === "hapus" ? "Hapus" : "Ubah"}
+              </Badge>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- Timeline / Gantt view ----------
+function TimelineView({ project }) {
+  const rows = flattenDepth(project.milestones || []);
+  const now = new Date();
+  const todayT = now.getTime();
+  const in30 = new Date(now); in30.setDate(now.getDate() + 30);
+  const dateStrs = [project.startDate, ...rows.map((r) => r.node.targetDate)].filter(Boolean);
+  const dates = dateStrs.map(parseYMD).filter(Boolean);
+  if (dates.length === 0) {
+    return <div style={{ background: C.surface, border: `1px dashed ${C.hairline}`, borderRadius: R.lg, padding: 40, textAlign: "center", color: C.inkMuted, fontSize: 14 }}>
+      Belum ada tanggal target. Tambahkan tanggal pada tahapan untuk melihat timeline.
+    </div>;
+  }
+  let lo = Math.min(...dates.map((d) => d.getTime()), todayT);
+  const hi = Math.max(...dates.map((d) => d.getTime()), todayT + 30 * 86400000, in30.getTime());
+  const span = hi - lo;
+  const pos = (d) => ((d.getTime() - lo) / span) * 100;
+  const todayPos = pos(new Date());
+  const barColor = (r) => {
+    const isDone = r.node.status === "Selesai";
+    const isActive = r.node.status === "Berjalan";
+    const isOverdue = r.node.targetDate && r.node.targetDate < todayStr() && !isDone;
+    return isDone ? C.green : isActive ? C.primary : isOverdue ? "oklch(0.75 0.15 65)" : "var(--muted)";
+  };
+  const dated = rows.filter((r) => r.node.targetDate && parseYMD(r.node.targetDate)).slice().sort((a, b) => a.node.targetDate.localeCompare(b.node.targetDate));
+  const noDate = rows.filter((r) => !r.node.targetDate || !parseYMD(r.node.targetDate));
+
+  return (
+    <div id="rnd-timeline" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", gap: 14, fontSize: 12, color: C.inkMuted, flexWrap: "wrap" }}>
+        {[["Selesai", C.green], ["Berjalan", C.primary], ["Belum mulai", "var(--muted)"], ["Overdue", "oklch(0.75 0.15 65)"]].map(([label, col]) => (
+          <span key={label} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 10, height: 10, borderRadius: 3, background: col }} /> {label}
+          </span>
+        ))}
+      </div>
+      {dated.map(({ node, depth }, i) => {
+        const end = parseYMD(node.targetDate).getTime();
+        const startPx = Math.max(0, Math.min(end, todayT));
+        const left = Math.min(pos(new Date(Math.max(lo, startPx))), 98);
+        const w = Math.max(2, Math.min(pos(new Date(Math.max(lo, end))) - left, 98 - left));
+        const isDone = node.status === "Selesai";
+        const isOverdue = node.targetDate < todayStr() && !isDone;
+        return (
+          <div key={node.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ flex: "0 0 34%", minWidth: 180, paddingLeft: depth * 14, fontSize: 13 }}>
+              <span style={{ fontWeight: 600, color: C.ink }}>{node.title}</span>
+              <span style={{ fontSize: 11, color: C.inkFaint, marginLeft: 6 }}>{node.targetDate}{isOverdue ? " (overdue)" : ""}</span>
+            </div>
+            <div style={{ position: "relative", flex: 1, height: 22, borderTop: `2px dashed ${C.hairline}` }}>
+              <div style={{ position: "absolute", left: todayPos + "%", top: -14, bottom: -14, width: 2, background: "color-mix(in oklch, var(--primary) 35%, transparent)" }}>
+                <span style={{ position: "absolute", top: 18, left: 2, fontSize: 10, color: C.primary, whiteSpace: "nowrap" }}>Hari ini</span>
+              </div>
+              {i === 0 && (
+                <div style={{ position: "absolute", left: 0, right: 0, top: -2, display: "flex", justifyContent: "space-between", fontSize: 10, color: C.inkFaint }}>
+                  <span>{new Date(lo).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })}</span>
+                  <span>{new Date(hi).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "2-digit" })}</span>
+                </div>
+              )}
+              <div style={{ position: "absolute", left: left + "%", top: 6, width: w + "%", height: 8, borderRadius: R.full, background: barColor({ node }) }} />
+            </div>
+          </div>
+        );
+      })}
+      {noDate.length > 0 && (
+        <div style={{ background: "var(--muted)", borderRadius: R.lg, padding: 12, fontSize: 12, color: C.inkMuted }}>
+          <b style={{ fontWeight: 600 }}>Tanpa tanggal target:</b> {noDate.map((r) => r.node.title).join(", ")}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ---------- Report View ----------
 function ReportView({ project }) {
   const { viewPhoto } = useLightbox();
@@ -1878,7 +2440,7 @@ function ReportView({ project }) {
   return (
     <div id="rnd-report" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 18 }}>
-        <h3 style={{ fontSize: 15, fontWeight: 700, margin: "0 0 12px" }}>Ringkasan Produk</h3>
+        <h3 style={{ fontSize: 14, fontWeight: 600, margin: "0 0 12px" }}>Ringkasan Produk</h3>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, fontSize: 13 }}>
           <div><span style={{ color: C.inkMuted }}>Mulai: </span>{project.startDate || "—"}</div>
           <div><span style={{ color: C.inkMuted }}>Target rilis: </span>{project.targetReleaseDate || "—"}</div>
@@ -1890,7 +2452,7 @@ function ReportView({ project }) {
       {all.map((m) => (
         <div key={m.id} style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-            <span style={{ fontWeight: 700, fontSize: 14 }}>{m.title}</span>
+            <span style={{ fontWeight: 600, fontSize: 14 }}>{m.title}</span>
             <Badge bg={(MILESTONE_STATUS[m.status] || MILESTONE_STATUS["Belum mulai"]).bg} fg={(MILESTONE_STATUS[m.status] || MILESTONE_STATUS["Belum mulai"]).fg}>{m.status}</Badge>
           </div>
           {m.description && <div style={{ fontSize: 13, color: C.inkMuted, margin: "0 0 8px" }} dangerouslySetInnerHTML={{ __html: renderRich(m.description) }} />}
@@ -1913,7 +2475,7 @@ function ReportView({ project }) {
               <p style={{ fontSize: 12, fontWeight: 600, color: C.inkSecondary, margin: "0 0 4px" }}>Evaluasi</p>
               {m.evaluations.map((ev) => (
                 <div key={ev.id} style={{ fontSize: 12, color: C.inkMuted, marginBottom: 2 }}>
-                  <Badge bg={ev.decision === "Go" ? "#c9f2d3" : "#ffe0c2"} fg={ev.decision === "Go" ? "#0b5e1e" : C.orangeDeep}>{ev.decision}</Badge>
+                  <Badge bg={ev.decision === "Go" ? "color-mix(in oklch, oklch(0.62 0.17 155) 13%, var(--card))" : "color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))"} fg={ev.decision === "Go" ? "oklch(0.45 0.13 155)" : "oklch(0.47 0.14 65)"}>{ev.decision}</Badge>
                   {" "}Skor {ev.score}/5 — <span dangerouslySetInnerHTML={{ __html: renderRich(ev.comments) }} /> <span style={{ color: C.inkFaint }}>({ev.createdAt})</span>
                 </div>
               ))}

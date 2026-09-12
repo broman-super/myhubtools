@@ -434,6 +434,17 @@ img{max-width:100%; display:block;}
 .btn-ghost{ color:var(--text-secondary); }
 .btn-danger{ color:var(--accent); }
 
+/* State proses DB: tombol redup + spinner kecil dalam tombol */
+.btn-busy{ opacity:.7; cursor:progress; }
+.btn-busy::before{
+  content:''; display:inline-block; width:.85em; height:.85em;
+  margin-right:.45em; vertical-align:-2px;
+  border:2px solid currentColor; border-top-color:transparent; border-radius:50%;
+  animation:btnSpin .6s linear infinite;
+}
+@keyframes btnSpin{ to{ transform:rotate(360deg); } }
+@media (prefers-reduced-motion: reduce){ .btn-busy::before{ animation:none; } }
+
 .category-group{ margin-bottom:var(--space-6); }
 .category-group-title{
   display:flex; align-items:center; gap:8px;

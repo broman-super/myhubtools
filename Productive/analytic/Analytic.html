@@ -1061,6 +1061,12 @@
                 display: none !important;
             }
         }
+
+        /* State proses DB: tombol redup + spinner kecil dalam tombol */
+        .btn-busy { opacity: .6; cursor: progress; }
+        .btn-busy .btn-spin { display: inline-block; width: .9em; height: .9em; margin-right: .45em; vertical-align: -2px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: btn-spin .6s linear infinite; }
+        @keyframes btn-spin { to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) { .btn-busy .btn-spin { animation: none; } }
     </style>
 </head>
 
@@ -1983,6 +1989,21 @@
 
         // State pengaman proses GAS & refresh otomatis
         window.isProcessingGAS = false;
+
+        // Pengaman anti dobel-kirim untuk tombol DB: spinner in-button + disabled
+        function lockBtn(btn, label) {
+            if (!btn) return;
+            btn.dataset.busyOrig = btn.innerHTML;
+            btn.disabled = true;
+            btn.classList.add('btn-busy');
+            btn.innerHTML = '<span class="btn-spin"></span>' + (label || 'Memproses...');
+        }
+        function unlockBtn(btn) {
+            if (!btn) return;
+            btn.disabled = false;
+            btn.classList.remove('btn-busy');
+            if (btn.dataset.busyOrig) { btn.innerHTML = btn.dataset.busyOrig; delete btn.dataset.busyOrig; }
+        }
 
         // Cegah penutupan halaman yang tidak disengaja selama penulisan ke GAS
         window.addEventListener('beforeunload', (event) => {
@@ -4922,6 +4943,10 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                 return;
             }
 
+            const rBtn = document.getElementById('btnRunAnalysis');
+            lockBtn(rBtn, 'Menganalisis...');
+            try {
+
             // Mode supabase: rawDataTransaksi kosong → ambil snapshot transaksi langsung dari
             // Supabase sekali per buka modal (RPC get_all_transaksi, grant anon) supaya payload
             // membawa kolom penuh (Tipe/Kategori/Penjualan) & preview BARU/UPDATE/SKIP akurat.
@@ -5022,6 +5047,9 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
 
             goToUploadStep(3);
             analyzeUploadedRows(uploadedData);
+            } finally {
+                unlockBtn(document.getElementById('btnRunAnalysis'));
+            }
         }
 
         function getKeyOfRow(row) {
@@ -5223,6 +5251,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
 
         function sendExcelToGAS() {
             if (!uploadedData || uploadedData.length === 0) return alert("Pilih file Excel terlebih dahulu!");
+            lockBtn(document.getElementById('btnSubmitUpload'), 'Mengirim...');
 
             // Tampilkan overlay dengan progress bar diaktifkan
             showProcessingOverlayWithProgress('Mengunggah Transaksi Bulk...', 'Menghubungkan ke server...');
@@ -5287,6 +5316,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
 
                         // Tutup upload modal setelah data sukses dikirim ke GAS
                         closeUploadModal();
+                        unlockBtn(document.getElementById('btnSubmitUpload'));
 
                         // Dynamic Sync tanpa reload
                         syncDashboardData().then(syncSuccess => {
@@ -5306,6 +5336,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                 })
                 .catch(err => {
                     clearInterval(progressTimer);
+                    unlockBtn(document.getElementById('btnSubmitUpload'));
                     console.error("Gagal melakukan upload:", err);
                     showErrorOverlay(
                         'Gagal Melakukan Upload!',
@@ -5617,6 +5648,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
         }
         function sendBiayaToGAS() {
             if (!_biayaUploadRows.length) return alert('Pilih file Excel terlebih dahulu!');
+            lockBtn(document.getElementById('btnSubmitBiayaUpload'), 'Mengirim...');
             showProcessingOverlayWithProgress('Mengunggah Biaya Bulk...', 'Menghubungkan ke server...');
             const payload = { action: 'bulkUpsertBiaya', rows: _biayaUploadRows };
             window.isProcessingGAS = true;
@@ -5642,6 +5674,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                         updateProcessingProgress(100, 'Data tersimpan! Memperbarui dashboard...');
                         localStorage.removeItem('intel_pro_cache_v3');
                         closeBiayaUploadModal();
+                        unlockBtn(document.getElementById('btnSubmitBiayaUpload'));
                         syncDashboardData().then(ok => {
                             if (ok) {
                                 const msg = `<b>Import Biaya Berhasil!</b><br>• Baris Baru: <b>${data.added}</b><br>• Baris Skip (Duplikat): <b>${data.skipped}</b>`;
@@ -5654,6 +5687,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                 })
                 .catch(err => {
                     clearInterval(progressTimer);
+                    unlockBtn(document.getElementById('btnSubmitBiayaUpload'));
                     console.error(err);
                     showErrorOverlay('Gagal Upload Biaya!', 'Terjadi kesalahan: ' + err.message);
                 });
@@ -5942,7 +5976,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                 return `<tr><td>${tglFmt}</td><td>${kat}</td><td>${fmtRpBiaya(nom)}</td>
                     <td><div style="display:flex; gap:6px;">
                         <button onclick="editBiayaRow(${id})" class="theme-toggle" title="Edit" style="padding:6px 10px; color:var(--primary); font-weight:800; font-size:11px;">EDIT</button>
-                        <button onclick="deleteBiayaRow(${id})" class="theme-toggle" title="Hapus" style="padding:6px 10px; color:var(--danger); font-weight:800; font-size:11px;">HAPUS</button>
+                        <button onclick="deleteBiayaRow(${id}, this)" class="theme-toggle" title="Hapus" style="padding:6px 10px; color:var(--danger); font-weight:800; font-size:11px;">HAPUS</button>
                     </div></td></tr>`;
             }).join('') || '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:20px;">Belum ada biaya pada rentang ini.</td></tr>';
             if (_biayaDataTable) { _biayaDataTable.destroy(); _biayaDataTable = null; }
@@ -6101,8 +6135,9 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             if (modal) modal.style.display = 'flex';
         }
 
-        async function deleteBiayaRow(id) {
+        async function deleteBiayaRow(id, btn) {
             if (!confirm('Hapus baris biaya ini? Tindakan tidak bisa dibatalkan.')) return;
+            lockBtn(btn, 'Menghapus...');
             try {
                 const res = await fetch(API_URL + '?action=deleteBiaya&id=' + encodeURIComponent(id));
                 const data = await res.json();
@@ -6113,6 +6148,8 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             } catch (err) {
                 console.error('Gagal menghapus biaya:', err);
                 showErrorOverlay('Gagal Menghapus!', err.message);
+            } finally {
+                unlockBtn(btn);
             }
         }
 

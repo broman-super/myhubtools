@@ -145,7 +145,22 @@ const utils = (() => {
     URL.revokeObjectURL(url);
   }
 
-  return { debounce, esc, copy, relTime, hostname, favIcon, uid, csvParse, csvBuild, downloadFile };
+  // Pengaman & reaksi tombol DB: disable + spinner dalam tombol saat proses.
+  function lockBtn(btn, text) {
+    if (!btn) return;
+    btn.dataset.orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.classList.add("btn-busy");
+    if (text) btn.innerHTML = text;
+  }
+  function unlockBtn(btn) {
+    if (!btn) return;
+    btn.disabled = false;
+    btn.classList.remove("btn-busy");
+    if (btn.dataset.orig) btn.innerHTML = btn.dataset.orig;
+  }
+
+  return { debounce, esc, copy, relTime, hostname, favIcon, uid, csvParse, csvBuild, downloadFile, lockBtn, unlockBtn };
 })();
 
 /* ---------------------------------------------------------------------- *
@@ -481,7 +496,12 @@ const db = (() => {
   }
 
   // Baru: tambah penghitung klik (popularity).
+  // Throttle 1 detik per link: mencegah spam klik mengirim banyak PATCH.
+  const clickThrottleMs = {};
   async function incrementClick(id) {
+    const now = Date.now();
+    if (clickThrottleMs[id] && now - clickThrottleMs[id] < 1000) return;
+    clickThrottleMs[id] = now;
     if (useRemote && !skipRemote()) {
       // click_count = click_count + 1 via header Prefer=return=minimal tidak
       // memberi body; pakai header count trick: set via JSON {"click_count":1}.
@@ -1067,6 +1087,8 @@ const dashboard = (() => {
   }
 
   async function performDelete() {
+    const btn = document.getElementById("deleteConfirm");
+    utils.lockBtn(btn, "Menghapus…");
     try {
       if (pendingDeleteBulk) {
         const ids = Array.from(state.get("selectedIds"));
@@ -1083,6 +1105,8 @@ const dashboard = (() => {
       renderMain(); renderNav();
     } catch (e) {
       components.toast("Gagal menghapus: " + e.message, { variant: "error" });
+    } finally {
+      utils.unlockBtn(btn);
     }
   }
 
@@ -1118,6 +1142,7 @@ const dashboard = (() => {
       components.toast("Judul dan URL wajib diisi", { variant: "error" });
       return;
     }
+    utils.lockBtn(document.getElementById("drawerSave"), "Menyimpan…");
     try {
       if (id) {
         const link = { ...state.get("links").find(l => l.id === id), title, url, category, badge, description };
@@ -1133,6 +1158,8 @@ const dashboard = (() => {
       renderMain(); renderNav();
     } catch (e) {
       components.toast("Gagal menyimpan: " + e.message, { variant: "error" });
+    } finally {
+      utils.unlockBtn(document.getElementById("drawerSave"));
     }
   }
 
@@ -1181,12 +1208,15 @@ const dashboard = (() => {
         const id = btn.dataset.delCat;
         const inUse = state.get("links").some(l => l.category === id);
         if (inUse && !confirm("Kategori ini masih dipakai oleh beberapa link. Hapus tetap?")) return;
+        utils.lockBtn(btn, "Menghapus…");
         try {
           await db.deleteCategory(id, state.get("adminPin"));
           state.set("categories", state.get("categories").filter(c => c.id !== id));
           renderCategoryModal(); renderMain(); renderNav();
         } catch (e) {
           components.toast("Gagal menghapus kategori: " + e.message, { variant: "error" });
+        } finally {
+          utils.unlockBtn(btn);
         }
       });
     });
@@ -1222,6 +1252,7 @@ const dashboard = (() => {
     const name = input.value.trim();
     if (!name) return;
     const icon = selectedIcon;
+    utils.lockBtn(document.getElementById("addCategoryBtn"), editCategoryId ? "Menyimpan…" : "Menambah…");
     try {
       if (editCategoryId) {
         await db.updateCategory(editCategoryId, name, icon, state.get("adminPin"));
@@ -1239,9 +1270,12 @@ const dashboard = (() => {
       document.getElementById("categoryModalTitle").textContent = "Kelola Kategori";
       if (typeof feather !== "undefined") feather.replace();
       highlightIcon("folder");
+      delete document.getElementById("addCategoryBtn").dataset.orig;
       renderCategoryModal(); renderNav();
     } catch (e) {
       components.toast("Gagal menyimpan kategori: " + e.message, { variant: "error" });
+    } finally {
+      utils.unlockBtn(document.getElementById("addCategoryBtn"));
     }
   }
 
@@ -1270,6 +1304,8 @@ const dashboard = (() => {
       document.getElementById("importError").textContent = "Pilih file CSV terlebih dahulu.";
       return;
     }
+    const btn = document.getElementById("importConfirm");
+    utils.lockBtn(btn, "Mengimpor…");
     try {
       await db.importCsv(importRows, state.get("adminPin"));
       const fresh = await db.getData();
@@ -1281,6 +1317,8 @@ const dashboard = (() => {
       importRows = [];
     } catch (e) {
       document.getElementById("importError").textContent = "Gagal import: " + e.message;
+    } finally {
+      utils.unlockBtn(btn);
     }
   }
 
@@ -1411,6 +1449,8 @@ const app = (() => {
     const pin = document.getElementById("pinInput").value.trim();
     const errEl = document.getElementById("loginError");
     errEl.textContent = "";
+    const btn = document.getElementById("loginSubmit");
+    utils.lockBtn(btn, "Memeriksa…");
     try {
       const ok = await db.login(pin);
       if (!ok) { errEl.textContent = "PIN salah, coba lagi."; return; }
@@ -1423,6 +1463,8 @@ const app = (() => {
       components.toast("Berhasil masuk sebagai admin", { variant: "success" });
     } catch (e) {
       errEl.textContent = "Gagal login: " + e.message;
+    } finally {
+      utils.unlockBtn(btn);
     }
   }
 

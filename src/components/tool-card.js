@@ -101,6 +101,14 @@ var ToolCard = {
         'Buka Modul' +
         '<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>' +
       '</div>';
+    // Badge notifikasi RND Roadmap: angka dibaca dari localStorage['rnd-alert-count']
+    if (config.hash === '#productive/rnd-roadmap') {
+      var badge = document.createElement('span');
+      badge.className = 'card-badge';
+      badge.id = 'badge-rnd-roadmap';
+      badge.setAttribute('hidden', '');
+      card.appendChild(badge);
+    }
     return card;
   },
 
