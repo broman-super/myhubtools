@@ -1892,7 +1892,7 @@
       timelineYear: new Date().getFullYear(), timelineMonth: new Date().getMonth(),
       timelineSelectedDate: null, timelineZoom: 0, timelineLabelWidth: 180,
       activeTags: [], activePriorities: [],
-      listPage: 0, undoStack: [], redoStack: [], saving: false
+      listPage: 0, undoStack: [], redoStack: [], saving: false, toggleBusy: false
     };
 
     const MONTHS_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -3627,22 +3627,28 @@
     }
 
     async function toggleDone(id) {
-      var t = S.tasks.find(function(x) { return x.id === id; });
-      var source = 'task', isEvent = false, isReminder = false;
-      if (!t) { t = S.events.find(function(x) { return x.id === id; }); source = 'event'; isEvent = true; }
-      if (!t) { t = S.reminders.find(function(x) { return x.id === id; }); source = 'reminder'; isReminder = true; }
-      if (!t) return;
-      if (source === 'task') {
-        t.done = !t.done; renderAll();
-        try { await api('saveTask', t); await refreshData(true); } catch (e) { toast('Gagal mengupdate status!', true); }
-      } else {
-        t.done = !t.done; t.status = t.done ? 'Selesai' : ''; renderAll();
-        try {
-          var d = { id: t.id, status: t.status, type: source };
-          if (isEvent) { d.nama = t.title; d.mulai = t.date; d.selesai = t.enddate; d.warna = t.color; d.deskripsi = t.description; }
-          else { d.nama = t.title; d.mulai = t.date; d.selesai = t.enddate; d.warna = t.color; d.deskripsi = t.description; }
-          await api('saveCalendarItem', d);
-        } catch (e) { toast('Gagal mengupdate status!', true); }
+      if (S.toggleBusy) return;
+      S.toggleBusy = true;
+      try {
+        var t = S.tasks.find(function(x) { return x.id === id; });
+        var source = 'task', isEvent = false, isReminder = false;
+        if (!t) { t = S.events.find(function(x) { return x.id === id; }); source = 'event'; isEvent = true; }
+        if (!t) { t = S.reminders.find(function(x) { return x.id === id; }); source = 'reminder'; isReminder = true; }
+        if (!t) return;
+        if (source === 'task') {
+          t.done = !t.done; renderAll();
+          try { await api('saveTask', t); await refreshData(true); } catch (e) { t.done = !t.done; renderAll(); toast('Gagal mengupdate status!', true); }
+        } else {
+          t.done = !t.done; t.status = t.done ? 'Selesai' : ''; renderAll();
+          try {
+            var d = { id: t.id, status: t.status, type: source };
+            if (isEvent) { d.nama = t.title; d.mulai = t.date; d.selesai = t.enddate; d.warna = t.color; d.deskripsi = t.description; }
+            else { d.nama = t.title; d.mulai = t.date; d.selesai = t.enddate; d.warna = t.color; d.deskripsi = t.description; }
+            await api('saveCalendarItem', d);
+          } catch (e) { t.done = !t.done; t.status = t.done ? 'Selesai' : ''; renderAll(); toast('Gagal mengupdate status!', true); }
+        }
+      } finally {
+        S.toggleBusy = false;
       }
     }
 

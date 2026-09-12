@@ -161,6 +161,11 @@ tr.status-batal { border-left: 4px solid #ef4444; }
 .empty-state { text-align: center; padding: 40px 20px; color: var(--text2); }
 .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
 .empty-state h3 { font-size: 16px; margin-bottom: 4px; color: var(--text); }
+/* State proses DB: tombol redup + spinner kecil dalam tombol */
+.btn-busy { opacity: .65; cursor: progress; }
+.btn-busy .btn-spin { display: inline-block; width: .9em; height: .9em; margin-right: .4em; vertical-align: -2px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: btn-spin .6s linear infinite; }
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .btn-busy .btn-spin { animation: none; } }
 /* Responsive */
 @media (max-width: 640px) {
   body { padding: 12px; }
@@ -381,6 +386,21 @@ var ICONS = {
     confirmCallback: null,
     fileData: null,
 
+    lockBtn: function(btn, label) {
+      if (!btn) return;
+      btn.dataset.orig = btn.innerHTML;
+      btn.disabled = true;
+      btn.classList.add('btn-busy');
+      btn.innerHTML = '<span class="btn-spin"></span>' + (label || 'Memproses...');
+    },
+
+    unlockBtn: function(btn) {
+      if (!btn) return;
+      btn.disabled = false;
+      btn.classList.remove('btn-busy');
+      if (btn.dataset.orig) { btn.innerHTML = btn.dataset.orig; delete btn.dataset.orig; }
+    },
+
     init: function() {
       var self = this;
       document.getElementById('userInput').value = this.user;
@@ -421,7 +441,11 @@ var ICONS = {
       document.getElementById('detailModal').addEventListener('click', function(e) { if (e.target === this) self.closeDetail(); });
 
       document.getElementById('confirmNo').addEventListener('click', function() { self.closeConfirm(); });
-      document.getElementById('confirmYes').addEventListener('click', function() { self.confirmCallback && self.confirmCallback(); self.closeConfirm(); });
+      document.getElementById('confirmYes').addEventListener('click', function() {
+        var cb = self.confirmCallback;
+        self.closeConfirm();
+        if (cb) cb();
+      });
 
       this.loadExpenses();
       this.loadDashboard();
@@ -576,15 +600,15 @@ var ICONS = {
 
       var btnDraft = document.getElementById('btnDraft');
       var btnSubmit = document.getElementById('btnSubmit');
-      if (btnDraft) btnDraft.disabled = true;
-      if (btnSubmit) { btnSubmit.disabled = true; btnSubmit.innerHTML = 'Mengirim...'; }
+      this.lockBtn(btnDraft, 'Menyimpan...');
+      this.lockBtn(btnSubmit, 'Mengirim...');
 
       this.fetchGAS('submitExpense', data, function(res) {
         var btnDraft = document.getElementById('btnDraft');
         var btnSubmit = document.getElementById('btnSubmit');
-        if (btnDraft) btnDraft.disabled = false;
-        if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.innerHTML = 'Kirim Pengajuan'; }
-        if (res.success || res.result) {
+        App.unlockBtn(btnDraft);
+        App.unlockBtn(btnSubmit);
+        if (res.success === true) {
           App.showToast('Pengajuan ' + (status === 'draft' ? 'disimpan sebagai draft' : 'dikirim'), 'success');
           App.clearForm();
           App.loadExpenses();
@@ -749,24 +773,24 @@ var ICONS = {
           var btn = document.createElement('button');
           btn.className = 'btn ' + cls;
           btn.innerHTML = label;
-          btn.addEventListener('click', cb);
+          btn.addEventListener('click', function() { cb(btn); });
           actions.appendChild(btn);
         };
         if (st === 'draft' || st === 'pengajuan') {
-          addBtn(ICONS.check+' Setujui', 'btn-success', function() { self.approveExpense(ex.id); });
-          addBtn(ICONS.x+' Tolak', 'btn-danger', function() { self.rejectExpense(ex.id); });
+          addBtn(ICONS.check+' Setujui', 'btn-success', function(btn) { self.approveExpense(ex.id, btn); });
+          addBtn(ICONS.x+' Tolak', 'btn-danger', function(btn) { self.rejectExpense(ex.id, btn); });
         }
         if (st === 'pengajuan' || st === 'disetujui') {
-          addBtn(ICONS.clipboard+' Realisasi', 'btn-warning', function() { self.markRealisasi(ex.id); });
+          addBtn(ICONS.clipboard+' Realisasi', 'btn-warning', function(btn) { self.markRealisasi(ex.id, btn); });
         }
         if (st === 'realisasi') {
-          addBtn(ICONS.money+' Reimburse', 'btn-success', function() { self.markReimburse(ex.id); });
+          addBtn(ICONS.money+' Reimburse', 'btn-success', function(btn) { self.markReimburse(ex.id, btn); });
         }
         if (st === 'draft' || st === 'pengajuan') {
-          addBtn(ICONS.ban+' Batal', 'btn-danger', function() { self.cancelExpense(ex.id); });
+          addBtn(ICONS.ban+' Batal', 'btn-danger', function(btn) { self.cancelExpense(ex.id, btn); });
         }
         if (st === 'draft') {
-          addBtn(ICONS.trash+' Hapus', 'btn-danger', function() { self.deleteExpense(ex.id); });
+          addBtn(ICONS.trash+' Hapus', 'btn-danger', function(btn) { self.deleteExpense(ex.id, btn); });
         }
 
         document.getElementById('detailModal').classList.add('show');
@@ -779,62 +803,74 @@ var ICONS = {
     },
 
     // ──── ACTIONS ────
-    approveExpense: function(id) {
+    approveExpense: function(id, btn) {
       var self = this;
       this.confirm('Setujui Pengajuan', 'Setujui pengajuan ini?', function() {
+        self.lockBtn(btn, 'Menyetujui...');
         self.fetchGAS('approveExpense', { id: id, approver: self.user }, function(res) {
-          if (res.success || res.result) { self.showToast('Pengajuan disetujui', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); self.loadPendingCount(); }
+          self.unlockBtn(btn);
+          if (res.success === true) { self.showToast('Pengajuan disetujui', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); self.loadPendingCount(); }
           else { self.showToast('Gagal: ' + (res.message || ''), 'error'); }
         });
       });
     },
 
-    rejectExpense: function(id) {
+    rejectExpense: function(id, btn) {
       var self = this;
       var reason = prompt('Alasan penolakan (opsional):');
       this.confirm('Tolak Pengajuan', 'Tolak pengajuan ini?', function() {
+        self.lockBtn(btn, 'Menolak...');
         self.fetchGAS('rejectExpense', { id: id, reason: reason || '', pengaju: self.user }, function(res) {
-          if (res.success || res.result) { self.showToast('Pengajuan ditolak', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); self.loadPendingCount(); }
+          self.unlockBtn(btn);
+          if (res.success === true) { self.showToast('Pengajuan ditolak', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); self.loadPendingCount(); }
           else { self.showToast('Gagal: ' + (res.message || ''), 'error'); }
         });
       });
     },
 
-    markRealisasi: function(id) {
+    markRealisasi: function(id, btn) {
       var self = this;
       this.confirm('Input Realisasi', 'Tandai pengajuan ini sudah direalisasikan?', function() {
+        self.lockBtn(btn, 'Memproses...');
         self.fetchGAS('markRealisasi', { id: id, lunas: true }, function(res) {
-          if (res.success || res.result) { self.showToast('Status realisasi diperbarui', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); self.loadPendingCount(); }
+          self.unlockBtn(btn);
+          if (res.success === true) { self.showToast('Status realisasi diperbarui', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); self.loadPendingCount(); }
           else { self.showToast('Gagal: ' + (res.message || ''), 'error'); }
         });
       });
     },
 
-    markReimburse: function(id) {
+    markReimburse: function(id, btn) {
       var self = this;
       this.confirm('Proses Reimburse', 'Tandai pengajuan ini sudah direimburse (selesai)?', function() {
+        self.lockBtn(btn, 'Memproses...');
         self.fetchGAS('markReimburse', { id: id }, function(res) {
-          if (res.success || res.result) { self.showToast('Reimburse selesai', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); self.loadPendingCount(); }
+          self.unlockBtn(btn);
+          if (res.success === true) { self.showToast('Reimburse selesai', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); self.loadPendingCount(); }
           else { self.showToast('Gagal: ' + (res.message || ''), 'error'); }
         });
       });
     },
 
-    cancelExpense: function(id) {
+    cancelExpense: function(id, btn) {
       var self = this;
       this.confirm('Batalkan Pengajuan', 'Yakin ingin membatalkan pengajuan ini?', function() {
+        self.lockBtn(btn, 'Membatalkan...');
         self.fetchGAS('cancelExpense', { id: id }, function(res) {
-          if (res.success || res.result) { self.showToast('Pengajuan dibatalkan', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); self.loadPendingCount(); }
+          self.unlockBtn(btn);
+          if (res.success === true) { self.showToast('Pengajuan dibatalkan', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); self.loadPendingCount(); }
           else { self.showToast('Gagal: ' + (res.message || ''), 'error'); }
         });
       });
     },
 
-    deleteExpense: function(id) {
+    deleteExpense: function(id, btn) {
       var self = this;
       this.confirm('Hapus Draft', 'Hapus draft ini secara permanen?', function() {
+        self.lockBtn(btn, 'Menghapus...');
         self.fetchGAS('deleteExpense', { id: id }, function(res) {
-          if (res.success || res.result) { self.showToast('Draft dihapus', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); }
+          self.unlockBtn(btn);
+          if (res.success === true) { self.showToast('Draft dihapus', 'success'); self.closeDetail(); self.loadExpenses(); self.loadDashboard(); self.loadPendingCount(); }
           else { self.showToast('Gagal: ' + (res.message || ''), 'error'); }
         });
       });
