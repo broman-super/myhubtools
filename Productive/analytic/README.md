@@ -30,7 +30,7 @@ Dashboard analitik penjualan real-time berbasis **Google Sheets + Google Apps Sc
 ## 2. Keterkaitan (yang wajib tahu sebelum menyentuh kode)
 
 ### 2.1 Backend GAS
-- `API_URL = https://script.google.com/macros/s/AKfycbx0OmcRVvhCSmX9r4J-RBsejZ_Th0fdfy46TaaPsdx6r1RxczSmmfcfeTHJe4fIFb1HEw/exec`
+- `API_URL = https://script.google.com/macros/s/AKfycbwNzZ8oL9LUjedZyIQJFW05PD0akrvJFM5JKAtMewxpWou66KRlJqy1rSUPfcVkSb2HLA/exec`
 - Action: `getSalesData`, `saveTarget`, `addBiaya`
 - Backend disimpan di `gscode/code-analytic.gs` — **bukan** lagi di `Productive/Task/`.
 - Data mentah lag ±7 hari dari hari ini (sheet update manual). Konsekuensi penting di §3.4.

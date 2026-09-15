@@ -1,5 +1,15 @@
-// 1. MASUKIN API KEY GEMINI LU DI BAWAH INI
-const GEMINI_API_KEY = 'AIzaSyBkaZBJpN3RXGDDcoEh6FrUNSR1KBbBO6o';
+// 1. GEMINI API KEY TIDAK BOLEH DIHARDCODE DI FILE INI (bekas key bocor ke git history).
+//    Simpan sekali lewat Script Properties:
+//      Run function `setGeminiApiKey('PASTE_KEY_DI_SINI')` dari editor Apps Script.
+//    Key lalu terbaca otomatis oleh geminiKey_() di bawah. Deployment baru / clone aman.
+function setGeminiApiKey(key) {
+  PropertiesService.getScriptProperties().setProperty('GEMINI_API_KEY', String(key || '').trim());
+  return 'ok';
+}
+function geminiKey_() {
+  var k = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  return k ? String(k).trim() : '';
+}
 
 // ==========================================
 // TIMEZONE CONFIGURATION - FORCE GMT+7
@@ -123,8 +133,9 @@ function getAllDashboardData() {
 // FUNGSI GEMINI AI (SUDAH DIPERBAIKI)
 // ==========================================
 function getAnalysisFromGemini(promptText) {
-  // INI KODE PEMBERSIHNYA (.trim() buat buang spasi nyelip)
-  var cleanApiKey = GEMINI_API_KEY.trim();
+  // Key dibaca dari Script Properties (setGeminiApiKey), bukan hardcode.
+  var cleanApiKey = geminiKey_();
+  if (!cleanApiKey) return "Error di Apps Script: GEMINI_API_KEY belum diset. Jalankan setGeminiApiKey('...') sekali di editor.";
 
   // Mempertahankan model gemini-1.5-flash
   var url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + cleanApiKey;

@@ -1985,7 +1985,7 @@
           circle: '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6"/></svg>',
           question: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
         };
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyEwtf2FBZ3FNh3BgFVVZukeH_hmMg0fftBOiYZFhUvqx8Ph3y0h9GtSWdpzE61pDt3VQ/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwNzZ8oL9LUjedZyIQJFW05PD0akrvJFM5JKAtMewxpWou66KRlJqy1rSUPfcVkSb2HLA/exec';
 
         // State pengaman proses GAS & refresh otomatis
         window.isProcessingGAS = false;
@@ -2157,6 +2157,19 @@
             if (progressBarContainer) progressBarContainer.style.display = 'none';
             if (progressBarFill) progressBarFill.style.width = '0%';
             if (progressText) progressText.style.display = 'none';
+        }
+
+        // Toast kecil (tanpa overlay) saat simpan sukses tapi sync dashboard gagal.
+        // Dipakai di semua titik "simpan dulu, sync belakangan" supaya user tidak
+        // terkecoh mengira simpanan gagal hanya karena re-render dashboard error.
+        function showRefreshToast() {
+            const toast = document.createElement('div');
+            toast.innerHTML = `${ICONS.warning}&nbsp; Data tersimpan. Dashboard perlu dimuat ulang. <a href="#" id="analyticReloadNotice" style="color:var(--primary);font-weight:700;">Refresh</a>`;
+            toast.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:2147483000;background:var(--card);border:1px solid var(--warning);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text);box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:300px;';
+            document.body.appendChild(toast);
+            const btn = document.getElementById('analyticReloadNotice');
+            if (btn) btn.onclick = (e) => { e.preventDefault(); location.reload(); };
+            setTimeout(() => toast.remove(), 8000);
         }
 
         // Sinkronisasi data asinkron dari spreadsheet ke dashboard secara in-place
@@ -4156,14 +4169,11 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                     // Bersihkan cache agar sync menarik data terbaru
                     localStorage.removeItem("intel_pro_cache_v3");
 
-                    // Dynamic Sync
-                    const syncSuccess = await syncDashboardData();
+                    // Konfirmasi sukses LANGSUNG: target sudah tersimpan di DB.
+                    showSuccessOverlay('Target Berhasil Disimpan!', 'Target omzet terupdate telah diterapkan pada dashboard secara dinamis.', 1500);
 
-                    if (syncSuccess) {
-                        showSuccessOverlay('Target Berhasil Disimpan!', 'Target omzet terupdate telah diterapkan pada dashboard secara dinamis.', 1500);
-                    } else {
-                        showErrorOverlay('Sinkronisasi Gagal!', 'Target berhasil disimpan ke database, namun dashboard gagal diperbarui secara lokal. Silakan refresh halaman.');
-                    }
+                    // Dynamic Sync di latar belakang; gagal hanya tampilkan toast kecil.
+                    syncDashboardData().then(ok => { if (!ok) showRefreshToast(); });
                 } else {
                     throw new Error(data.message || "Gagal menyimpan target");
                 }
@@ -4215,19 +4225,17 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                     // Bersihkan cache agar sync menarik data terbaru
                     localStorage.removeItem("intel_pro_cache_v3");
 
-                    // Dynamic Sync
-                    const syncSuccess = await syncDashboardData();
+                    // Konfirmasi sukses LANGSUNG: biaya sudah tersimpan di DB.
+                    showSuccessOverlay(isEdit ? 'Biaya Diperbarui!' : 'Biaya Berhasil Dicatat!', isEdit ? 'Perubahan biaya berhasil disimpan dan disinkronkan ke dashboard.' : 'Biaya operasional baru berhasil ditambahkan dan disinkronkan ke dalam dashboard.', 1500);
 
-                    // Paksa refetch tab biaya bila sedang terbuka (setelah sync → omzet overlay fresh)
-                    _biayaRangeKey = null;
-                    _biayaPrevKey = null;
-                    if (isBiayaTabActive()) await renderBiayaTab();
-
-                    if (syncSuccess) {
-                        showSuccessOverlay(isEdit ? 'Biaya Diperbarui!' : 'Biaya Berhasil Dicatat!', isEdit ? 'Perubahan biaya berhasil disimpan dan disinkronkan ke dashboard.' : 'Biaya operasional baru berhasil ditambahkan dan disinkronkan ke dalam dashboard.', 1500);
-                    } else {
-                        showErrorOverlay('Sinkronisasi Gagal!', 'Biaya berhasil disimpan ke database, namun dashboard gagal diperbarui secara lokal. Silakan refresh halaman.');
-                    }
+                    // Dynamic Sync di latar belakang; gagal hanya tampilkan toast kecil.
+                    syncDashboardData().then(ok => {
+                        // Paksa refetch tab biaya bila sedang terbuka (setelah sync → omzet overlay fresh)
+                        _biayaRangeKey = null;
+                        _biayaPrevKey = null;
+                        if (isBiayaTabActive()) renderBiayaTab().catch(() => {});
+                        if (!ok) showRefreshToast();
+                    });
                 } else {
                     throw new Error(data.message || "Gagal menyimpan");
                 }
@@ -4359,6 +4367,22 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
         // Mode supabase: rawDataTransaksi kosong, jadi snapshot sheet di-fetch sekali per buka modal
         // agar preview (BARU/UPDATE/SKIP) dan payload upload tetap membawa kolom penuh (Tipe/Kategori/Penjualan).
         let uploadSheetData = null;
+        // ponytail: snapshot full-table mahal; cache 60 dtk supaya modal buka ulang tidak selalu fetch ulang.
+        // Di-invalidate saat import sukses (lihat sendExcelToGAS) agar data terbaru ikut ter-preview.
+        const UPLOAD_SNAPSHOT_CACHE_KEY = 'intel_upload_snapshot_cache_v1';
+        const UPLOAD_SNAPSHOT_TTL = 60 * 1000;
+        function loadUploadSnapshot() {
+            try {
+                const raw = localStorage.getItem(UPLOAD_SNAPSHOT_CACHE_KEY);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (!parsed || typeof parsed.ts !== 'number' || Date.now() - parsed.ts > UPLOAD_SNAPSHOT_TTL) return null;
+                return Array.isArray(parsed.rows) ? parsed.rows : null;
+            } catch (e) { return null; }
+        }
+        function saveUploadSnapshot(rows) {
+            try { localStorage.setItem(UPLOAD_SNAPSHOT_CACHE_KEY, JSON.stringify({ ts: Date.now(), rows: rows })); } catch (e) {}
+        }
 
         const TARGET_COLUMNS = [
             { key: 'noTransaksi', label: 'No. Transaksi', candidates: ['nomor', 'nomor #', 'no #', 'no. #', 'nofaktur', 'no. transaksi', 'no. invoice', 'invoice', 'id transaksi', 'id', 'no'] },
@@ -4951,30 +4975,35 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             // Supabase sekali per buka modal (RPC get_all_transaksi, grant anon) supaya payload
             // membawa kolom penuh (Tipe/Kategori/Penjualan) & preview BARU/UPDATE/SKIP akurat.
             if (DATA_SOURCE === 'supabase' && uploadSheetData === null) {
-                try {
-                    const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_all_transaksi', {
-                        method: 'POST',
-                        headers: {
-                            'apikey': SUPABASE_ANON_KEY,
-                            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({})
-                    });
-                    if (!res.ok) throw new Error('Supabase ' + res.status);
-                    const rows = await res.json();
-                    // RPC mengembalikan kolom teknis (id, dedupe_key) yang mengganggu
-                    // getKeyOfRow & originalColumns → buang sebelum dipakai preview.
-                    uploadSheetData = (Array.isArray(rows) ? rows : []).map(r => {
-                        const clean = {};
-                        for (const k in r) {
-                            if (k !== 'id' && k !== 'dedupe_key') clean[k] = r[k];
-                        }
-                        return clean;
-                    });
-                } catch (err) {
-                    console.warn("Gagal ambil snapshot transaksi dari Supabase untuk upload preview:", err);
-                    uploadSheetData = [];
+                // Pakai cache 60 dtk bila ada; kalau basi baru fetch penuh.
+                uploadSheetData = loadUploadSnapshot();
+                if (uploadSheetData === null) {
+                    try {
+                        const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_all_transaksi', {
+                            method: 'POST',
+                            headers: {
+                                'apikey': SUPABASE_ANON_KEY,
+                                'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({})
+                        });
+                        if (!res.ok) throw new Error('Supabase ' + res.status);
+                        const rows = await res.json();
+                        // RPC mengembalikan kolom teknis (id, dedupe_key) yang mengganggu
+                        // getKeyOfRow & originalColumns → buang sebelum dipakai preview.
+                        uploadSheetData = (Array.isArray(rows) ? rows : []).map(r => {
+                            const clean = {};
+                            for (const k in r) {
+                                if (k !== 'id' && k !== 'dedupe_key') clean[k] = r[k];
+                            }
+                            return clean;
+                        });
+                        saveUploadSnapshot(uploadSheetData);
+                    } catch (err) {
+                        console.warn("Gagal ambil snapshot transaksi dari Supabase untuk upload preview:", err);
+                        uploadSheetData = [];
+                    }
                 }
             }
 
@@ -5308,8 +5337,12 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                 .then(data => {
                     clearInterval(progressTimer);
                     if (data.status === 'success') {
+                        // Selesaikan progres ke 100% lalu konfirmasi (bukan berhenti di ~95%)
+                        updateProcessingProgress(100, 'Data tersimpan!');
+
                         // Bersihkan cache agar re-render menarik data terbaru
                         localStorage.removeItem("intel_pro_cache_v3");
+                        localStorage.removeItem(UPLOAD_SNAPSHOT_CACHE_KEY);
 
                         // Tutup upload modal setelah data sukses dikirim ke GAS
                         closeUploadModal();
@@ -5321,17 +5354,9 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                         showSuccessOverlay('Bulk Upload Berhasil!', detailMsg, 4000);
 
                         // Dynamic Sync tanpa reload, jalan di latar belakang.
-                        // Sync gagal hanya menampilkan toast kecil, bukan overlay error
-                        // yang membuat user mengira import-nya gagal.
+                        // Sync gagal hanya memunculkan toast kecil Refresh.
                         syncDashboardData().then(syncSuccess => {
-                            if (syncSuccess) return;
-                            const toast = document.createElement('div');
-                            toast.innerHTML = `${ICONS.warning}&nbsp; Import tersimpan. Dashboard perlu dimuat ulang. <a href="#" id="analyticReloadNotice" style="color:var(--primary);font-weight:700;">Refresh</a>`;
-                            toast.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:2147483000;background:var(--card);border:1px solid var(--warning);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text);box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:300px;';
-                            document.body.appendChild(toast);
-                            const btn = document.getElementById('analyticReloadNotice');
-                            if (btn) btn.onclick = (e) => { e.preventDefault(); location.reload(); };
-                            setTimeout(() => toast.remove(), 8000);
+                            if (!syncSuccess) showRefreshToast();
                         });
                     } else {
                         throw new Error(data.message || "Gagal memproses bulk upsert");
@@ -5674,6 +5699,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                 .then(data => {
                     clearInterval(progressTimer);
                     if (data.status === 'success') {
+                        updateProcessingProgress(100, 'Data tersimpan!');
                         localStorage.removeItem('intel_pro_cache_v3');
                         closeBiayaUploadModal();
                         unlockBtn(document.getElementById('btnSubmitBiayaUpload'));
@@ -5681,16 +5707,7 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                         const msg = `<b>Import Biaya Berhasil!</b><br>• Baris Baru: <b>${data.added}</b><br>• Baris Skip (Duplikat): <b>${data.skipped}</b>`;
                         showSuccessOverlay('Bulk Upload Biaya Berhasil!', msg, 4000);
                         // Dynamic Sync di latar belakang; gagal hanya tampilkan toast kecil.
-                        syncDashboardData().then(ok => {
-                            if (ok) return;
-                            const toast = document.createElement('div');
-                            toast.innerHTML = `${ICONS.warning}&nbsp; Import tersimpan. Dashboard perlu dimuat ulang. <a href="#" id="analyticReloadNotice" style="color:var(--primary);font-weight:700;">Refresh</a>`;
-                            toast.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:2147483000;background:var(--card);border:1px solid var(--warning);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text);box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:300px;';
-                            document.body.appendChild(toast);
-                            const btn = document.getElementById('analyticReloadNotice');
-                            if (btn) btn.onclick = (e) => { e.preventDefault(); location.reload(); };
-                            setTimeout(() => toast.remove(), 8000);
-                        });
+                        syncDashboardData().then(ok => { if (!ok) showRefreshToast(); });
                     } else { throw new Error(data.message || 'Gagal memproses bulk biaya'); }
                 })
                 .catch(err => {

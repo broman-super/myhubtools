@@ -176,10 +176,17 @@ var __MIGRATE_BATCH = 500;
 // 2) Run fungsi `setupSupabaseProps` sekali.
 // 3) Nilai tersimpan di Script Properties, lalu blok ini
 //    OTOMATIS dikosongkan (kunci rahasia tidak tersisa di file).
+//
+// ⚠️ Kunci SERVICE_ROLE pernah ada di file ini dan kemungkinan bocor ke git history.
+//    ROTATE key-nya di dashboard Supabase. Setelah rotate, jalankan ulang
+//    `setupSupabaseProps` (susun dulu nilai di atas) agar Script Properties
+//    memakai key baru — kalau tidak, bulkUpsert via code-analytic.gs putus.
+//    Jangan pernah hardcode kunci baru — tempel hanya saat mau menjalankan
+//    `setupSupabaseProps`, lalu tunggu fungsi itu mengosongkannya lagi.
 // ------------------------------------------------------------
 var __SUPABASE_CONFIG__ = {
-  SUPABASE_URL: 'https://ciukvojsknsdnkysbpjl.supabase.co',       // ← tempel Project URL di sini
-  SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdWt2b2pza25zZG5reXNicGpsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjA4Mzc0OCwiZXhwIjoyMTAxNjU5NzQ4fQ.Qh7rmC0ExaYuiaTcLrCyag_2cW4qxdJWyzIz4FwQQfY'    // ← tempel service_role key di sini
+  SUPABASE_URL: '',       // ← tempel Project URL (dan kosongkan lagi) sebelum Run setupSupabaseProps
+  SERVICE_ROLE_KEY: ''    // ← tempel service_role key (dan kosongkan lagi) sebelum Run setupSupabaseProps
 };
 
 function setupSupabaseProps() {
