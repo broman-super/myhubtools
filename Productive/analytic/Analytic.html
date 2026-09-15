@@ -5308,27 +5308,30 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                 .then(data => {
                     clearInterval(progressTimer);
                     if (data.status === 'success') {
-                        // Selesaikan progres secara instan ke 100%
-                        updateProcessingProgress(100, 'Data tersimpan! Memperbarui tampilan dashboard...');
-
-                        // Bersihkan cache agar sync menarik data terbaru
+                        // Bersihkan cache agar re-render menarik data terbaru
                         localStorage.removeItem("intel_pro_cache_v3");
 
                         // Tutup upload modal setelah data sukses dikirim ke GAS
                         closeUploadModal();
                         unlockBtn(document.getElementById('btnSubmitUpload'));
 
-                        // Dynamic Sync tanpa reload
+                        // Konfirmasi sukses LANGSUNG: data sudah tersimpan di DB.
+                        // Jangan ditahan menunggu sync — sync gagal ≠ import gagal.
+                        const detailMsg = `<b>Import Berhasil!</b><br>• Baris Baru: <b>${data.added}</b><br>• Baris Update: <b>${data.updated}</b><br>• Baris Skip (Duplikat): <b>${data.skipped}</b>`;
+                        showSuccessOverlay('Bulk Upload Berhasil!', detailMsg, 4000);
+
+                        // Dynamic Sync tanpa reload, jalan di latar belakang.
+                        // Sync gagal hanya menampilkan toast kecil, bukan overlay error
+                        // yang membuat user mengira import-nya gagal.
                         syncDashboardData().then(syncSuccess => {
-                            if (syncSuccess) {
-                                const detailMsg = `<b>Import Berhasil!</b><br>• Baris Baru: <b>${data.added}</b><br>• Baris Update: <b>${data.updated}</b><br>• Baris Skip (Duplikat): <b>${data.skipped}</b>`;
-                                showSuccessOverlay('Bulk Upload Berhasil!', detailMsg, 4000);
-                            } else {
-                                showErrorOverlay(
-                                    'Sinkronisasi Dashboard Gagal!',
-                                    'Data transaksi berhasil disimpan di database, namun dashboard gagal memuat data terbaru secara asinkron. Silakan refresh halaman.'
-                                );
-                            }
+                            if (syncSuccess) return;
+                            const toast = document.createElement('div');
+                            toast.innerHTML = `${ICONS.warning}&nbsp; Import tersimpan. Dashboard perlu dimuat ulang. <a href="#" id="analyticReloadNotice" style="color:var(--primary);font-weight:700;">Refresh</a>`;
+                            toast.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:2147483000;background:var(--card);border:1px solid var(--warning);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text);box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:300px;';
+                            document.body.appendChild(toast);
+                            const btn = document.getElementById('analyticReloadNotice');
+                            if (btn) btn.onclick = (e) => { e.preventDefault(); location.reload(); };
+                            setTimeout(() => toast.remove(), 8000);
                         });
                     } else {
                         throw new Error(data.message || "Gagal memproses bulk upsert");
@@ -5671,17 +5674,22 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                 .then(data => {
                     clearInterval(progressTimer);
                     if (data.status === 'success') {
-                        updateProcessingProgress(100, 'Data tersimpan! Memperbarui dashboard...');
                         localStorage.removeItem('intel_pro_cache_v3');
                         closeBiayaUploadModal();
                         unlockBtn(document.getElementById('btnSubmitBiayaUpload'));
+                        // Konfirmasi sukses LANGSUNG: data sudah tersimpan di DB.
+                        const msg = `<b>Import Biaya Berhasil!</b><br>• Baris Baru: <b>${data.added}</b><br>• Baris Skip (Duplikat): <b>${data.skipped}</b>`;
+                        showSuccessOverlay('Bulk Upload Biaya Berhasil!', msg, 4000);
+                        // Dynamic Sync di latar belakang; gagal hanya tampilkan toast kecil.
                         syncDashboardData().then(ok => {
-                            if (ok) {
-                                const msg = `<b>Import Biaya Berhasil!</b><br>• Baris Baru: <b>${data.added}</b><br>• Baris Skip (Duplikat): <b>${data.skipped}</b>`;
-                                showSuccessOverlay('Bulk Upload Biaya Berhasil!', msg, 4000);
-                            } else {
-                                showErrorOverlay('Sinkronisasi Gagal!', 'Data biaya tersimpan, tapi dashboard gagal memuat ulang. Silakan refresh halaman.');
-                            }
+                            if (ok) return;
+                            const toast = document.createElement('div');
+                            toast.innerHTML = `${ICONS.warning}&nbsp; Import tersimpan. Dashboard perlu dimuat ulang. <a href="#" id="analyticReloadNotice" style="color:var(--primary);font-weight:700;">Refresh</a>`;
+                            toast.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:2147483000;background:var(--card);border:1px solid var(--warning);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text);box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:300px;';
+                            document.body.appendChild(toast);
+                            const btn = document.getElementById('analyticReloadNotice');
+                            if (btn) btn.onclick = (e) => { e.preventDefault(); location.reload(); };
+                            setTimeout(() => toast.remove(), 8000);
                         });
                     } else { throw new Error(data.message || 'Gagal memproses bulk biaya'); }
                 })
