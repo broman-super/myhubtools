@@ -45,6 +45,7 @@ class ReynaHubRouter {
       '#utilities/activity': 'Productive/tr/tracking.html',
       '#utilities/retur': 'Productive/tr-retur/retur-track.html',
       '#utilities/merger': 'Productive/PDF-Merger/PDFM_V2.html',
+      '#utilities/faktur': 'Productive/Faktur-Penjualan/Index.html',
       '#doc/dak': 'Doc/form-dak.html',
       '#external/resi': 'Productive/Resi-Generator/Index.html'
     };

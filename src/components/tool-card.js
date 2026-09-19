@@ -79,6 +79,13 @@ var ToolCard = {
       title: 'PDFM Merger',
       desc: 'Penyatuan berkas resi terpisah menjadi satu dokumen PDF tanpa memburamkan barcode/QR.',
       search: 'pdfm merger satukan semua resi pdf gabung'
+    },
+    {
+      group: 'universal',
+      hash: '#utilities/faktur',
+      title: 'Faktur Penjualan',
+      desc: 'Pembuatan faktur penjualan format resmi A4, siap disimpan sebagai PDF.',
+      search: 'faktur penjualan invoice tagihan pdf harga produk'
     }
   ],
 
