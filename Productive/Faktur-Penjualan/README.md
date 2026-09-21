@@ -14,8 +14,8 @@ Pembuat faktur penjualan format resmi **A4** berbasis web: pilih produk dari kat
 - **Dropdown/autocomplete produk** — dari `products.json` milik Resi Generator (path relatif `../Resi-Generator/products.json`); fallback `EMBEDDED_PRODUCTS` saat `file://`.
 - **No. faktur auto** — `INV-YYYYMMDD-SEQ` (SEQ harian, `localStorage 'invSeq_<tanggal>'`), bisa di-override manual.
 - **Status faktur** — dropdown Terbit/Dibayar per faktur, tampil di kop & riwayat (badge hijau saat Dibayar).
-- **Logo kop opsional** — unggah PNG/JPG ≤1 MB (`localStorage 'invoiceLogo'`), tampil di kiri atas lembar faktur; bisa dihapus.
-- **Satuan per baris** — default `pcs`, bisa diganti (unit, dus, meter, dll), ikut tercetak di kolom Satuan.
+- **Logo kop opsional** — unggah PNG/JPG ≤1 MB (`localStorage 'invoiceLogo'`), tampil di kiri atas lembar faktur; bisa dihapus. Tombol **Logo Supersub** memakai preset bawaan (dataURL di-hardcode di dalam file, sumber asli `Logo.txt`).
+- **Satuan per baris** — otomatis `pcs` (tampil sebagai teks, bukan kolom input); bisa diisi custom via bulk edit (`nama, qty, satuan, harga, diskon%`), ikut tercetak di kolom Satuan.
 - **PPN 11%** otomatis (UU HPP), diskon per baris, ongkir manual.
 - **Live preview A4** — pane kanan update realtime (`iframe.srcdoc`).
 - **Simpan PDF** — popup → `window.print()` → pilih "Save as PDF"; faktur valid otomatis masuk **Riwayat**.
@@ -96,7 +96,8 @@ create policy "faktur_penjualan_update" on public.faktur_penjualan for update to
 ### 3.5 Seed katalog produk (opsional, rekomendasi)
 - Konversi katalog Resi-Generator (`products.json`, 390 item) ke tabel **`faktur_produk`** (SKU, nama, harga) sudah disiapkan: **`seed-produk.sql`** — buka, masuk ke **Supabase Dashboard → SQL Editor → New query**, paste seluruh isi file, **Run**.
 - Idempotent: aman dijalankan ulang (upsert per SKU). Kolom `harga` default `0` — isi via tool ("Kelola Harga Produk") atau Table Editor.
-- Isi harga semua katalog sekaligus lewat **`seed-harga.sql`** (Classic/Xtreme/Aerogrip/Twotone = 185.000, Waterproof = 200.000). Setelah di-Run, tool otomatis memakai harga tersebut saat buka (fetch `faktur_produk`, fallback ke `invoicePrices`/`invoicePrices` localStorage bila DB offline).
+- Isi harga semua katalog sekaligus lewat **`seed-harga.sql`** (Classic/Xtreme/Aerogrip/Twotone = 185.000 asli 195.000, Waterproof = 200.000 asli 235.000). **Wajib**: file ini juga menambah kolom `harga_asli` yang dipakai tool untuk **mengisi kolom Diskon otomatis** (persen dari harga asli vs jual) dan chip "coret". Setelah di-Run, tool otomatis memakai harga tersebut saat buka (fetch `faktur_produk`, fallback ke `invoicePrices` localStorage bila DB offline).
+- ⚠️ **Jika kolom `harga_asli` belum ada** (query `select=sku,harga,harga_asli` di DB hasil 400), artinya `seed-harga.sql` belum di-Run: harga jual tetap terisi otomatis, tapi Diskon tidak bisa dihitung. Jalankan `seed-harga.sql` sekali agar Diskon ikut auto-isi.
 - Faktur Penjualan tetap membaca katalog dari `products.json`/`EMBEDDED_PRODUCTS`; tabel DB disiapkan untuk sinkronisasi katalog lintas perangkat berikutnya.
 - Namun **harga default sudah diambil dari Supabase** (`faktur_produk.harga`) saat tool dibuka — relevan kalau nanti sinkronisasi katalog berjalan.
 
