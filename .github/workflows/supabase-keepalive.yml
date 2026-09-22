@@ -1,0 +1,38 @@
+name: Supabase Keep-Alive & Cross-Check
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ping Supabase Main (iyraamxkrygtzsqkvnqz)
+        shell: bash
+        run: |
+          code=$(curl -s -o /tmp/main.json -w "%{http_code}" \
+            'https://iyraamxkrygtzsqkvnqz.supabase.co/rest/v1/faktur_penjualan?select=id&limit=1' \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5cmFhbXhrcnlndHpzcWt2bnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MDE3NTQsImV4cCI6MjEwMjA3Nzc1NH0.g9naRe6CJaZ-FIZHjUkVx_62GZlxVFixQbIUzDF3M7s" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5cmFhbXhrcnlndHpzcWt2bnF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MDE3NTQsImV4cCI6MjEwMjA3Nzc1NH0.g9naRe6CJaZ-FIZHjUkVx_62GZlxVFixQbIUzDF3M7s")
+          echo "HTTP $code"
+          cat /tmp/main.json
+          [ "$code" = "200" ] || exit 1
+
+      - name: Ping Supabase Analytic (ciukvojsknsdnkysbpjl)
+        shell: bash
+        run: |
+          code=$(curl -s -o /tmp/analytic.json -w "%{http_code}" \
+            'https://ciukvojsknsdnkysbpjl.supabase.co/rest/v1/biaya?select=id&limit=1' \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdWt2b2pza25zZG5reXNicGpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwODM3NDgsImV4cCI6MjEwMTY1OTc0OH0.VlOnxyhan-pydisulQ6jT9g89eFbgwzPwuMrMRYRu7M" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpdWt2b2pza25zZG5reXNicGpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYwODM3NDgsImV4cCI6MjEwMTY1OTc0OH0.VlOnxyhan-pydisulQ6jT9g89eFbgwzPwuMrMRYRu7M")
+          echo "HTTP $code"
+          cat /tmp/analytic.json
+          [ "$code" = "200" ] || exit 1
