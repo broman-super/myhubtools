@@ -357,6 +357,11 @@ main {
     z-index: 2;
 }
 
+/* Badge penanda webtool baru — warna berbeda dari badge notifikasi */
+.card-badge-new {
+    background: var(--accent);
+}
+
 /* ===== FRAME CONTAINER ===== */
 #frame-container {
     display: none;

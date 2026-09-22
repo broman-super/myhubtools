@@ -116,6 +116,13 @@ var ToolCard = {
       badge.setAttribute('hidden', '');
       card.appendChild(badge);
     }
+    // Badge penanda webtool baru
+    if (config.hash === '#utilities/faktur') {
+      var newBadge = document.createElement('span');
+      newBadge.className = 'card-badge card-badge-new';
+      newBadge.textContent = 'BARU';
+      card.appendChild(newBadge);
+    }
     return card;
   },
 
