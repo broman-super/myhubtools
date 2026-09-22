@@ -1560,9 +1560,9 @@ const app = (() => {
     components.hideLoadingOverlay();
 
     const startMode = IS_ADMIN_PAGE
-      ? "admin"
+      ? (state.get("isAdmin") ? "admin" : null)
       : ((location.hash === "#admin" && state.get("isAdmin")) ? "admin" : "public");
-    switchMode(startMode);
+    if (startMode) switchMode(startMode);
     if (IS_ADMIN_PAGE && !state.get("isAdmin")) components.openModal("loginModal");
     bindKeyboardShortcuts();
   }
