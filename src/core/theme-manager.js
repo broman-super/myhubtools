@@ -51,13 +51,4 @@ class ThemeManager {
     }
     this.applyTheme();
   }
-
-  setTheme(theme) {
-    if (['light', 'dark', 'system'].indexOf(theme) !== -1) {
-      this.currentTheme = theme;
-      this.applyTheme();
-    }
-  }
-
-  getTheme() { return this.currentTheme; }
 }

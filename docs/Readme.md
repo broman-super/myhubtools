@@ -85,7 +85,7 @@ docs/
 
 ## Quick Start
 
-1. Buka `index.html` di browser (atau gunakan `npm run dev` untuk dev server)
+1. Buka `index.html` di browser
 2. Klik "Akses Workspace" di landing page
 3. Pilih tool dari sidebar atau dashboard grid
 4. Setiap tool berjalan independen di iframe-nya sendiri

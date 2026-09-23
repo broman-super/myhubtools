@@ -28,8 +28,7 @@ index.html          SPA Shell (landing + workspace + sidebar + iframe router)
   │   ├── PDF-Merger/PDFM_V2.html     PDF Merger + Label Parser
   │   └── Resi-Generator/Index.html   Resi Generator
   ├── Doc/form-dak.html              Form Pengajuan DAK
-  ├── gscode/                        GAS backend (code-*.gs)
-  └── package.json                     Vite, ESLint, Prettier, Vitest (dev deps only)
+  └── gscode/                        GAS backend (code-*.gs)
 ```
 
 Shell memuat tools via iframe. Komunikasi antar frame menggunakan `postMessage` untuk sinkronisasi theme (dark/light).
@@ -41,16 +40,13 @@ Shell memuat tools via iframe. Komunikasi antar frame menggunakan `postMessage` 
 | Layer | Teknologi |
 |-------|-----------|
 | Frontend | Vanilla HTML5, CSS3 (Grid, Custom Properties), JavaScript ES6+ |
-| Build | Vite (dev server, esbuild minify, sourcemaps, manual chunks) |
+| Build | Tanpa build (statis). Kecuali `Productive/Project_develop` (React + Vite, build satu file) |
 | Backend | Google Apps Script (GAS) — serverless |
 | Database | Google Sheets |
 | Font | Plus Jakarta Sans (offline, self-hosted via `src/styles/`) |
 | Hosting | GitHub Pages (custom domain: reynahub.web.id) |
-| Linting | ESLint (strict: no-var, prefer-const, single quotes) |
-| Formatting | Prettier (single quotes, trailing commas, 100 width) |
-| Testing | Vitest + jsdom (minimal) |
 
-Zero runtime dependencies. Dev deps only: Vite, ESLint, Prettier, Vitest.
+Zero runtime dependencies. Tanpa toolchain di root; hanya `Productive/Project_develop` yang punya `package.json` sendiri (Vite).
 
 ---
 
@@ -193,12 +189,14 @@ Generator formulir untuk program Dana Amanah Karyawan (DAK) dengan perhitungan Q
 
 ## Pengembangan
 
+Repo ini tanpa framework dan tanpa dev toolchain di root — tiap tool adalah HTML statis murni, tinggal dibuka langsung di browser.
+
+Satu-satunya tool yang dibangun adalah `Productive/Project_develop` (React + Vite):
+
 ```bash
-npm install      # Install dev dependencies
-npm run dev      # Dev server (port 3000)
-npm run lint     # ESLint
-npm run format   # Prettier
-npm run test     # Vitest
+cd Productive/Project_develop
+npm install
+npm run build   # output: dist/index.html (satu file, siap dideploy)
 ```
 
 ### Deploy

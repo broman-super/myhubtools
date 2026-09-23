@@ -29,10 +29,6 @@ class ReynaHubRouter {
     window.location.hash = hash;
   }
 
-  goHome() {
-    window.location.hash = '#dashboard';
-  }
-
   getToolPath(hash) {
     var clean = hash.split('?')[0];
     var map = {
