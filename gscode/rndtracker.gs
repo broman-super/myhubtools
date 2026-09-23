@@ -16,9 +16,11 @@
 // (tabel rnd_roadmap hanya punya policy select untuk anon).
 // ============================================
 
+// ponytail: repo tidak menyimpan key. Isi sementara lalu Run setupSupabaseProps —
+// nilai tersimpan di Script Properties dan block ini dikosongkan (lihat DEPLOY step 2-3).
 var __SUPABASE_CONFIG__ = {
-  SUPABASE_URL: 'https://iyraamxkrygtzsqkvnqz.supabase.co',       // ← tempel Project URL project UNITOOLS di sini
-  SERVICE_ROLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5cmFhbXhrcnlndHpzcWt2bnF6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjUwMTc1NCwiZXhwIjoyMTAyMDc3NzU0fQ.VJODIL3SbUyDQHdM9ljsScOFqPIRDNoYR51QClAiuVY'    // ← tempel service_role key di sini
+  SUPABASE_URL: '',       // ← tempel Project URL project UNITOOLS di sini
+  SERVICE_ROLE_KEY: ''    // ← tempel service_role key di sini
 };
 
 var STORAGE_BUCKET = 'roadmap-photos'; // ← buat bucket ini di Supabase Storage & set Public
