@@ -25,10 +25,14 @@
             --bg: #f8fafc;
             --card: #ffffff;
             --primary: #ff0000;
+            --primary-solid: #c81e1e;
+            --primary-strong: #b91c1c;
             --primary-light: rgba(255, 0, 0, 0.08);
             --success: #10b981;
+            --success-strong: #065f46;
             --success-light: #d1fae5;
             --danger: #ef4444;
+            --danger-strong: #b91c1c;
             --danger-light: #fee2e2;
             --warning: #f59e0b;
             --warning-strong: #92400e;
@@ -44,10 +48,14 @@
             --bg: #0f172a;
             --card: #1e293b;
             --primary: #ff3b3b;
+            --primary-solid: #c81e1e;
+            --primary-strong: #fca5a5;
             --primary-light: rgba(255, 59, 59, 0.15);
             --success: #10b981;
+            --success-strong: #6ee7b7;
             --success-light: rgba(16, 185, 129, 0.2);
             --danger: #ef4444;
+            --danger-strong: #fca5a5;
             --danger-light: rgba(239, 68, 68, 0.2);
             --warning: #f59e0b;
             --warning-strong: #fbbf24;
@@ -61,6 +69,11 @@
         html {
             min-width: 360px;
             color-scheme: light;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
         }
 
         body {
@@ -106,6 +119,7 @@
             border: 1px solid var(--border);
             color: var(--text);
             padding: 8px 12px;
+            min-height: 44px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
@@ -131,6 +145,10 @@
 
         .compare-pill button {
             padding: 8px 12px;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             border: none;
             background: transparent;
             color: var(--text-muted);
@@ -143,7 +161,7 @@
         }
 
         .compare-pill button.active {
-            background: var(--primary);
+            background: var(--primary-solid);
             color: white;
             border-radius: 6px;
         }
@@ -427,22 +445,22 @@
 
         .badge.success {
             background: var(--success-light);
-            color: var(--success);
+            color: var(--success-strong);
         }
 
         .badge.danger {
             background: var(--danger-light);
-            color: var(--danger);
+            color: var(--danger-strong);
         }
 
         .badge.warning {
             background: var(--warning-light);
-            color: var(--warning);
+            color: var(--warning-strong);
         }
 
         .badge.primary {
             background: var(--primary-light);
-            color: var(--primary);
+            color: var(--primary-strong);
         }
 
         .progress-bg {
@@ -465,15 +483,20 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 14px;
-            height: 14px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
-            background: var(--border);
-            color: var(--text-muted);
+            border: none;
+            margin: 0 0 0 6px;
+            padding: 0;
+            background: var(--accent);
+            color: var(--text);
+            font: inherit;
             font-size: 10px;
             font-weight: 800;
+            line-height: 1;
             cursor: help;
-            margin-left: 6px;
+            flex-shrink: 0;
         }
 
         #kpiTip {
@@ -659,7 +682,6 @@
             max-width: 520px;
             position: relative;
             animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            transition: max-width 0.4s ease, width 0.4s ease;
         }
 
         .mapping-grid {
@@ -832,7 +854,6 @@
             background: var(--primary);
             color: white;
             border-color: var(--primary);
-            box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
         }
 
         .step-circle.done {
@@ -862,6 +883,7 @@
             html, body {
                 background: #ffffff !important;
                 font-size: 8px;
+                padding: 0 !important;
             }
 
             /* Paksa kedua tab tampil (override inline display:none dari showTab) — tetap GRID agar layout 3 kolom jalan */
@@ -902,7 +924,6 @@
             }
 
             .bento-item {
-                grid-column: 1 / -1 !important;
                 width: 100% !important;
                 min-width: 0 !important;
                 margin: 0 !important;
@@ -919,8 +940,8 @@
             }
 
             /* Chart-box ukuran kecil di print 1 kolom */
-            .chart-box { height: 180px !important; min-height: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .chart-box.large { min-height: 200px !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .chart-box { height: 140px !important; min-height: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .chart-box.large { min-height: 190px !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
             /* Typography ramping agar tidak buang kertas */
             .bento-value { font-size: 16px !important; line-height: 1.1 !important; }
@@ -952,18 +973,21 @@
             .bento-item:has(#chartHari) { display: none !important; }
             #marginAnalysis { display: none !important; }
             .compare-pill { display: none !important; }
-            div:has(> #biayaChartKomposisi) { height: 120px !important; }
+            div:has(> #biayaChartKomposisi) { height: 160px !important; }
 
-            /* Chart tren (Trend Sales & Tren Biaya) full-width; sisanya 3 kolom */
-            .col-span-12 {
-                grid-column: 1 / -1 !important;
-            }
-            /* Trend chart diperkecil agar tidak makan tempat */
-            .col-span-12 .chart-box { height: 90px !important; }
+            /* Layout 3 kolom: KPI 4-up (col-span-3), trend full-width (col-span-12),
+               sisanya mengikuti span asli layar untuk pasar/produk side-by-side */
+            .bento-item.col-span-3 { grid-column: span 3 !important; }
+            .bento-item.col-span-4 { grid-column: span 4 !important; }
+            .bento-item.col-span-6 { grid-column: span 6 !important; }
+            .bento-item.col-span-8 { grid-column: span 8 !important; }
+            .bento-item.col-span-12 { grid-column: 1 / -1 !important; }
+            /* Trend chart diperbesar agar label axis (Rp + tanggal) tidak di-collapse Chart.js */
+            .col-span-12 .chart-box { height: 200px !important; }
 
             /* Top Produk (tabel 20 baris) dipasangkan 2/3 di kanan Market Share (1/3): side-by-side */
             .bento-item:has(#dtProduk) {
-                grid-column: span 2 !important;
+                grid-column: span 8 !important;
             }
 
             /* Paksa semua kolom #dtProduk tampil di print (termasuk Momentum) —
@@ -974,7 +998,7 @@
             #dtProduk td.dtr-control { display: none !important; }
 
             .chart-box {
-                height: 120px !important;
+                flex: 0 0 auto !important;
                 min-height: 0 !important;
                 break-inside: avoid;
                 page-break-inside: avoid;
@@ -1075,15 +1099,15 @@
         style="position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center;">
         <div
             style="background:var(--card); padding:40px; border-radius:24px; box-shadow:0 10px 30px rgba(0,0,0,0.1); border:1px solid var(--border); width:90%; max-width:400px; text-align:center;">
-            <h2 style="font-family:'Geomini','Plus Jakarta Sans'; color:var(--primary); margin-bottom:10px;">Sales Analytic
-                Simplify</h2>
+            <h3 style="font-family:'Geomini','Plus Jakarta Sans'; color:var(--primary); margin-bottom:10px;">Sales Analytic
+                Simplify</h3>
             <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px; font-weight:600;">Area Terbatas.
                 Masukkan Password.</p>
             <input type="password" id="pwdInput"
                 style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); background:var(--accent); color:var(--text); margin-bottom:16px; font-weight:800; outline:none; text-align:center; box-sizing:border-box;"
                 placeholder="Password">
             <button onclick="verifyPwd()"
-                style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer;">LOGIN</button>
+                style="width:100%; padding:12px; background:var(--primary-solid); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer;">LOGIN</button>
             <p id="pwdError"
                 style="color:var(--danger); font-size:12px; margin-top:10px; font-weight:800; display:none;">Password
                 Salah!</p>
@@ -1129,7 +1153,7 @@
             </div>
 
             <button id="processingCloseBtn" onclick="hideProcessingOverlay()"
-                style="display:none; margin-top:20px; padding:10px 20px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer; font-size:12px;">TUTUP</button>
+                style="display:none; margin-top:20px; padding:10px 20px; background:var(--primary-solid); color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer; font-size:12px;">TUTUP</button>
         </div>
     </div>
 
@@ -1179,7 +1203,7 @@
             </div>
 
             <button onclick="saveExpenseToGAS()" id="btnSaveExpense"
-                style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:14px; transition:0.2s;">CATAT
+                style="width:100%; padding:14px; background:var(--primary-solid); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:14px; transition:0.2s;">CATAT
                 PENGELUARAN</button>
         </div>
     </div>
@@ -1200,7 +1224,7 @@
             <input type="number" id="inputTargetSales" placeholder="Contoh: 820000000"
                 style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text); margin-bottom:16px; font-weight:800; outline:none; font-size:16px;">
             <button onclick="saveTargetToGAS()" id="btnSaveTarget"
-                style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:14px; transition:0.2s;">SIMPAN
+                style="width:100%; padding:14px; background:var(--primary-solid); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:14px; transition:0.2s;">SIMPAN
                 TARGET</button>
         </div>
     </div>
@@ -1307,7 +1331,7 @@
                         HAPUS & UPLOAD ULANG
                     </button>
                     <button onclick="runDataAnalysis()" id="btnRunAnalysis"
-                        style="padding: 12px 30px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px; transition: 0.2s;">
+                        style="padding: 12px 30px; background: var(--primary-solid); color: white; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px; transition: 0.2s;">
                         LANJUT ANALISIS DATA
                     </button>
                 </div>
@@ -1369,7 +1393,7 @@
                         KEMBALI KE PEMETAAN
                     </button>
                     <button onclick="sendExcelToGAS()" id="btnSubmitUpload" disabled
-                        style="padding: 12px 30px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px; opacity: 0.5; transition: 0.2s;">
+                        style="padding: 12px 30px; background: var(--primary-solid); color: white; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px; opacity: 0.5; transition: 0.2s;">
                         KIRIM KE SPREADSHEET
                     </button>
                 </div>
@@ -1433,7 +1457,7 @@
             <input type="hidden" id="startDate"><input type="hidden" id="endDate">
             <input type="hidden" id="comparisonMode" value="rolling">
             <button class="no-print" onclick="window.print()" title="Cetak / Export PDF (A4)"
-                style="background: var(--primary); color: #fff; cursor: pointer; padding: 10px 16px; border: none; border-radius: 8px; font-weight: 800; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
+                style="background: var(--primary-solid); color: #fff; cursor: pointer; padding: 10px 16px; border: none; border-radius: 8px; font-weight: 800; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                 Cetak
             </button>
@@ -1448,6 +1472,21 @@
 
         <div class="bento-container" id="mainContainer">
             <div id="printRangeHeader" class="print-range-subheader" style="display:none;"></div>
+            <div id="emptyState" style="display:none; grid-column:1 / -1; box-sizing:border-box; background:var(--card); border:1px dashed var(--border); border-radius:16px; padding:18px 20px; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:14px;">
+                    <span style="font-size:24px; line-height:1;">📦</span>
+                    <div>
+                        <div style="font-weight:800; font-size:14px;">Belum ada data penjualan di rentang tanggal ini.</div>
+                        <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Impor file Excel (Faktur/Retur) untuk memulai, atau geser jangkauan tanggal ke periode yang sudah berisi data.</div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button onclick="document.getElementById('uploadExcelModal').style.display='flex';"
+                        style="min-height:44px; padding:10px 16px; background:var(--primary-solid); color:white; border:none; border-radius:10px; font-weight:800; font-size:12px; cursor:pointer;">Import Excel</button>
+                    <button onclick="document.getElementById('emptyState').style.display='none';"
+                        style="min-height:44px; padding:10px 16px; background:var(--accent); color:var(--text-muted); border:1px solid var(--border); border-radius:10px; font-weight:800; font-size:12px; cursor:pointer;">Tutup</button>
+                </div>
+            </div>
         <!-- ROW 1 -->
         <div class="bento-item col-span-3">
             <div class="bento-header">
@@ -1695,12 +1734,20 @@
             </div>
             <div id="localWarningBox" style="font-size:13px; line-height:1.6; color:var(--text); margin-bottom:16px;">
                 Menganalisis anomali...</div>
+            <details id="mdPromptBox"
+                style="display:none; margin-bottom:16px; border:1px solid var(--border); border-radius:12px; background:var(--card);">
+                <summary
+                    style="cursor:pointer; padding:10px 14px; font-size:11px; font-weight:800; color:var(--text-muted);">
+                    Markdown prompt otomatis (disusun local engine — hanya dikirim saat menekan Tanya Gemini)</summary>
+                <pre id="mdPromptPreview"
+                    style="margin:0; padding:12px 14px; font-size:11px; line-height:1.5; color:var(--text); background:var(--bg); border-top:1px solid var(--border); white-space:pre-wrap; word-break:break-word; max-height:280px; overflow:auto;"></pre>
+            </details>
             <div id="aiResultBox"
                 style="display:none; background:var(--card); color:var(--text); border-radius:12px; padding:20px; font-size:13px; line-height:1.6; margin-bottom:16px; border:1px solid var(--border); box-shadow:inset 0 2px 4px rgba(0,0,0,0.05);">
                 <div id="aiContent"></div>
             </div>
             <button onclick="mintaSaranAI()"
-                style="background:var(--primary); color:white; border:none; padding:12px 20px; border-radius:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:auto; transition:0.2s;">
+                style="background:var(--primary-solid); color:white; border:none; padding:12px 20px; border-radius:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:auto; transition:0.2s;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg> TANYA GEMINI UNTUK SOLUSI
@@ -1752,12 +1799,12 @@
                     <label style="font-size:11px; color:var(--text);">Tanggal (opsional) <select id="mapTanggal" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text);"></select></label>
                     <label style="font-size:11px; color:var(--text);">Kategori Biaya (opsional) <select id="mapKategori" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text);"></select></label>
                 </div>
-                <button onclick="applyBiayaMapping()" style="margin-top:12px; width:100%; padding:10px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer;">TERAPKAN MAPPING</button>
+                <button onclick="applyBiayaMapping()" style="margin-top:12px; width:100%; padding:10px; background:var(--primary-solid); color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer;">TERAPKAN MAPPING</button>
                 <div style="font-size:10px; color:var(--text-muted); margin-top:6px; text-align:center;">Header terdeteksi: <span id="biayaDetectedHeaders"></span></div>
             </div>
             <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
                 <button onclick="closeBiayaUploadModal()" style="padding:12px 20px; background:none; border:1px solid var(--border); color:var(--text-muted); border-radius:12px; font-weight:800; cursor:pointer; font-size:13px;">BATAL</button>
-                <button onclick="sendBiayaToGAS()" id="btnSubmitBiayaUpload" disabled style="padding:12px 30px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px; opacity:0.5; transition:0.2s;">KIRIM KE DATABASE</button>
+                <button onclick="sendBiayaToGAS()" id="btnSubmitBiayaUpload" disabled style="padding:12px 30px; background:var(--primary-solid); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px; opacity:0.5; transition:0.2s;">KIRIM KE DATABASE</button>
             </div>
         </div>
     </div>
@@ -2092,7 +2139,7 @@
             if (visual) {
                 // Ikon animasi centang hijau sukses (SVG)
                 visual.innerHTML = `
-                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation: scaleUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation: scaleUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                 `;
@@ -2128,7 +2175,7 @@
             if (visual) {
                 // Ikon animasi silang merah error (SVG)
                 visual.innerHTML = `
-                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation: scaleUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation: scaleUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
@@ -2849,7 +2896,7 @@
                     const isEnd = selEnd && day.isSame(selEnd, 'day');
                     if (day.isSame(moment(), 'day') && !isStart && !isEnd) st += ' color:var(--primary);';
                     if (inRange && !isStart && !isEnd) st += ' background:var(--primary-light);';
-                    if (isStart || isEnd) st += ' background:var(--primary); color:#fff; font-weight:900;';
+                    if (isStart || isEnd) st += ' background:var(--primary-solid); color:#fff; font-weight:900;';
                     cell.style.cssText = st;
                     cell.addEventListener('click', function (e) { e.stopPropagation(); onDayClick(day); });
                     grid.appendChild(cell);
@@ -3339,6 +3386,7 @@
                 if (document.getElementById('kpiSales')) document.getElementById('kpiSales').innerText = formatRp(netSales);
                 let notaCount = Object.keys(basketData).length;
                 __lastNotaCount = notaCount;
+                updateEmptyState(netSales, notaCount);
                 if (document.getElementById('kpiSalesVs')) document.getElementById('kpiSalesVs').innerHTML = `<span class="help-icon" data-tooltip="Persentase pertumbuhan omzet bersih vs periode pembanding. Nota = 1 pembeli yang belanja dalam 1 hari (proxy transaksi).">?</span> ${hitungVsText(netSales, netSalesLalu)} vs <span style="font-weight:700; color:#cbd5e1;">${formatRp(netSalesLalu)}</span> · <span style="color:var(--text-muted); font-weight:700;">${notaCount.toLocaleString('id-ID')} Nota</span>`;
                 let barFill = document.getElementById('kpiSalesProgress');
                 if (barFill) {
@@ -3494,7 +3542,7 @@
 
                 if (document.getElementById('basketIntel')) {
                     document.getElementById('basketIntel').innerHTML = `
-                    <div style="background:var(--primary); color:white; padding:15px; border-radius:12px; display:flex; flex-direction:column; gap:12px;">
+                    <div style="background:var(--primary-solid); color:white; padding:15px; border-radius:12px; display:flex; flex-direction:column; gap:12px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:12px;">
                             <div>
                                 <div style="font-size:10px; font-weight:800; color:rgba(255,255,255,0.75);">AVG: RESELLER</div>
@@ -3510,7 +3558,7 @@
                             <div style="font-size:14px; font-weight:900; color:#fff;">${UPT} <span style="font-size:10px;">pcs</span></div>
                         </div>
                     </div>
-                    <div style="background:var(--danger-light); padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; border-left:4px solid var(--danger);">
+                    <div style="background:var(--danger-light); padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; ">
                         <div style="font-size:10px; font-weight:800; color:var(--danger);">CAC (BIAYA AKUISISI)</div>
                         <div style="font-size:14px; font-weight:900; color:var(--danger);">${formatRp(CAC)}</div>
                     </div>
@@ -3591,7 +3639,7 @@
 
                 if (document.getElementById('vipInsight')) {
                     document.getElementById('vipInsight').innerHTML = `
-                    <div style="background:var(--danger-light); border-left:4px solid var(--danger); padding:10px 12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="background:var(--danger-light);  padding:10px 12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; flex-direction:column;">
                             <span style="font-size:10px; font-weight:800; color:var(--danger); display:inline-flex; align-items:center; gap:4px;">${ICONS.warning} RISIKO CHURN (>14 HARI)</span>
                             <span style="font-size:12px; font-weight:700; color:#0f172a;">${totalKabur} Pelanggan Awas Kabur</span>
@@ -3983,19 +4031,19 @@
             // === CEK 1: TARGET PROJECTION ===
             if (proyPct < 100 && achPct < 100) {
                 let shortfall = TARGET_SALES - runRate;
-                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:10px 12px; background:var(--danger-light); border-radius:8px; border-left:4px solid var(--danger); line-height:1.6;">${ICONS.alert} <b>WASPADA GAGAL TARGET:</b> Laju ${formatRp(dailyVelocity)}/hari hanya akan menghasilkan <b>${formatRp(runRate)}</b> di akhir periode. Shortfall: <b style="color:var(--danger);">-${formatRp(shortfall)}</b>. Segera Push Iklan & Follow-Up!</div>`);
+                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:10px 12px; background:var(--danger-light); border-radius:8px;  line-height:1.6;">${ICONS.alert} <b>WASPADA GAGAL TARGET:</b> Laju ${formatRp(dailyVelocity)}/hari hanya akan menghasilkan <b>${formatRp(runRate)}</b> di akhir periode. Shortfall: <b style="color:var(--danger);">-${formatRp(shortfall)}</b>. Segera Push Iklan & Follow-Up!</div>`);
             } else if (proyPct >= 100 && achPct < 100) {
-                warnings.push(`<div style="color:#065f46; font-size:12px; padding:10px 12px; background:#d1fae5; border-radius:8px; border-left:4px solid #059669; line-height:1.6;">${ICONS.star} <b>PROYEKSI AMAN:</b> Laju ${formatRp(dailyVelocity)}/hari, proyeksi ${formatRp(runRate)}. Pertahankan ritme!</div>`);
+                warnings.push(`<div style="color:var(--success-strong); font-size:12px; padding:10px 12px; background:var(--success-light); border-radius:8px;  line-height:1.6;">${ICONS.star} <b>PROYEKSI AMAN:</b> Laju ${formatRp(dailyVelocity)}/hari, proyeksi ${formatRp(runRate)}. Pertahankan ritme!</div>`);
             }
 
             // === CEK 2: RUGI ===
             if (netProfit < 0 && netSales > 0) {
-                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; border-left:4px solid var(--danger);"><b>RUGI BANDAR:</b> Biaya operasional menggerus laba. Net Margin: ${(netProfit / netSales * 100).toFixed(1)}%.</div>`);
+                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; "><b>RUGI BANDAR:</b> Biaya operasional menggerus laba. Net Margin: ${(netProfit / netSales * 100).toFixed(1)}%.</div>`);
             }
 
             // === CEK 3: RETUR TINGGI ===
             if (lossRate > 5) {
-                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; border-left:4px solid var(--danger);"><b>RETUR KRITIS:</b> Loss rate ${lossRate.toFixed(1)}% — Di atas ambang 5%. Cek kualitas produk & packing!</div>`);
+                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; "><b>RETUR KRITIS:</b> Loss rate ${lossRate.toFixed(1)}% — Di atas ambang 5%. Cek kualitas produk & packing!</div>`);
             }
 
             // === CEK 4: DOMINASI RESELLER TUNGGAL ===
@@ -4003,7 +4051,7 @@
             if (urRes.length > 0 && netSales > 0) {
                 let topResellerShare = (urRes[0][1] / netSales) * 100;
                 if (topResellerShare > 40) {
-                    warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; border-left:4px solid var(--warning);"><b>KONSENTRASI RISIKO:</b> ${topResellerShare.toFixed(1)}% omzet bergantung pada 1 reseller (<b>${urRes[0][0]}</b>). Diversifikasi segera!</div>`);
+                    warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; "><b>KONSENTRASI RISIKO:</b> ${topResellerShare.toFixed(1)}% omzet bergantung pada 1 reseller (<b>${urRes[0][0]}</b>). Diversifikasi segera!</div>`);
                 }
             }
 
@@ -4013,11 +4061,11 @@
                 let qtyGrowth = (netQtySkrg - netQtyLalu) / netQtyLalu * 100;
                 let aovGrowth = aovLalu > 0 ? (aovSkrg - aovLalu) / aovLalu * 100 : 0;
                 if (salesGrowth > 0 && qtyGrowth < -5) {
-                    warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; border-left:4px solid var(--warning);"><b>VOLUME MENYUSUT:</b> Omzet naik ${salesGrowth.toFixed(1)}% tapi QTY turun ${Math.abs(qtyGrowth).toFixed(1)}%. Anda tertolong kenaikan harga rata-rata (AOV +${aovGrowth.toFixed(1)}%). Waspada — volume pelanggan sedang menipis!</div>`);
+                    warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; "><b>VOLUME MENYUSUT:</b> Omzet naik ${salesGrowth.toFixed(1)}% tapi QTY turun ${Math.abs(qtyGrowth).toFixed(1)}%. Anda tertolong kenaikan harga rata-rata (AOV +${aovGrowth.toFixed(1)}%). Waspada — volume pelanggan sedang menipis!</div>`);
                 } else if (salesGrowth < -5 && qtyGrowth > 0) {
-                    warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; border-left:4px solid var(--warning);"><b>HARGA RATA-RATA TURUN:</b> QTY naik ${qtyGrowth.toFixed(1)}% tapi omzet turun ${Math.abs(salesGrowth).toFixed(1)}%. AOV drop ${Math.abs(aovGrowth).toFixed(1)}%. Cek apakah ada diskon berlebihan atau pergeseran ke produk murah!</div>`);
+                    warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; "><b>HARGA RATA-RATA TURUN:</b> QTY naik ${qtyGrowth.toFixed(1)}% tapi omzet turun ${Math.abs(salesGrowth).toFixed(1)}%. AOV drop ${Math.abs(aovGrowth).toFixed(1)}%. Cek apakah ada diskon berlebihan atau pergeseran ke produk murah!</div>`);
                 } else if (salesGrowth < -5 && qtyGrowth < -5) {
-                    warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; border-left:4px solid var(--danger);"><b>DOUBLE DROP:</b> Omzet turun ${Math.abs(salesGrowth).toFixed(1)}% DAN QTY turun ${Math.abs(qtyGrowth).toFixed(1)}%. Ini sinyal perlambatan permintaan yang serius. Segera audit semua channel!</div>`);
+                    warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; "><b>DOUBLE DROP:</b> Omzet turun ${Math.abs(salesGrowth).toFixed(1)}% DAN QTY turun ${Math.abs(qtyGrowth).toFixed(1)}%. Ini sinyal perlambatan permintaan yang serius. Segera audit semua channel!</div>`);
                 }
             }
 
@@ -4030,11 +4078,11 @@
                 let cac = totalOpex / totalCust;
                 let avgMarginPerCust = netProfit / totalCust;
                 if (cac > avgMarginPerCust && avgMarginPerCust > 0) {
-                    warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; border-left:4px solid var(--danger);"><b>IKLAN BERDARAH (CAC > MARGIN):</b> Biaya akuisisi ${formatRp(cac)}/pelanggan melampaui margin rata-rata ${formatRp(avgMarginPerCust)}/pelanggan. Evaluasi efisiensi iklan sekarang!</div>`);
+                    warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; "><b>IKLAN BERDARAH (CAC > MARGIN):</b> Biaya akuisisi ${formatRp(cac)}/pelanggan melampaui margin rata-rata ${formatRp(avgMarginPerCust)}/pelanggan. Evaluasi efisiensi iklan sekarang!</div>`);
                 } else if (cac > 0 && avgMarginPerCust > 0) {
                     let cacRatio = (cac / avgMarginPerCust * 100).toFixed(0);
                     if (cacRatio > 60) {
-                        warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; border-left:4px solid var(--warning);"><b>CAC MENDEKATI KRITIS:</b> Biaya akuisisi ${formatRp(cac)}/pelanggan = ${cacRatio}% dari margin. Pantau ketat, jangan tambah spend iklan tanpa menaikkan konversi!</div>`);
+                        warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; "><b>CAC MENDEKATI KRITIS:</b> Biaya akuisisi ${formatRp(cac)}/pelanggan = ${cacRatio}% dari margin. Pantau ketat, jangan tambah spend iklan tanpa menaikkan konversi!</div>`);
                     }
                 }
             }
@@ -4047,7 +4095,7 @@
                         let drop = (v - vLalu) / vLalu * 100;
                         if (drop < -25) {
                             let shareKat = (v / (netSales || 1) * 100).toFixed(1);
-                            warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; border-left:4px solid var(--danger);"><b>KATEGORI AMBLES — ${kat}:</b> Anjlok ${Math.abs(drop).toFixed(1)}% vs periode lalu (Porsi saat ini: ${shareKat}%). Segera investigasi: harga bersaing? Stok kosong? Kompetitor masuk?</div>`);
+                            warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; "><b>KATEGORI AMBLES — ${kat}:</b> Anjlok ${Math.abs(drop).toFixed(1)}% vs periode lalu (Porsi saat ini: ${shareKat}%). Segera investigasi: harga bersaing? Stok kosong? Kompetitor masuk?</div>`);
                         }
                     }
                 });
@@ -4064,20 +4112,20 @@
                     let worstShare = (worstDay[1] / totalHariOmzet * 100).toFixed(1);
                     let expectedShare = (100 / 7).toFixed(1);
                     if (parseFloat(worstShare) < parseFloat(expectedShare) * 0.4) {
-                        warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; border-left:4px solid var(--warning);"><b>HARI MATI — ${worstDay[0]}:</b> Hanya menyumbang ${worstShare}% omzet (vs rata-rata ${expectedShare}%). Manfaatkan dengan flash sale / push notif khusus hari ${worstDay[0]}! Golden day: <b>${goldenDay[0]} (${goldenShare}%)</b>.</div>`);
+                        warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; "><b>HARI MATI — ${worstDay[0]}:</b> Hanya menyumbang ${worstShare}% omzet (vs rata-rata ${expectedShare}%). Manfaatkan dengan flash sale / push notif khusus hari ${worstDay[0]}! Golden day: <b>${goldenDay[0]} (${goldenShare}%)</b>.</div>`);
                     }
                 }
             }
 
             // === CEK 9 (B4): CHURN VALUE ALERT ===
             if (churnCount > 3) {
-                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; border-left:4px solid var(--danger);"><b>CHURN URGENT — ${churnCount} Pelanggan Hilang:</b> Potensi omzet tertahan <b>${formatRp(churnOmzet)}</b>. Hubungi mereka hari ini dengan penawaran eksklusif!</div>`);
+                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; "><b>CHURN URGENT — ${churnCount} Pelanggan Hilang:</b> Potensi omzet tertahan <b>${formatRp(churnOmzet)}</b>. Hubungi mereka hari ini dengan penawaran eksklusif!</div>`);
             } else if (churnCount > 0) {
-                warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; border-left:4px solid var(--warning);"><b>PANTAU CHURN — ${churnCount} Pelanggan >14 Hari:</b> Potensi omzet ${formatRp(churnOmzet)} sedang tidur. Follow-up sebelum benar-benar kabur!</div>`);
+                warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; "><b>PANTAU CHURN — ${churnCount} Pelanggan >14 Hari:</b> Potensi omzet ${formatRp(churnOmzet)} sedang tidur. Follow-up sebelum benar-benar kabur!</div>`);
             }
 
             if (warnings.length === 0) {
-                warnings.push(`<div style="color:#065f46; font-size:12px; padding:10px 12px; background:#d1fae5; border-radius:8px; border-left:4px solid #059669;">${ICONS.check} <b>KONDISI SEHAT:</b> Tidak ada anomali kritis terdeteksi pada periode ini. Pertahankan performa!</div>`);
+                warnings.push(`<div style="color:var(--success-strong); font-size:12px; padding:10px 12px; background:var(--success-light); border-radius:8px; ">${ICONS.check} <b>KONDISI SEHAT:</b> Tidak ada anomali kritis terdeteksi pada periode ini. Pertahankan performa!</div>`);
             }
 
             document.getElementById('localWarningBox').innerHTML = `<div style="display:flex; flex-direction:column; gap:8px;">` + warnings.join('') + `</div>`;
@@ -4102,30 +4150,52 @@
             let b2cPct = netSales > 0 ? (b2cSales / netSales * 100).toFixed(1) : 0;
             let top3Reseller = urRes.slice(0, 3).map(i => i[0]).join(', ');
 
-            // B3 persona + semua data
-            contextForAI = `[SYSTEM: KAMU ADALAH FINANCIAL & SALES AUDITOR YANG KERAS DAN TAJAM]
-Gunakan kerangka analisis 3 lapis: WHO (Siapa yang churn/bermasalah), WHAT (Produk/Kategori apa yang retur/turun), dan WHEN (Hari/Periode apa yang paling sepi). Jangan beri saran klise. Berikan 3 TAKTIK EKSEKUSI KONKRET yang bisa dijalankan HARI INI untuk memperbaiki margin dan volume. Format jawaban: Masalah Utama → Taktik Konkret → Target Hasil.
+            // === AUTO-GENERATED MARKDOWN PROMPT (disusun local engine; AI dipanggil HANYA saat tombol "Tanya Gemini") ===
+            function htmlToMd(html) {
+                return html
+                    .replace(/<svg[\s\S]*?<\/svg>/g, '')
+                    .replace(/<b>/g, '**').replace(/<\/b>/g, '**')
+                    .replace(/<[^>]+>/g, '')
+                    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+                    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&#x27;/g, "'")
+                    .replace(/\s+/g, ' ').trim();
+            }
+            var mdWarnings = warnings.map(function (w) { return '- ' + htmlToMd(w); }).join('\n');
+            if (!mdWarnings.trim()) mdWarnings = '- Tidak ada anomali kritis.';
+            contextForAI = [
+                '# INSTANT DIAGNOSTICS - Laporan Analisis (disusun otomatis oleh local engine)',
+                '',
+                'Berperan sebagai financial & sales auditor yang keras dan tajam. Data di bawah sudah dianalisis mesin lokal; jangan beri saran klise. Berikan 3 TAKTIK EKSEKUSI KONKRET yang bisa dijalankan HARI INI untuk memperbaiki margin dan volume, format: Masalah Utama -> Taktik Konkret -> Target Hasil.',
+                '',
+                '## 1. Ringkasan KPI Periode Ini',
+                '- Target Achievement: ' + achPct.toFixed(1) + '% (Defisit ' + formatRp(gap) + ')',
+                '- Proyeksi Akhir: ' + formatRp(runRate) + ' vs Target ' + formatRp(TARGET_SALES),
+                '- Net Sales: ' + formatRp(netSales) + ' (Growth ' + gthSales + '% vs Periode Lalu ' + formatRp(netSalesLalu || 0) + ')',
+                '- Net QTY: ' + netQtySkrg + ' pcs (vs Lalu ' + netQtyLalu + ' pcs, tren ' + qtyGrowthStr + ')',
+                '- AOV (Avg Order Value): ' + formatRp(aovSkrg) + ' (vs Lalu ' + formatRp(aovLalu) + ', tren ' + aovGrowthStr + ')',
+                '- Net Profit: ' + formatRp(netProfit) + ' | Net Margin: ' + (netSales > 0 ? (netProfit / netSales * 100).toFixed(1) : 0) + '%',
+                '- Opex Terbesar: ' + topOpex,
+                '- Retur Loss Rate: ' + lossRate.toFixed(1) + '%',
+                '',
+                '## 2. Anomali Terdeteksi (Local Engine)',
+                mdWarnings,
+                '',
+                '## 3. Rincian Pendukung',
+                '### Kategori (Top 4)',
+                katDetail,
+                '',
+                '### Pelanggan (B2B/B2C)',
+                '- B2B (Reseller): ' + formatRp(b2bSales) + ' (' + b2bPct + '% share) | Top Reseller: ' + (top3Reseller || 'N/A'),
+                '- B2C (Marketplace/Umum): ' + formatRp(b2cSales) + ' (' + b2cPct + '% share)',
+                '- Churn Alert: ' + churnCount + ' pelanggan absen >14 hari, menahan omzet ' + formatRp(churnOmzet) + ' (B4)'
+            ].join('\n');
 
-[DATA RINGKAS PERIODE INI]
-- Target Achievement: ${achPct.toFixed(1)}% (Defisit ${formatRp(gap)})
-- Proyeksi Akhir: ${formatRp(runRate)} vs Target ${formatRp(TARGET_SALES)}
-- Net Sales: ${formatRp(netSales)} (Growth ${gthSales}% vs Periode Lalu ${formatRp(netSalesLalu || 0)})
-- Net QTY: ${netQtySkrg} pcs (vs Lalu ${netQtyLalu} pcs, tren ${qtyGrowthStr})
-- AOV (Avg Order Value): ${formatRp(aovSkrg)} (vs Lalu ${formatRp(aovLalu)}, tren ${aovGrowthStr})
-- Net Profit: ${formatRp(netProfit)} | Net Margin: ${netSales > 0 ? (netProfit / netSales * 100).toFixed(1) : 0}%
-- Opex Terbesar: ${topOpex}
-- Retur Loss Rate: ${lossRate.toFixed(1)}%
-
-[DATA KATEGORI (B1)]
-${katDetail}
-
-[DATA PELANGGAN (B2)]
-- B2B (Reseller): ${formatRp(b2bSales)} (${b2bPct}% share) | Top Reseller: ${top3Reseller || 'N/A'}
-- B2C (Marketplace/Umum): ${formatRp(b2cSales)} (${b2cPct}% share)
-- Churn Alert: ${churnCount} pelanggan absen >14 hari, menahan omzet ${formatRp(churnOmzet)} (B4)
-
-[ANOMALI TERDETEKSI LOKAL]
-${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join('\n') : '- Tidak ada anomali kritis.'}`;
+            // Tampilkan preview prompt markdown (tanpa memanggil AI).
+            var $mdPrev = document.getElementById('mdPromptPreview');
+            if ($mdPrev) {
+                $mdPrev.textContent = contextForAI;
+                document.getElementById('mdPromptBox').style.display = 'block';
+            }
         }
 
         function setCompareMode(mode) {
@@ -6178,13 +6248,86 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             }
         }
 
+        // ===== Print: re-fit chart ke ukuran cetak + perbesar font sumbu/legend sementara =====
+        // (Chart.js me-render teks pada resolusi canvas; tanpa ini, chart print kecil → label di-collapse)
+        var __chartFontSnapshot = [];
+        function walkChartFonts(cb) {
+            if (typeof Chart === 'undefined') return;
+            var list = document.querySelectorAll('canvas');
+            for (var i = 0; i < list.length; i++) {
+                var inst = null;
+                try { inst = Chart.getChart(list[i]); } catch (e) {}
+                if (!inst || !inst.options) continue;
+                var o = inst.options;
+                var fonts = [];
+                if (o.font && typeof o.font.size === 'number') fonts.push(o.font);
+                if (o.scales) {
+                    for (var k in o.scales) {
+                        var t = o.scales[k] && o.scales[k].ticks;
+                        if (t && t.font && typeof t.font.size === 'number') fonts.push(t.font);
+                    }
+                }
+                if (o.plugins) {
+                    if (o.plugins.legend && o.plugins.legend.labels && o.plugins.legend.labels.font) fonts.push(o.plugins.legend.labels.font);
+                    if (o.plugins.title && o.plugins.title.font) fonts.push(o.plugins.title.font);
+                }
+                for (var j = 0; j < fonts.length; j++) cb(inst, fonts[j]);
+            }
+        }
+        function bumpChartFonts(delta) {
+            walkChartFonts(function (inst, f) {
+                if (delta > 0) {
+                    if (inst.__fontOrig === undefined) inst.__fontOrig = {};
+                    var key = __chartFontSnapshot.length + ':' + (inst.canvas ? inst.canvas.id : '');
+                    if (f.__origSize === undefined) { f.__origSize = f.size; inst.__fontOrig[key] = f.size; }
+                    f.size = Math.min(f.__origSize + delta, 14);
+                } else if (f.__origSize !== undefined) {
+                    f.size = f.__origSize;
+                }
+                try { inst.update('none'); } catch (e) {}
+            });
+        }
+        function fitChartsToPrint() {
+            if (typeof Chart === 'undefined') return;
+            var list = document.querySelectorAll('canvas');
+            for (var i = 0; i < list.length; i++) {
+                var inst = null;
+                try { inst = Chart.getChart(list[i]); } catch (e) {}
+                if (!inst) continue;
+                var box = list[i].parentElement;
+                if (!box) continue;
+                var w = box.clientWidth, h = box.clientHeight;
+                if (!w || !h) continue;
+                try { inst.resize(w, h); inst.update('none'); } catch (e) {}
+            }
+        }
+        window.addEventListener('beforeprint', function () { bumpChartFonts(2); fitChartsToPrint(); });
+        window.addEventListener('afterprint', function () { bumpChartFonts(-2); fitChartsToPrint(); });
+
+        // ===== Empty state: panduan saat periode tanpa data =====
+        function updateEmptyState(netSales, notaCount) {
+            var el = document.getElementById('emptyState');
+            if (!el) return;
+            var kosong = (netSales === 0 && (!notaCount || notaCount === 0));
+            el.style.display = kosong ? 'flex' : 'none';
+        }
+
         // ===== Global tooltip (bebas dari stacking context kartu, anti-terpotong tepi) =====
         (function () {
             var tip = document.getElementById('kpiTip');
             if (!tip) { tip = document.createElement('div'); tip.id = 'kpiTip'; document.body.appendChild(tip); }
             var showEl = null;
             function hide() { tip.classList.remove('show'); showEl = null; }
+            function upIcon(el) {
+                if (el.tagName === 'BUTTON') return el;
+                el.setAttribute('role', 'button');
+                el.setAttribute('tabindex', '0');
+                var txt = el.getAttribute('data-static-tooltip') || el.getAttribute('data-tooltip') || '';
+                el.setAttribute('aria-label', txt ? 'Info: ' + txt.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : 'Info');
+                return el;
+            }
             function show(el, e) {
+                el = upIcon(el);
                 var txt = el.getAttribute('data-static-tooltip') || el.getAttribute('data-tooltip');
                 if (!txt) { hide(); return; }
                 showEl = el;
@@ -6205,6 +6348,13 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
                 tip.style.left = left + 'px';
                 tip.style.top = top + 'px';
             }
+            document.querySelectorAll('.help-icon').forEach(upIcon);
+            document.querySelectorAll('.bento-item .bento-title').forEach(function (t) {
+                var it = t.closest('.bento-item') || t;
+                var m = (it.className || '').match(/col-span-(\d+)/);
+                t.setAttribute('role', 'heading');
+                t.setAttribute('aria-level', (m && (m[1] === '3' || m[1] === '6')) ? '3' : '2');
+            });
             document.addEventListener('mouseover', function (e) {
                 var el = e.target && e.target.closest && e.target.closest('.help-icon');
                 if (el) { show(el, e); return; }
@@ -6214,6 +6364,20 @@ ${warnings.length > 0 ? warnings.map(w => '- ' + w.replace(/<[^>]+>/g, '')).join
             document.addEventListener('mouseout', function (e) {
                 if (e.target && e.target.closest && e.target.closest('.help-icon')) return;
                 hide();
+            });
+            document.addEventListener('focusin', function (e) {
+                var el = e.target && e.target.closest && e.target.closest('.help-icon');
+                if (!el) return;
+                var r = el.getBoundingClientRect();
+                show(el, { clientX: r.left, clientY: r.top });
+            });
+            document.addEventListener('focusout', function (e) {
+                var el = e.target && e.target.closest && e.target.closest('.help-icon');
+                if (el) { hide(); return; }
+                if (showEl && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.help-icon'))) hide();
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.target && e.target.closest && e.target.closest('.help-icon') && (e.key === ' ' || e.key === 'Enter')) e.preventDefault();
             });
             document.addEventListener('scroll', hide, true);
             window.addEventListener('resize', hide);
