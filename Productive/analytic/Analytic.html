@@ -4383,11 +4383,14 @@
                 c.update('none');
                 c.resize();
             });
-            try { const dt = $('#dtProduk').DataTable(); sessionStorage.setItem('dtProduk_len', dt.page.len()); dt.page.len(20).draw(false); } catch (e) {}
-            try { const dt = $('#dtProduk').DataTable(); if (dt.responsive) { dt.responsive.disable(); dt.columns.adjust().draw(false); } } catch (e) {}
-            try { const dt = $('#biayaTable').DataTable(); sessionStorage.setItem('biayaTable_len', dt.page.len()); dt.page.len(-1).draw(false); } catch (e) {}
+            if ($.fn.DataTable.isDataTable('#dtProduk')) { try { const dt = $('#dtProduk').DataTable(); sessionStorage.setItem('dtProduk_len', dt.page.len()); dt.page.len(20).draw(false); } catch (e) {} }
+            if ($.fn.DataTable.isDataTable('#dtProduk')) { try { const dt = $('#dtProduk').DataTable(); if (dt.responsive) { dt.responsive.disable(); dt.columns.adjust().draw(false); } } catch (e) {} }
+            // Deteksi biaya-kosong berbasis DATA (bukan keberadaan instance DataTable — itu efek samping yang rapuh)
             let biayaEmpty = true;
-            try { const dtb = $('#biayaTable').DataTable(); if (dtb.rows().count() > 0) biayaEmpty = false; } catch (e) {}
+            try { if (typeof _biayaRowsCur !== 'undefined' && _biayaRowsCur && _biayaRowsCur.length > 0) biayaEmpty = false; } catch (e) {}
+            // Pastikan tabel biaya ter-render bila data ada (aman walau tab biaya belum pernah dibuka)
+            if (!biayaEmpty && typeof renderBiayaTable === 'function') { try { renderBiayaTable(); } catch (e) {} }
+            if ($.fn.DataTable.isDataTable('#biayaTable')) { try { const dt = $('#biayaTable').DataTable(); sessionStorage.setItem('biayaTable_len', dt.page.len()); dt.page.len(-1).draw(false); } catch (e) {} }
             if (biayaEmpty) { const bc = document.getElementById('biayaContainer'); if (bc) bc.classList.add('biaya-kosong'); }
             try { const r = $('#reportrange').val() || ''; const ph = document.getElementById('printRangeHeader'); if (ph) ph.textContent = 'Periode: ' + r; } catch (e) {}
         }
@@ -4417,9 +4420,9 @@
                 c.update('none');
                 c.resize();
             });
-            try { $('#dtProduk').DataTable().page.len(parseInt(sessionStorage.getItem('dtProduk_len') || '10', 10)).draw(false); } catch (e) {}
-            try { const dt = $('#dtProduk').DataTable(); if (dt.responsive) { dt.responsive.enable(); dt.columns.adjust().draw(false); } } catch (e) {}
-            try { $('#biayaTable').DataTable().page.len(parseInt(sessionStorage.getItem('biayaTable_len') || '10', 10)).draw(false); } catch (e) {}
+            if ($.fn.DataTable.isDataTable('#dtProduk')) { try { $('#dtProduk').DataTable().page.len(parseInt(sessionStorage.getItem('dtProduk_len') || '10', 10)).draw(false); } catch (e) {} }
+            if ($.fn.DataTable.isDataTable('#dtProduk')) { try { const dt = $('#dtProduk').DataTable(); if (dt.responsive) { dt.responsive.enable(); dt.columns.adjust().draw(false); } } catch (e) {} }
+            if ($.fn.DataTable.isDataTable('#biayaTable')) { try { $('#biayaTable').DataTable().page.len(parseInt(sessionStorage.getItem('biayaTable_len') || '10', 10)).draw(false); } catch (e) {} }
             try { const bc = document.getElementById('biayaContainer'); if (bc) bc.classList.remove('biaya-kosong'); } catch (e) {}
         }
 
@@ -6074,7 +6077,8 @@
                         <button onclick="deleteBiayaRow(${id}, this)" class="theme-toggle" title="Hapus" style="padding:6px 10px; color:var(--danger); font-weight:800; font-size:11px;">HAPUS</button>
                     </div></td></tr>`;
             }).join('') || '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:20px;">Belum ada biaya pada rentang ini.</td></tr>';
-            if (_biayaDataTable) { _biayaDataTable.destroy(); _biayaDataTable = null; }
+            if ($.fn.DataTable.isDataTable('#biayaTable')) { $('#biayaTable').DataTable().destroy(); }
+            _biayaDataTable = null;
             if (window.$ && $.fn.DataTable && (_biayaRowsCur || []).length > 0) {
                 _biayaDataTable = $('#biayaTable').DataTable({ pageLength: 10, lengthChange: false, order: [], columns: [null, null, null, { orderable: false }] });
             }
