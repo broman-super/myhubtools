@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id" data-theme="light">
+<script>(function(){var s;if(window.parent!==window){s=localStorage.getItem('reynahub-theme')||'system';}else{s=localStorage.getItem('theme')||'system';}var d=s==='dark'?'dark':s==='light'?'light':(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
 
 <head>
     <meta charset="UTF-8">
@@ -928,6 +929,7 @@
                 min-width: 0 !important;
                 margin: 0 !important;
                 padding: 4px !important;
+                box-sizing: border-box !important;
                 background: #ffffff !important;
                 border: 1px solid #94a3b8 !important;
                 border-radius: 6px !important;
@@ -974,6 +976,7 @@
             #marginAnalysis { display: none !important; }
             .compare-pill { display: none !important; }
             div:has(> #biayaChartKomposisi) { height: 160px !important; }
+            #biayaChartKomposisi { width: 100% !important; height: 100% !important; display: block !important; }
 
             /* Layout 3 kolom: KPI 4-up (col-span-3), trend full-width (col-span-12),
                sisanya mengikuti span asli layar untuk pasar/produk side-by-side */
@@ -1000,6 +1003,7 @@
             .chart-box {
                 flex: 0 0 auto !important;
                 min-height: 0 !important;
+                box-sizing: border-box !important;
                 break-inside: avoid;
                 page-break-inside: avoid;
                 border: 1px solid #94a3b8 !important;
@@ -4343,15 +4347,18 @@
             let html = document.documentElement;
             if (html.getAttribute('data-theme') === 'dark') {
                 html.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
+                if (window.parent === window) localStorage.setItem('theme', 'light');
             } else {
                 html.setAttribute('data-theme', 'dark');
-                localStorage.setItem('theme', 'dark');
+                if (window.parent === window) localStorage.setItem('theme', 'dark');
             }
+            if (window.parent !== window) { try { window.parent.postMessage({ type: 'THEME_CHANGED', theme: document.documentElement.getAttribute('data-theme') }, '*'); } catch (e) {} }
             if (typeof prosesData === 'function') prosesData();
         }
 
-        if (localStorage.getItem('theme') === 'dark') {
+        if (window.parent !== window) {
+            try { window.parent.postMessage({ type: 'request-theme' }, '*'); } catch (e) {}
+        } else if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
 
@@ -6389,7 +6396,7 @@
     </script>
     <script>
         window.addEventListener('message', function(e) {
-            if (e.data && e.data.type === 'SET_THEME') {
+            if (e.data && e.data.type === 'SET_THEME' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
                 document.documentElement.setAttribute('data-theme', e.data.theme);
             }
         });

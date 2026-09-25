@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id" data-theme="light">
+<script>(function(){var s;if(window.parent!==window){s=localStorage.getItem('reynahub-theme')||'system';}else{s=localStorage.getItem('reynahub-theme')||'system';}var d=s==='dark'?'dark':s==='light'?'light':(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
 <head>
     <link rel="stylesheet" href="../../src/styles/tools.css">
   <meta charset="UTF-8">
@@ -1239,9 +1240,10 @@ filtered.forEach(function(d) {
             var current = html.getAttribute('data-theme') || 'light';
             var next = current === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', next);
+            if (window.parent !== window) { try { window.parent.postMessage({ type: 'THEME_CHANGED', theme: next }, '*'); } catch (e) {} }
         }
         window.addEventListener('message', function(e) {
-            if (e.data && e.data.type === 'SET_THEME') {
+            if (e.data && e.data.type === 'SET_THEME' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
                 document.documentElement.setAttribute('data-theme', e.data.theme);
             }
         });

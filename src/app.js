@@ -98,11 +98,23 @@
       broadcastCurrentTheme();
     });
 
-    // Respond to theme requests from child iframes
+    // Respond to theme requests + child theme changes (hub = sumber kebenaran)
     window.addEventListener('message', function(e) {
-      if (e.data && e.data.type === 'request-theme') {
+      if (!e.data) return;
+      var isChild = false;
+      var frames = document.querySelectorAll('iframe');
+      for (var i = 0; i < frames.length; i++) {
+        if (frames[i].contentWindow === e.source) { isChild = true; break; }
+      }
+      if (!isChild) return;
+      if (e.data.type === 'request-theme') {
         var theme = themeManager && themeManager.getEffectiveTheme() ? 'dark' : 'light';
-        if (e.source) e.source.postMessage({ type: 'SET_THEME', theme: theme }, '*');
+        e.source.postMessage({ type: 'SET_THEME', theme: theme }, '*');
+      } else if (e.data.type === 'THEME_CHANGED' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
+        if (themeManager) {
+          themeManager.currentTheme = e.data.theme;
+          themeManager.applyTheme();
+        }
       }
     });
 

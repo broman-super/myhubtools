@@ -2,6 +2,7 @@
 <html lang="id">
 
 <head>
+    <script>(function(){var s;if(window.parent!==window){s=localStorage.getItem('reynahub-theme')||'system';}else{s=localStorage.getItem('dak-theme')||'system';}var d=s==='dark'?'dark':s==='light'?'light':(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formulir Dana Amanah PT EKT</title>
@@ -966,19 +967,22 @@
             var html = document.documentElement;
             var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', next);
-            localStorage.setItem('reynahub-theme', next);
+            if (window.parent !== window) {
+                try { window.parent.postMessage({ type: 'THEME_CHANGED', theme: next }, '*'); } catch (e) {}
+            } else {
+                localStorage.setItem('dak-theme', next);
+            }
         }
         (function() {
-            var saved = localStorage.getItem('reynahub-theme');
-            if (saved === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
+            if (window.parent !== window) {
+                try { window.parent.postMessage({ type: 'request-theme' }, '*'); } catch (e) {}
             }
             window.addEventListener('message', function(e) {
                 var msg = e.data || {};
-                var theme = msg.theme || (msg.data && msg.data.theme);
+                var theme = msg.type === 'SET_THEME' ? msg.theme : (msg.theme || (msg.data && msg.data.theme));
                 if (theme === 'dark' || theme === 'light') {
                     document.documentElement.setAttribute('data-theme', theme);
-                    localStorage.setItem('reynahub-theme', theme);
+                    if (window.parent === window) localStorage.setItem('dak-theme', theme);
                 }
             });
         })();

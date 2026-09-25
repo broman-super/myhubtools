@@ -1344,7 +1344,8 @@ const theme = (() => {
   function apply(mode) {
     document.documentElement.setAttribute("data-theme", mode);
     state.set("theme", mode);
-    storage.set("theme", mode);
+    if (window.parent === window) storage.set("theme", mode);
+    if (window.parent !== window) { try { window.parent.postMessage({ type: "THEME_CHANGED", theme: mode }, "*"); } catch (e) {} }
     ["themeToggle", "themeToggleDash"].forEach(id => {
       const btn = document.getElementById(id);
       if (btn) btn.innerHTML = `<i data-feather="${mode === "dark" ? "sun" : "moon"}"></i>`;
@@ -1353,6 +1354,10 @@ const theme = (() => {
   }
   function toggle() { apply(state.get("theme") === "dark" ? "light" : "dark"); }
   function init() {
+    if (window.parent !== window) {
+      try { window.parent.postMessage({ type: "request-theme" }, "*"); } catch (e) {}
+      return;
+    }
     const saved = storage.get("theme", null);
     const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
     apply(saved || (prefersDark ? "dark" : "light"));
