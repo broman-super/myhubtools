@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id" data-theme="light">
+<script>(function(){var s;if(window.parent!==window){s=localStorage.getItem('reynahub-theme')||'system';}else{s=localStorage.getItem('ts-theme')||'system';}var d=s==='dark'?'dark':s==='light'?'light':(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
 
 <head>
     <link rel="stylesheet" href="../../src/styles/tools.css">
@@ -3948,12 +3949,15 @@
             var html = document.documentElement;
             var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', next);
-            localStorage.setItem('ts-theme', next);
+            if (window.parent !== window) { try { window.parent.postMessage({ type: 'THEME_CHANGED', theme: next }, '*'); } catch (e) {} }
+            else localStorage.setItem('ts-theme', next);
         }
-        var savedTheme = localStorage.getItem('ts-theme');
-        if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+        if (window.parent === window) {
+            var savedTheme = localStorage.getItem('ts-theme');
+            if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+        }
         window.addEventListener('message', function(e) {
-            if (e.data && e.data.type === 'SET_THEME') {
+            if (e.data && e.data.type === 'SET_THEME' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
                 document.documentElement.setAttribute('data-theme', e.data.theme);
             }
         });
