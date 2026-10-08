@@ -3,7 +3,7 @@
 Dashboard analitik penjualan real-time berbasis **Google Sheets + Google Apps Script (GAS)**. Satu file HTML mandiri (CSS & JS inline) yang di-load hub REYNAHUB melalui iframe.
 
 - **File:** `Productive/analytic/Analytic.html` (±4270 baris, self-contained)
-- **Backend:** `gscode/code-analytic.gs` (di-deploy sebagai Apps Script Web App)
+- **Backend:** `gas/code-analytic.gs` (di-deploy sebagai Apps Script Web App)
 - **Status:** ✅ Stable — GAS integration
 
 ---
@@ -32,7 +32,7 @@ Dashboard analitik penjualan real-time berbasis **Google Sheets + Google Apps Sc
 ### 2.1 Backend GAS
 - `API_URL = https://script.google.com/macros/s/AKfycbwNzZ8oL9LUjedZyIQJFW05PD0akrvJFM5JKAtMewxpWou66KRlJqy1rSUPfcVkSb2HLA/exec`
 - Action: `getSalesData`, `saveTarget`, `addBiaya`
-- Backend disimpan di `gscode/code-analytic.gs` — **bukan** lagi di `Productive/Task/`.
+- Backend disimpan di `gas/code-analytic.gs` — **bukan** lagi di `Productive/planner/`.
 - Data mentah lag ±7 hari dari hari ini (sheet update manual). Konsekuensi penting di §3.4.
 
 ### 2.2 Hub & Shell

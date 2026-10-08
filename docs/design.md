@@ -1,597 +1,370 @@
-# Desain Sistem — REYNAHUB_SYS
+# Panduan & Desain Sistem REYNAHUB / UNITOOLS
 
-**Updated:** 2026-07-27
-**Scope:** Design system and patterns for the shell AND all current/future tools
+**Menggantikan `DESIGN.md` versi lama** — satu sumber tunggal: sistem desain, konstitusi webtool, template, dan prosedur bergabung.
 
----
-
-## 1. Design Philosophy
-
-Every tool in REYNAHUB_SYS shares a consistent look and feel through **CSS custom properties**. The shell defines the design tokens; each tool interprets them independently. No tool should feel like it was built by a different team — the tokens make them all look like one system.
-
-**Three pillars:**
-1. **Consistency** — same colors, spacing, typography across all tools
-2. **Isolation** — each tool owns its styles; no CSS conflicts
-3. **Adaptability** — dark mode, print, mobile all handled per tool via tokens
+**Update:** 2026-10-08 · **Sifat:** hidup (diperbarui saat ada token/komponen baru)
 
 ---
 
-## 2. Design Tokens (The Source of Truth)
+## Isi
 
-All design decisions in every tool should reference these tokens. No hardcoded colors, font sizes, or spacing values.
-
-### 2.1 Color Palette
-```css
-/* Base */
---bg-primary:    #f8fafc;    /* Page/shell background */
---bg-card:       #ffffff;     /* Card, modal, container background */
---text-main:     #0f172a;     /* Body text */
---text-muted:    #64748b;     /* Labels, secondary text, placeholders */
---accent:        #ff0000;     /* Primary brand accent (red) */
---accent-glow:   rgba(255, 0, 0, 0.08);
---border:        rgba(15, 23, 42, 0.06);
---sidebar-bg:    #000000;
---sidebar-color: #ffffff;
-```
-
-### 2.2 Platform Colors — Centralized System (Untuk Tools dengan Banyak Warna)
-Tools seperti Task Scheduler yang memerlukan banyak warna (per platform: IG, WA, TT, SP, WB, EVT) harus menggunakan sistem warna terpusat ini.
-
-**Pattern:** Setiap platform punya 3 token yang saling terkait:
-- `--platform-<id>`: warna utama (solid)
-- `--platform-<id>-bg`: background 12% opacity (untuk badge/badge-light)
-- `--platform-<id>-txt`: text color yang kontras dengan `--platform-<id>-bg` (biasanya putih)
-
-**Daftar platform yang sudah terdaftar:**
-| ID | Warna | Badge Background | Contoh Penggunaan |
-|----|-------|-------------------|-------------------|
-| `ig` | `#a855f7` (purple) | `rgba(168,85,247,0.12)` | Instagram campaign |
-| `wa` | `#22c55e` (green) | `rgba(34,197,94,0.12)` | WhatsApp campaign |
-| `tt` | `#a1a1a1` (grey) | `rgba(161,161,161,0.12)` | TikTok campaign |
-| `sp` | `#f97316` (orange) | `rgba(249,115,22,0.12)` | Shopee/Tokopedia |
-| `wb` | `#3b82f6` (blue) | `rgba(59,130,246,0.12)` | Web campaign |
-| `evt` | `#06b6d4` (cyan) | `rgba(6,182,212,0.12)` | Event |
-| `other` | `#64748b` (slate) | `rgba(100,116,139,0.12)` | Unknown / fallback |
-
-**Cara menggunakan di tool:**
-```css
-/* Badge background — pakai platform-bg, bukan platform warna langsung */
-.badge-wa {
-  background: var(--platform-wa-bg);
-  color: var(--platform-wa);
-}
-
-/* Dot indicator — pakai platform warna langsung */
-.dot-ig {
-  background: var(--platform-ig);
-}
-
-/* Tombol utama platform — pakai platform warna sebagai bg */
-.btn-platform {
-  background: var(--platform-tt);
-  color: var(--platform-tt-txt);
-}
-```
-
-**Mengapa 3 token per platform?**
-- `--platform-wa` (solid): untuk dot, icon, tombol tebal
-- `--platform-wa-bg` (12% opacity): untuk badge ringan, background chip, hover state
-- `--platform-wa-txt` (putih): untuk teks di atas badge bg — menjamin kontras
-
-**Dark mode:** platform colors (`--platform-X`) tetap sama. Hanya badge backgrounds yang naik opacity dari 12% → 18% agar tetap terbaca di dark background.
-
-**Menambah platform baru:** cukup tambahkan 3 baris di `design-system.css`:
-```css
-:root {
-  --platform-baru:   #hexcodemunakat;
-  --platform-baru-bg: rgba(r, g, b, 0.12);
-  --platform-baru-txt:  #ffffff; /* atau #0f172a kalau warnanya terang */
-}
-```
-Tidak perlu ubah tool apapun — platform baru akan langsung tersedia di semua tool yang pakai token ini.
-
-**Contrast ratio requirement:** semua `--platform-X` colors harus mencapai rasio kontras 4.5:1 terhadap `--bg-card` (light) dan `--bg-card` (dark). Gunakan tool: https://webAIM.org/resources/contrastchecker/
---accent-glow:   rgba(255, 0, 0, 0.08);
---border:        rgba(15, 23, 42, 0.06);
-
-/* Semantic */
---success:       #22c55e;
---success-light: rgba(34, 197, 94, 0.1);
---danger:        #ef4444;
---danger-light:  rgba(239, 68, 68, 0.1);
---warning:       #f59e0b;
---warning-light: rgba(245, 158, 11, 0.1);
---info:          #3b82f6;
---info-light:    rgba(59, 130, 246, 0.1);
-```
-
-**How new tools should use colors:**
-- Never hardcode `#f8fafc` or `#ffffff` — use `var(--bg-primary)` and `var(--bg-card)`
-- Never hardcode text colors — use `var(--text-main)` or `var(--text-muted)`
-- Brand-specific colors (e.g., Tiktok #a1a1a1, campaign colors) are defined per-tool, not in tokens
-
-### 2.2 Dark Mode Overrides
-```css
-[data-theme="dark"] {
-  --bg-primary:    #090d16;
-  --bg-card:       #121826;
-  --text-main:     #f1f5f9;
-  --text-muted:    #94a3b8;
-  --accent:        #ff3b3b;
-  --accent-glow:   rgba(255, 59, 59, 0.15);
-  --border:        rgba(255, 255, 255, 0.07);
-}
-```
-
-**How new tools should handle dark mode:**
-- Override semantic tokens (backgrounds, text, borders) under `[data-theme="dark"]` — never override the base values
-- Do NOT write separate dark mode CSS files — use the same selector in the same stylesheet
-
-### 2.3 Typography
-| Role | Font | Weight | Size | Applied To |
-|------|------|--------|------|------------|
-| Brand/Logo | Gemini | 900 | 1.6rem | Shell heading |
-| Page Titles | Gemini | 900 | clamp(2.4rem, 6vw, 4rem) | Landing hero |
-| Body | Plus Jakarta Sans | 400 | 1rem | All tool body text |
-| Headings (tool) | Plus Jakarta Sans | 800 | 1.1–1.5rem | Tool section headings |
-| Labels/Small | Plus Jakarta Sans | 600–700 | 0.75–0.875rem | Badges, captions, table headers |
-| Code/Technical | Plus Jakarta Sans | 400 | inherit | Monospace reserved for logs, technical content |
-
-### 2.4 Spacing & Sizing
-
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--radius` | 16px | Card, modal, bento corner radius |
-| `--radius-sm` | 12px | Button, input, small container |
-| `--transition` | 0.3s cubic-bezier(0.4, 0, 0.2, 1) | Standard transition |
-
-### 2.5 How New Tools Should Define Their Own Tokens
-Each tool may define tool-specific tokens for its domain. These go in `:root` within the tool's `<style>` block:
-
-```css
-:root {
-  /* Tool-specific tokens — only if needed */
-  --tool-specific: value;
-}
-```
-Always fall back to shell tokens first. Only create tool-specific tokens when no shell token covers the need.
+1. [Apa itu yang membuat kepingan puzzle nyambung](#part-i-prinsip)
+2. [Sistem Desain (Token & Komponen)](#part-ii-sistem-desain)
+3. [Konstitusi Webtool — Aturan Wajib](#part-iii-konstitusi-webtool)
+4. [Template + Snippet Siap Pakai](#part-iv-template--snippet)
+5. [Cara Bergabung ke Hub](#part-v-cara-bergabung)
+6. [Checklist Kelulusan](#part-vi-checklist-kelulusan)
 
 ---
 
-## 3. Layout System (Generic)
+## Part I — Prinsip
 
-### 3.1 Tool Container Pattern (All Tools)
-Every tool page should follow this layout skeleton:
+Sebuah webtool dianggap **bagian dari REYNAHUB** bila memenuhi satu janji:
 
+> **Satu navbar, satu tema, satu bahasa desain — beda fungsi, sama keluarga.**
+
+Artinya:
+- Halaman tool **tidak boleh** menggambar header/navigasi ganda.
+- Tool **mengikuti tema hub** (dark/light) secara otomatis.
+- Warna, radius, font, spacing: lewat **token**, bukan nilai tebak.
+- Tool yang dibuka di dalam hub = **kepingan**; tool yang dibuka langsung (URL sendiri) = **mandiri**. Dua mode itu ditangani satu kontrak (bagian IV).
+
+---
+
+## Part II — Sistem Desain
+
+### 2.1 Identitas
+
+| Elemen | Nilai |
+|---|---|
+| Aksen utama | Merah `#ff0000` (light) · `#ff3b3b` (dark) |
+| Font display | **Geomini** (600–800) — judul, hero, logo |
+| Font body | **Plus Jakarta Sans** (400–800) — UI, form, tabel |
+| Font mono | SF Mono / Cascadia / Fira / Consolas — kode, resi, log |
+| Sorot halus | `color-mix(in srgb, var(--primary) 10%, transparent)` (light) · 18% (dark) — **jangan** border 2px + glow |
+| Radius | `--radius-sm` 8px (card/badge) · `--radius-md` 12px (input/form) · `--radius-bento` 18px (bento/modal) |
+
+### 2.2 Token — Sumber Tunggal
+
+Kanon ada di `src/styles/design-system.css`. Tool **tidak perlu me-link** file itu; tool cukup **menyalin blok token** ke `<style>` bawaan. Pemetaan nama yang wajib:
+
+| Nama token (tool) | Light | Dark | Kegunaan |
+|---|---|---|---|
+| `--bg` | `#f8fafc` | `#0f172a` | Latar halaman |
+| `--surface` | `#ffffff` | `#1e293b` | Kartu, modal, kontainer |
+| `--surface2` | `#f1f5f9` | `#1e293b` | Latar sekunder, header tabel |
+| `--text` | `#0f172a` | `#f1f5f9` | Teks utama |
+| `--muted` (alias `--text2`) | `#64748b` | `#94a3b8` | Label, placeholder |
+| `--border` | `rgba(15,23,42,.06)` | `rgba(255,255,255,.07)` | Garis dok |
+| `--primary` | `#ff0000` | `#ff3b3b` | Aksi utama, aksen |
+| `--primary-light` | `#ff7b7b` | `#ff6b6b` | Hover/active brand |
+| `--primary-soft` | 10% primary | 18% primary | Latar sorot halus |
+| `--danger` | `#ef4444` | sama | Error, hapus |
+| `--success` | `#22c55e` | sama | Sukses, aktif |
+| `--warning` | `#f59e0b` | sama | Perhatian |
+| `--radius-sm/md/bento` | 8/12/18px | sama | Radius |
+| `--shadow-sm/md/lg` | dari `components.css` | sama | Bayangan elevasi |
+| `--focus-ring` | `0 0 0 3px var(--primary-glow)` | sama | Fokus keyboard |
+
+**Aturan emas:**
+1. **Nol hex/rgba hardcoded di luar blok `:root`** — CSS, JS, dan inline `style` sekalipun wajib `var(--...)` (pengecualian: `@media print` + warna khusus data chart/platform, itupun via token bila ada).
+2. Dark mode = **hanya memperbarui nilai token di `[data-theme="dark"]`**, jangan per-element.
+3. Radius/space lewat token (`--space-1..8` = 4/8/12/16/20/24/32px); jangan magic number.
+4. `--danger` = bahaya, `--success` = sukses. **Jangan pernah** menyalahi semantik (mis. `--success` diisi warna hitam).
+5. `--primary` adalah satu-satunya nama aksen sistem. Nama menipu (mis. `--accent` berisi warna kartu) dilarang.
+
+### 2.3 Warna Platform (tool yang menampilkan banyak "kanal")
+
+Tiga token per platform: solid `--platform-<id>`, background `--platform-<id>-bg` (12% light / 18% dark), text `--platform-<id>-txt`.
+
+| ID | Solid | Badge-bg |
+|---|---|---|
+| `ig` | `#a855f7` | `rgba(168,85,247,0.12)` |
+| `wa` | `#22c55e` | `rgba(34,197,94,0.12)` |
+| `tt` | `#a1a1a1` | `rgba(161,161,161,0.12)` |
+| `sp` | `#f97316` | `rgba(249,115,22,0.12)` |
+| `wb` | `#3b82f6` | `rgba(59,130,246,0.12)` |
+| `evt` | `#06b6d4` | `rgba(6,182,212,0.12)` |
+| `other` | `#64748b` | `rgba(100,116,139,0.12)` |
+
+Pola pakai: badge = `background: var(--platform-wa-bg); color: var(--platform-wa);`, dot/tombol solid = `background: var(--platform-wa)`, teks di atasnya = `var(--platform-wa-txt)`.
+
+### 2.4 Komponen Standar
+
+| Komponen | Resep |
+|---|---|
+| Tombol primary | `background: var(--primary); color:#fff; border-radius:var(--radius-md); padding:10px 20px; font-weight:700;` + `:active {transform:scale(.97)}` (min touch 44×44) |
+| Tombol sekunder | `background: var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-md); padding:8px 16px;` |
+| Tombol ghost | `background:transparent; color:var(--primary);` |
+| Kartu | `background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:1.25rem;` |
+| Kartu bento (hub) | `--radius-bento`; hover `translateY(-4px)` + `box-shadow: 0 12px 24px var(--primary-glow)` |
+| Input/select/textarea | `border:1px solid var(--border); border-radius:var(--radius-md); background:var(--surface); color:var(--text); width:100%;` focus `outline:2px solid var(--primary); outline-offset:2px` |
+| Tabel | `th`: 11px, 700, `var(--muted)`, uppercase, letter-spacing .5px, border-bottom 2px; `td`: 14px, border-bottom 1px `var(--border)`; bungkus `.table-wrapper{overflow-x:auto}` |
+| Badge status | pill `border-radius:99px`, fontSize 11px, `--success-light/--danger-light/--warning-light` |
+| Modal | `.modal-overlay` fixed inset 0 `rgba(0,0,0,.5)` + `.modal-card` `--surface`, `--radius-bento`, max-w 480px |
+| Toast | fixed bottom/right, `var(--text)` bg? → pakai `--surface` + border + shadow |
+
+### 2.5 Font, Ikon, Tooltip
+- Font dimuat via `src/styles/tools.css` (base64, sudah merata). Tool yang **tidak** berjalan lewat hub wajib me-link `src/styles/tools.css` agar body font benar.
+- Ikon: inline SVG gaya Feather (`stroke="currentColor" stroke-width="2"`), **bukan emoji** sebagai ikon fungsional.
+- Setiap tombol ikon wajib punya `title` + `aria-label`.
+- `:focus-visible` memakai `--focus-ring`; **dilarang** `outline:none`.
+
+### 2.6 Print
+Semua tool yang mencetak wajib punya:
+```css
+@media print {
+  @page { size: A4 landscape; margin: 15mm; }
+  .no-print { display: none !important; }
+  body { background:#fff !important; color:#000 !important; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+```
+Angka minimal: teks ≥ 10px (body 12px). Kartu diberi `break-inside: avoid`.
+
+---
+
+## Part III — Konstitusi Webtool
+
+### Aturan 1 (PALING PENTING) — Navbar Tunggal: Dua Mode, Satu Kontrak
+
+Tujuan: **tidak ada header/navbar ganda** saat tool dibuka di dalam hub.
+
+Setiap tool mengenalkan **dua mode** dengan deteksi sederhana:
+
+```js
+// Deteksi embedded — taruh di akhir <body> (atau module init)
+document.body.classList.toggle('is-embedded', window.self !== window.top);
+```
+
+| Mode | Kapan | Yang dilakukan tool |
+|---|---|---|
+| **Standalone** | dibuka langsung (URL tool) | Tampilkan `.topbar` sendiri: brand kecil + tombol "Kembali ke Hub" + toggle tema. Tool jadi aplikasi utuh. |
+| **Embedded** | dibuka lewat hub (`#main-frame`) | **Sembunyikan `.topbar`/`.tool-main` header sendiri.** Navigasi dipegang sidebar hub. Tool hanya render konten. |
+
+```css
+/* Tool punya satu topbar; saat embedded, topbar milik HUB yang jalan, punya tool disembunyikan */
+.is-embedded .topbar { display: none !important; }
+.is-embedded body    { height: 100%; overflow: hidden; }
+.tool-main           { flex: 1; overflow-y: auto; }
+```
+
+Pola layout baku (kedua mode):
 ```html
 <body>
-  <!-- Optional: top bar (brand + theme toggle + user actions) -->
-  <header class="topbar"> ... </header>
-
-  <!-- Main content area (scrollable) -->
+  <header class="topbar">            <!-- otomatis hilang saat embedded -->
+    <div class="topbar-brand">Logo · Nama Tool</div>
+    <div class="topbar-actions">
+      <a class="btn-ghost" href="../index.html">Hub ⤴</a>
+      <button class="theme-toggle" id="theme-toggle" title="Ubah tema">◐</button>
+    </div>
+  </header>
   <main class="tool-main">
-    <!-- Tool-specific content -->
+    <!-- konten fitur; scroll di sini -->
   </main>
-
-  <!-- Optional: bottom bar / footer -->
-  <footer class="tool-footer"> ... </footer>
 </body>
 ```
 
-### 3.2 Card Grid (Bento)
-Every tool that displays a list of items should use bento grid:
+> Catatan: tombol "Kembali ke Hub" cukup ada di mode standalone. Saat embedded, `../index.html` tidak berarti — sembunyikan bersama `.topbar`.
 
-```css
-.bento-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 10px;
-}
-```
+### Aturan 2 — Tema Selalu Ikut Hub (Dual-Mode Bridge)
 
-Responsive behavior:
-- Desktop (≥1024px): 3-4 columns
-- Tablet (≥640px): 2 columns
-- Mobile (<640px): 1 column, scrollable horizontally for tables
+Semua warna via `data-theme` pada `<html>`. Kendali tema:
 
-### 3.3 Flex Utilities
-Common flex patterns available in tools:
-```css
-.flex-row     { display: flex; align-items: center; gap: 8px; }
-.flex-col     { display: flex; flex-direction: column; gap: 4px; }
-.flex-between { display: flex; justify-content: space-between; align-items: center; }
-.flex-center  { display: flex; align-items: center; justify-content: center; }
-```
+- **Mode embedded:** hub adalah otoritas. Tool (a) **tidak** membaca/menulis storage tema sendiri saat embedded, (b) minta tema saat baru dimuat (`request-theme`), (c) terima `SET_THEME`, (d) kirim `THEME_CHANGED` hanya saat user menekan toggle-nya sendiri.
+- **Mode standalone:** tool membaca `reynahub-theme` (key global) **lebih awal di `<head>`** untuk mencegah flash salah tema; toggle menulis key itu.
 
----
+Snippet lengkap ada di [Part IV → 4.2](#42-bridge-tema-dual-mode).
 
-## 4. Component Design System
+### Aturan 3 — Layout & Komponen Wajib
 
-### 4.1 Button
+1. Struktur: `.topbar` + `.tool-main` (+ footer opsional). Tidak ada header ad-hoc (`nav-bar`, `header-container`, bare `<h1>`).
+2. Bento/kartu untuk daftar: `display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:10px;` (mobile 1 kolom, tablet 2, desktop 3–4).
+3. Mobile: bottom-nav `56px + env(safe-area-inset-bottom)` untuk tool navigasi-dominan; `100dvh/100vw`, scroll hanya di area konten.
 
-| Variant | CSS | Usage |
-|---------|-----|-------|
-| Primary | `background: var(--accent); color: #fff; border-radius: var(--radius-sm); padding: 10px 20px; font-weight: 700;` | Main actions (submit, save, approve) |
-| Raised | `background: var(--bg-card); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 8px 16px;` | Secondary actions |
-| Ghost | `background: transparent; color: var(--accent);` | Tertiary actions (cancel, skip) |
-| Pressable | Add `transform: scale(0.97)` on `:active` | Any button that benefits from tactile feedback |
+### Aturan 4 — Dark & Light Dua-duanya Produksi
 
-**Minimum touch target:** 44px × 44px
+- `[data-theme="dark"]` **harus** mengubah nilai token, bukan menimpa elemen.
+- Wajib dicek dua tema sebelum dianggap selesai.
+- `prefers-reduced-motion: reduce` menghormati animasi/transisi (di design-system).
 
-### 4.2 Card
+### Aturan 5 — Teknologi Bebas, Kontrak Tetap
 
-```css
-.bento-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.25rem;
-  transition: var(--transition);
-  cursor: pointer;
-}
-.bento-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px var(--accent-glow);
-}
-```
+Framework apa pun (vanilla, React, Vue, dsb.) boleh — asalkan **kontrak runtime** tetap: token bernama sesuai tabel 2.2, `<html data-theme>`, dual-mode navbar, registrasi hub. Komponen visual (tombol, kartu, tabel) tetap mengikuti resep 2.4 meski ditulis dalam komponen framework.
 
-### 4.3 Modal / Dialog
+### Aturan 6 — Pendaftaran: Menjadi Kepingan
 
-```css
-.modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 1000;
-}
-.modal-card {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  padding: 1.5rem;
-  max-width: 480px;
-  width: 90vw;
-}
-```
-
-### 4.4 Toast Notification
-```css
-.toast {
-  position: fixed; bottom: 20px; right: 20px;
-  background: var(--text-main); color: var(--bg-primary);
-  padding: 12px 20px; border-radius: var(--radius-sm);
-  animation: slideIn 0.3s ease;
-  z-index: 2000;
-}
-@keyframes slideIn {
-  from { transform: translateY(20px); opacity: 0; }
-  to   { transform: translateY(0); opacity: 1; }
-}
-```
-
-### 4.5 Form Elements
-```css
-input, select, textarea {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 14px;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-card);
-  color: var(--text-main);
-  width: 100%;
-}
-input:focus, select:focus, textarea:focus {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-```
-
-### 4.6 Table (for data-heavy tools)
-```css
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.data-table th {
-  text-align: left;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 8px 12px;
-  border-bottom: 2px solid var(--border);
-}
-.data-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-  font-size: 14px;
-}
-/* Responsive: scroll horizontally on mobile */
-.table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-```
-
-### 4.7 Status Badges
-```css
-.badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 99px;
-  font-size: 11px;
-  font-weight: 700;
-}
-.badge-success { background: var(--success-light); color: var(--success); }
-.badge-danger  { background: var(--danger-light);  color: var(--danger); }
-.badge-warning { background: var(--warning-light); color: var(--warning); }
-.badge-info    { background: var(--info-light);   color: var(--info); }
-```
-
-### 4.8 Search Bar
-```css
-.search-box {
-  display: flex; align-items: center; gap: 8px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 8px 16px;
-  width: 100%;
-  max-width: 400px;
-}
-.search-box input {
-  border: none; background: transparent;
-  outline: none; flex: 1;
-  font-family: inherit; font-size: 14px;
-}
-```
+Tool "gabung" setelah file-nya ada + masuk daftar `src/components/tool-card.js` (lihat Part V). Hash routing hub memetakan setiap kartu ke file tool.
 
 ---
 
-## 5. Tool-Specific Design Patterns
+## Part IV — Template & Snippet
 
-### 5.1 When to Use a Calendar Grid (Month View)
-Applies to: any tool that shows time-based items on a grid (tasks, events, schedules, leave tracking, etc.)
+### 4.1 Kerangka HTML Siap Pakai (vanilla, patuh penuh)
 
-**Grid structure:**
-```css
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  border: 1px solid var(--border);
-}
-.cal-cell {
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  min-height: 80px;
-  padding: 4px;
-  font-size: 12px;
-}
-```
-
-**Indicator dots:** Plain colored circles, 16px diameter, no text by default, number only when multi-item same color.
-
-### 5.2 When to Use a Timeline/Horizontal View
-Applies to: per-day drill-down, activity logs, event streams.
-
-**Structure:** Fixed-width date labels on the left, scrollable content area on the right.
-
-### 5.3 When to Use a List View
-Applies to: detailed item list (campaigns, expenses, links, activities).
-
-**Structure:** Cards in a bento grid, each card has: title row (badge + name), metadata row (dates/tags), description section, actions row.
-
-### 5.4 When to Use a Dashboard
-Applies to: summary/overview tool (analytics, expense summary, KPI tracking).
-
-**Structure:** KPI cards at top (4 across desktop, 2 on tablet, 1 on mobile), chart below, detailed table at bottom.
-
-### 5.5 When to Use a Form View
-Applies to: any CRUD tool (expense submission, task creation, link management).
-
-**Structure:** Form grouped by logical sections, required fields marked, validation inline, submit button sticky bottom.
-
-### 5.6 When to Use a Print View
-Applies to: any tool whose data users need on paper (calendar, timeline, list, form).
-
-**Required print features:**
-- `@media print` block with `@page { size: A4 landscape; margin: 15mm !important; }`
-- Hidden UI elements via `.no-print { display: none !important; }`
-- Color fidelity: `-webkit-print-color-adjust: exact; print-color-adjust: exact;`
-- Font size: minimum 10px in print; 12px for body
-- Two-page spread for tools with both summary + detail (page 1: grid, page 2: list)
-
----
-
-## 6. Print-Specific Design (All Tools That Support Printing)
-
-### 6.1 Print CSS Block Template
-Every tool that supports printing must include this base block:
-
-```css
-@media print {
-  body {
-    padding: 0;
-    margin: 0;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    background: #ffffff !important;
-    color: #000000 !important;
-  }
-  @page {
-    size: A4 landscape;
-    margin: 15mm !important;
-  }
-  .no-print {
-    display: none !important;
-  }
-  * {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-}
-```
-
-### 6.2 Print Layout Patterns
-
-**Pattern A — Two-page spread (Calendar + List):**
-- Page 1: Calendar grid (`.cal-side` with `page-break-after: always`)
-- Page 2: List of items (`.list-side`)
-
-**Pattern B — Single page:**
-- Tool renders entirely on one page
-- If content overflows, add `page-break-inside: avoid` to cards/items
-
-### 6.3 Dot/Indicator Styling for Print
-For calendar grid dots or similar indicators:
-- Use `border-radius: 50%` for circle dots
-- Minimum size: 16px × 16px for visibility
-- No text inside dot unless showing number (color-group numbering)
-- Background color is the primary identifier
-
----
-
-## 7. Animation & Interaction Patterns
-
-### 7.1 Transitions That All Tools Should Have
-| Element | Transition | Duration | Easing |
-|---------|-----------|----------|--------|
-| Theme change | background + color | 0.3s | ease |
-| Card hover | translateY + box-shadow | 0.3s | cubic-bezier(0.4,0,0.2,1) |
-| Modal open/close | opacity + transform | 0.3s | ease |
-| Toast appear/disappear | translateY + opacity | 0.3s | ease |
-| Sidebar toggle | width | 0.3s | ease |
-| Page transition (landing → workspace) | translateY + opacity | 0.5s → 0.6s | cubic-bezier(0.85,0,0.15,1) |
-
-### 7.2 Reduced Motion
-```css
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.001ms !important;
-    transition-duration: 0.001ms !important;
-  }
-}
-```
-
-### 7.3 Loading States (Skeleton)
-For tools with async data loading:
-```css
-.skeleton {
-  background: linear-gradient(90deg, var(--border) 25%, transparent 50%, var(--border) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: var(--radius-sm);
-}
-@keyframes shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-```
-
----
-
-## 8. Accessibility (WCAG 2.1 AA)
-
-### 8.1 Required for Every New Tool
-- **Semantic HTML5:** use `<header>`, `<main>`, `<nav>`, `<section>`, `<button>`, `<table>`
-- **Focus visible:** always show `:focus-visible` outline (2px solid var(--accent))
-- **Color contrast:** text must meet 4.5:1 ratio on backgrounds (both light and dark themes)
-- **Touch targets:** minimum 44px × 44px for all interactive elements
-- **Keyboard navigation:** all actions reachable via Tab + Enter/Space
-
-### 8.2 Icon Buttons
-Every icon-only button must have a `title` attribute for screen readers:
 ```html
-<button title="Tambah" aria-label="Tambah item">
-  <svg ...><path .../></svg>
-</button>
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <script>
+    // ANTI-FLASH: terapkan tema sedini mungkin (standalone). Embedded di-set hub.
+    (function () {
+      if (window.self !== window.top) return; // embedded: hub yang tentukan
+      var s = localStorage.getItem('reynahub-theme') || 'system';
+      var d = s === 'dark' ? 'dark' : s === 'light' ? 'light'
+            : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', d);
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Nama Tool — REYNAHUB</title>
+  <link rel="stylesheet" href="../../src/styles/tools.css"> <!-- font, WAJIB utk standalone -->
+  <style>
+    :root {
+      --bg:#f8fafc; --surface:#ffffff; --surface2:#f1f5f9;
+      --text:#0f172a; --muted:#64748b; --border:rgba(15,23,42,.06);
+      --primary:#ff0000; --primary-light:#ff7b7b;
+      --primary-soft: color-mix(in srgb, #ff0000 10%, transparent);
+      --danger:#ef4444; --success:#22c55e; --warning:#f59e0b;
+      --radius-sm:8px; --radius-md:12px; --radius-bento:18px;
+      --shadow-md:0 4px 12px rgba(15,23,42,.08);
+      --focus-ring:0 0 0 3px color-mix(in srgb, #ff0000 15%, transparent);
+    }
+    [data-theme="dark"] {
+      --bg:#0f172a; --surface:#1e293b; --surface2:#1e293b;
+      --text:#f1f5f9; --muted:#94a3b8; --border:rgba(255,255,255,.07);
+      --primary:#ff3b3b; --primary-light:#ff6b6b;
+      --primary-soft: color-mix(in srgb, #ff3b3b 18%, transparent);
+      --shadow-md:0 4px 12px rgba(0,0,0,.4);
+      --focus-ring:0 0 0 3px color-mix(in srgb, #ff3b3b 25%, transparent);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif; /* dari tools.css */
+      background: var(--bg); color: var(--text);
+      height: 100vh; display: flex; flex-direction: column;
+    }
+    .topbar { display:flex; align-items:center; justify-content:space-between;
+      padding:10px 16px; background:var(--surface); border-bottom:1px solid var(--border); }
+    .tool-main { flex:1; overflow-y:auto; padding:16px; }
+    /* Aturan 1: saat embedded, navbar satu — punya HUB */
+    .is-embedded .topbar { display:none !important; }
+    :focus-visible { outline:var(--focus-ring); outline-offset:2px; }
+    @media print {
+      @page { size: A4 landscape; margin: 15mm; }
+      body { background:#fff !important; color:#000 !important; }
+      .no-print { display:none !important; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand"><strong>Nama Tool</strong></div>
+    <div class="topbar-actions">
+      <a class="no-print" href="../../index.html" style="font-size:13px;color:var(--muted);text-decoration:none;">⤴ Kembali ke Hub</a>
+      <button class="theme-toggle" id="theme-toggle" title="Ubah tema" aria-label="Ubah tema">◐</button>
+    </div>
+  </header>
+  <main class="tool-main">
+    <!-- KONTEN FITUR -->
+  </main>
+  <script>
+    document.body.classList.toggle('is-embedded', window.self !== window.top);
+    // ... muat theme bridge (4.2) + logika fitur ...
+  </script>
+</body>
+</html>
 ```
 
-### 8.3 Form Accessibility
-- Every `<input>` has a `<label>` element
-- Required fields are visually indicated (asterisk + ARIA `aria-required="true"`)
-- Error messages are associated with the input via `aria-describedby`
+### 4.2 Bridge Tema Dual-Mode
+
+`theme-bridge.js` (framework-agnostik; bekerja pada `document.documentElement` — React/Vue tetap jalan karena CSS membaca `data-theme`):
+
+```js
+(function () {
+  var root = document.documentElement;
+  var isEmbedded = window.self !== window.top;
+  function apply(theme) { root.setAttribute('data-theme', theme); }
+  function current() { return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; }
+
+  if (isEmbedded) {
+    // Otoritas = hub. Minta tema saat load; ikuti perintah hub.
+    window.addEventListener('message', function (e) {
+      if (!e.data) return;
+      if (e.data.type === 'SET_THEME' && (e.data.theme === 'dark' || e.data.theme === 'light')) apply(e.data.theme);
+    });
+    // Baru minta SETELAH listener terpasang (pastikan urutan ini)
+    window.parent.postMessage({ type: 'request-theme' }, '*');
+  } else {
+    // Standalone: baca key global (sudah di anti-flash head); toggle menulisinya.
+    apply(localStorage.getItem('reynahub-theme') === 'dark' ? 'dark' : 'light');
+  }
+
+  var btn = document.getElementById('theme-toggle');
+  if (btn) btn.addEventListener('click', function () {
+    var next = current() === 'dark' ? 'light' : 'dark';
+    apply(next);
+    if (isEmbedded) {
+      window.parent.postMessage({ type: 'THEME_CHANGED', theme: next }, '*');
+    } else {
+      localStorage.setItem('reynahub-theme', next);
+    }
+  });
+})();
+```
+
+Urutan kunci: **pasang listener dulu, baru kirim `request-theme`** — hindari balasan yang datang sebelum listener aktif (bug yang sudah pernah terjadi).
+
+### 4.3 Pendaftaran di Hub (`src/components/tool-card.js`)
+
+Tambah satu entri ke array `ToolCard.configs`:
+
+```js
+{
+  group: 'productive',                    // 'productive' | 'universal'
+  hash: '#productive/nama-tool',          // rute unik (slug tools)
+  title: 'Nama Tool',
+  desc: 'Satu kalimat deskripsi fungsi bermanfaat.',
+  search: 'kata kunci pencarian alternatif'
+}
+```
+
+- `hash` menentukan rute + grup sidebar (bagian sebelum `/`).
+- Router hub memetakan hash → path file di `src/router.js` — ikuti pola entri di sana.
+- Badge `BARU` di kartu: tambahkan blok `if (config.hash === '...') newBadge` di `createCard` (contoh: Faktur).
+
+### 4.4 Catatan Framework
+
+- **React/Vue/Next** dst.: komponen header pakai CAKUPAN yang sama — `@media`/`.is-embedded .topbar { display:none }` cukup karena token dari `<style>` global; gunakan token via variable CSS, jangan inline hex di JSX.
+- **Tailwind** (jika terpaksa): konfigurasi `theme.extend.colors` memetakan token REYNAHUB (`primary`, `bg`, `surface`, `text`, dst.) — jangan pakai slate default yang bukan palet sistem.
+- Data chart: warna dataset tetapkan dari token (`getComputedStyle(root).getPropertyValue('--primary')`) atau palet platform, jangan literal.
 
 ---
 
-## 9. Icon System
+## Part V — Cara Bergabung
 
-### 9.1 Tool Icons
-Tools use Feather Icons (inline SVG, not icon font):
-```html
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <line x1="5" y1="12" x2="19" y2="12"/>
-</svg>
-```
+1. **Debug standalone** — buka langsung `file://`/localhost: tool tampil penuh, topbar sendiri, dark/light sync.
+2. **Debug embedded** — buka lewat hub; pastikan: (a) topbar tool hilang, (b) tema mengikuti hub saat toggle, (c) tidak ada error konsol `Cross origin` / postMessage, (d) isi tool muat dalam frame.
+3. **Daftar** di `tool-card.js` (+ router bila rute baru).
+4. **Periksa** checklist Part VI; validasi dark + light via screenshot.
+5. **Dokumentasikan** pola unik tool di DESIGN.md bila ada komponen/token baru.
 
-### 9.2 Shell Icons
-The shell sidebar uses inline SVG for all nav icons — loaded directly in HTML, no CDN dependency.
+## Part VI — Checklist Kelulusan
 
-### 9.3 Custom Tool Icons
-If a tool needs a custom icon (e.g., LATCH logo, expense icon), use inline SVG with proper `viewBox` and `stroke`/`fill`. Do not use emoji as functional icons.
-
----
-
-## 10. Design Anti-Patterns (What NOT To Do)
-
-1. **No inline `!important`** — except in print media overrides
-2. **No hardcoded pixel dimensions** for layout — use CSS Grid, Flexbox, `clamp()`, percentages
-3. **No `@import`** in CSS — all styles inline (`<style>`) or linked (`<link>`)
-4. **No framework utility classes** in production — no Tailwind, Bootstrap, etc.
-5. **No emoji as functional icons** — use inline SVG (Feather) instead
-6. **No `position: fixed`** on anything except topbar or landing page
-7. **No `overflow: hidden`** on `<body>` — only on contained scrollable areas
-8. **No new CSS custom properties without updating this design system** — check tokens first, use what exists or add to the shared token set
-9. **Do not duplicate design tokens across tools** — use the same `--var` names; they are shared by design
-10. **Do not use `!important` on colors in dark mode** — use the `[data-theme="dark"]` override pattern
+- [ ] `:root` berisi minimal: `--bg, --surface, --surface2, --text, --muted, --border, --primary(+light/soft), --danger, --success, --warning, --radius-sm/md`.
+- [ ] **0 hex/rgba hardcoded** di luar blok `:root` (termasuk JS & inline style) — cek: `rg '(#[0-9a-fA-F]{3,6})|rgba\(' `.
+- [ ] Dark mode: hanya override token; dua tema valid (kontras ≥ 4.5:1).
+- [ ] Mode embedded: topbar sendiri tersembunyi; `request-theme`/`SET_THEME` jalan; tidak ada navbar ganda.
+- [ ] Mode standalone: anti-flash di `<head>`, tombol "Kembali ke Hub" ada, font termuat (`tools.css`).
+- [ ] Layout: `.tool-main` scroll area; bento untuk daftar; mobile bottom-nav bila perlu.
+- [ ] Ikon: inline SVG (bukan emoji); setiap icon-button `aria-label`+`title`.
+- [ ] Print (jika tool mencetak): `@page` + `@media print` + `.no-print`.
+- [ ] Aksesibilitas: `:focus-visible` memakai `--focus-ring`; input punya `<label>`; `prefers-reduced-motion` dihormati.
+- [ ] Terdaftar di `tool-card.js`, hash unik, kartu + deskripsi benar.
+- [ ] Dibuka via hub: tidak ada error konsol; tema sinkron; ukuran frame pas.
 
 ---
 
-## 11. File Structure for New Tool CSS
-
-Every tool should organize its styles this way:
-
-```css
-/* ============================================
-   Layer 1: Reset & Base
-   ============================================ */
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Plus Jakarta Sans', sans-serif; ... }
-
-/* ============================================
-   Layer 2: Design Tokens (tool-specific overrides only)
-   ============================================ */
-:root { --tool-color-primary: #...; }
-
-/* ============================================
-   Layer 3: Layout
-   ============================================ */
-.tool-container { ... }
-.tool-header { ... }
-.tool-main { ... }
-.tool-footer { ... }
-
-/* ============================================
-   Layer 4: Components (reuse design system tokens)
-   ============================================ */
-.tool-card { ... }
-.tool-btn { ... }
-.tool-input { ... }
-.tool-table { ... }
-.tool-badge { ... }
-
-/* ============================================
-   Layer 5: Dark Mode
-   ============================================ */
-[data-theme="dark"] .tool-card { ... }
-
-/* ============================================
-   Layer 6: Print (if applicable)
-   ============================================ */
-@media print { ... }
-
-/* ============================================
-   Layer 7: Utilities
-   ============================================ */
-.hidden { display: none !important; }
-.text-center { text-align: center; }
-```
-
-Never skip layers. This ensures consistency across tools.
+*Sumber kebenaran teknis: `src/styles/design-system.css`, `src/app.js`, `src/core/theme-manager.js`, `src/components/tool-card.js`. Tool tolok ukur (sudah patuh): faktur-penjualan, outbound-track.*

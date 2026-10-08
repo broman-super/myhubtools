@@ -2,9 +2,9 @@
 
 Terminal scanning barcode untuk pencatatan & pemantauan paket retur, dengan auto-detect ekspedisi, staging batch, dan update status.
 
-- **File:** `Productive/tr-retur/retur-track.html` (single-file)
+- **File:** `Productive/retur-track/retur-track.html` (single-file)
 - **Backend:** Supabase (project UNITOOLS `iyraamxkrygtzsqkvnqz`) — REST langsung dari browser, **tanpa GAS**
-- **Schema:** `Productive/tr-retur/retur_schema.sql` (jalankan sekali di Supabase SQL Editor)
+- **Schema:** `Productive/retur-track/retur_schema.sql` (jalankan sekali di Supabase SQL Editor)
 - **Status:** ✅ Stable — Supabase integration
 
 ---
@@ -32,13 +32,13 @@ Semua akses data lewat REST `https://iyraamxkrygtzsqkvnqz.supabase.co/rest/v1/` 
 - **`retur_tracking`** (tabel utama): `resi, ekspedisi, waktu_scan, tanggal, operator, status`.
 - **`retur_expeditions`** (daftar ekspedisi tambahan): `nama, regex`. Default kode (`EXP_DEFAULTS` di HTML) selalu menang; isi tabel hanya **menambah** ekspedisi baru.
 - RLS: anon bisa baca & tulis (model sama dengan LATCH / backend GAS lama — konsisten).
-- `gscode/code-retur-track.gs` = backend GAS **LAMA**, tidak lagi dipanggil oleh HTML. Dapat diarsip.
+- `gas/code-retur-track.gs` = backend GAS **LAMA**, tidak lagi dipanggil oleh HTML. Dapat diarsip.
 
 ### 2.3 ⚠️ `Kode GS.txt` = salinan LAMA (jangan dipakai)
-`Productive/tr-retur/Kode GS.txt` berisi backend versi lama (sheet "Retur", dispatch `this[fnName]` tanpa allowlist, fungsi `addRetur/getAllRetur/updateRetur/deleteRetur`) yang **tidak cocok** dengan pemanggilan HTML saat ini. Ini sisa sejarah — **bisa dihapus** untuk menghindari salah-salin.
+`Productive/retur-track/Kode GS.txt` berisi backend versi lama (sheet "Retur", dispatch `this[fnName]` tanpa allowlist, fungsi `addRetur/getAllRetur/updateRetur/deleteRetur`) yang **tidak cocok** dengan pemanggilan HTML saat ini. Ini sisa sejarah — **bisa dihapus** untuk menghindari salah-salin.
 
 ### 2.4 Hub & Shell
-- Router: `#utilities/retur` → `Productive/tr-retur/retur-track.html`.
+- Router: `#utilities/retur` → `Productive/retur-track/retur-track.html`.
 - Memuat CSS bersama hub `../../src/styles/tools.css`.
 - Supabase: project `iyraamxkrygtzsqkvnqz`, tabel `retur_tracking` & `retur_expeditions` (lih. `retur_schema.sql`).
 
@@ -74,4 +74,4 @@ Status:     DB.call("updateTrackingStatus", id, status) → PATCH by id
 
 1. **Supabase Dashboard » SQL Editor** → jalankan isi `retur_schema.sql` (bikin tabel + RLS).
 2. Pastikan `CONFIG.SUPABASE_URL` / `SUPABASE_ANON_KEY` di `retur-track.html` cocok dengan project (`iyraamxkrygtzsqkvnqz`).
-3. **(Migrasi data lama)** — buka project Apps Script dari spreadsheet Retur Track, tempel `gscode/migrate-retur-supabase.gs`, isi `__SUPABASE_CONFIG__` (URL + service_role project yang sama), Run `setupSupabaseProps` lalu `migrateReturToSupabase`. Cek hasil di Table Editor. (*Langkah ini satu kali; setelah selesai script tidak dipakai lagi.*)
+3. **(Migrasi data lama)** — buka project Apps Script dari spreadsheet Retur Track, tempel `gas/migrate-retur-supabase.gs`, isi `__SUPABASE_CONFIG__` (URL + service_role project yang sama), Run `setupSupabaseProps` lalu `migrateReturToSupabase`. Cek hasil di Table Editor. (*Langkah ini satu kali; setelah selesai script tidak dipakai lagi.*)

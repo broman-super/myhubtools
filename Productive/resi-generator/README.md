@@ -2,7 +2,7 @@
 
 Generator label & resi cetak (A6) berbasis web: pilih eksedisi, logo perusahaan, produk, lalu **cetak via popup `window.print()`** — tidak butuh backend.
 
-- **File:** `Productive/Resi-Generator/Index.html` (≈1089) + `expedisi.js`, `logo.js`, `products.json`, folder `Logo/*.png`
+- **File:** `Productive/resi-generator/Index.html` (≈1089) + `expedisi.js`, `logo.js`, `products.json`, folder `Logo/*.png`
 - **Backend:** ⛔ Tidak ada (pure client-side, cetak via popup)
 - **Status:** ✅ Stable — client-side
 
@@ -36,7 +36,7 @@ Generator label & resi cetak (A6) berbasis web: pilih eksedisi, logo perusahaan,
 - `logo.js` adalah **satu baris base64** — sangat panjang, jangan dibuka/minify kecuali tahu bahwa editingnya rawan.
 
 ### 2.3 Hub & Shell
-- Router: `#utilities/resi` → `Productive/Resi-Generator/Index.html`.
+- Router: `#utilities/resi` → `Productive/resi-generator/Index.html`.
 - CSS: `../../src/styles/tools.css` + `:root` tema lokal. **Tema merah/indigo** tidak bentrok, override lokal.
 - Tema dark/light: `toggleTheme()` inline + `postMessage` tipe `SET_THEME` dari hub.
 

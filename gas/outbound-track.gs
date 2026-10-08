@@ -9,7 +9,7 @@
 // 4) Deploy > New deployment > Web app
 //       - Execute as: Me
 //       - Who has access: Anyone
-// 5) Tempel URL .../exec hasil deploy ke SCRIPT_URL di Outbondtrack.html.
+// 5) Tempel URL .../exec hasil deploy ke SCRIPT_URL di outbound-track.html.
 // ------------------------------------------------------------
 // Frontend hanya memanggil action "simpanDataGudang" ke sini (write).
 // Read (getRiwayatGrouped / getDetailById) langsung ke Supabase REST

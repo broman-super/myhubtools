@@ -650,7 +650,7 @@ function loadProductDatabase() {
   productDatabase = EMBEDDED_PRODUCTS.slice();
   fillDatalist(); // selalu tampil dulu (embedded), diperbarui oleh fetch / Supabase
   // Prioritas: salinan lokal bila ada → sumber asli Resi-Generator.
-  var sources = ['products.json', '../Resi-Generator/products.json'];
+  var sources = ['products.json', '../resi-generator/products.json'];
   (function tryLoad(i) {
     if (i >= sources.length) return;
     fetch(sources[i])
