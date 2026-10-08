@@ -17,18 +17,18 @@ index.html          SPA Shell (landing + workspace + sidebar + iframe router)
   │   ├── app.js                      Main app init
   │   └── styles/                     CSS (tools.css, design-system.css, components.css)
   ├── Productive/
-  │   ├── Task/taskschedule.html      Team Planner + Calendar + Timeline + Print
+  │   ├── planner/taskschedule.html   Team Planner + Calendar + Timeline + Print
   │   ├── analytic/Analytic.html      SAS Analytic Dashboard
   │   ├── latch/latch.html            LATCH Link Manager
   │   │   ├── css/style.css
   │   │   └── js/app.js              (GAS backend: https://script.google.com/macros/s/AKfycbwHxK9RHMPXuqlOmucA0GyHwzc33A6WsGeUAD0iwtaGVBSihAQaUeyg_Q7UUn7cULnp/exec)
-  │   ├── outbondtrack/Outbondtrack.html  Package Tracker (logistics scan)
-  │   ├── tr/tracking.html            Activity Tracker
-  │   ├── tr-retur/retur-track.html   Retur Tracker
-  │   ├── PDF-Merger/PDFM_V2.html     PDF Merger + Label Parser
-  │   └── Resi-Generator/Index.html   Resi Generator
-  ├── Doc/form-dak.html              Form Pengajuan DAK
-  └── gscode/                        GAS backend (code-*.gs)
+  │   ├── outbound-track/outbound-track.html  Package Tracker (logistics scan)
+  │   ├── activity-tracker/tracking.html  Activity Tracker
+  │   ├── retur-track/retur-track.html   Retur Tracker
+  │   ├── pdf-merger/PDFM_V2.html     PDF Merger + Label Parser
+  │   └── resi-generator/Index.html   Resi Generator
+  ├── dak/form-dak.html              Form Pengajuan DAK
+  └── gas/                           GAS backend (code-*.gs)
 ```
 
 Shell memuat tools via iframe. Komunikasi antar frame menggunakan `postMessage` untuk sinkronisasi theme (dark/light).
@@ -78,7 +78,7 @@ Semua tool mendukung dark mode via `data-theme="dark"` selector. Toggle tersedia
 
 ### 01 / PRODUCTIVE
 
-#### Team Planner (`Productive/Task/taskschedule.html`)
+#### Team Planner (`Productive/planner/taskschedule.html`)
 Manajemen tugas, event, reminder, dan campaign dengan calendar view, timeline, dan print view.
 
 **4 Layer Item:**
@@ -145,7 +145,7 @@ Portal pengumpul dan manajemen tautan/link penting.
 
 ---
 
-#### Activity Tracker (`Productive/tr/tracking.html`)
+#### Activity Tracker (`Productive/activity-tracker/tracking.html`)
 **Judul:** SUPERSUB Ops — Tracker
 
 Pencatatan aktivitas harian dan pemantauan beban kerja tim.
@@ -160,29 +160,29 @@ Pencatatan aktivitas harian dan pemantauan beban kerja tim.
 
 ---
 
-#### Retur Tracker (`Productive/tr-retur/retur-track.html`)
+#### Retur Tracker (`Productive/retur-track/retur-track.html`)
 Pencatatan dan pelacakan barang retur dengan auto-detect ekspedisi dan staging table.
 
 ---
 
-#### Package Tracker (`Productive/outbondtrack/Outbondtrack.html`)
+#### Package Tracker (`Productive/outbound-track/outbound-track.html`)
 Pendataan paket masuk/keluar dengan scanning barcode/QR code, live counter, dan print options (A3 detail, thermal label).
 
 ---
 
-#### PDF Merger (`Productive/PDF-Merger/PDFM_V2.html`)
+#### PDF Merger (`Productive/pdf-merger/PDFM_V2.html`)
 Penyatuan berkas PDF + ekstraksi label resi (Shopee, TikTok, dll) dengan parse produk dan CSV export.
 
 ---
 
-#### Resi Generator (`Productive/Resi-Generator/Index.html`)
+#### Resi Generator (`Productive/resi-generator/Index.html`)
 Generator nomor dan label resi otomatis, multi-ekspedisi (JNE, POS, J&T, J&T Cargo, Baraka, Ojol), logo otomatis, preview cetak.
 
 ---
 
 ### 02 / UNIVERSAL TOOLS
 
-#### Form Pengajuan DAK (`Doc/form-dak.html`)
+#### Form Pengajuan DAK (`dak/form-dak.html`)
 Generator formulir untuk program Dana Amanah Karyawan (DAK) dengan perhitungan Qardh dan Murabahah, auto-format Rupiah & HP, foto upload, dan print langsung.
 
 ---

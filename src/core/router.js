@@ -32,18 +32,18 @@ class ReynaHubRouter {
   getToolPath(hash) {
     var clean = hash.split('?')[0];
     var map = {
-      '#productive/planner': 'Productive/Task/taskschedule.html',
+      '#productive/planner': 'Productive/planner/taskschedule.html',
       '#productive/analytic': 'Productive/analytic/Analytic.html',
       '#productive/latch': 'Productive/latch/latch.html',
       '#productive/expense': 'Productive/expense-tracker/index.html',
       '#productive/rnd-roadmap': 'Productive/Project_develop/dist/index.html',
-      '#utilities/outbond': 'Productive/outbondtrack/Outbondtrack.html',
-      '#utilities/activity': 'Productive/tr/tracking.html',
-      '#utilities/retur': 'Productive/tr-retur/retur-track.html',
-      '#utilities/merger': 'Productive/PDF-Merger/PDFM_V2.html',
-      '#utilities/faktur': 'Productive/Faktur-Penjualan/Index.html',
-      '#doc/dak': 'Doc/form-dak.html',
-      '#external/resi': 'Productive/Resi-Generator/Index.html'
+      '#utilities/outbond': 'Productive/outbound-track/outbound-track.html',
+      '#utilities/activity': 'Productive/activity-tracker/tracking.html',
+      '#utilities/retur': 'Productive/retur-track/retur-track.html',
+      '#utilities/merger': 'Productive/pdf-merger/PDFM_V2.html',
+      '#utilities/faktur': 'Productive/faktur-penjualan/Index.html',
+      '#doc/dak': 'dak/form-dak.html',
+      '#external/resi': 'Productive/resi-generator/Index.html'
     };
     return map[clean] || '';
   }

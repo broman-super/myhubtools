@@ -2,7 +2,7 @@
 
 Alat proses PDF resi A6: gabung urut, ekstrak teks/halaman, deteksi duplikat, dan export CSV. **100% client-side — tidak butuh backend.**
 
-- **File:** `Productive/PDF-Merger/PDFM_V2.html` (UI, ±311 baris) + `assets/js/{utils,merger,extractor,parser,app}.js`
+- **File:** `Productive/pdf-merger/PDFM_V2.html` (UI, ±311 baris) + `assets/js/{utils,merger,extractor,parser,app}.js`
 - **Backend:** ⛔ Tidak ada (pure browser)
 - **Status:** ✅ Stable — client-side
 
@@ -34,7 +34,7 @@ Alat proses PDF resi A6: gabung urut, ekstrak teks/halaman, deteksi duplikat, da
 - `app.js` (orchestrator) pakai API dari keempat file di atas. Pindah urutan = `ReferenceError` saat startup.
 
 ### 2.3 Hub & Shell
-- Router: `#utilities/pdf-merger` → `Productive/PDF-Merger/PDFM_V2.html`.
+- Router: `#utilities/pdf-merger` → `Productive/pdf-merger/PDFM_V2.html`.
 - Memuat CSS bersama hub `../../src/styles/tools.css` + `:root` tema lokal (`--primary: #ff0000` → **tema merah**, ciri khas Label Merger).
 
 ---

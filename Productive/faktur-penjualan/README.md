@@ -2,7 +2,7 @@
 
 Pembuat faktur penjualan format resmi **A4** berbasis web: pilih produk dari katalog Resi Generator, isi pembeli, lalu **Simpan PDF via `window.print()`** — tanpa backend.
 
-- **File:** `Productive/Faktur-Penjualan/Index.html`
+- **File:** `Productive/faktur-penjualan/Index.html`
 - **Backend:** ⛔ Tidak ada (pure client-side)
 - **Status:** ✅ Stable — client-side
 
@@ -11,7 +11,7 @@ Pembuat faktur penjualan format resmi **A4** berbasis web: pilih produk dari kat
 ## 1. Fitur & Cara Pakai
 
 - **Data penjual default** — terisi otomatis dari `DEFAULT_PENJUAL` (Supersub). Bisa diedit per-faktur.
-- **Dropdown/autocomplete produk** — dari `products.json` milik Resi Generator (path relatif `../Resi-Generator/products.json`); fallback `EMBEDDED_PRODUCTS` saat `file://`.
+- **Dropdown/autocomplete produk** — dari `products.json` milik Resi Generator (path relatif `../resi-generator/products.json`); fallback `EMBEDDED_PRODUCTS` saat `file://`.
 - **No. faktur auto** — `INV-YYYYMMDD-SEQ` (SEQ harian, `localStorage 'invSeq_<tanggal>'`), bisa di-override manual.
 - **Status faktur** — dropdown Terbit/Dibayar per faktur, tampil di kop & riwayat (badge hijau saat Dibayar).
 - **Logo kop opsional** — unggah PNG/JPG ≤1 MB (`localStorage 'invoiceLogo'`), tampil di kiri atas lembar faktur; bisa dihapus. Tombol **Logo Supersub** memakai preset bawaan (dataURL di-hardcode di dalam file, sumber asli `Logo.txt`).
@@ -36,7 +36,7 @@ Pembuat faktur penjualan format resmi **A4** berbasis web: pilih produk dari kat
 ### 2.1 Data (client)
 | Sumber | Isi | Catatan |
 |---|---|---|
-| `../Resi-Generator/products.json` | katalog produk (`{name, sku}`) | dimuat via fetch; **jangan di-edit dari tool ini** |
+| `../resi-generator/products.json` | katalog produk (`{name, sku}`) | dimuat via fetch; **jangan di-edit dari tool ini** |
 | `EMBEDDED_PRODUCTS` (inline) | fallback produk | dipakai saat fetch gagal (`file://`) |
 | `localStorage 'invoiceDraft'` | draft faktur | auto-save + restore |
 | `localStorage 'invoicePrices'` | harga default per SKU | modal "Kelola Harga Produk" + auto-fill |
@@ -46,7 +46,7 @@ Pembuat faktur penjualan format resmi **A4** berbasis web: pilih produk dari kat
 | **Supabase** `faktur_penjualan` | riwayat faktur cloud | mencerminkan `invoiceHistory` (upsert) |
 
 ### 2.2 Hub & Shell
-- Router: `#utilities/faktur` → `Productive/Faktur-Penjualan/Index.html`.
+- Router: `#utilities/faktur` → `Productive/faktur-penjualan/Index.html`.
 - CSS: `../../src/styles/tools.css` + token REYNAHUB (`var(--bg-card)`, `var(--accent)`, dst).
 - Tema dark/light: `toggleTheme()` inline + `postMessage` tipe `SET_THEME` dari hub.
 
@@ -56,7 +56,7 @@ Pembuat faktur penjualan format resmi **A4** berbasis web: pilih produk dari kat
 
 ### 3.1 Produk — jangan edit `products.json` Resi Generator
 - Tool ini membaca file tersebut (read-only, via fetch).
-- Untuk mengubah katalog produk: ubah di **Resi Generator** (`Productive/Resi-Generator/products.json`) atau fallback `EMBEDDED_PRODUCTS` di tool ini.
+- Untuk mengubah katalog produk: ubah di **Resi Generator** (`Productive/resi-generator/products.json`) atau fallback `EMBEDDED_PRODUCTS` di tool ini.
 
 ### 3.2 PPN & pembulatan
 - PPN **11%** (`CONFIG_FAKTUR.ppnPersen`).
@@ -91,7 +91,7 @@ create policy "faktur_penjualan_update" on public.faktur_penjualan for update to
 ```
 
 - Setelah tabel jadi, badge "Riwayat Faktur" berubah **DB online**: riwayat tersimpan ke cloud & tersinkron dari semua perangkat.
-- `SUPABASE_URL`/`ANON_KEY` disimpan di `CONFIG_DB` (pola `Productive/tr-retur/retur-track.html`). **Jangan commit anon key proyek lain** — proyek ini memang tanpa auth (public), sama seperti tool Universal lain.
+- `SUPABASE_URL`/`ANON_KEY` disimpan di `CONFIG_DB` (pola `Productive/retur-track/retur-track.html`). **Jangan commit anon key proyek lain** — proyek ini memang tanpa auth (public), sama seperti tool Universal lain.
 
 ### 3.5 Seed katalog produk (opsional, rekomendasi)
 - Konversi katalog Resi-Generator (`products.json`, 390 item) ke tabel **`faktur_produk`** (SKU, nama, harga) sudah disiapkan: **`seed-produk.sql`** — buka, masuk ke **Supabase Dashboard → SQL Editor → New query**, paste seluruh isi file, **Run**.

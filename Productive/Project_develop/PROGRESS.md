@@ -45,7 +45,7 @@
 - `src/index.css`: alias bridge dipangkas: hanya `--surface2`, `--focus-ring`, `--radius-full`, `--shadow-sm/md`, `--warning`, `--success`. Yang dibuang (`--bg`, `--surface`, `--text`, `--primary-light`, `--radius-bento`, `--font-sans` duplikat) tidak dipakai App.jsx.
 
 ## Paket 10 fitur baru (2026-09-12): Fase 1–11 selesai
-Rencana rinci di `Update_Plan.md` (Fase 1–12). Fitur dikerjakan surgical di `src/App.jsx`; backend & hub shell diubah minimal.
+Rencana rinci terdaftar pada paket ini (Fase 1–12). Fitur dikerjakan surgical di `src/App.jsx`; backend & hub shell diubah minimal.
 - **Fase 1 Prioritas**: `PRIORITY_META` (P1 dark-red/P2 amber/P3 sky), select + chip kartu, sort "Prioritas". Build 767.30 kB.
 - **Fase 2 Tag**: state tags di ProjectModal + saran (`allTags`), filter tag multi (AND) + chip kartu (maks 3 + `+n`). 770.24.
 - **Fase 3 Template**: localStorage `rnd-templates` (`loadTemplates/saveTemplates`), `cloneNodeClean` + `instantiateMilestones`, `TemplateSelector` di Project Baru, tombol "Simpan Template" di detail. 772.07.

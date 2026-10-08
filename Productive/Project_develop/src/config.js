@@ -3,7 +3,7 @@
 // SUPABASE_URL / SUPABASE_ANON_KEY = project UNITOOLS.
 //   - anon key bersifat publik & hanya punya akses READ (RLS select-only).
 //   - write dilakukan lewat GAS bridge (service_role), bukan dari sini.
-// GAS_SCRIPT_URL = URL .../exec hasil deploy gscode/rndtracker.gs
+// GAS_SCRIPT_URL = URL .../exec hasil deploy gas/rndtracker.gs
 //
 // Tips: bisa juga pakai .env (Vite baca VITE_*):
 //   VITE_SUPABASE_URL=... VITE_SUPABASE_ANON_KEY=... VITE_GAS_SCRIPT_URL=...

@@ -2,8 +2,8 @@
 
 Sistem logging dan scanning barcode untuk pencatatan paket masuk/keluar, live counter, dan print resi.
 
-- **File:** `Productive/outbondtrack/Outbondtrack.html` (±1130 baris, single-file)
-- **Backend:** Hybrid — write lewat Google Apps Script `gscode/outbondtrack.gs` (service_role), read langsung Supabase REST (anon). Database: **Supabase** (project **UNITOOLS** — database gabungan beberapa tool, tabel per tool ber-prefix `outbond_`). Skema ada di `migrasi_supabase.sql`.
+- **File:** `Productive/outbound-track/outbound-track.html` (±1130 baris, single-file)
+- **Backend:** Hybrid — write lewat Google Apps Script `gas/outbound-track.gs` (service_role), read langsung Supabase REST (anon). Database: **Supabase** (project **UNITOOLS** — database gabungan beberapa tool, tabel per tool ber-prefix `outbond_`). Skema ada di `migrasi_supabase.sql`.
 - **Status:** ✅ Stable — Supabase + GAS write hybrid
 
 ---
@@ -25,12 +25,12 @@ Sistem logging dan scanning barcode untuk pencatatan paket masuk/keluar, live co
   - `getRiwayatGrouped` → `GET /rest/v1/outbond_paket?select=...&order=id.desc`, digrup per `id_penginputan` di client.
   - `getDetailById` → `GET /rest/v1/outbond_paket?`"id_penginputan"`=eq.<id>`.
   - Kredensial: `SUPABASE_URL` + `SUPABASE_ANON_KEY` (baris ±641). Tabel `outbond_paket` punya policy `select using (true)` — baca publik, **tidak ada policy insert** (write mustahil via client).
-- **Write** (`simpanDataGudang`) tetap lewat `SCRIPT_URL = .../exec` (GAS Web App, kode di `gscode/outbondtrack.gs`) dengan **service_role** — respons `{ success: true, data }` / `{ success: false, error }`.
+- **Write** (`simpanDataGudang`) tetap lewat `SCRIPT_URL = .../exec` (GAS Web App, kode di `gas/outbound-track.gs`) dengan **service_role** — respons `{ success: true, data }` / `{ success: false, error }`.
 - `apiCall(action, payload, onSuccess, onError)` = satu pintu: dispatch action read → Supabase, sisanya → GAS. Action lain yang ditambah ke frontend otomatis via GAS.
 - Body POST GAS tetap `text/plain;charset=utf-8` (trik hindari CORS preflight — jangan diganti jadi `application/json`).
 
 ### 2.2 Hub & Shell
-- Router: `#utilities/outbond` → `Productive/outbondtrack/Outbondtrack.html`.
+- Router: `#utilities/outbond` → `Productive/outbound-track/outbound-track.html`.
 - Memuat **CSS bersama hub** `../src/styles/tools.css`.
 - Ada `<base target="_top">` — sengaja, agar bisa di-embed di GAS. Jangan dihapus.
 
@@ -43,7 +43,7 @@ Sistem logging dan scanning barcode untuk pencatatan paket masuk/keluar, live co
 - **O2** — `<html lang="id">` sudah ada (accessibility). Jangan hapus.
 
 ### 3.2 ✅ Backend tersimpan di repo
-Kode backend ada di `gscode/outbondtrack.gs` (script GAS terpisah khusus outbond) dan skema DB di `migrasi_supabase.sql`. Deployment = paste file .gs ke project GAS baru → `setupSupabaseProps` → deploy Web App (akses = Anyone) → tempel URL ke `SCRIPT_URL`.
+Kode backend ada di `gas/outbound-track.gs` (script GAS terpisah khusus outbond) dan skema DB di `migrasi_supabase.sql`. Deployment = paste file .gs ke project GAS baru → `setupSupabaseProps` → deploy Web App (akses = Anyone) → tempel URL ke `SCRIPT_URL`.
 
 **Migrasi data lama** (Sheet `WAKTU_SCAN/ID_PENGINPUTAN/NOMOR_RESI/EKSPEDISI` → `outbond_paket`) sudah selesai dan kode migrasinya sengaja **tidak disertakan** di file `.gs` ini. Jika suatu saat perlu migrasi ulang, tambahkan fungsi batch-insert (contoh pola lama tersimpan di riwayat commit) atau minta ke maintainer.
 

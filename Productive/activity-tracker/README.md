@@ -2,7 +2,7 @@
 
 Pencatatan dan pemantauan performa progres kerja harian seluruh anggota tim, dengan login per-user, dashboard bundle, SPV summary, template aktivitas, dan auditor AI (Gemini).
 
-- **File:** `Productive/tr/tracking.html` (UI, ±3700 baris) + `assets/config.js`, `assets/app-core.js`, `assets/app-features.js`
+- **File:** `Productive/activity-tracker/tracking.html` (UI, ±3700 baris) + `assets/config.js`, `assets/app-core.js`, `assets/app-features.js`
 - **Backend:** Google Apps Script (Web App) via `assets/config.js`
 - **Status:** ✅ Stable — GAS integration
 
@@ -35,7 +35,7 @@ Semua panggilan backend lewat wrapper **`gasFetch`** (di `app-core.js`) atau **`
 - Sesi diambil dari response `checkLogin` → disimpan ke `window.sessionUser`. Operasi berikutnya mengirim `username: sessionUser.name`.
 
 ### 2.3 Hub & Shell
-- Router: `#utilities/activity` → `Productive/tr/tracking.html`.
+- Router: `#utilities/activity` → `Productive/activity-tracker/tracking.html`.
 - Memuat **CSS bersama hub** (`../../src/styles/tools.css`) + **Tailwind CDN** (`cdn.tailwindcss.com`). Dua sumber CSS ini bisa bertabrakan — kalau ada style tak berubah, cek utility Tailwind dulu.
 
 ### 2.4 Storage

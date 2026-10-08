@@ -2,10 +2,10 @@
 
 Manajemen perencanaan tugas tim, campaign, event, dan reminder dengan tampilan kalender + timeline, plus view cetak. Backend Google Sheets + GAS.
 
-- **File:** `Productive/Task/taskschedule.html` (±3920 baris)
-- **Backend:** `gscode/code-taskschedule.gs` (Web App GAS)
+- **File:** `Productive/planner/taskschedule.html` (±3920 baris)
+- **Backend:** `gas/code-taskschedule.gs` (Web App GAS)
 - **Status:** ✅ Stable
-- **Catatan:** file backend pernah di `Productive/Task/`, sekarang dipusatkan di `gscode/`.
+- **Catatan:** file backend pernah di `Productive/planner/`, sekarang dipusatkan di `gas/`.
 
 ---
 
@@ -25,10 +25,10 @@ Manajemen perencanaan tugas tim, campaign, event, dan reminder dengan tampilan k
 - `GAS_URL = https://script.google.com/macros/s/AKfycbztQF43rq6TcEJvb1qUheMddor1ESSiVQHX0Hc3NRX6ipunZpiyi9bysIRhTVOL_OJC/exec` (sesuai `taskschedule.html:1859`)
 - **Baca data:** `GET ?action=getTasks` → array objek task.
 - **Tulis data:** `POST` JSON `{ action, data }` dengan header `Content-Type: text/plain;charset=utf-8` (bukan `application/json` — jangan diganti, GAS butuh `postData.contents`).
-- Action tulis didefinisikan di `gscode/code-taskschedule.gs` (save/update/delete item per tipe).
+- Action tulis didefinisikan di `gas/code-taskschedule.gs` (save/update/delete item per tipe).
 
 ### 2.2 Hub & Shell
-- Router: `#productive/planner` → `Productive/Task/taskschedule.html` (`src/core/router.js`).
+- Router: `#productive/planner` → `Productive/planner/taskschedule.html` (`src/core/router.js`).
 - Dimuat via iframe — CSS/JS terisolasi, TAPI file ini **menautkan CSS bersama hub**: `../../src/styles/tools.css`.
 
 ### 2.3 CSS bersama hub — ⚠️ berbeda dari tool lain
@@ -51,7 +51,7 @@ Manajemen perencanaan tugas tim, campaign, event, dan reminder dengan tampilan k
 ## 3. Catatan Perubahan & Aturan Anti-Bug
 
 ### 3.1 ✅ Bug backend yang sudah diperbaiki (jangan regresi)
-Bug di `gscode/code-taskschedule.gs` ini pernah terjadi dan sudah fixed:
+Bug di `gas/code-taskschedule.gs` ini pernah terjadi dan sudah fixed:
 - **T1** — hapus item pakai `rows[i][0]` hardcode → kini lookup kolom ID dinamis. Jangan hardcode index kolom.
 - **T2** — frontend kirim `reminders` (plural), backend map key `reminder` → dinormalisasi. Pertahankan konsistensi key frontend↔backend.
 - **T3** — filter campaign baca `r.type` padahal data ber-key `r.tipe`. Sudah diselaraskan ke `r.tipe` (header sheet: "Tipe").
@@ -70,8 +70,8 @@ Bug di `gscode/code-taskschedule.gs` ini pernah terjadi dan sudah fixed:
 - Halaman cetak dibuat lewat window baru (string HTML berisi `@page{size:landscape}`). Saat mengubah tampilan, pastikan selektor `.p-grid`, `.p-track`, `.p-leg` dkk tidak ikut berubah — print view terpisah total dari UI utama.
 
 ### 3.5 Struktur file
-- Tool ini single-file. Satu-satunya file pendamping = `gscode/code-taskschedule.gs`.
-- `Productive/Task/` sekarang hanya berisi `taskschedule.html`.
+- Tool ini single-file. Satu-satunya file pendamping = `gas/code-taskschedule.gs`.
+- `Productive/planner/` sekarang hanya berisi `taskschedule.html`.
 
 ---
 
