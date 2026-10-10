@@ -2,8 +2,8 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from "react"
 import { createPortal } from "react-dom";
 import {
   Plus, Calendar, ChevronDown, ChevronRight, Pencil, Trash2, Camera, CheckCircle2,
-  Circle, AlertTriangle, ArrowLeft, TrendingUp, Archive, Star, FolderKanban, RotateCcw,
-  ClipboardList, LayoutGrid, Download, Printer, Copy, Bell
+  Circle, AlertTriangle, ArrowLeft, Archive, FolderKanban, RotateCcw,
+  ClipboardList, LayoutGrid, Download, Printer, Copy, Bell, X
 } from "lucide-react";
 import { loadProjects, syncToSupabase, uploadToStorage, deleteFromStorage } from "./supabase.js";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -14,13 +14,33 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+
+// ---------- Viewport helpers (structural responsive: reorder, collapse, reflow) ----------
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(() => (typeof window !== "undefined" ? window.matchMedia(query).matches : false));
+  useEffect(() => {
+    const mql = window.matchMedia(query);
+    const handler = (e) => setMatches(e.matches);
+    setMatches(mql.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, [query]);
+  return matches;
+}
+function useResponsiveClass() {
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const isTablet = useMediaQuery("(min-width: 768px) and (max-width: 1023px)");
+  return isMobile ? "is-mobile" : isTablet ? "is-tablet" : "is-desktop";
+}
 
 // ---------- Design tokens — diselaraskan ke design-system.css (REYNAHUB/UNITOOLS) ----------
 const C = {
   canvasSoft: "var(--background)",
   surface: "var(--card)",
-  surface2: "var(--muted)",
   hairline: "var(--border)",
   ink: "var(--foreground)",
   inkSecondary: "var(--muted-foreground)",
@@ -28,13 +48,10 @@ const C = {
   inkFaint: "var(--muted-foreground)",
   primary: "var(--primary)",
   primaryActive: "var(--primary)",
-  secondary: "var(--primary)",
   onPrimary: "var(--primary-foreground)",
   danger: "var(--destructive)",
-  dangerLight: "color-mix(in oklch, var(--destructive) 12%, var(--card))",
-  sky: "oklch(0.72 0.09 255)", purple: "oklch(0.72 0.16 305)", purpleDeep: "oklch(0.42 0.13 300)", pink: "oklch(0.72 0.17 340)",
   orange: "var(--warning)", orangeDeep: "oklch(0.47 0.14 65)",
-  teal: "oklch(0.7 0.12 190)", green: "var(--success)", brown: "oklch(0.48 0.07 70)",
+  green: "var(--success)",
 };
 
 const R = { xs: "var(--radius-sm)", sm: "var(--radius-md)", md: "var(--radius-md)", lg: "var(--radius-lg)", xl: "var(--radius-xl)", full: "var(--radius-full)" };
@@ -44,20 +61,20 @@ const shadow2 = "var(--shadow-md)";
 
 // ---------- Status config ----------
 const PROJECT_STATUS = {
-  Ideation: { label: "Ideation", bg: "color-mix(in oklch, oklch(0.72 0.16 305) 13%, var(--card))", fg: "oklch(0.42 0.13 300)" },
-  "On Track": { label: "On Track", bg: "color-mix(in oklch, oklch(0.62 0.17 155) 13%, var(--card))", fg: "oklch(0.45 0.13 155)" },
-  "At Risk": { label: "At Risk", bg: "color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))", fg: "oklch(0.47 0.14 65)" },
-  Done: { label: "Done", bg: "color-mix(in oklch, var(--primary) 13%, var(--card))", fg: "oklch(0.45 0.11 250)" },
+  Ideation: { label: "Ideation", variant: "purple", fg: "oklch(0.42 0.13 300)" },
+  "On Track": { label: "On Track", variant: "success", fg: "oklch(0.45 0.13 155)" },
+  "At Risk": { label: "At Risk", variant: "warning", fg: "oklch(0.47 0.14 65)" },
+  Done: { label: "Done", variant: "info", fg: "oklch(0.45 0.11 250)" },
 };
 const MILESTONE_STATUS = {
-  "Belum mulai": { label: "Belum mulai", bg: "var(--muted)", fg: "var(--muted-foreground)" },
-  Berjalan: { label: "Berjalan", bg: "color-mix(in oklch, var(--primary) 13%, var(--card))", fg: "oklch(0.45 0.11 250)" },
-  Selesai: { label: "Selesai", bg: "color-mix(in oklch, oklch(0.62 0.17 155) 13%, var(--card))", fg: "oklch(0.45 0.13 155)" },
+  "Belum mulai": { label: "Belum mulai", variant: "neutral", fg: "var(--muted-foreground)" },
+  Berjalan: { label: "Berjalan", variant: "info", fg: "oklch(0.45 0.11 250)" },
+  Selesai: { label: "Selesai", variant: "success", fg: "oklch(0.45 0.13 155)" },
 };
 const PRIORITY_META = {
-  P1: { label: "P1", bg: "color-mix(in oklch, oklch(0.577 0.245 27.325) 13%, var(--card))", fg: "oklch(0.47 0.14 65)" },
-  P2: { label: "P2", bg: "color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))", fg: "oklch(0.47 0.14 65)" },
-  P3: { label: "P3", bg: "color-mix(in oklch, oklch(0.72 0.09 255) 13%, var(--card))", fg: "oklch(0.4 0.1 250)" },
+  P1: { label: "P1", variant: "red", fg: "oklch(0.47 0.14 65)" },
+  P2: { label: "P2", variant: "warning", fg: "oklch(0.47 0.14 65)" },
+  P3: { label: "P3", variant: "indigo", fg: "oklch(0.4 0.1 250)" },
 };
 
 // ---------- helpers: id + tree ops ----------
@@ -250,7 +267,7 @@ function highlightMatch(text, q) {
   if (idx === -1) return s;
   return (<>
     {s.slice(0, idx)}
-    <mark style={{ background: "#fff3a3", color: "inherit", borderRadius: 2, padding: "0 1px" }}>{s.slice(idx, idx + needle.length)}</mark>
+    <mark style={{ background: "var(--highlight)", color: "var(--foreground)", borderRadius: 2, padding: "0 1px" }}>{s.slice(idx, idx + needle.length)}</mark>
     {s.slice(idx + needle.length)}
   </>);
 }
@@ -275,8 +292,8 @@ function Lightbox({ url, onClose }) {
       <button
         onClick={onClose}
         aria-label="Tutup"
-        style={{ position: "absolute", top: 16, right: 16, background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", width: 38, height: 38, borderRadius: R.full, cursor: "pointer", fontSize: 22, lineHeight: 1 }}
-      >×</button>
+        style={{ position: "absolute", top: 16, right: 16, background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", width: 38, height: 38, borderRadius: R.full, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+      ><X size={18} /></button>
       <img
         src={url}
         alt=""
@@ -456,7 +473,6 @@ function weeklySummary(projects) {
     flattenMilestones(p.milestones).forEach((m) => {
       const ca = m.completedAt ? new Date(m.completedAt) : null;
       if (m.status === "Selesai") {
-        sum.doneTotal++;
         if (ca && ca.getTime() >= weekAgo.getTime()) sum.doneThisWeek++;
       }
       if (m.targetDate && m.targetDate < todayStr() && m.status !== "Selesai") sum.overdue++;
@@ -593,20 +609,6 @@ function seedData() {
 }
 
 // ---------- shared small UI ----------
-function Badge({ bg, fg, children, icon }) {
-  return (
-    <span
-      style={{
-        background: bg, color: fg, borderRadius: R.full, padding: "3px 10px",
-        fontSize: 12, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4,
-        whiteSpace: "nowrap",
-      }}
-    >
-      {icon}{children}
-    </span>
-  );
-}
-
 function ProgressBar({ pct, color = C.primary }) {
   return (
     <div style={{ background: "var(--muted)", borderRadius: R.full, height: 6, width: "100%", overflow: "hidden" }}>
@@ -765,6 +767,7 @@ export default function App() {
   const retry = useRef(0);
   const pendingDeletes = useRef([]);
   const deletingRef = useRef(false);
+  const responsiveClass = useResponsiveClass();
 
   // --- Load dari Supabase (anon read) ---
   useEffect(() => {
@@ -777,15 +780,8 @@ export default function App() {
           skipSync.current = true;
           setProjects(rows);
         } else {
-          const seeded = seedData();
           skipSync.current = true;
-          setProjects(seeded);
-          try {
-            await syncToSupabase(seeded.map((p) => ({ id: p.id, data: p })), []);
-            setSaveStatus({ state: "saved", msg: "Tersimpan" });
-          } catch (e) {
-            setSaveStatus({ state: "error", msg: "Gagal simpan: " + (e && e.message ? e.message : e) });
-          }
+          setProjects(seedData());
         }
       } catch (e) {
         if (!cancelled) console.error("Gagal memuat roadmap:", e);
@@ -964,9 +960,9 @@ export default function App() {
 
   if (loading) {
     return (
-      <div style={{ fontFamily: "var(--font-sans)", background: C.canvasSoft, minHeight: "100dvh", height: "100dvh", overflowY: "auto", color: C.ink, padding: "28px 24px" }}>
+      <div className={responsiveClass} style={{ fontFamily: "var(--font-sans)", background: C.canvasSoft, minHeight: "100dvh", height: "100dvh", overflowY: "auto", color: C.ink, padding: "28px 24px" }}>
         <style>{`@keyframes sk{0%{opacity:.45}50%{opacity:1}100%{opacity:.45}} .sk{background:var(--surface2);border-radius:8px;animation:sk 1.2s ease-in-out infinite;}`}</style>
-        <div style={{ maxWidth: 1320, margin: "0 auto" }}>
+        <div style={{ maxWidth: "var(--app-max)", margin: "0 auto" }}>
           <div className="sk" style={{ height: 28, width: 220, marginBottom: 22 }} />
           <div id="rnd-project-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
             {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -985,7 +981,7 @@ export default function App() {
 
   return (
     <LightboxContext.Provider value={{ viewPhoto: setLightboxUrl }}>
-    <div style={{ fontFamily: "var(--font-sans)", background: C.canvasSoft, minHeight: "100dvh", height: "100dvh", overflowY: "auto", color: C.ink }}>
+    <div className={responsiveClass} style={{ fontFamily: "var(--font-sans)", background: C.canvasSoft, minHeight: "100dvh", height: "100dvh", overflowY: "auto", color: C.ink }}>
       <style>{`
         * { box-sizing: border-box; }
         ::placeholder { color: var(--muted); }
@@ -1008,15 +1004,43 @@ export default function App() {
           .rnd-overlay, .rnd-pop, .rnd-rise, .rnd-toast { animation: none !important; }
           button { transition: none !important; }
         }
+        @media (max-width: 767px) {
+          #rnd-dashboard { flex-direction: column !important; gap: 16px !important; }
+          #rnd-sidebar { flex: none !important; width: 100% !important; position: static !important; order: 2; }
+          #rnd-summary { flex-direction: column !important; gap: 12px !important; }
+          #rnd-project-grid, .rnd-grid-300 { grid-template-columns: 1fr !important; }
+          #rnd-topnav { padding: 12px var(--app-pad) !important; }
+        }
+        @media (min-width: 768px) and (max-width: 1023px) {
+          #rnd-dashboard { gap: 16px !important; }
+          #rnd-sidebar { flex-basis: 200px !important; }
+        }
+        @media (max-width: 767px) {
+          .fs-30 { font-size: 24px !important; }
+          .fs-15 { font-size: 16px !important; }
+          .fs-14 { font-size: 14px !important; }
+          .fs-13 { font-size: 13px !important; }
+          .fs-12 { font-size: 12px !important; }
+          .fs-11 { font-size: 11px !important; }
+          .fs-22 { font-size: 20px !important; }
+          .fs-18 { font-size: 16px !important; }
+          .fs-16 { font-size: 14px !important; }
+          .min-h-76 { min-height: 60px !important; }
+          .min-h-34 { min-height: 28px !important; }
+          .p-18 { padding: 14px !important; }
+          .p-16 { padding: 12px !important; }
+          .p-14 { padding: 10px !important; }
+          .gap-10 { gap: 8px !important; }
+        }
       `}</style>
 
       {/* Top nav */}
-      <div id="rnd-topnav" style={{ background: C.surface, borderBottom: `1px solid ${C.hairline}`, padding: "14px 24px", display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 10 }}>
+      <div id="rnd-topnav" style={{ background: C.surface, borderBottom: `1px solid ${C.hairline}`, padding: "14px var(--app-pad)", display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 10 }}>
         <div
           onClick={backToDashboard}
           style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}
         >
-          <div style={{ width: 28, height: 28, borderRadius: R.md, background: C.secondary, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 28, height: 28, borderRadius: R.md, background: C.primary, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <LayoutGrid size={16} color="var(--primary-foreground)" />
           </div>
           <span style={{ fontWeight: 600, fontSize: 14, letterSpacing: "normal" }}>RND Roadmap Tracker</span>
@@ -1059,7 +1083,7 @@ export default function App() {
                       <span style={{ fontWeight: 600 }}>{a.project.name}</span>
                       <span style={{ color: C.inkMuted }}> — {a.milestone.title}</span>
                     </div>
-                    <Badge bg={a.kind === "overdue" ? "color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))" : "color-mix(in oklch, var(--primary) 13%, var(--card))"} fg={a.kind === "overdue" ? "oklch(0.47 0.14 65)" : "oklch(0.45 0.11 250)"}>
+                    <Badge variant={a.kind === "overdue" ? "warning" : "info"}>
                       {a.kind === "overdue" ? `Lewat target: ${a.milestone.targetDate}` : `Target: ${a.milestone.targetDate}`}
                     </Badge>
                   </div>
@@ -1070,7 +1094,7 @@ export default function App() {
         </>
       )}
 
-        <div style={{ maxWidth: 1320, margin: "0 auto", padding: "28px 24px 64px" }}>
+        <div style={{ maxWidth: "var(--app-max)", margin: "0 auto", padding: "28px var(--app-pad) 64px" }}>
         {view === "dashboard" && (
           <Dashboard
             projects={projects}
@@ -1123,6 +1147,7 @@ export default function App() {
 // ---------- Ringkasan mingguan ----------
 function WeeklyPanel({ projects }) {
   const s = weeklySummary(projects);
+  const [open, setOpen] = useState(false);
   const now = new Date();
   const monday = new Date(now); monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
   const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
@@ -1134,7 +1159,7 @@ function WeeklyPanel({ projects }) {
     { label: "Lewat target", value: s.overdue, color: "oklch(0.47 0.14 65)" },
     { label: "Target 14 hari", value: s.upcoming, color: "oklch(0.55 0.16 250)" },
     { label: "Selesai minggu ini", value: s.doneThisWeek, color: C.green },
-    { label: "Total selesai", value: s.doneTotal + "/" + s.itemsTotal, color: C.inkSecondary },
+    { label: "Item checklist selesai", value: s.doneTotal + "/" + s.itemsTotal, color: C.inkSecondary },
   ];
   const copyWeekly = () => {
     const lines = [
@@ -1147,30 +1172,39 @@ function WeeklyPanel({ projects }) {
       "Tahapan lewat target   : " + s.overdue,
       "Target dalam 14 hari   : " + s.upcoming,
       "Selesai minggu ini     : " + s.doneThisWeek,
-      "Total selesai          : " + s.doneTotal + "/" + s.itemsTotal,
+      "Item checklist selesai : " + s.doneTotal + "/" + s.itemsTotal,
     ].join("\n");
     try { navigator.clipboard.writeText(lines); } catch (_) {}
   };
   return (
-    <div id="rnd-weekly" style={{ background: "var(--card)", border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: "14px 16px", marginBottom: 20 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>Ringkasan Mingguan</div>
-          <div style={{ fontSize: 11.5, color: C.inkMuted }}>{fmt(monday)} – {fmt(sunday)} {sunday.getFullYear()} · seluruh project aktif</div>
-        </div>
-        <button onClick={copyWeekly} className={C.btnSecondary} style={{ padding: "6px 12px", fontSize: 12 }} title="Salin ringkasan sebagai teks">
-          <Copy size={13} /> Salin Ringkasan
+    <Card id="rnd-weekly" className="mb-5 gap-0 p-[14px_16px]">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <button
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          style={{ display: "flex", alignItems: "center", gap: 8, background: "transparent", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
+        >
+          <ChevronDown size={16} color={C.inkMuted} style={{ transform: open ? "none" : "rotate(-90deg)", transition: "transform .15s" }} />
+          <span>
+            <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: C.ink }}>Ringkasan Mingguan</span>
+            <span style={{ display: "block", fontSize: 11.5, color: C.inkMuted }}>{fmt(monday)} – {fmt(sunday)} {sunday.getFullYear()} · seluruh project aktif</span>
+          </span>
         </button>
+        <SecondaryButton onClick={copyWeekly} style={{ padding: "6px 12px", fontSize: 12 }} title="Salin ringkasan sebagai teks">
+          <Copy size={13} /> Salin Ringkasan
+        </SecondaryButton>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10 }}>
-        {items.map((it) => (
-          <div key={it.label} style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.md, padding: "10px 12px" }}>
-            <div style={{ fontSize: 20, fontWeight: 700, color: it.color, lineHeight: 1.1 }}>{it.value}</div>
-            <div style={{ fontSize: 11.5, color: C.inkMuted, marginTop: 2 }}>{it.label}</div>
-          </div>
-        ))}
-      </div>
-    </div>
+      {open && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10, marginTop: 10 }}>
+          {items.map((it) => (
+            <div key={it.label} style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.md, padding: "10px 12px" }}>
+              <div style={{ fontSize: 20, fontWeight: 700, color: it.color, lineHeight: 1.1 }}>{it.value}</div>
+              <div style={{ fontSize: 11.5, color: C.inkMuted, marginTop: 2 }}>{it.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
   );
 }
 
@@ -1247,14 +1281,20 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
     overdueMilestones(p).forEach((m) => alerts.push({ project: p, milestone: m, kind: "overdue" }));
     upcomingMilestones(p).forEach((m) => alerts.push({ project: p, milestone: m, kind: "upcoming" }));
   });
+  const overdueCount = alerts.filter((a) => a.kind === "overdue").length;
+  const upcomingCount = alerts.filter((a) => a.kind === "upcoming").length;
 
   return (
     <div id="rnd-dashboard" style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
       <div style={{ flex: 1, minWidth: 0 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 600, letterSpacing: "normal", margin: "0 0 4px" }}>Dashboard</h1>
-          <p style={{ fontSize: 14, color: C.inkMuted, margin: 0 }}>Ringkasan progres produk baru Divisi R&D.</p>
+          <h1 className="fs-22" style={{ fontWeight: 600, letterSpacing: "normal", margin: "0 0 4px" }}>Dashboard</h1>
+          <p style={{ fontSize: 14, color: overdueCount > 0 ? C.orangeDeep : C.inkMuted, margin: 0, fontWeight: overdueCount > 0 ? 600 : 400 }}>
+            {overdueCount > 0
+              ? `${overdueCount} tahapan lewat target${upcomingCount ? ` · ${upcomingCount} target ≤ 14 hari` : ""}`
+              : "Ringkasan progres produk baru Divisi R&D."}
+          </p>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <SecondaryButton
@@ -1313,17 +1353,18 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
             })}
           </div>
         )}
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value)}
-          className={cn(inputCls, "h-8 w-auto cursor-pointer")}
-        >
-          <option value="default">Urutkan: Default</option>
-          <option value="status">Status</option>
-          <option value="target">Target Rilis</option>
-          <option value="progress">Progress</option>
-          <option value="priority">Prioritas</option>
-        </select>
+        <Select value={sort} onValueChange={(v) => setSort(v)}>
+          <SelectTrigger className={cn(inputCls, "h-8 w-auto cursor-pointer")}><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value="default">Urutkan: Default</SelectItem>
+              <SelectItem value="status">Status</SelectItem>
+              <SelectItem value="target">Target Rilis</SelectItem>
+              <SelectItem value="progress">Progress</SelectItem>
+              <SelectItem value="priority">Prioritas</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Ringkasan mingguan */}
@@ -1333,16 +1374,16 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
       <div id="rnd-summary" style={{ display: "flex", gap: 16, marginBottom: 20, flexWrap: "wrap", alignItems: "stretch" }}>
         <div style={{ flex: "1 1 360px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(118px, 1fr))", gap: 12 }}>
           {Object.entries(PROJECT_STATUS).map(([key, cfg]) => (
-            <div key={key} style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: "14px 16px", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 76 }}>
+            <Card key={key} className="flex-col justify-between gap-0 p-[14px_16px] min-h-[76px]">
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ width: 9, height: 9, borderRadius: R.full, background: cfg.fg, flexShrink: 0 }} />
                 <span style={{ fontSize: 12.5, color: C.inkMuted, fontWeight: 500 }}>{cfg.label}</span>
               </div>
-              <div style={{ fontSize: 30, fontWeight: 600, letterSpacing: "normal", lineHeight: 1.1 }}>{counts[key] || 0}</div>
-            </div>
+              <div className="fs-30" style={{ fontWeight: 600, letterSpacing: "normal", lineHeight: 1.1 }}>{counts[key] || 0}</div>
+            </Card>
           ))}
         </div>
-        <div id="rnd-donut" style={{ flex: "0 0 auto", minWidth: 220, background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: "14px 18px", display: "flex", alignItems: "center", gap: 16 }}>
+        <Card id="rnd-donut" className="flex-row items-center gap-4 p-[14px_18px]" style={{ flex: "0 0 auto", minWidth: 220 }}>
           <svg width="84" height="84" viewBox="0 0 88 88">
             <circle cx="44" cy="44" r="36" fill="none" stroke={C.hairline} strokeWidth="10" />
             <circle cx="44" cy="44" r="36" fill="none" stroke={C.primary} strokeWidth="10"
@@ -1355,8 +1396,38 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
             <div style={{ fontSize: 13, color: C.inkMuted, fontWeight: 500 }}>Progress Keseluruhan</div>
             <div style={{ fontSize: 12, color: C.inkFaint, marginTop: 2 }}>{doneItems}/{totalItems} item checklist</div>
           </div>
-        </div>
+        </Card>
       </div>
+
+      {alerts.length > 0 && (
+        <Card id="rnd-alerts" className="gap-0 overflow-visible p-[18px] mb-5" style={{ boxShadow: shadow1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+            <AlertTriangle size={16} color={C.orangeDeep} />
+            <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>Panel Peringatan</h3>
+            <span style={{ fontSize: 12, color: C.inkMuted, marginLeft: "auto" }}>{overdueCount} lewat target · {upcomingCount} target ≤ 14 hari</span>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 8 }}>
+            {alerts.map((a, i) => (
+              <div
+                key={i}
+                onClick={() => onOpen(a.project.id)}
+                style={{
+                  display: "flex", flexDirection: "column", gap: 6, cursor: "pointer",
+                  padding: "9px 11px", borderRadius: R.sm, background: a.kind === "overdue" ? "color-mix(in oklch, oklch(0.75 0.15 65) 8%, var(--card))" : "var(--muted)",
+                }}
+              >
+                <div style={{ fontSize: 13 }}>
+                  <span style={{ fontWeight: 600 }}>{a.project.name}</span>
+                  <span style={{ color: C.inkMuted }}> — {a.milestone.title}</span>
+                </div>
+                <Badge variant={a.kind === "overdue" ? "warning" : "info"}>
+                  {a.kind === "overdue" ? `Lewat target: ${a.milestone.targetDate}` : `Target: ${a.milestone.targetDate}`}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{navView === "trash" ? "Project di Trash" : navView === "archive" ? "Project Diarsipkan" : "Semua Project"}</h3>
@@ -1373,21 +1444,22 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
           const stats = projectChecklistStats(p);
           const cfg = PROJECT_STATUS[STAT_EFF[p.id]] || PROJECT_STATUS["Ideation"];
           return (
-          <div
+          <Card
             key={p.id}
             id={"rnd-project-card-" + p.id}
-            style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 18, cursor: "pointer", animation: "rnd-rise .38s ease both", animationDelay: (i * 45) + "ms" }}
+            className="cursor-pointer gap-0 p-[18px]"
+            style={{ animation: "rnd-rise .38s ease both", animationDelay: (i * 45) + "ms" }}
             onClick={() => onOpen(p.id)}
           >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                <Badge bg={cfg.bg} fg={cfg.fg}>{cfg.label}</Badge>
+                <Badge variant={cfg.variant}>{cfg.label}</Badge>
                 {p.priority && PRIORITY_META[p.priority] && (
-                  <Badge bg={PRIORITY_META[p.priority].bg} fg={PRIORITY_META[p.priority].fg}>{PRIORITY_META[p.priority].label}</Badge>
+                  <Badge variant={PRIORITY_META[p.priority].variant}>{PRIORITY_META[p.priority].label}</Badge>
                 )}
                 {p.trashedAt ? (
-                  <Badge bg="color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))" fg="oklch(0.47 0.14 65)">Trash · {daysLeft(p)} hari</Badge>
+                  <Badge variant="warning">Trash · {daysLeft(p)} hari</Badge>
                 ) : overdueMilestones(p).length > 0 && (
-                  <Badge bg="color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))" fg="oklch(0.47 0.14 65)">Lewat Target</Badge>
+                  <Badge variant="warning">Lewat Target</Badge>
                 )}
                 <div style={{ display: "flex", gap: 2 }} onClick={(e) => e.stopPropagation()}>
                   {navView === "trash" ? (
@@ -1405,7 +1477,7 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
                   )}
                 </div>
               </div>
-              <h4 style={{ fontSize: 14, fontWeight: 600, margin: "0 0 2px", letterSpacing: "normal" }}>{highlightMatch(p.name, q)}</h4>
+              <h4 className="fs-14" style={{ fontWeight: 600, margin: "0 0 2px", letterSpacing: "normal" }}>{highlightMatch(p.name, q)}</h4>
               <p style={{ fontSize: 12, color: C.inkFaint, margin: "0 0 10px" }}>{p.code} · {p.category}</p>
               <p style={{ fontSize: 13, color: C.inkSecondary, margin: "0 0 14px", lineHeight: 1.4, minHeight: 34 }}>{highlightMatch(p.description, q)}</p>
               {(p.tags || []).length > 0 && (
@@ -1424,13 +1496,13 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
               </div>
               <ProgressBar pct={stats.pct} />
               <p style={{ fontSize: 11, color: C.inkFaint, margin: "10px 0 0" }}>Target rilis: {p.targetReleaseDate || "—"}</p>
-            </div>
+            </Card>
           );
         })}
       </div>
       </div>
       <aside id="rnd-sidebar" style={{ flex: "0 0 248px", position: "sticky", top: 72, display: "flex", flexDirection: "column", gap: 16 }}>
-        <div style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 14 }}>
+        <Card className="gap-0 p-[14px]">
           <div style={{ fontSize: 11, fontWeight: 600, color: C.inkMuted, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.5px" }}>Navigasi</div>
           <nav style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             {NAV.map((n) => (
@@ -1450,38 +1522,7 @@ function Dashboard({ projects, navView, setNavView, onOpen, onNewProject, onEdit
               </button>
             ))}
           </nav>
-        </div>
-        {alerts.length > 0 && (
-          <div style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 18, boxShadow: shadow1 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-              <AlertTriangle size={16} color={C.orangeDeep} />
-              <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>Panel Peringatan</h3>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {alerts.map((a, i) => (
-                <div
-                  key={i}
-                  onClick={() => onOpen(a.project.id)}
-                  style={{
-                    display: "flex", flexDirection: "column", gap: 6, cursor: "pointer",
-                    padding: "9px 11px", borderRadius: R.sm, background: a.kind === "overdue" ? "color-mix(in oklch, oklch(0.75 0.15 65) 8%, var(--card))" : "var(--muted)",
-                  }}
-                >
-                  <div style={{ fontSize: 13 }}>
-                    <span style={{ fontWeight: 600 }}>{a.project.name}</span>
-                    <span style={{ color: C.inkMuted }}> — {a.milestone.title}</span>
-                  </div>
-                  <Badge
-                    bg={a.kind === "overdue" ? "color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))" : "color-mix(in oklch, var(--primary) 13%, var(--card))"}
-                    fg={a.kind === "overdue" ? "oklch(0.47 0.14 65)" : "oklch(0.45 0.11 250)"}
-                  >
-                    {a.kind === "overdue" ? `Lewat target: ${a.milestone.targetDate}` : `Target: ${a.milestone.targetDate}`}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        </Card>
       </aside>
     </div>
   );
@@ -1501,10 +1542,15 @@ function TemplateSelector({ onLoad }) {
     <div style={{ marginTop: 4 }}>
       <FieldLabel>Buat dari Template (opsional)</FieldLabel>
       <div style={{ display: "flex", gap: 6 }}>
-        <select className={cn(inputCls, "cursor-pointer flex-1")} value={sel} onChange={(e) => setSel(e.target.value)}>
-          <option value="">Pilih template struktur…</option>
-          {templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-        </select>
+        <Select value={sel} onValueChange={(v) => setSel(v)}>
+          <SelectTrigger className={cn(inputCls, "cursor-pointer flex-1")}><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value="">Pilih template struktur…</SelectItem>
+              {templates.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
         <Button type="button" variant="outline" onClick={apply} className="h-8">Terapkan</Button>
       </div>
     </div>
@@ -1606,16 +1652,26 @@ function ProjectModal({ initial, onClose, onSave, allTags = [] }) {
         </div>
         <div>
           <FieldLabel>Status</FieldLabel>
-          <select className={cn(inputCls, "cursor-pointer")} value={form.status} onChange={set("status")}>
-            {Object.keys(PROJECT_STATUS).map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
+          <Select value={form.status} onValueChange={set("status")}>
+            <SelectTrigger className={cn(inputCls, "cursor-pointer")}><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {Object.keys(PROJECT_STATUS).map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
           </div>
           <div>
             <FieldLabel>Prioritas</FieldLabel>
-            <select className={cn(inputCls, "cursor-pointer")} value={form.priority || ""} onChange={set("priority")}>
-              <option value="">Tidak ada</option>
-              {Object.keys(PRIORITY_META).map((p) => <option key={p} value={p}>{p} — {p === "P1" ? "Tinggi" : p === "P2" ? "Sedang" : "Rendah"}</option>)}
-            </select>
+                <Select value={form.priority || ""} onValueChange={set("priority")}>
+                  <SelectTrigger className={cn(inputCls, "cursor-pointer")}><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="">Tidak ada</SelectItem>
+                      {Object.keys(PRIORITY_META).map((p) => <SelectItem key={p} value={p}>{p} — {p === "P1" ? "Tinggi" : p === "P2" ? "Sedang" : "Rendah"}</SelectItem>)}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
 </div>
           <label style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: C.inkSecondary, cursor: "pointer" }}>
             <input type="checkbox" checked={form.autoStatus} onChange={(e) => setForm((f) => ({ ...f, autoStatus: e.target.checked }))} style={{ marginTop: 2 }} />
@@ -1767,15 +1823,13 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones, allPr
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-            <Badge bg={cfg.bg} fg={cfg.fg}>{cfg.label}</Badge>
+            <Badge variant={cfg.variant}>{cfg.label}</Badge>
             {project.autoStatus && effStatus !== project.status && (
-              <Badge bg="color-mix(in oklch, var(--primary) 13%, var(--card))" fg="oklch(0.45 0.11 250)" icon={<AlertTriangle size={11} />}>
-                Auto: {effStatus}
-              </Badge>
+              <Badge variant="info"><AlertTriangle size={11} /> Auto: {effStatus}</Badge>
             )}
             <span style={{ fontSize: 12, color: C.inkFaint }}>{project.code} · {project.category}</span>
           </div>
-          <h1 style={{ fontSize: 22, fontWeight: 600, letterSpacing: "normal", margin: "0 0 6px" }}>{project.name}</h1>
+          <h1 className="fs-22" style={{ fontWeight: 600, letterSpacing: "normal", margin: "0 0 6px" }}>{project.name}</h1>
           <div style={{ fontSize: 14, color: C.inkSecondary, margin: 0, maxWidth: 620 }} dangerouslySetInnerHTML={{ __html: renderRich(project.description) }} />
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -1792,25 +1846,25 @@ function ProjectDetail({ project, onBack, onEditProject, updateMilestones, allPr
       {tplMsg && <div style={{ fontSize: 12, color: "oklch(0.45 0.13 155)", fontWeight: 600, margin: "-10px 0 12px" }}>{tplMsg}</div>}
 
       <div id="rnd-detail-stats" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
-        <div style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 16 }}>
+        <Card className="gap-0 p-4">
           <p style={{ fontSize: 12, color: C.inkMuted, margin: "0 0 6px" }}>Progress Checklist</p>
           <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 8 }}>
-            <span style={{ fontSize: 22, fontWeight: 600 }}>{stats.pct}%</span>
+            <span className="fs-22" style={{ fontWeight: 600 }}>{stats.pct}%</span>
             <span style={{ fontSize: 12, color: C.inkFaint }}>({stats.done}/{stats.total} item)</span>
           </div>
           <ProgressBar pct={stats.pct} />
-        </div>
-        <div style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 16 }}>
+        </Card>
+        <Card className="gap-0 p-4">
           <p style={{ fontSize: 12, color: C.inkMuted, margin: "0 0 6px" }}>Tahapan Overdue</p>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             {overdue.length > 0 && <AlertTriangle size={16} color={C.orangeDeep} />}
-            <span style={{ fontSize: 22, fontWeight: 600, color: overdue.length ? "oklch(0.47 0.14 65)" : C.ink }}>{overdue.length}</span>
+            <span className="fs-22" style={{ fontWeight: 600, color: overdue.length ? "oklch(0.47 0.14 65)" : C.ink }}>{overdue.length}</span>
           </div>
-        </div>
-        <div style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 16 }}>
+        </Card>
+        <Card className="gap-0 p-4">
           <p style={{ fontSize: 12, color: C.inkMuted, margin: "0 0 6px" }}>Target Rilis</p>
-          <span style={{ fontSize: 14, fontWeight: 600 }}>{project.targetReleaseDate || "—"}</span>
-        </div>
+          <span className="fs-14" style={{ fontWeight: 600 }}>{project.targetReleaseDate || "—"}</span>
+        </Card>
       </div>
 
       {/* Tabs (shadcn) */}
@@ -1952,8 +2006,8 @@ function MilestoneNode({ node, depth, isLast, q = "", onAddChild, onEdit, onDele
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
                 <span style={{ fontSize: depth === 0 ? 15 : 14, fontWeight: 600 }}>{highlightMatch(node.title, q)}</span>
-                <Badge bg={st.bg} fg={st.fg}>{st.label}</Badge>
-                {isOverdue && <Badge bg="color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))" fg="oklch(0.47 0.14 65)" icon={<AlertTriangle size={11} />}>Overdue</Badge>}
+                <Badge variant={st.variant}>{st.label}</Badge>
+                {isOverdue && <Badge variant="warning"><AlertTriangle size={11} /> Overdue</Badge>}
               </div>
               {node.description && <div style={{ fontSize: 13, color: C.inkMuted, margin: "0 0 6px" }} dangerouslySetInnerHTML={{ __html: renderRich(node.description) }} />}
               <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 12, color: C.inkFaint, flexWrap: "wrap" }}>
@@ -1961,7 +2015,7 @@ function MilestoneNode({ node, depth, isLast, q = "", onAddChild, onEdit, onDele
                 {checklistTotal > 0 && (
                   <span style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 120 }}>
                     Checklist {checklistDone}/{checklistTotal}
-                    <span style={{ width: 60 }}><ProgressBar pct={pct} color={C.teal} /></span>
+                    <span style={{ width: 60 }}><ProgressBar pct={pct} color="oklch(0.7 0.12 190)" /></span>
                   </span>
                 )}
                 {(node.evaluations || []).length > 0 && <span>{node.evaluations.length} evaluasi</span>}
@@ -2029,7 +2083,7 @@ function MilestoneNode({ node, depth, isLast, q = "", onAddChild, onEdit, onDele
                     {node.evaluations.map((ev) => (
                       <div key={ev.id} style={{ padding: "8px 10px", borderRadius: R.sm, background: C.canvasSoft }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
-<Badge bg={ev.decision === "Go" ? "color-mix(in oklch, oklch(0.62 0.17 155) 13%, var(--card))" : "color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))"} fg={ev.decision === "Go" ? "oklch(0.45 0.13 155)" : "oklch(0.47 0.14 65)"}>{ev.decision}</Badge>
+                  <Badge variant={ev.decision === "Go" ? "success" : "warning"}>{ev.decision}</Badge>
                           <span style={{ fontSize: 12, color: C.inkMuted }}>Skor {ev.score}/5</span>
                           <span style={{ fontSize: 11, color: C.inkFaint }}>· {ev.createdAt}</span>
                         </div>
@@ -2099,9 +2153,14 @@ function MilestoneModal({ isEdit, initial, onClose, onSave }) {
         <div style={{ display: "flex", gap: 12 }}>
           <div style={{ flex: 1 }}>
             <FieldLabel>Status</FieldLabel>
-            <select className={cn(inputCls, "cursor-pointer")} value={form.status} onChange={set("status")}>
-              {Object.keys(MILESTONE_STATUS).map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <Select value={form.status} onValueChange={set("status")}>
+              <SelectTrigger className={cn(inputCls, "cursor-pointer")}><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {Object.keys(MILESTONE_STATUS).map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
           <div style={{ flex: 1 }}>
             <FieldLabel>Target Tanggal</FieldLabel>
@@ -2208,10 +2267,15 @@ function ChecklistModal({ initial, onClose, onSave, sources = [], onImport }) {
             </button>
             {showImport && (
               <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8, border: `1px solid ${C.hairline}`, borderRadius: R.md, padding: 10 }}>
-                <select className={cn(inputCls, "cursor-pointer")} value={importSrc} onChange={(e) => pickSource(e.target.value)}>
-                  <option value="">Pilih sumber…</option>
-                  {sources.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-                </select>
+                <Select value={importSrc} onValueChange={pickSource}>
+                  <SelectTrigger className={cn(inputCls, "cursor-pointer")}><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="">Pilih sumber…</SelectItem>
+                      {sources.map((s) => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
                 {importSrc && (() => {
                   const src = sources.find((s) => s.id === importSrc);
                   return src ? (
@@ -2333,7 +2397,7 @@ function ActivityPanel({ history, onLog }) {
           style={{ width: "100%", font: "inherit", fontSize: 13, resize: "vertical", background: "transparent", border: "none", outline: "none", color: C.ink }}
         />
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <button onClick={submit} className={C.btnPrimary} style={{ padding: "7px 16px", fontSize: 13 }}>Kirim Komentar</button>
+          <PrimaryButton onClick={submit} style={{ padding: "7px 16px", fontSize: 13 }}>Kirim Komentar</PrimaryButton>
         </div>
       </div>
       {history.length === 0 ? (
@@ -2348,8 +2412,7 @@ function ActivityPanel({ history, onLog }) {
                 <div style={{ fontSize: 13, color: C.ink, lineHeight: 1.45 }}>{h.text}</div>
                 <div style={{ fontSize: 11, color: C.inkFaint, marginTop: 2 }}>{relTime(h.at)}</div>
               </div>
-              <Badge bg={h.type === "komentar" ? "color-mix(in oklch, var(--primary) 13%, var(--card))" : h.type === "hapus" ? "color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))" : "var(--muted)"}
-                     fg={h.type === "komentar" ? "oklch(0.45 0.11 250)" : h.type === "hapus" ? "oklch(0.47 0.14 65)" : C.inkMuted}>
+              <Badge variant={h.type === "komentar" ? "info" : h.type === "hapus" ? "warning" : "neutral"}>
                 {h.type === "komentar" ? "Komentar" : h.type === "hapus" ? "Hapus" : "Ubah"}
               </Badge>
             </div>
@@ -2453,7 +2516,7 @@ function ReportView({ project }) {
         <div key={m.id} style={{ background: C.surface, border: `1px solid ${C.hairline}`, borderRadius: R.lg, padding: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
             <span style={{ fontWeight: 600, fontSize: 14 }}>{m.title}</span>
-            <Badge bg={(MILESTONE_STATUS[m.status] || MILESTONE_STATUS["Belum mulai"]).bg} fg={(MILESTONE_STATUS[m.status] || MILESTONE_STATUS["Belum mulai"]).fg}>{m.status}</Badge>
+            <Badge variant={(MILESTONE_STATUS[m.status] || MILESTONE_STATUS["Belum mulai"]).variant}>{m.status}</Badge>
           </div>
           {m.description && <div style={{ fontSize: 13, color: C.inkMuted, margin: "0 0 8px" }} dangerouslySetInnerHTML={{ __html: renderRich(m.description) }} />}
 
@@ -2475,7 +2538,7 @@ function ReportView({ project }) {
               <p style={{ fontSize: 12, fontWeight: 600, color: C.inkSecondary, margin: "0 0 4px" }}>Evaluasi</p>
               {m.evaluations.map((ev) => (
                 <div key={ev.id} style={{ fontSize: 12, color: C.inkMuted, marginBottom: 2 }}>
-                  <Badge bg={ev.decision === "Go" ? "color-mix(in oklch, oklch(0.62 0.17 155) 13%, var(--card))" : "color-mix(in oklch, oklch(0.75 0.15 65) 13%, var(--card))"} fg={ev.decision === "Go" ? "oklch(0.45 0.13 155)" : "oklch(0.47 0.14 65)"}>{ev.decision}</Badge>
+<Badge variant={ev.decision === "Go" ? "success" : "warning"}>{ev.decision}</Badge>
                   {" "}Skor {ev.score}/5 — <span dangerouslySetInnerHTML={{ __html: renderRich(ev.comments) }} /> <span style={{ color: C.inkFaint }}>({ev.createdAt})</span>
                 </div>
               ))}
