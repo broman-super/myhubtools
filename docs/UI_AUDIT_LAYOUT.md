@@ -1,6 +1,6 @@
 # Audit UI & Layout Suite REYNAHUB / UNITOOLS
 
-**Tanggal:** 2026-10-08 · **Cakupan:** 15 file HTML + CSS bersama · **Acuan:** `docs/DESIGN.md` (Desain Sistem REYNAHUB_SYS) + skill `bro-ui`
+**Tanggal:** 2026-10-08 · **Cakupan:** 15 file HTML + CSS bersama · **Acuan:** `docs/guidebook/design.md` (Desain Sistem REYNAHUB_SYS) + skill `bro-ui`
 
 ---
 
@@ -14,7 +14,7 @@ Hub `index.html` adalah **satu-satunya bagian yang patuh** terhadap `design-syst
 
 ## 2. Metodologi
 
-1. `context.mjs` (Impeccable) membaca `docs/DESIGN.md`.
+1. `context.mjs` (Impeccable) membaca `docs/guidebook/design.md`.
 2. Matriks per-file dihasilkan dengan membedah `<style>`/skeleton tiap HTML (token block, hex hardcode di CSS/JS, dark mode, print, grid, radius).
 3. Setiap temuan dibandingkan dengan **tabel token kanonik** di bab 3 dan **spec layout** di bab 4.
 
@@ -120,7 +120,7 @@ Merah `#ff0000` hanya di outbond/Faktur/latch/Analytic-`--primary`. Sisanya: cri
 ### Fase A — Fondasi token (tanpa mengubah tampilan)
 1. Perluas `design-system.css` dengan blok **alias tool** yang sudah lengkap (`--bg/--surface/--surface2/--text/--muted/--primary(+glow/light/soft)/--danger/--success/--warning/--border/--radius-* /--shadow-* /--space-* /--focus-ring`).
 2. Buat `src/styles/tool-tokens.css` — snippet yang di-link setiap tool (atau di-inject via iframe hub) agar `:root` tool = alias baku + overrides domain masing-masing.
-3. Catat pemetaan di `docs/DESIGN.md` (tabel bab 3 di atas).
+3. Catat pemetaan di `docs/guidebook/design.md` (tabel bab 3 di atas).
 
 ### Fase B — Perbaikan cepat per-tool (bertarget, risiko rendah)
 | Tool | Tindakan |

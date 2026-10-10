@@ -206,6 +206,12 @@ npm run build   # output: dist/index.html (satu file, siap dideploy)
 
 ---
 
+## Dokumentasi
+
+- **[`docs/guidebook/`](docs/guidebook/README.md)** — panduan membuat tool baru + sistem desain (untuk developer & AI).
+
+---
+
 ## Lisensi
 
 Internal use — REYNAHUB_SYS.

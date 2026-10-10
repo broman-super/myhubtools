@@ -12,7 +12,7 @@
 2. [Sistem Desain (Token & Komponen)](#part-ii-sistem-desain)
 3. [Konstitusi Webtool — Aturan Wajib](#part-iii-konstitusi-webtool)
 4. [Template + Snippet Siap Pakai](#part-iv-template--snippet)
-5. [Cara Bergabung ke Hub](#part-v-cara-bergabung)
+5. [Menambahkan Tool Baru & Cara Bergabung](#part-v-menambahkan-tool-baru)
 6. [Checklist Kelulusan](#part-vi-checklist-kelulusan)
 
 ---
@@ -166,6 +166,16 @@ Pola layout baku (kedua mode):
 ```
 
 > Catatan: tombol "Kembali ke Hub" cukup ada di mode standalone. Saat embedded, `../index.html` tidak berarti — sembunyikan bersama `.topbar`.
+
+**Hybrid (tool dengan aksi esensial di header):** tools seperti dashboard/analytic punya baris aksi yang wajib dipakai di dalam tool (filter tanggal, import, cetak/export, tab). Untuk tool ini tidak semua chrome disembunyikan:
+
+- Sembunyikan **hanya brand/warna lokal** (mis. `<h1>`, logo, tagline) saat embedded — bukan seluruh header.
+- **Baris aksi tetap tampil** supaya tool berfungsi penuh di dalam hub; navigasi global tetap milik hub.
+- Contoh (Sales Analytic) di `Productive/analytic/Analytic.html`:
+  ```css
+  .is-embedded .nav-bar h1 { display: none !important; }
+  ```
+- Aturan tetap: header/`nav-bar` semantik satu sumber; kontrol aksi di header tool dikelompokkan (`nav-group`) dengan pemisah antar-konteks (navigasi | preferensi | mutasi data | periode), dan saat `@media` sempit pemisahnya dilepas agar wrap tetap rapi.
 
 ### Aturan 2 — Tema Selalu Ikut Hub (Dual-Mode Bridge)
 
@@ -332,7 +342,7 @@ Tambah satu entri ke array `ToolCard.configs`:
 ```
 
 - `hash` menentukan rute + grup sidebar (bagian sebelum `/`).
-- Router hub memetakan hash → path file di `src/router.js` — ikuti pola entri di sana.
+- Router hub memetakan hash → path file di `src/core/router.js` — ikuti pola entri di sana.
 - Badge `BARU` di kartu: tambahkan blok `if (config.hash === '...') newBadge` di `createCard` (contoh: Faktur).
 
 ### 4.4 Catatan Framework
@@ -343,13 +353,48 @@ Tambah satu entri ke array `ToolCard.configs`:
 
 ---
 
-## Part V — Cara Bergabung
+## Part V — Menambahkan Tool Baru
 
-1. **Debug standalone** — buka langsung `file://`/localhost: tool tampil penuh, topbar sendiri, dark/light sync.
-2. **Debug embedded** — buka lewat hub; pastikan: (a) topbar tool hilang, (b) tema mengikuti hub saat toggle, (c) tidak ada error konsol `Cross origin` / postMessage, (d) isi tool muat dalam frame.
-3. **Daftar** di `tool-card.js` (+ router bila rute baru).
-4. **Periksa** checklist Part VI; validasi dark + light via screenshot.
-5. **Dokumentasikan** pola unik tool di DESIGN.md bila ada komponen/token baru.
+### Peta repo — bagian apa yang disentuh
+
+| Bagian | File | Peran |
+|---|---|---|
+| Shell | `index.html` + `src/app.js` | Halaman hub, sidebar grup, bridge tema (`postMessage`), render kartu |
+| Rute | `src/core/router.js` | `getToolPath()`: hash → path file tool |
+| Kartu | `src/components/tool-card.js` | `ToolCard.configs[]`: `group, hash, title, desc, search` |
+| Gaya bersama | `src/styles/{design-system,components,tools}.css` | Token, komponen, font |
+| Offline | `src/sw.js` | `/Productive/` = network-first → tool baru di bawah situ **otomatis keurus, tidak perlu daftar/bump** |
+| Backend | `gas/*.gs` | Di-deploy ke GAS; URL `.../exec` ditempel di tool |
+| Tool | `Productive/<nama-kebab>/` | Folder sendiri, HTML self-contained (CSS+JS inline) |
+
+**Sidebar tidak perlu disentuh** — tombol nav hanya memfilter grup (`group` di config tool-card).
+
+### Langkah
+
+1. **Buat folder** `Productive/<nama-kebab>/` — kebab-case seragam (`pdf-merger`, `retur-track`, dst.) — plus file HTML utama (`Index.html` atau `<nama-tool>.html`).
+2. **Kerangka HTML** — salin template 4.1 (anti-flash, token `:root` light+dark, `.topbar` + `.is-embedded .topbar{display:none}`) dan bridge tema 4.2.
+3. **Daftar kartu** — satu entri di `ToolCard.configs` (`src/components/tool-card.js`, contoh 4.3).
+4. **Daftar rute** — satu baris di `src/core/router.js`:
+   ```js
+   '#group/nama-tool': 'Productive/<nama-kebab>/<file>.html',
+   ```
+   Prefix hash: `#productive/…` · `#utilities/…` · `#doc/…` · `#external/…` — hash harus unik.
+5. **Dokumentasi** — baris baru di peta folder `README.md` root + seksi "Modul Tools"; buat `README.md` dalam folder tool (pola yang sudah ada: File · Backend · Status · Keterkaitan · Aturan anti-bug · Flow).
+6. **Uji** — langkah 1–5 di bawah, lalu checklist Part VI.
+
+Badge `BARU` di kartu: tambahkan blok `if (config.hash === '…') newBadge` di `createCard` (lihat entri Faktur di `tool-card.js`).
+
+### Backend GAS (bila tool butuh tulis data)
+
+- Kode di `gas/<nama>.gs` (terpusat, bukan di folder tool) → deploy sebagai Web App → tempel URL `.../exec` ke konstanta di tool.
+- Tulis data selalu `POST` body `text/plain;charset=utf-8` (kontrak GAS lama — hindari CORS preflight; jangan diganti).
+
+### Uji sebelum submit
+
+1. **Debug standalone** — buka langsung `file://`/localhost: tool tampil penuh, topbar sendiri, dark/light simpan ke localStorage.
+2. **Debug embedded** — buka lewat hub; pastikan: (a) topbar tool hilang, (b) tema mengikuti hub saat toggle, (c) tidak ada error konsol `Cross origin`/postMessage, (d) isi tool muat dalam frame.
+3. **Periksa** checklist Part VI; validasi dark + light.
+4. **Dokumentasikan** pola unik tool (komponen/token baru) di bagian ini bila perlu.
 
 ## Part VI — Checklist Kelulusan
 

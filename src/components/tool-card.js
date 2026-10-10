@@ -13,7 +13,7 @@ var ToolCard = {
       group: 'productive',
       hash: '#productive/analytic',
       title: 'Analytic Dashboard',
-      desc: 'SAS Bento Edition. Grafik interaktif analisis penjualan dan visualisasi performa data.',
+      desc: 'Dashboard analisis penjualan & biaya: grafik interaktif, target, impor Excel, laporan cetak/PDF.',
       search: 'analytic dashboard sales analytic simplify sas visualisasi data'
     },
     {

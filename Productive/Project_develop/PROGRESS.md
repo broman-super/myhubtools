@@ -7,7 +7,7 @@
 - Tugas anti-dobel-kirim + spinner (FASE 1–8) selesai di sesi sebelumnya. Jangan diutak-atik.
 
 ## Keputusan desain (penting)
-- User **sengaja tidak** mengikuti Design System REYNAHUB (merah, `docs/DESIGN.md`) untuk tool ini. Brief: **persis preset shadcn mist**. Aksen biru, bukan merah.
+- User **sengaja tidak** mengikuti Design System REYNAHUB (merah, `docs/guidebook/design.md`) untuk tool ini. Brief: **persis preset shadcn mist**. Aksen biru, bukan merah.
 - Semua #fff di elemen aktif → `var(--primary-foreground)`. Semua pastel hardcode status → tint `color-mix(in oklch, <warna> 13%, var(--card))`.
 
 ## Stack
