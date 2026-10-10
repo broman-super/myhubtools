@@ -1,0 +1,228 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-10T09:20:00Z",
+  "title": "Design System: Resi Generator — Supersub",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "SuperSub Red",
+        "canonical": "#ff0000",
+        "tonalRamp": ["#3d0000", "#660000", "#8f0000", "#b80000", "#e60000", "#ff0000", "#ff3333", "#ff6666"]
+      },
+      "primary-dark": {
+        "role": "primary",
+        "displayName": "SuperSub Red (dark)",
+        "canonical": "#ff3b3b",
+        "tonalRamp": ["#3d0e0e", "#661414", "#8f1a1a", "#b82121", "#d92f2f", "#ff3b3b", "#ff5c5c", "#ff8585"]
+      },
+      "on-primary": {
+        "role": "neutral",
+        "displayName": "Paper White",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#f8fafc", "#f1f5f9", "#e2e8f0", "#cbd5e1", "#94a3b8", "#64748b", "#334155", "#0f172a"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Card White",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#f8fafc", "#f1f5f9", "#e2e8f0", "#cbd5e1", "#94a3b8", "#64748b", "#334155", "#0f172a"]
+      },
+      "surface-alt": {
+        "role": "neutral",
+        "displayName": "Cool Field",
+        "canonical": "#f8fafc",
+        "tonalRamp": ["#f8fafc", "#f1f5f9", "#e2e8f0", "#cbd5e1", "#94a3b8", "#64748b", "#334155", "#0f172a"]
+      },
+      "surface-sunken": {
+        "role": "neutral",
+        "displayName": "Sunken Slate",
+        "canonical": "#f1f5f9",
+        "tonalRamp": ["#f8fafc", "#f1f5f9", "#e2e8f0", "#cbd5e1", "#94a3b8", "#64748b", "#334155", "#0f172a"]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "rgba(15,23,42,0.06)",
+        "tonalRamp": ["#f8fafc", "#f1f5f9", "#e2e8f0", "#cbd5e1", "#94a3b8", "#64748b", "#334155", "#0f172a"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Deep Ink",
+        "canonical": "#0f172a",
+        "tonalRamp": ["#f8fafc", "#f1f5f9", "#e2e8f0", "#cbd5e1", "#94a3b8", "#64748b", "#334155", "#0f172a"]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Ink Muted",
+        "canonical": "#64748b",
+        "tonalRamp": ["#f8fafc", "#f1f5f9", "#e2e8f0", "#cbd5e1", "#94a3b8", "#64748b", "#334155", "#0f172a"]
+      },
+      "success": {
+        "role": "secondary",
+        "displayName": "Signal Green",
+        "canonical": "#22c55e",
+        "tonalRamp": ["#0a2e17", "#14532d", "#166534", "#15803d", "#16a34a", "#22c55e", "#4ade80", "#86efac"]
+      },
+      "danger": {
+        "role": "secondary",
+        "displayName": "Alert Red",
+        "canonical": "#ef4444",
+        "tonalRamp": ["#3d0a0a", "#661414", "#8f1d1d", "#b82121", "#dc2626", "#ef4444", "#f87171", "#fca5a5"]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Print Paper",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#ffffff", "#f5f5f5", "#ebebeb", "#d4d4d4", "#a3a3a3", "#525252", "#262626", "#000000"]
+      },
+      "paper-ink": {
+        "role": "neutral",
+        "displayName": "Print Ink",
+        "canonical": "#000000",
+        "tonalRamp": ["#ffffff", "#f5f5f5", "#ebebeb", "#d4d4d4", "#a3a3a3", "#525252", "#262626", "#000000"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display (Geomini)",
+        "purpose": "Topbar wordmark and the printed label's service name."
+      },
+      "body": {
+        "displayName": "Body (Plus Jakarta Sans)",
+        "purpose": "All UI text, inputs, addresses. 16px floor prevents iOS focus zoom."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Field labels, card section titles, captions at 12px/600."
+      }
+    },
+    "shadows": [
+      { "name": "sm", "value": "0 4px 6px -1px rgba(0,0,0,0.02)", "purpose": "Resting controls — courier buttons, pills, secondary buttons, preview frame." },
+      { "name": "md", "value": "0 12px 24px -10px rgba(0,0,0,0.06)", "purpose": "Lifted containers — cards, preview pane, suggestions dropdown, toast." },
+      { "name": "lg", "value": "0 20px 40px rgba(0,0,0,0.15)", "purpose": "Sticky action card and lightbox." },
+      { "name": "press", "value": "inset 0 1px 3px rgba(0,0,0,0.10)", "purpose": "Active/pressed tactile feedback on buttons and inputs. Never at rest." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Default 0.15–0.2s easing for color, border, and shadow state transitions." },
+      { "name": "ease-emphasized", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Entrance animations (0.42–0.55s): topbar slide-down, card fade-up, preview slide-in." },
+      { "name": "hover-lift", "value": "translateY(-2px)", "purpose": "The only permitted hover transform; pairs with a one-step shadow raise." },
+      { "name": "spin", "value": "rotate(360deg) 0.6s linear infinite", "purpose": "Button spinner during print-popup preparation." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "480px" },
+      { "name": "md", "value": "680px" },
+      { "name": "lg", "value": "900px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single forward action (Preview & Print). Red fill, white text, lifts one shadow step on hover.",
+      "html": "<button class=\"ds-btn-primary\">Preview &amp; Print</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:10px 18px;border:none;border-radius:9px;font-family:var(--font-sans),sans-serif;font-size:13.5px;font-weight:600;background:#ff0000;color:#ffffff;box-shadow:0 12px 24px -10px rgba(0,0,0,0.06);cursor:pointer;white-space:nowrap;transition:background .15s ease,transform .08s ease}.ds-btn-primary:hover{background:color-mix(in srgb,#ff0000,#000 14%);transform:translateY(-2px);box-shadow:0 20px 40px rgba(0,0,0,0.15)}.ds-btn-primary:active{background:color-mix(in srgb,#ff0000,#000 18%);box-shadow:inset 0 1px 3px rgba(0,0,0,0.10)}.ds-btn-primary:focus-visible{outline:2px solid #ff0000;outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Non-destructive support actions (Export CSV, Export PDF, Simpan Template, Batal). Outline that turns red on hover.",
+      "html": "<button class=\"ds-btn-secondary\">Export CSV</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:10px 18px;border:1.5px solid rgba(15,23,42,0.06);border-radius:9px;font-family:var(--font-sans),sans-serif;font-size:13.5px;font-weight:600;background:#ffffff;color:#0f172a;box-shadow:0 4px 6px -1px rgba(0,0,0,0.02);cursor:pointer;white-space:nowrap;transition:all .2s cubic-bezier(.4,0,.2,1)}.ds-btn-secondary:hover{border-color:#ff0000;color:#ff0000;transform:translateY(-2px);box-shadow:0 12px 24px -10px rgba(0,0,0,0.06)}.ds-btn-secondary:active{box-shadow:inset 0 1px 3px rgba(0,0,0,0.10)}.ds-btn-secondary:focus-visible{outline:2px solid #ff0000;outline-offset:2px}"
+    },
+    {
+      "name": "Courier Chip",
+      "kind": "chip",
+      "refersTo": "input-text",
+      "description": "Courier selector. Greyscale logo on white; active state is a red border plus a press inset, and it carries aria-pressed.",
+      "html": "<button class=\"ds-eksp-btn\" aria-pressed=\"true\"><img src=\"Logo/exp_jne.png\" alt=\"JNE\" style=\"width:32px;height:32px;object-fit:contain\"><span class=\"ds-eksp-label\">JNE</span></button>",
+      "css": ".ds-eksp-btn{cursor:pointer;border:1.5px solid rgba(15,23,42,0.06);border-radius:9px;padding:7px 3px 5px;text-align:center;background:#ffffff;box-shadow:0 4px 6px -1px rgba(0,0,0,0.02);font-family:var(--font-sans),sans-serif;transition:all .2s cubic-bezier(.4,0,.2,1)}.ds-eksp-label{display:block;font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.4px}.ds-eksp-btn img{filter:grayscale(100%) brightness(.4) contrast(1.1);margin:0 auto 4px}.ds-eksp-btn:hover{transform:translateY(-2px);box-shadow:0 12px 24px -10px rgba(0,0,0,0.06)}.ds-eksp-btn:hover .ds-eksp-label{color:#ff0000}.ds-eksp-btn[aria-pressed=true]{border-color:#ff0000;box-shadow:inset 0 1px 3px rgba(0,0,0,0.10)}.ds-eksp-btn[aria-pressed=true] img{filter:grayscale(100%) brightness(.25) contrast(1.15)}.ds-eksp-btn:focus-visible{outline:2px solid #ff0000;outline-offset:2px}"
+    },
+    {
+      "name": "Service Pill",
+      "kind": "chip",
+      "refersTo": "button-secondary",
+      "description": "Service-level selector. Full-round; active state is a red fill with white text and aria-pressed.",
+      "html": "<button class=\"ds-pill\" aria-pressed=\"true\">Reguler</button>",
+      "css": ".ds-pill{cursor:pointer;padding:8px 16px;min-height:44px;border:1.5px solid rgba(15,23,42,0.06);border-radius:9999px;font-family:var(--font-sans),sans-serif;font-size:13px;font-weight:600;color:#64748b;background:#ffffff;box-shadow:0 4px 6px -1px rgba(0,0,0,0.02);display:inline-flex;align-items:center;transition:all .2s cubic-bezier(.4,0,.2,1)}.ds-pill:hover{border-color:#ff0000;color:#ff0000;transform:translateY(-2px);box-shadow:0 12px 24px -10px rgba(0,0,0,0.06)}.ds-pill[aria-pressed=true]{background:#ff0000;color:#ffffff;border-color:#ff0000}.ds-pill:focus-visible{outline:2px solid #ff0000;outline-offset:2px}"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input-text",
+      "description": "Every form field. 16px always, to stop iOS focus zoom. Focus is a red border plus a 20% accent ring and a press inset.",
+      "html": "<label class=\"ds-label\" for=\"ds-nama\">Nama Penerima *</label><input class=\"ds-input\" id=\"ds-nama\" type=\"text\" required aria-required=\"true\" placeholder=\"Nama lengkap\">",
+      "css": ".ds-label{display:block;font-size:12.5px;font-weight:600;color:#64748b;margin-bottom:5px;letter-spacing:.2px}.ds-input{width:100%;padding:11px 12px;border:1.5px solid rgba(15,23,42,0.06);border-radius:8px;font-family:var(--font-sans),sans-serif;font-size:16px;color:#0f172a;background:#ffffff;transition:all .2s cubic-bezier(.4,0,.2,1)}.ds-input::placeholder{color:#64748b}.ds-input:focus{border-color:#ff0000;box-shadow:inset 0 1px 3px rgba(0,0,0,0.10),0 0 0 3px color-mix(in srgb,#ff0000 20%,transparent);outline:none}"
+    },
+    {
+      "name": "Locked Field",
+      "kind": "input",
+      "refersTo": "input-text",
+      "description": "Read-only sender data. Sunken background, muted text, lock icon, and an explicit badge saying the field is fixed.",
+      "html": "<div class=\"ds-locked-badge\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\"/><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"/></svg>Data tetap</div><div class=\"ds-locked\">SUPERUB INDONESIA</div>",
+      "css": ".ds-locked-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:7px;background:#f1f5f9;border:1px solid rgba(15,23,42,0.06);font-size:11px;font-weight:600;color:#64748b;margin-bottom:12px}.ds-locked{width:100%;padding:11px 12px;border:1.5px solid rgba(15,23,42,0.06);border-radius:8px;font-size:13.5px;color:#64748b;background:#f1f5f9;cursor:not-allowed;user-select:none;display:flex;align-items:center;gap:8px;line-height:1.4;overflow-wrap:break-word}"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "input-text",
+      "description": "The form's section container. White surface, hairline border, 12px corner, md shadow, uppercase section title.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\">Pengirim</div></div>",
+      "css": ".ds-card{background:#ffffff;border:1.5px solid rgba(15,23,42,0.06);border-radius:12px;padding:20px 22px;box-shadow:0 12px 24px -10px rgba(0,0,0,0.06)}.ds-card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#64748b;margin-bottom:16px;padding-bottom:11px;border-bottom:1px solid rgba(15,23,42,0.06);display:flex;align-items:center;gap:7px}"
+    },
+    {
+      "name": "Toast",
+      "kind": "custom",
+      "refersTo": "button-secondary",
+      "description": "The tool's only status announcer, with role=status and aria-live=polite. Success is green, error is red, info is the accent tint.",
+      "html": "<div class=\"ds-toast ds-toast-success\" role=\"status\" aria-live=\"polite\">Resi berhasil dibuat.</div>",
+      "css": ".ds-toast{position:fixed;bottom:22px;right:22px;left:22px;padding:12px 16px;border-radius:9px;font-family:var(--font-sans),sans-serif;font-size:13.5px;font-weight:600;box-shadow:0 12px 24px -10px rgba(0,0,0,0.06);z-index:999;display:flex;align-items:center;gap:8px;max-width:400px;margin:0 auto}.ds-toast-success{background:rgba(34,197,94,0.10);color:#0f172a;border:1.5px solid #22c55e}.ds-toast-error{background:rgba(239,68,68,0.10);color:#0f172a;border:1.5px solid #ef4444}.ds-toast-info{background:rgba(255,0,0,0.10);color:#ff0000;border:1.5px solid rgba(15,23,42,0.06)}"
+    },
+    {
+      "name": "Preview Frame",
+      "kind": "custom",
+      "refersTo": "input-text",
+      "description": "Live iframe of the real 100x150mm label, scaled by transform to fit its column. The printed document is the source of truth.",
+      "html": "<iframe class=\"ds-preview\" title=\"Preview lembar resi\" style=\"width:378px;min-height:420px;border:none;border-radius:8px\"></iframe>",
+      "css": ".ds-preview{background:#ffffff;border:none;border-radius:8px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.02);flex-shrink:0;transform-origin:top center}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Logistics Desk",
+    "overview": "Resi Generator is a print-production tool, not a dashboard. It exists for one job: fill a form, see a 100×150mm label, print it. Everything else is subordinate to that path. The tool is deliberately sober and operational — Indonesian, plain, fast to scan — because the person using it is usually packing boxes with one hand.\n\nThe tool is self-contained by design: it is a single index.html plus data files, shipped inside the REYNAHUB hub. It does not load the hub's design-system.css, so it carries its own :root copy of the hub tokens rather than linking it. That is a deliberate architectural choice (offline / file:// capable), not drift. The values must stay identical to the hub so a single theme change propagates everywhere.",
+    "keyCharacteristics": [
+      "One shell, one fixed topbar; the form is the app",
+      "Preview is the artefact, always visible beside the form on desktop, placed below it on mobile",
+      "Print output is a separate paper world (#fff / #000) — never themed by the UI palette",
+      "Every color, radius, shadow, and shadow comes from :root; no raw hex outside it",
+      "Touch targets are 44px minimum; hover states are gated behind @media (hover: hover)"
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "Red marks selection, primary action, and focus — nothing else. If a red pixel is not telling the user \"this is chosen, this is the way forward,\" it is wrong.", "section": "colors" },
+      { "name": "The Paper Rule", "body": "The label document is always #ffffff on #000, in both themes. It is a print surface, not a UI surface; it never inherits the UI palette.", "section": "colors" },
+      { "name": "The Copy-Not-Link Rule", "body": "This tool deliberately re-declares hub token values in its own :root instead of linking design-system.css. Every value must match the hub. Divergence is a bug, not a local preference.", "section": "colors" },
+      { "name": "The 16px Input Rule", "body": "Every text input, select, and textarea is 16px, always. It prevents iOS focus zoom and keeps the form usable one-handed. Never shrink inputs for density.", "section": "typography" },
+      { "name": "The Print Is Arial Rule", "body": "The popup print document uses Arial. It is a separate document with no access to the app's fonts, and Arial renders identically on every print driver. This is intentional, not a missing font.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Nothing carries a shadow at rest except the three scale roles. Hover lifts by one step, never two. transform: translateY(-2px) on hover is the only motion shadow.", "section": "elevation" },
+      { "name": "The Pill Exception", "body": "Only .pill (service selector) and .toast's container geometry use full-round. Everything else is cornered. If it isn't a chip, it gets a real corner.", "section": "shapes" }
+    ],
+    "dos": [
+      "Do keep :root values identical to src/styles/design-system.css. The copy exists for offline/file:// operation, not for independence.",
+      "Do write every color, radius, and shadow through a token. The exception is the print document, which is a separate paper world.",
+      "Do keep every text input at 16px to prevent iOS focus zoom.",
+      "Do gate hover affordances behind @media (hover: hover) and give touch devices pointer: coarse equivalents.",
+      "Do inset the topbar and main column by env(safe-area-inset-*) for notched phones.",
+      "Do treat the preview iframe as the single source of truth for the label — build it once, print what it shows."
+    ],
+    "donts": [
+      "Don't load a second web font beyond Plus Jakarta Sans and Geomini, and don't make the stylesheet render-blocking — tools.css is 855KB of inlined base64 and is loaded media=\"print\" with onload promotion.",
+      "Don't reintroduce neumorphism. The hard --neo-* double-shadow language was removed in the hub-convergence pass; shadows are the three-step scale only.",
+      "Don't theme the print document. It stays #fff/#000 with Arial in both light and dark.",
+      "Don't use color alone for the active courier — it gets a red border plus an inset, and it must carry aria-pressed.",
+      "Don't shrink the courier chip label below 10px, or any interactive target below 44px.",
+      "Don't add outline: none to a focusable element without an equivalent visible focus treatment."
+    ]
+  }
+}

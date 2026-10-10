@@ -2,7 +2,8 @@
 
 Generator label & resi cetak (A6) berbasis web: pilih eksedisi, logo perusahaan, produk, lalu **cetak via popup `window.print()`** — tidak butuh backend.
 
-- **File:** `Productive/resi-generator/Index.html` (≈1089) + `expedisi.js`, `logo.js`, `products.json`, folder `Logo/*.png`
+- **File:** `Productive/resi-generator/index.html` (1218 baris) + `expedisi.js`, `logo.js`, `products.json`, folder `Logo/*.png`
+- **Design spec:** `DESIGN.md` + `.impeccable/design.json` (palette, type ramp, radius scale, komponen)
 - **Backend:** ⛔ Tidak ada (pure client-side, cetak via popup)
 - **Status:** ✅ Stable — client-side
 
@@ -36,9 +37,16 @@ Generator label & resi cetak (A6) berbasis web: pilih eksedisi, logo perusahaan,
 - `logo.js` adalah **satu baris base64** — sangat panjang, jangan dibuka/minify kecuali tahu bahwa editingnya rawan.
 
 ### 2.3 Hub & Shell
-- Router: `#utilities/resi` → `Productive/resi-generator/Index.html`.
-- CSS: `../../src/styles/tools.css` + `:root` tema lokal. **Tema merah/indigo** tidak bentrok, override lokal.
+- Router: **`#external/resi`** → `Productive/resi-generator/index.html` (didefinisikan di `src/core/router.js`).
+- CSS: `../../src/styles/tools.css` + `:root` tema lokal (memuat token; lihat §2.3.1).
 - Tema dark/light: `toggleTheme()` inline + `postMessage` tipe `SET_THEME` dari hub.
+
+#### 2.3.1 Token: copy, bukan link (WAJIB SINKRON)
+Tool ini **tidak** memuat `design-system.css` supaya bisa jalan dari `file://` / offline. Jadi `:root` di `index.html` **menyalin nilai token hub** — `--bg`, `--surface`, `--text`, `--muted`, `--accent`, `--border`, `--success`, `--danger`, `--radius`, `--shadow-*` — bukan membuat tema sendiri.
+
+**Aturan:** setiap nilai `:root` harus sama dengan `src/styles/design-system.css`. Kalau ubah token di hub, ubah juga di `index.html`. Divergensi = bug, bukan preferensi lokal.
+
+Palet sekarang: aksen **merah hub (`#ff0000` light / `#ff3b3b` dark)**, shadow tiga tingkat (`sm`/`md`/`lg`) + `--press` untuk inset `:active`. Neumorphic `--neo-*` sudah dihapus pada pass konvergensi hub — jangan dipasang kembali.
 
 ### 2.4 Storage
 - `localStorage 'resiFormState'` — menyimpan form pakai `try { localStorage.setItem(...) }` (cross-origin guard).
