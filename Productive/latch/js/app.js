@@ -160,7 +160,17 @@ const utils = (() => {
     if (btn.dataset.orig) btn.innerHTML = btn.dataset.orig;
   }
 
-  return { debounce, esc, copy, relTime, hostname, favIcon, uid, csvParse, csvBuild, downloadFile, lockBtn, unlockBtn };
+  // Pesan error ramah (Indonesia) untuk user; detail mentah tetap ke console.
+  function friendlyErr(context, e) {
+    if (e) console.error(context, e);
+    const msg = String((e && e.message) || "");
+    if (/failed to fetch|networkerror|load failed|timeout|timed out|fetch/i.test(msg)) {
+      return context + " — koneksi bermasalah. Periksa jaringan lalu coba lagi.";
+    }
+    return context + ". Coba lagi sebentar lagi.";
+  }
+
+  return { debounce, esc, copy, relTime, hostname, favIcon, uid, csvParse, csvBuild, downloadFile, lockBtn, unlockBtn, friendlyErr };
 })();
 
 /* ---------------------------------------------------------------------- *
@@ -181,7 +191,8 @@ const state = (() => {
     adminPin: "",
     dashActiveCategory: null,
     selectedIds: new Set(),
-    dirtyRows: new Set()
+    dirtyRows: new Set(),
+    offline: false
   };
   function get(key) { return data[key]; }
   function set(key, value) { data[key] = value; }
@@ -269,24 +280,42 @@ const db = (() => {
 
   async function getData() {
     if (useRemote && !skipRemote()) {
-      const [links, categories, configRows] = await Promise.all([
-        sb("latch_links?select=*&order=sort_order.asc"),
-        sb("latch_categories?select=*&order=sort_order.asc"),
-        sb("latch_config?select=*")
-      ]).catch(e => { throw e; });
-      const config = {};
-      (configRows || []).forEach(r => { config[r.key] = r.value; });
-      // Supabase returns snake_case columns; normalize for the app.
-      const normLinks = (links || []).map(l => ({
-        id: l.id, title: l.title, url: l.url, category: l.category_id,
-        badge: l.badge || "", description: l.description || "",
-        clickCount: l.click_count || 0, order: l.sort_order || 0,
-        createdAt: l.created_at || ""
-      }));
-      const normCats = (categories || []).map(c => ({
-        id: c.id, name: c.name, icon: c.icon || "folder", order: c.sort_order || 0
-      }));
-      return { links: normLinks, categories: normCats, config };
+      try {
+        const [links, categories, configRows] = await Promise.all([
+          sb("latch_links?select=*&order=sort_order.asc"),
+          sb("latch_categories?select=*&order=sort_order.asc"),
+          sb("latch_config?select=*")
+        ]);
+        const config = {};
+        (configRows || []).forEach(r => { config[r.key] = r.value; });
+        // Supabase returns snake_case columns; normalize for the app.
+        const normLinks = (links || []).map(l => ({
+          id: l.id, title: l.title, url: l.url, category: l.category_id,
+          badge: l.badge || "", description: l.description || "",
+          clickCount: l.click_count || 0, order: l.sort_order || 0,
+          createdAt: l.created_at || ""
+        }));
+        const normCats = (categories || []).map(c => ({
+          id: c.id, name: c.name, icon: c.icon || "folder", order: c.sort_order || 0
+        }));
+        // Simpan cache supaya saat offline user tetap melihat data terakhir.
+        storage.set("cache_links", normLinks);
+        storage.set("cache_categories", normCats);
+        storage.set("cache_config", config);
+        return { links: normLinks, categories: normCats, config, offline: false };
+      } catch (e) {
+        const cached = storage.get("cache_links", null);
+        if (cached) {
+          console.error("getData: Supabase gagal, pakai cache lokal", e);
+          return {
+            links: cached,
+            categories: storage.get("cache_categories", []),
+            config: storage.get("cache_config", {}),
+            offline: true
+          };
+        }
+        throw e;
+      }
     }
     storage.seedDemoData();
     return {
@@ -444,7 +473,7 @@ const db = (() => {
       let createdCats = [];
       const linksRows = [];
       rows.forEach((r, i) => {
-        const [title, url, categoryName, badge] = r;
+        const [title, url, categoryName, badge, description] = r;
         if (!title || !url) return;
         let catId = null;
         if (categoryName) {
@@ -458,7 +487,7 @@ const db = (() => {
         }
         linksRows.push({
           id: utils.uid(), title, url, category_id: catId,
-          badge: (badge || "").toLowerCase(), description: "",
+          badge: (badge || "").toLowerCase(), description: description || "",
           click_count: 0, sort_order: i
         });
       });
@@ -474,7 +503,7 @@ const db = (() => {
     const cats = storage.get("categories", []);
     let order = links.length;
     rows.forEach(r => {
-      const [title, url, categoryName, badge] = r;
+      const [title, url, categoryName, badge, description] = r;
       if (!title || !url) return;
       let cat = cats.find(c => c.name.toLowerCase() === (categoryName || "").toLowerCase());
       if (!cat && categoryName) {
@@ -485,7 +514,7 @@ const db = (() => {
         id: utils.uid(), title, url,
         category: cat ? cat.id : "",
         badge: (badge || "").toLowerCase(),
-        description: "",
+        description: description || "",
         createdAt: new Date().toISOString(),
         order: order++
       });
@@ -595,7 +624,7 @@ const components = (() => {
     wrap.innerHTML = "";
     const el = document.createElement("div");
     el.className = `toast ${variant}`;
-    el.innerHTML = `<span>${utils.esc(message)}</span>`;
+    el.innerHTML = `<span class="toast-dot" aria-hidden="true"></span><span>${utils.esc(message)}</span>`;
     if (undo) {
       const btn = document.createElement("button");
       btn.className = "toast-undo";
@@ -612,7 +641,17 @@ const components = (() => {
     if (wrap) wrap.classList.remove("show");
   }
 
+  let lastFocused = null;
+  function captureFocus() { lastFocused = document.activeElement; }
+  function restoreFocus() {
+    if (lastFocused && typeof lastFocused.focus === "function") {
+      try { lastFocused.focus(); } catch (e) {}
+    }
+    lastFocused = null;
+  }
+
   function openModal(id) {
+    captureFocus();
     closeAllModals();
     const modal = document.getElementById(id);
     if (!modal) return;
@@ -624,6 +663,7 @@ const components = (() => {
   function closeModal(id) {
     const modal = document.getElementById(id);
     if (modal) modal.classList.remove("open");
+    restoreFocus();
   }
   function closeAllModals() {
     document.querySelectorAll(".modal.open").forEach(m => m.classList.remove("open"));
@@ -640,20 +680,37 @@ const components = (() => {
   }
 
   function openDrawer(id) {
+    captureFocus();
     document.getElementById("overlayBg").classList.add("show");
-    document.getElementById(id).classList.add("open");
+    const el = document.getElementById(id);
+    el.classList.add("open");
+    const input = el.querySelector("input, textarea, select");
+    if (input) setTimeout(() => input.focus(), 60);
+    trapFocus(el);
   }
   function closeDrawer(id) {
     document.getElementById("overlayBg").classList.remove("show");
     document.getElementById(id).classList.remove("open");
+    restoreFocus();
   }
   function openSheet(id) {
+    captureFocus();
     document.getElementById("overlayBg").classList.add("show");
-    document.getElementById(id).classList.add("open");
+    const el = document.getElementById(id);
+    el.classList.add("open");
+    trapFocus(el);
   }
   function closeSheet(id) {
     document.getElementById("overlayBg").classList.remove("show");
     document.getElementById(id).classList.remove("open");
+    restoreFocus();
+  }
+  // Tutup panel terbuka (drawer/bottom-sheet) dari overlay / tombol Esc.
+  function closePanels() {
+    document.querySelectorAll(".drawer.open, .bottom-sheet.open").forEach(el => el.classList.remove("open"));
+    const ov = document.getElementById("overlayBg");
+    if (ov) ov.classList.remove("show");
+    restoreFocus();
   }
 
   function renderSkeletonGrid(container, count = 6) {
@@ -679,7 +736,7 @@ const components = (() => {
 
   return {
     toast, hideToast, openModal, closeModal, closeAllModals,
-    openDrawer, closeDrawer, openSheet, closeSheet,
+    openDrawer, closeDrawer, openSheet, closeSheet, closePanels,
     renderSkeletonGrid, hideLoadingOverlay
   };
 })();
@@ -691,7 +748,12 @@ const view = (() => {
   let clockTimer = null;
   let observer = null;
 
-  function badgeClass(badge) { return badge ? `badge-${badge}` : ""; }
+  const BADGE_LABELS = { hot: "Penting", daily: "Harian", core: "Inti", archive: "Arsip" };
+
+  function badgePill(badge) {
+    if (!badge || !BADGE_LABELS[badge]) return "";
+    return `<span class="badge-pill"><i class="badge-dot badge-${badge}" aria-hidden="true"></i>${BADGE_LABELS[badge]}</span>`;
+  }
 
   function iconUrl(url) { return utils.favIcon(url); }
 
@@ -740,9 +802,10 @@ const view = (() => {
     const mode = state.get("sortMode");
     const icon = mode === "popular" ? "trending-up" : "clock";
     const label = mode === "popular" ? "Populer" : "Terbaru";
+    const nextLabel = mode === "popular" ? "Terbaru" : "Populer";
     wrap.innerHTML = `
       <span class="sort-status"><i data-feather="${icon}"></i><span>${label}</span></span>
-      <button class="sort-btn" data-sort="${mode === "popular" ? "latest" : "popular"}" title="Ubah urutan">
+      <button class="sort-btn" data-sort="${mode === "popular" ? "latest" : "popular"}" title="Urutkan berdasarkan ${nextLabel}" aria-label="Urutkan berdasarkan ${nextLabel}">
         <i data-feather="${mode === "popular" ? "clock" : "trending-up"}"></i>
       </button>`;
     if (typeof feather !== "undefined") feather.replace();
@@ -765,27 +828,31 @@ const view = (() => {
       const { query, activeCategory, links } = state._data;
       let title = "Tidak ada link ditemukan";
       let sub = "Coba ubah kata kunci pencarian";
-      if (!links.length) { title = "Belum ada link"; sub = "Tambahkan link pertama lewat mode admin"; }
+      let cta = "";
+      if (!links.length) { title = "Belum ada link"; sub = "Tambahkan link pertama lewat mode admin"; cta = `<button class="btn btn-primary pressable empty-cta" id="emptyAdminBtn"><i data-feather="plus"></i> Masuk mode admin</button>`; }
       else if (activeCategory !== "all" && !query) { title = "Kategori ini masih kosong"; sub = "Belum ada link di kategori ini"; }
       grid.innerHTML = `
         <div class="empty-state">
           <div class="empty-icon inset"><i data-feather="search"></i></div>
           <div class="empty-title">${utils.esc(title)}</div>
           <div class="empty-sub">${utils.esc(sub)}</div>
+          ${cta}
         </div>`;
       if (typeof feather !== "undefined") feather.replace();
+      document.getElementById("emptyAdminBtn")?.addEventListener("click", () => document.getElementById("btnAdminSwitch")?.click());
       return;
     }
 
     grid.innerHTML = visible.map((l, i) => `
-      <div class="link-card raised ${badgeClass(l.badge)}" data-url="${utils.esc(l.url)}" style="animation-delay:${(i % 12) * 50}ms">
+      <div class="link-card raised" data-url="${utils.esc(l.url)}" style="animation-delay:${(i % 12) * 50}ms">
         <div class="link-icon"><img src="${iconUrl(l.url)}" alt="" loading="lazy" onerror="this.style.display='none'"></div>
         <a class="link-body" href="${utils.esc(l.url)}" target="_blank" rel="noopener noreferrer" data-click="${utils.esc(l.id)}">
           <div class="link-title">${utils.esc(l.title)}</div>
           ${l.description ? `<div class="link-desc">${utils.esc(l.description)}</div>` : ""}
-          <div class="link-meta">${utils.relTime(l.createdAt)}${(l.clickCount || 0) > 0 ? ` · <span class="link-clicks"><i data-feather="mouse-pointer" style="width:10px;height:10px"></i> ${l.clickCount}</span>` : ""}</div>
+          <div class="link-meta">${utils.esc(utils.hostname(l.url))} · ${utils.relTime(l.createdAt)}${(l.clickCount || 0) > 0 ? ` · <span class="link-clicks"><i data-feather="mouse-pointer" style="width:10px;height:10px"></i> ${l.clickCount}</span>` : ""}</div>
+          ${badgePill(l.badge)}
         </a>
-        <button class="copy-btn pressable" data-copy="${utils.esc(l.url)}" title="Salin link"><i data-feather="copy"></i></button>
+        <button class="copy-btn pressable" data-copy="${utils.esc(l.url)}" title="Salin link" aria-label="Salin link"><i data-feather="copy"></i></button>
       </div>`).join("");
 
     if (typeof feather !== "undefined") feather.replace();
@@ -842,6 +909,8 @@ const view = (() => {
   function renderAnnouncement() {
     const el = document.getElementById("announceText");
     if (el) el.textContent = state.get("config").announcement || "Selamat datang di LATCH.";
+    const countEl = document.getElementById("atmCount");
+    if (countEl) countEl.textContent = state.get("links").length;
   }
 
   function bindSearch() {
@@ -925,14 +994,15 @@ const dashboard = (() => {
 
   function categoryOptionsHtml(selected) {
     const cats = state.get("categories").slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    return cats.map(c => `<option value="${utils.esc(c.id)}" ${c.id === selected ? "selected" : ""}>${utils.esc(c.name)}</option>`).join("");
+    const none = `<option value="" ${!selected ? "selected" : ""}>Tanpa kategori</option>`;
+    return none + cats.map(c => `<option value="${utils.esc(c.id)}" ${c.id === selected ? "selected" : ""}>${utils.esc(c.name)}</option>`).join("");
   }
 
   function rowHtml(link) {
     const selected = state.get("selectedIds").has(link.id);
     return `
       <div class="dash-row raised" data-id="${utils.esc(link.id)}" draggable="true">
-        <div class="dash-grip"><span class="drag-handle" title="Seret untuk urutkan"><i data-feather="more-vertical"></i></span><input type="checkbox" class="checkbox row-check" ${selected ? "checked" : ""}></div>
+        <div class="dash-grip"><span class="drag-handle" title="Seret untuk urutkan"><i data-feather="more-vertical"></i></span><input type="checkbox" class="checkbox row-check" aria-label="Pilih link" ${selected ? "checked" : ""}></div>
         <div><label>Judul</label><input type="text" class="row-title" value="${utils.esc(link.title)}"></div>
         <div><label>URL</label><input type="text" class="row-url" value="${utils.esc(link.url)}"></div>
         <div>
@@ -941,11 +1011,11 @@ const dashboard = (() => {
         </div>
         <div><label>Waktu</label><span style="font-size:12px;color:var(--text-tertiary)">${utils.relTime(link.createdAt)}</span></div>
         <div class="row-actions">
-          <span class="save-hint"><button class="row-save" title="Simpan"><i data-feather="save"></i></button></span>
-          <button class="row-move row-up mobile-only" title="Naik"><i data-feather="chevron-up"></i></button>
-          <button class="row-move row-down mobile-only" title="Turun"><i data-feather="chevron-down"></i></button>
-          <button class="row-copy" title="Salin"><i data-feather="copy"></i></button>
-          <button class="row-delete" title="Hapus"><i data-feather="trash-2"></i></button>
+          <span class="save-hint"><button class="row-save" title="Simpan" aria-label="Simpan perubahan"><i data-feather="save"></i></button></span>
+          <button class="row-move row-up mobile-only" title="Naik" aria-label="Naikkan urutan"><i data-feather="chevron-up"></i></button>
+          <button class="row-move row-down mobile-only" title="Turun" aria-label="Turunkan urutan"><i data-feather="chevron-down"></i></button>
+          <button class="row-copy" title="Salin" aria-label="Salin URL"><i data-feather="copy"></i></button>
+          <button class="row-delete" title="Hapus" aria-label="Hapus link"><i data-feather="trash-2"></i></button>
         </div>
       </div>`;
   }
@@ -1006,7 +1076,7 @@ const dashboard = (() => {
           components.toast("Perubahan disimpan", { variant: "success" });
           renderNav();
         } catch (e) {
-          components.toast("Gagal menyimpan: " + e.message, { variant: "error" });
+          components.toast(utils.friendlyErr("Gagal menyimpan perubahan", e), { variant: "error" });
         }
       });
 
@@ -1073,40 +1143,82 @@ const dashboard = (() => {
     if (btn) btn.classList.toggle("hidden", count === 0);
   }
 
-  let pendingDeleteId = null;
-  let pendingDeleteBulk = false;
+  let pendingDelete = null; // { type:"link"|"bulk"|"category", id, name, snapshot }
   function confirmDelete(id) {
-    pendingDeleteId = id; pendingDeleteBulk = false;
-    document.getElementById("deleteModalText").textContent = "Link ini akan dihapus permanen.";
+    const link = state.get("links").find(l => l.id === id);
+    pendingDelete = { type: "link", id, name: link ? link.title : "link ini", snapshot: link ? { ...link } : null };
+    document.getElementById("deleteModalText").textContent = link
+      ? `"${link.title}" akan dihapus permanen.`
+      : "Link ini akan dihapus permanen.";
     components.openModal("deleteModal");
   }
   function confirmBulkDelete() {
-    pendingDeleteBulk = true;
+    pendingDelete = { type: "bulk" };
     document.getElementById("deleteModalText").textContent = `${state.get("selectedIds").size} link akan dihapus permanen.`;
+    components.openModal("deleteModal");
+  }
+  function confirmDeleteCategory(id) {
+    const cat = state.get("categories").find(c => c.id === id);
+    const used = state.get("links").filter(l => l.category === id).length;
+    pendingDelete = { type: "category", id, name: cat ? cat.name : "kategori ini", snapshot: cat ? { ...cat } : null };
+    document.getElementById("deleteModalText").textContent = used
+      ? `Kategori "${cat ? cat.name : ""}" dihapus. ${used} link tidak ikut terhapus, hanya kehilangan kategori.`
+      : `Kategori "${cat ? cat.name : ""}" akan dihapus permanen.`;
     components.openModal("deleteModal");
   }
 
   async function performDelete() {
+    if (!pendingDelete) return;
+    const job = pendingDelete;
     const btn = document.getElementById("deleteConfirm");
     utils.lockBtn(btn, "Menghapus…");
     try {
-      if (pendingDeleteBulk) {
+      if (job.type === "bulk") {
         const ids = Array.from(state.get("selectedIds"));
         await db.deleteLinks(ids, state.get("adminPin"));
         state.set("links", state.get("links").filter(l => !ids.includes(l.id)));
         state.get("selectedIds").clear();
         updateBulkBar();
-      } else if (pendingDeleteId) {
-        await db.deleteLink(pendingDeleteId, state.get("adminPin"));
-        state.set("links", state.get("links").filter(l => l.id !== pendingDeleteId));
+        components.toast(`${ids.length} link dihapus`, { variant: "success" });
+      } else if (job.type === "category") {
+        await db.deleteCategory(job.id, state.get("adminPin"));
+        state.set("categories", state.get("categories").filter(c => c.id !== job.id));
+        components.toast(`Kategori "${job.name}" dihapus`, {
+          variant: "success",
+          undo: job.snapshot ? async () => {
+            try {
+              const back = await db.addCategory(job.snapshot.name, job.snapshot.icon, state.get("adminPin"));
+              state.set("categories", [...state.get("categories"), back]);
+              renderCategoryModal(); renderMain(); renderNav();
+              components.toast("Kategori dipulihkan", { variant: "success" });
+            } catch (e) { components.toast(utils.friendlyErr("Gagal memulihkan kategori", e), { variant: "error" }); }
+          } : null
+        });
+      } else if (job.type === "link") {
+        await db.deleteLink(job.id, state.get("adminPin"));
+        state.set("links", state.get("links").filter(l => l.id !== job.id));
+        components.toast(`"${job.name}" dihapus`, {
+          variant: "success",
+          undo: job.snapshot ? async () => {
+            try {
+              const back = await db.addLink({
+                title: job.snapshot.title, url: job.snapshot.url, category: job.snapshot.category,
+                badge: job.snapshot.badge, description: job.snapshot.description
+              }, state.get("adminPin"));
+              state.set("links", [...state.get("links"), back]);
+              renderMain(); renderNav();
+              components.toast("Link dipulihkan", { variant: "success" });
+            } catch (e) { components.toast(utils.friendlyErr("Gagal memulihkan link", e), { variant: "error" }); }
+          } : null
+        });
       }
-      components.toast("Berhasil dihapus", { variant: "success" });
       components.closeModal("deleteModal");
       renderMain(); renderNav();
     } catch (e) {
-      components.toast("Gagal menghapus: " + e.message, { variant: "error" });
+      components.toast(utils.friendlyErr("Gagal menghapus", e), { variant: "error" });
     } finally {
       utils.unlockBtn(btn);
+      pendingDelete = null;
     }
   }
 
@@ -1157,7 +1269,7 @@ const dashboard = (() => {
       components.closeDrawer("linkDrawer");
       renderMain(); renderNav();
     } catch (e) {
-      components.toast("Gagal menyimpan: " + e.message, { variant: "error" });
+      components.toast(utils.friendlyErr("Gagal menyimpan link", e), { variant: "error" });
     } finally {
       utils.unlockBtn(document.getElementById("drawerSave"));
     }
@@ -1170,7 +1282,7 @@ const dashboard = (() => {
     const container = document.getElementById("iconPicker");
     if (!container) return;
     container.innerHTML = ICONS.map(icon =>
-      `<button class="icon-picker-item${icon === selectedIcon ? " selected" : ""}" data-icon="${icon}" title="${icon}"><i data-feather="${icon}"></i></button>`
+      `<button class="icon-picker-item${icon === selectedIcon ? " selected" : ""}" data-icon="${icon}" title="${icon}" aria-label="Ikon ${icon}"><i data-feather="${icon}"></i></button>`
     ).join("");
     if (typeof feather !== "undefined") feather.replace();
     container.querySelectorAll(".icon-picker-item").forEach(btn => {
@@ -1198,27 +1310,13 @@ const dashboard = (() => {
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:10px;background:var(--bg-base)">
         <span style="font-size:13px"><i data-feather="${c.icon || "folder"}" style="width:13px;height:13px;margin-right:6px;vertical-align:-2px"></i>${utils.esc(c.name)}</span>
         <div style="display:flex;gap:6px">
-          <button class="btn-icon-sm" data-edit-cat="${utils.esc(c.id)}" title="Edit"><i data-feather="edit-3" style="width:13px;height:13px"></i></button>
-          <button class="btn-danger" data-del-cat="${utils.esc(c.id)}" style="font-size:11px">Hapus</button>
+          <button class="btn-icon-sm" data-edit-cat="${utils.esc(c.id)}" title="Edit" aria-label="Edit kategori"><i data-feather="edit-3" style="width:13px;height:13px"></i></button>
+          <button class="btn-danger" data-del-cat="${utils.esc(c.id)}" aria-label="Hapus kategori ${utils.esc(c.name)}" style="font-size:11px">Hapus</button>
         </div>
       </div>`).join("") || `<div style="font-size:12px;color:var(--text-tertiary);text-align:center;padding:12px">Belum ada kategori</div>`;
     if (typeof feather !== "undefined") feather.replace();
     list.querySelectorAll("[data-del-cat]").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const id = btn.dataset.delCat;
-        const inUse = state.get("links").some(l => l.category === id);
-        if (inUse && !confirm("Kategori ini masih dipakai oleh beberapa link. Hapus tetap?")) return;
-        utils.lockBtn(btn, "Menghapus…");
-        try {
-          await db.deleteCategory(id, state.get("adminPin"));
-          state.set("categories", state.get("categories").filter(c => c.id !== id));
-          renderCategoryModal(); renderMain(); renderNav();
-        } catch (e) {
-          components.toast("Gagal menghapus kategori: " + e.message, { variant: "error" });
-        } finally {
-          utils.unlockBtn(btn);
-        }
-      });
+      btn.addEventListener("click", () => confirmDeleteCategory(btn.dataset.delCat));
     });
     list.querySelectorAll("[data-edit-cat]").forEach(btn => {
       btn.addEventListener("click", () => editCategory(btn.dataset.editCat));
@@ -1273,7 +1371,7 @@ const dashboard = (() => {
       delete document.getElementById("addCategoryBtn").dataset.orig;
       renderCategoryModal(); renderNav();
     } catch (e) {
-      components.toast("Gagal menyimpan kategori: " + e.message, { variant: "error" });
+      components.toast(utils.friendlyErr("Gagal menyimpan kategori", e), { variant: "error" });
     } finally {
       utils.unlockBtn(document.getElementById("addCategoryBtn"));
     }
@@ -1316,7 +1414,7 @@ const dashboard = (() => {
       components.toast(`${importRows.length} link diimport`, { variant: "success" });
       importRows = [];
     } catch (e) {
-      document.getElementById("importError").textContent = "Gagal import: " + e.message;
+      document.getElementById("importError").textContent = utils.friendlyErr("Import gagal", e);
     } finally {
       utils.unlockBtn(btn);
     }
@@ -1333,7 +1431,7 @@ const dashboard = (() => {
     openDrawerForAdd, openDrawerForEdit, saveDrawer,
     renderCategoryModal, saveCategory, cancelEditCategory, renderIconPicker,
     exportCsv, handleCsvFile, confirmImport,
-    confirmBulkDelete, performDelete
+    confirmBulkDelete, performDelete, confirmDeleteCategory
   };
 })();
 
@@ -1376,11 +1474,13 @@ const app = (() => {
       else components.openModal("loginModal");
     });
     document.getElementById("themeToggle")?.addEventListener("click", theme.toggle);
+    document.getElementById("btnHelp")?.addEventListener("click", () => components.openModal("helpModal"));
   }
 
   function bindAdminEvents() {
     document.getElementById("btnPublicSwitch")?.addEventListener("click", () => switchMode("public"));
     document.getElementById("themeToggleDash")?.addEventListener("click", theme.toggle);
+    document.getElementById("btnHelp")?.addEventListener("click", () => components.openModal("helpModal"));
     document.getElementById("btnLogout")?.addEventListener("click", () => {
       state.set("isAdmin", false);
       state.set("adminPin", "");
@@ -1405,12 +1505,12 @@ const app = (() => {
   function bindGlobalModalEvents() {
     if (globalModalEventsBound) return;
     globalModalEventsBound = true;
-    document.getElementById("overlayBg")?.addEventListener("click", () => {
-      document.querySelectorAll(".drawer.open, .bottom-sheet.open").forEach(el => el.classList.remove("open"));
-      document.getElementById("overlayBg").classList.remove("show");
-    });
+    document.getElementById("overlayBg")?.addEventListener("click", () => components.closePanels());
     document.querySelectorAll(".modal .modal-backdrop").forEach(bg => {
-      bg.addEventListener("click", () => bg.closest(".modal").classList.remove("open"));
+      bg.addEventListener("click", () => {
+        const m = bg.closest(".modal");
+        if (m) components.closeModal(m.id);
+      });
     });
 
     document.getElementById("drawerClose")?.addEventListener("click", () => components.closeDrawer("linkDrawer"));
@@ -1467,7 +1567,7 @@ const app = (() => {
       switchMode("admin");
       components.toast("Berhasil masuk sebagai admin", { variant: "success" });
     } catch (e) {
-      errEl.textContent = "Gagal login: " + e.message;
+      errEl.textContent = utils.friendlyErr("Login gagal", e);
     } finally {
       utils.unlockBtn(btn);
     }
@@ -1509,7 +1609,7 @@ const app = (() => {
         document.getElementById("searchInput")?.focus();
         return;
       }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "l") {
+      if (e.altKey && e.key.toLowerCase() === "l") {
         e.preventDefault();
         const first = document.querySelector(".link-card .link-body");
         if (first) window.open(first.getAttribute("href"), "_blank", "noopener");
@@ -1517,10 +1617,8 @@ const app = (() => {
       }
       if (e.key === "Escape") {
         if (document.querySelector(".modal.open")) components.closeAllModals();
-        else if (document.querySelector(".drawer.open, .bottom-sheet.open")) {
-          document.querySelectorAll(".drawer.open, .bottom-sheet.open").forEach(el => el.classList.remove("open"));
-          document.getElementById("overlayBg")?.classList.remove("show");
-        } else if (state.get("mode") === "public" && state.get("query")) {
+        else if (document.querySelector(".drawer.open, .bottom-sheet.open")) components.closePanels();
+        else if (state.get("mode") === "public" && state.get("query")) {
           const input = document.getElementById("searchInput");
           if (input) { input.value = ""; state.set("query", ""); state.set("visibleCount", CONFIG.BATCH_SIZE); view.renderGrid(); }
         }
@@ -1532,9 +1630,14 @@ const app = (() => {
     });
   }
 
+  function setOfflineBanner(on) {
+    const b = document.getElementById("offlineBanner");
+    if (b) b.classList.toggle("hidden", !on);
+  }
+
   async function loadData() {
     const timeoutId = setTimeout(() => {
-      components.toast("Gagal memuat data (timeout)", { variant: "error" });
+      components.toast("Koneksi lambat — masih memuat…", { variant: "info" });
     }, CONFIG.LOAD_TIMEOUT_MS);
     try {
       const data = await db.getData();
@@ -1542,10 +1645,13 @@ const app = (() => {
       state.set("links", data.links || []);
       state.set("categories", data.categories || []);
       state.set("config", data.config || {});
+      state.set("offline", !!data.offline);
+      setOfflineBanner(!!data.offline);
       return true;
     } catch (e) {
       clearTimeout(timeoutId);
-      components.toast("Gagal memuat data: " + e.message, { variant: "error" });
+      setOfflineBanner(false);
+      components.toast(utils.friendlyErr("Gagal memuat data", e), { variant: "error" });
       return false;
     }
   }
