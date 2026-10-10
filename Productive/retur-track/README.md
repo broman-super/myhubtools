@@ -42,6 +42,11 @@ Semua akses data lewat REST `https://iyraamxkrygtzsqkvnqz.supabase.co/rest/v1/` 
 - Memuat CSS bersama hub `../../src/styles/tools.css`.
 - Supabase: project `iyraamxkrygtzsqkvnqz`, tabel `retur_tracking` & `retur_expeditions` (lih. `retur_schema.sql`).
 
+#### 2.4.1 Token: copy, bukan link (WAJIB SINKRON)
+`tools.css` **hanya berisi `@font-face` — nol token**. Karena tool ini standalone (bisa dari `file://`), `:root` di `retur-track.html` **menyalin nilai token hub** seperti `faktur-penjualan/Index.html`.
+
+**Aturan:** setiap nilai `:root` harus sama dengan `src/styles/design-system.css`. Ubah token di hub → ubah juga di sini. Divergensi = bug, bukan preferensi lokal.
+
 ---
 
 ## 3. Catatan Perubahan & Aturan Anti-Bug

@@ -47,5 +47,8 @@ tmp/
 temp/
 *.tmp
 
+# AI design-tooling session artifacts (critique snapshots, dsb.)
+/.impeccable/
+
 # Vite
 vite.config.js.timestamp-*.mjs

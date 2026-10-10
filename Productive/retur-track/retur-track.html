@@ -9,9 +9,12 @@
   <style>
     body {
       margin: 0;
-      font-family: 'Plus Jakarta Sans';
+      font-family: var(--font-sans, 'Plus Jakarta Sans'), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       color: var(--text); background: var(--bg);
-      height: 100vh; overflow: hidden; display: flex;
+      /* 100dvh, bukan 100vh: address-bar mobile tidak memotong panel saat hide/show */
+      height: 100dvh; min-height: 100vh; overflow: hidden; display: flex;
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
       -webkit-font-smoothing: antialiased;
     }
 
@@ -50,10 +53,11 @@
     }
 
     .search-box::placeholder { color: var(--text-muted); }
-    .search-box:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(218,0,55,0.08); }
+    .search-box:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-ring); }
 
     /* ---- INPUT ---- */
     .input-group { margin-bottom: 14px; }
+    .input-group .field-label { margin-bottom: 8px; }
 
     #inputResi {
       width: 100%; padding: 16px 20px; font-size: 20px; font-weight: 600;
@@ -64,7 +68,7 @@
     }
 
     #inputResi::placeholder { color: var(--text-muted); font-weight: 400; font-size: 14px; letter-spacing: 2px; }
-    #inputResi:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(218,0,55,0.08); }
+    #inputResi:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-ring); }
 
     .operator-group { display: flex; gap: 12px; margin-bottom: 12px; padding: 6px 0; }
     .op-label { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; cursor: pointer; }
@@ -93,7 +97,13 @@
     }
 
     tbody tr:last-child td { border-bottom: none; }
-    tbody tr:hover { background: var(--surface); }
+    tbody tr:hover { background: var(--surface2); }
+
+    /* Keyboard focus harus terlihat — tool ini keyboard-first (scanner). */
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
 
     .table-empty {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -120,7 +130,7 @@
     }
 
     select:hover { border-color: var(--text-muted); }
-    select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(218,0,55,0.08); }
+    select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-ring); }
 
     /* ---- MANUAL EXPEDITION INPUT ---- */
     .manual-exp-input {
@@ -130,11 +140,11 @@
       transition: border-color 0.15s, box-shadow 0.15s;
     }
     .manual-exp-input::placeholder { color: var(--text-muted); font-weight: 400; }
-    .manual-exp-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(218,0,55,0.08); }
+    .manual-exp-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-ring); }
 
     .exp-cell { display: flex; flex-direction: column; gap: 2px; }
     .exp-cell select { width: 100%; box-sizing: border-box; }
-    .exp-cell .manual-hint { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .exp-cell .manual-hint { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
 
     /* ---- COPY BUTTON ---- */
     .btn-copy {
@@ -145,8 +155,8 @@
     }
 
     .btn-copy svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .btn-copy:hover { color: var(--accent); background: rgba(218,0,55,0.06); }
-    .btn-copy.copied { color: #16a34a; }
+    .btn-copy:hover { color: var(--accent); background: var(--accent-soft); }
+    .btn-copy.copied { color: var(--success); }
 
     /* ---- BUTTON DELETE ---- */
     .btn-del {
@@ -157,7 +167,7 @@
       transition: 0.15s;
     }
 
-    .btn-del:hover { color: var(--accent); background: rgba(218,0,55,0.05); border-color: rgba(218,0,55,0.1); }
+    .btn-del:hover { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-soft); }
 
     /* ---- ACTION BAR ---- */
     .action-bar {
@@ -246,7 +256,7 @@
       cursor: pointer; transition: 0.15s; user-select: none;
     }
 
-    .history-header:hover { background: var(--surface); }
+    .history-header:hover { background: var(--surface2); }
 
     .history-header.open {
       border-radius: 8px 8px 0 0;
@@ -302,7 +312,7 @@
     }
 
     .history-item:last-child { border-bottom: none; }
-    .history-item:hover { background: var(--surface); }
+    .history-item:hover { background: var(--surface2); }
 
     .item-resi {
       font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
@@ -330,16 +340,16 @@
     }
 
     .btn-status {
-      width: 28px; height: 28px; border-radius: 6px;
+      width: 44px; height: 44px; border-radius: 8px;
       border: 1px solid var(--border); background: var(--surface);
-      cursor: pointer; font-size: 11px; font-weight: 700;
+      cursor: pointer; font-size: 12px; font-weight: 700;
       display: inline-flex; align-items: center; justify-content: center;
-      transition: 0.15s;
+      transition: 0.15s; flex-shrink: 0;
     }
 
     .btn-done { color: var(--text-muted); }
-    .btn-done:hover { color: #16a34a; background: #f0fdf4; border-color: #16a34a; }
-    .btn-done.active { color: #fff; background: #16a34a; border-color: #16a34a; }
+    .btn-done:hover { color: var(--success); background: var(--success-soft); border-color: var(--success); }
+    .btn-done.active { color: #fff; background: var(--success); border-color: var(--success); }
 
     .btn-err { color: var(--text-muted); }
     .btn-err:hover { color: var(--accent); background: #fff5f5; border-color: var(--accent); }
@@ -358,11 +368,78 @@
     @keyframes btn-spin { to { transform: rotate(360deg); } }
     @media (prefers-reduced-motion: reduce) { .btn-busy .btn-spin { animation: none; } }
 
-    /* Status visual */
-    .history-item.status-valid { opacity: 0.45; }
-    .history-item.status-valid .item-resi { text-decoration: line-through; }
-    .history-item.status-error { opacity: 0.45; }
+    /* Status visual — pakai tint + teks redup, JANGAN opacity < .6:
+       data selesai tetap harus terbaca (kontras AA) oleh operator. */
+    .history-item.status-valid .item-resi { text-decoration: line-through; color: var(--text-muted); }
     .history-item.status-error .item-resi { text-decoration: line-through; color: var(--accent); }
+    .history-item.status-valid .item-eksp { color: var(--text-muted); }
+
+    /* ---- SCAN FEEDBACK (Operate: tetap terlihat dari jauh) ---- */
+    @keyframes scan-flash {
+      0%   { background: var(--accent-soft); }
+      100% { background: transparent; }
+    }
+    tbody tr.scan-ok  { animation: scan-flash .45s ease-out; }
+    tbody tr.scan-dup { animation: scan-flash .45s ease-out; }
+    tbody tr.scan-unk { animation: scan-flash .45s ease-out; }
+
+    /* Toast ringkas — pengganti alert() untuk konfirmasi scan */
+    .toast-scan {
+      position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%);
+      z-index: 200; padding: 10px 16px; border-radius: var(--radius-md);
+      background: var(--surface); color: var(--text);
+      border: 1.5px solid var(--border); box-shadow: var(--shadow-md);
+      font-size: 14px; font-weight: 600; white-space: nowrap;
+      opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease;
+    }
+    .toast-scan.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+    .toast-scan.t-ok   { border-color: var(--success); color: var(--success); }
+    .toast-scan.t-dup  { border-color: var(--accent); color: var(--accent); }
+    .toast-scan.t-unk  { border-color: var(--border); }
+
+    /* Banner sukses submit — bertahan sampai scan berikutnya */
+    .submit-banner {
+      display: none; align-items: center; gap: 10px;
+      margin: 0 0 12px; padding: 10px 14px; border-radius: var(--radius-sm);
+      background: var(--success-soft); border: 1.5px solid var(--success);
+      color: var(--success); font-size: 13px; font-weight: 600;
+    }
+    .submit-banner.show { display: flex; }
+    .submit-banner svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* Konfirmasi kirim — pengganti confirm() native. Tombolnya MENAMAikan
+       aksinya ("Kirim N Paket" / "Batal"), bukan OK/Cancel. */
+    .confirm-bar {
+      display: none; align-items: center; gap: 10px; flex-wrap: wrap;
+      margin: 0 0 12px; padding: 12px 14px; border-radius: var(--radius-sm);
+      background: var(--surface); border: 1.5px solid var(--accent);
+      font-size: 13px; font-weight: 600; color: var(--text);
+    }
+    .confirm-bar.show { display: flex; }
+    .confirm-bar .confirm-text { flex: 1; min-width: 200px; }
+    .confirm-bar button {
+      min-height: 44px; padding: 8px 16px; border-radius: var(--radius-sm);
+      font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+      border: 1.5px solid var(--border); background: var(--surface); color: var(--text);
+    }
+    .confirm-bar button.btn-confirm { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .confirm-bar button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* Label persisten untuk kotak pencari (placeholder = contoh, bukan label) */
+    .field-label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: var(--text-muted); margin: 0 0 6px;
+    }
+
+    /* Indikator koneksi supabase */
+    .conn-state {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 600; color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+    .conn-state.online .conn-dot { background: var(--success); }
+    .conn-state.offline .conn-dot { background: var(--accent); }
 
     /* ---- RESPONSIVE ---- */
     @media (max-width: 1024px) {
@@ -393,6 +470,16 @@
       .table-wrap, .table-scroll, .history-list { overflow: visible; flex-grow: 0; }
       body { flex-direction: column; overflow: auto; }
       .table-wrap { min-height: 160px; }
+      /* Submit + banner menempel di bawah: dengan 30+ baris, CTA utama
+         tidak boleh menghilang di balik scroll. Hormati safe-area. */
+      .submit-banner, .action-bar {
+        position: sticky; left: 0; right: 0; z-index: 25;
+        background: var(--surface); margin: 0 -16px 12px; padding: 12px 16px;
+        border-top: 1px solid var(--border);
+      }
+      .action-bar { bottom: 0; margin: 16px -16px 0; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+      .action-bar button.primary { flex: 1; min-height: 48px; }
+      .toast-scan { bottom: max(96px, calc(env(safe-area-inset-bottom) + 96px)); }
     }
 
     @media (max-width: 768px) {
@@ -408,7 +495,7 @@
       color: var(--text, #0f172a);
       padding: 8px 14px;
       border-radius: 8px;
-      font-family: 'Plus Jakarta Sans';
+      font-family: var(--font-sans, 'Plus Jakarta Sans'), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-weight: 600;
       font-size: 13px;
       display: inline-flex;
@@ -424,23 +511,48 @@
     }
     .theme-toggle svg { width: 16px; height: 16px; }
 
+    /* ── Design tokens — mapping kitab bro-ui / design-system hub.
+       tools.css hanya berisi @font-face (tanpa token), jadi tool standalone
+       menyalin nilai token hub di sini seperti faktur-penjualan. WAJIB sinkron
+       dengan src/styles/design-system.css — divergensi = bug, bukan preferensi lokal. ── */
     :root {
-        --bg: #EDEDED;
+        --bg: #f8fafc;
         --surface: #ffffff;
-        --text: #171717;
-        --text-muted: #6b7280;
-        --border: #d1d5db;
-        --accent: #DA0037;
+        --surface2: #f1f5f9;
+        --text: #0f172a;
+        --text-muted: #64748b;
+        --border: rgba(15, 23, 42, 0.06);
+        --accent: #ff0000;
         --accent-hover: #b8002e;
+        --accent-soft: rgba(255, 0, 0, 0.10);
+        --primary-soft: rgba(255, 0, 0, 0.10);
+        --danger: #ef4444;
+        --danger-soft: rgba(239, 68, 68, 0.10);
+        --success: #22c55e;
+        --success-soft: rgba(34, 197, 94, 0.12);
+        --focus-ring: 0 0 0 3px rgba(255, 0, 0, 0.08);
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-full: 9999px;
+        --shadow-md: 0 12px 24px -10px rgba(0, 0, 0, 0.06);
     }
     [data-theme="dark"] {
         --bg: #0f172a;
         --surface: #1e293b;
+        --surface2: #1e293b;
         --text: #f1f5f9;
         --text-muted: #94a3b8;
-        --border: #334155;
+        --border: rgba(255, 255, 255, 0.07);
         --accent: #ff3b3b;
         --accent-hover: #ff5c5c;
+        --accent-soft: rgba(255, 59, 59, 0.18);
+        --primary-soft: rgba(255, 59, 59, 0.18);
+        --danger: #ef4444;
+        --danger-soft: rgba(239, 68, 68, 0.18);
+        --success: #22c55e;
+        --success-soft: rgba(34, 197, 94, 0.18);
+        --focus-ring: 0 0 0 3px rgba(255, 59, 59, 0.15);
+        --shadow-md: 0 12px 24px -10px rgba(0, 0, 0, 0.5);
     }
     [data-theme="dark"] body { background: var(--bg); color: var(--text); }
     [data-theme="dark"] .card, [data-theme="dark"] .scan-area, [data-theme="dark"] .result-area {
@@ -453,14 +565,14 @@
 
     /* status buttons */
     [data-theme="dark"] .btn-done { color: var(--text-muted); }
-    [data-theme="dark"] .btn-done:hover { color: #4ade80; background: rgba(74,222,128,0.1); border-color: #4ade80; }
+    [data-theme="dark"] .btn-done:hover { color: var(--success); background: var(--success-soft); border-color: var(--success); }
     [data-theme="dark"] .btn-err { color: var(--text-muted); }
     [data-theme="dark"] .btn-err:hover { color: var(--accent); background: rgba(255,59,59,0.1); border-color: var(--accent); }
 
     /* copy button */
     [data-theme="dark"] .btn-copy { color: var(--text-muted); }
     [data-theme="dark"] .btn-copy:hover { color: var(--accent); background: rgba(255,59,59,0.08); }
-    [data-theme="dark"] .btn-copy.copied { color: #4ade80; }
+    [data-theme="dark"] .btn-copy.copied { color: var(--success); }
 
     /* delete button */
     [data-theme="dark"] .btn-del { color: var(--text-muted); }
@@ -483,14 +595,20 @@
   <button type="button" class="mtab-btn" data-tab="riwayat">Riwayat</button>
 </div>
 
+<div class="toast-scan" id="toastScan" role="status" aria-live="polite" aria-atomic="true"></div>
+
 <div class="container">
   <!-- PANEL KIRI -->
   <div class="panel-left">
     <h2>Terminal Input Retur</h2>
 
-    <input type="text" class="search-box" id="searchLeft" placeholder="Cari nomor resi..." oninput="filterStaging()">
+    <div class="search-field">
+      <label class="field-label" for="searchLeft">Cari di Staging</label>
+      <input type="text" class="search-box" id="searchLeft" placeholder="Nomor resi…" oninput="filterStaging()">
+    </div>
 
     <div class="input-group">
+      <label class="field-label" for="inputResi">Scan Barcode Resi</label>
       <input type="text" id="inputResi" placeholder="SCAN BARCODE RESI..." autofocus autocomplete="off">
     </div>
 
@@ -521,6 +639,17 @@
       </div>
     </div>
 
+    <div class="confirm-bar" id="confirmBar" role="group" aria-labelledby="confirmText">
+      <span class="confirm-text" id="confirmText"></span>
+      <button type="button" class="btn-cancel" id="btnConfirmCancel" onclick="cancelSubmit()">Batal</button>
+      <button type="button" class="btn-confirm" id="btnConfirmSend" onclick="confirmSubmit()">Kirim</button>
+    </div>
+
+    <div class="submit-banner" id="submitBanner" role="status" aria-live="polite">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      <span id="submitBannerText"></span>
+    </div>
+
     <div class="action-bar">
       <span id="stagedCount">0 Paket</span>
       <button class="primary" id="btnSubmit" onclick="pushToDatabase()">Proses Ke Database</button>
@@ -532,21 +661,25 @@
     <h2>Riwayat Scan</h2>
 
     <div class="filter-bar">
-                    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+                    <button class="theme-toggle" onclick="toggleTheme()" title="Ganti tema gelap atau terang" aria-label="Ganti tema gelap atau terang">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                        Theme
+                        Tema
                     </button>
       <button class="filter-btn active" data-filter="all" onclick="loadHistory('all', this)">Semua</button>
       <button class="filter-btn" data-filter="today" onclick="loadHistory('today', this)">Hari Ini</button>
       <button class="filter-btn" data-filter="7days" onclick="loadHistory('7days', this)">7 Hari</button>
       <button class="filter-btn" data-filter="30days" onclick="loadHistory('30days', this)">1 Bulan</button>
+      <span class="conn-state" id="connState" title="Status koneksi database"><span class="conn-dot"></span><span id="connLabel">Memeriksa…</span></span>
       <a class="filter-btn btn-db" href="https://supabase.com/dashboard/project/iyraamxkrygtzsqkvnqz/editor/retur_tracking" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
         Lihat Database
       </a>
     </div>
 
-    <input type="text" class="search-box" id="searchRight" placeholder="Cari nomor resi..." oninput="filterHistory()">
+    <div class="search-field">
+      <label class="field-label" for="searchRight">Cari di Riwayat</label>
+      <input type="text" class="search-box" id="searchRight" placeholder="Nomor resi…" oninput="filterHistory()">
+    </div>
 
     <div class="pending-badge zero" id="pendingBadge">0 Resi Belum Diproses</div>
 
@@ -821,11 +954,78 @@
   // ============================================================
   // AUTO FOCUS
   // ============================================================
+  // ============================================================
+  // FEEDBACK SCAN — sinyal tak-terlihat-dari-jauh tapi wajib (Operate)
+  // Terminal scanner: operator tidak menatap layar. Audio + flash baris +
+  // toast = satu-satunya konfirmasi bahwa scan masuk (atau ditolak).
+  // ============================================================
+  var _toastTimer = null;
+  function showToastScan(msg, kind) {
+    var t = document.getElementById("toastScan");
+    if (!t) return;
+    t.textContent = msg;
+    t.className = "toast-scan show " + (kind ? "t-" + kind : "");
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(function() { t.className = "toast-scan"; }, 1800);
+  }
+
+  // Blip pendek: tidak butuh aset audio, dan browser mengizinkan setelah
+  // interaksi pertama (scan) sehingga aman untuk terminal.
+  function playBlip(pattern) {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!playBlip._ctx) playBlip._ctx = new AC();
+      var ctx = playBlip._ctx;
+      if (ctx.state === "suspended") ctx.resume();
+      var now = ctx.currentTime;
+      pattern.forEach(function(f, i) {
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = f;
+        gain.gain.setValueAtTime(0.0001, now + i * 0.09);
+        gain.gain.exponentialRampToValueAtTime(0.14, now + i * 0.09 + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.09 + 0.075);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(now + i * 0.09); osc.stop(now + i * 0.09 + 0.08);
+      });
+    } catch (e) { /* audio opsional — jangan sampai mematikan loop scan */ }
+  }
+
+  // Flash baris pertama (baru saja di-unshift) agar terlihat tanpa scroll.
+  function flashFirstRow(kind) {
+    var tr = elTableBody.querySelector("tr");
+    if (!tr) return;
+    tr.classList.add("scan-" + kind);
+    setTimeout(function() { tr.classList.remove("scan-" + kind); }, 480);
+  }
+
   function focusInput() { elInput.focus(); }
+
+  // ---- Koneksi database: jangan sampai outage terbaca sebagai "0 pending" ----
+  var lastLoadOk = null;
+  function setConnState(state, label) {
+    var el = document.getElementById("connState");
+    var txt = document.getElementById("connLabel");
+    if (!el) return;
+    el.classList.remove("online", "offline");
+    if (state) el.classList.add(state);
+    if (txt && label) txt.textContent = label;
+  }
 
   window.onload = function() {
     focusInput();
-    DB.call("getExpeditionConfig", [], function(r) { configEkspedisi = r || []; });
+    // Tanpa onFailure: kegagalan load config membuat SETIAP scan jatuh ke
+    // UNKNOWN dan submit menyalahkan operator — padahal ini masalah koneksi.
+    DB.call("getExpeditionConfig", [], function(r) {
+      configEkspedisi = r || [];
+      setConnState("online", "Terhubung");
+    }, function() {
+      configEkspedisi = [];
+      setConnState("offline", "Tidak terkoneksi");
+      showToastScan("Gagal memuat daftar ekspedisi — periksa koneksi", "unk");
+    });
     loadHistory("all", document.querySelector('.filter-btn.active'));
   };
 
@@ -846,25 +1046,39 @@
 
   function processScan(resi) {
     var key = resi.toUpperCase();
-    if (stagingData.some(function(d) { return String(d.resi).toUpperCase() === key; })) return;
+    var banner = document.getElementById("submitBanner");
+    if (banner) banner.classList.remove("show");
+    var cbar = document.getElementById("confirmBar");
+    if (cbar) cbar.classList.remove("show");
+    pendingSubmit = null;
+    if (stagingData.some(function(d) { return String(d.resi).toUpperCase() === key; })) {
+      // Duplikat TIDAK boleh senyap: operator perlu tahu paket ini tidak masuk.
+      playBlip([320, 240]);
+      flashFirstRow("dup");
+      showToastScan("Resi sudah ada di staging — dilewati", "dup");
+      return;
+    }
     var exp = matchRegex(resi);
     if (exp) { addStaging(resi, exp); return; }
     // Cek cache lokal (resi yang sama pernah di-scan session ini)
     if (expeditionCache[resi]) { addStaging(resi, expeditionCache[resi]); return; }
     // Tanya backend → pasti akurat
     addStaging(resi, "UNKNOWN");
-    renderTable();
     DB.call("lookupExpedition", [resi], function(result) {
       if (result && result !== "") {
         expeditionCache[resi] = result;
         updateStagingExpedition(resi, result);
       }
-    });
+    }, function() { /* lookup gagal — baris tetap UNKNOWN, aman diperbaiki manual */ });
   }
 
   function matchRegex(resi) {
     for (var i = 0; i < configEkspedisi.length; i++) {
-      if (new RegExp(configEkspedisi[i].regex, "i").test(resi)) return configEkspedisi[i].name;
+      // Regex dari tabel retur_expeditions bisa invalid; satu baris buruk
+      // tidak boleh mematikan auto-detect untuk seluruh sesi.
+      try {
+        if (new RegExp(configEkspedisi[i].regex, "i").test(resi)) return configEkspedisi[i].name;
+      } catch (e) { /* lewati regex invalid */ }
     }
     return null;
   }
@@ -872,6 +1086,13 @@
   function addStaging(resi, exp) {
     stagingData.unshift({ resi: resi, ekspedisi: exp, operator: getOperator(), timestamp: Date.now() });
     renderTable();
+    if (exp === "UNKNOWN") {
+      playBlip([520]);
+      flashFirstRow("unk");
+    } else {
+      playBlip([880, 1180]);
+      flashFirstRow("ok");
+    }
   }
 
   function updateStagingExpedition(resi, exp) {
@@ -899,6 +1120,23 @@
   // LEFT PANEL — Render Table
   // ============================================================
   function renderTable() {
+    // Simpan & pulihkan fokus: renderTable adalah root cause P0 — rebuild tbody
+    // menghapus elemen terfokus (select/manual-input/btn-del) sehingga jatuh ke
+    // <body> dan scan berikutnya hilang senyap. Satu guard di sini menutup semua
+    // jalur pemanggil (edit ekspedisi, hapus baris, resolve UNKNOWN, filter).
+    var af = document.activeElement;
+    var restoreResi = null, restoreField = null;
+    if (af && af !== document.body && elTableBody.contains(af)) {
+      var row = af.closest("tr");
+      if (row) {
+        var resiCell = row.querySelector("td:nth-child(5) span");
+        restoreResi = resiCell ? resiCell.textContent : null;
+        restoreField = af.tagName === "SELECT" ? "select" :
+                       af.classList.contains("manual-exp-input") ? "manual" :
+                       af.classList.contains("btn-del") ? "del" : null;
+      }
+    }
+
     elTableBody.innerHTML = "";
     var filtered = getFilteredStaging();
 
@@ -908,19 +1146,24 @@
     } else {
       elTableEmpty.style.display = "none";
       document.getElementById("stagingTable").style.display = "";
-      var opts = '<option value="UNKNOWN">-- Pilih Ekspedisi --</option>';
-      configEkspedisi.forEach(function(c) { opts += '<option value="' + c.name + '">' + c.name + "</option>"; });
 
 filtered.forEach(function(d) {
         var i = stagingData.indexOf(d);
         var tr = document.createElement("tr");
+        tr.setAttribute("data-idx", i);
         if (d.ekspedisi === "UNKNOWN") tr.className = "unknown";
 
-        var sel = opts.replace('value="' + d.ekspedisi + '"', 'value="' + d.ekspedisi + '" selected');
+        // Bangun opsi berbasis nama (bukan string-replace) supaya nama ekspedisi
+        // yang jadi prefix nama lain ("JNE" vs "JNE Truck") tidak salah tandai.
+        var selOpts = '<option value="UNKNOWN">-- Pilih Ekspedisi --</option>';
+        configEkspedisi.forEach(function(c) {
+          selOpts += '<option value="' + c.name + '"' +
+                     (c.name === d.ekspedisi ? " selected" : "") + ">" + c.name + "</option>";
+        });
 
-        var expCell = '<div class="exp-cell"><select onchange="updateRowExpedition(' + i + ',this.value)">' + sel + '</select>';
+        var expCell = '<div class="exp-cell"><select onchange="updateRowExpedition(' + i + ',this.value)">' + selOpts + '</select>';
         if (d.ekspedisi === "UNKNOWN") {
-          expCell += '<input class="manual-exp-input" type="text" placeholder="Ketik manual..." value="' + (d.manualExp || "") + '" oninput="updateRowManual(' + i + ',this.value)"><span class="manual-hint">atau ketik nama ekspedisi</span>';
+          expCell += '<input class="manual-exp-input" type="text" placeholder="Nama ekspedisi…" value="' + (d.manualExp || "") + '" oninput="updateRowManual(' + i + ',this.value)"><span class="manual-hint">Pilih dari daftar, atau ketik nama bila belum ada</span>';
         }
         expCell += '</div>';
 
@@ -928,16 +1171,36 @@ filtered.forEach(function(d) {
     var operator = d.operator || '';
 
         tr.innerHTML =
-          '<td style="color:#999;font-size:13px;font-variant-numeric:tabular-nums">' + (filtered.indexOf(d) + 1) + '</td>' +
-          '<td style="color:#999;font-size:13px">' + tanggal + '</td>' +
+          '<td style="color:var(--text-muted);font-size:13px;font-variant-numeric:tabular-nums">' + (filtered.indexOf(d) + 1) + '</td>' +
+          '<td style="color:var(--text-muted);font-size:13px">' + tanggal + '</td>' +
           '<td>' + operator + '</td>' +
           '<td>' + expCell + '</td>' +
-          '<td><span style="font-family:monospace;font-size:14px">' + d.resi + '</span><button class="btn-copy" onclick="copyResi(this,\'' + d.resi + '\')">' + COPY_ICON_SVG + '</button></td>' +
-          '<td><button class="btn-del" onclick="deleteRow(' + i + ')">&#215;</button></td>';
+          '<td><span style="font-family:monospace;font-size:14px">' + d.resi + '</span><button class="btn-copy" onclick="copyResi(this,\'' + d.resi + '\')" title="Salin nomor resi" aria-label="Salin nomor resi">' + COPY_ICON_SVG + '</button></td>' +
+          '<td><button class="btn-del" onclick="deleteRow(' + i + ')" title="Hapus dari staging" aria-label="Hapus ' + d.resi + ' dari staging">&#215;</button></td>';
         elTableBody.appendChild(tr);
       });
     }
     elCount.innerText = stagingData.length + " Paket";
+
+    // Pulihkan fokus ke elemen yang sama (setelah rebuild).
+    if (restoreResi !== null && restoreField) {
+      var idx = -1;
+      for (var k = 0; k < stagingData.length; k++) {
+        if (stagingData[k].resi === restoreResi) { idx = k; break; }
+      }
+      if (idx !== -1) {
+        var rowEl = elTableBody.querySelector('tr[data-idx="' + idx + '"]');
+        var target = rowEl && rowEl.querySelector(
+          restoreField === "select" ? "select" :
+          restoreField === "manual" ? ".manual-exp-input" : ".btn-del"
+        );
+        if (target) target.focus();
+        else focusInput();
+        return;
+      }
+    }
+    // Baris terfokus hilang (dihapus) — kembali ke input scan supaya loop tidak putus.
+    if (af && af !== document.body && elTableBody.contains(af)) focusInput();
   }
 
   function updateRowExpedition(i, v) { stagingData[i].ekspedisi = v; renderTable(); }
@@ -975,6 +1238,41 @@ filtered.forEach(function(d) {
   // ============================================================
   // SUBMIT
   // ============================================================
+  var pendingSubmit = null; // jumlah paket menunggu konfirmasi, null = tidak ada
+
+  function showConfirmBar(n) {
+    pendingSubmit = n;
+    var bar = document.getElementById("confirmBar");
+    var txt = document.getElementById("confirmText");
+    var send = document.getElementById("btnConfirmSend");
+    if (txt) txt.textContent = "Kirim " + n + " paket ke database? Data yang sudah terkirim tidak bisa dihapus dari sini.";
+    if (send) send.textContent = "Kirim " + n + " Paket";
+    if (bar) bar.classList.add("show");
+    var btn = document.getElementById("btnConfirmSend");
+    if (btn) btn.focus();
+  }
+
+  function hideConfirmBar() {
+    pendingSubmit = null;
+    var bar = document.getElementById("confirmBar");
+    if (bar) bar.classList.remove("show");
+    focusInput();
+  }
+
+  function cancelSubmit() { hideConfirmBar(); }
+
+  // Escape = keluar dari konfirmasi tanpa mengirim.
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape" && pendingSubmit !== null) { e.preventDefault(); hideConfirmBar(); }
+  });
+
+  function confirmSubmit() {
+    if (pendingSubmit === null) return;
+    var n = pendingSubmit;
+    hideConfirmBar();
+    sendBatch(n);
+  }
+
   function pushToDatabase() {
     if (stagingData.length === 0) return;
 
@@ -986,18 +1284,36 @@ filtered.forEach(function(d) {
     });
 
     if (stagingData.some(function(d) { return d.ekspedisi === "UNKNOWN"; })) {
-      alert("Terdapat resi tanpa ekspedisi. Pilih dari dropdown atau ketik nama ekspedisi."); return;
+      // Tunjuk dulu baris bermasalah supaya operator tahu harus memperbaiki yang mana.
+      var rows = elTableBody.querySelectorAll("tr");
+      for (var k = 0; k < rows.length; k++) {
+        if (rows[k].classList.contains("unknown")) { rows[k].scrollIntoView({ block: "nearest" }); break; }
+      }
+      showToastScan("Ada resi tanpa ekspedisi — pilih di baris bertanda merah", "unk");
+      return;
     }
 
+    showConfirmBar(stagingData.length);
+  }
+
+  function sendBatch(n) {
     var btn = document.getElementById("btnSubmit");
-    btn.innerText = "MENGIRIM..."; btn.disabled = true;
+    btn.innerText = "Mengirim " + n + " paket…"; btn.disabled = true;
     DB.call("submitBatchData", [stagingData], function() {
+      var banner = document.getElementById("submitBanner");
+      var txt = document.getElementById("submitBannerText");
+      if (txt) txt.textContent = n + " paket terkirim — lanjut scan berikutnya";
+      if (banner) banner.classList.add("show");
       stagingData = []; renderTable();
       loadHistory(currentFilter, document.querySelector('.filter-btn.active'));
       btn.innerText = "Proses Ke Database"; btn.disabled = false;
+      focusInput();
     }, function(err) {
-      alert("Gagal: " + (err.message || err));
+      // Detail teknis ke console; yang dilihat operator adalah pesan + pemulihan.
+      console.error("[submitBatchData]", err);
+      showToastScan("Gagal mengirim. Paket masih di staging — coba lagi.", "dup");
       btn.innerText = "Proses Ke Database"; btn.disabled = false;
+      focusInput();
     });
   }
 
@@ -1013,24 +1329,34 @@ filtered.forEach(function(d) {
 
     DB.call("getTrackingHistory", [filter], function(res) {
       if (!res.success) {
+        // Gagal membaca DATA (bukan jaringan) — riwayat tidak diketahui.
+        setConnState("offline", "Tidak terkoneksi");
         loadedHistory = [];
         updatePendingBadge();
-        elHistory.innerHTML = '<div class="history-empty" style="color:var(--accent)">Error: ' + (res.message || "Gagal mengambil data") + '</div>';
+        elHistory.innerHTML = '<div class="history-empty" style="color:var(--accent)">Riwayat gagal dimuat — periksa koneksi, lalu tekan filter lagi.</div>';
         return;
       }
       if (!res.groups || res.groups.length === 0) {
+        setConnState("online", "Terhubung");
         loadedHistory = [];
         updatePendingBadge();
-        elHistory.innerHTML = '<div class="history-empty">Belum ada riwayat scan</div>';
+        // Bedakan "periode ini kosong" dari "belum pernah ada data".
+        var kosong = filter === "all"
+          ? "Belum ada retur tercatat."
+          : "Belum ada retur pada periode ini.";
+        elHistory.innerHTML = '<div class="history-empty">' + kosong + "</div>";
         return;
       }
+      setConnState("online", "Terhubung");
       loadedHistory = res.groups;
       updatePendingBadge();
       renderHistory(res.groups);
     }, function() {
+      // Gagal jaringan/server — beda pesan dari "belum ada data".
+      setConnState("offline", "Tidak terkoneksi");
       loadedHistory = [];
       updatePendingBadge();
-      elHistory.innerHTML = '<div class="history-empty">Gagal memuat riwayat</div>';
+      elHistory.innerHTML = '<div class="history-empty" style="color:var(--accent)">Riwayat gagal dimuat — periksa koneksi, lalu tekan filter lagi.</div>';
     });
   }
 
@@ -1038,13 +1364,22 @@ filtered.forEach(function(d) {
   // RIGHT PANEL — Pending Count Badge
   // ============================================================
   function updatePendingBadge() {
+    // Load gagal → tampilkan "—", BUKAN "0". Angka nol berbohong: operator
+    // akan percaya semua sudah diproses padahal statusnya tidak diketahui.
+    var el = document.getElementById("connState");
+    var offline = el && el.classList.contains("offline");
+    if (offline) {
+      elPendingBadge.innerText = "— Resi Menunggu Verifikasi";
+      elPendingBadge.classList.remove("zero");
+      return;
+    }
     var count = 0;
     loadedHistory.forEach(function(g) {
       g.items.forEach(function(item) {
         if (item.status === "Pending") count++;
       });
     });
-    elPendingBadge.innerText = count + " Resi Belum Diproses";
+    elPendingBadge.innerText = count + " Resi Menunggu Verifikasi";
     if (count === 0) {
       elPendingBadge.classList.add("zero");
     } else {
@@ -1081,7 +1416,11 @@ filtered.forEach(function(d) {
     elHistory.innerHTML = "";
 
     if (filtered.length === 0) {
-      elHistory.innerHTML = '<div class="history-empty">Tidak ada hasil ditemukan</div>';
+      var q = elSearchRight.value.trim();
+      var pesan = q
+        ? 'Tidak ada resi cocok dengan "' + q + '". Periksa nomor, atau hapus pencarian.'
+        : "Tidak ada riwayat untuk ditampilkan.";
+      elHistory.innerHTML = '<div class="history-empty">' + pesan + "</div>";
       return;
     }
 
@@ -1138,10 +1477,10 @@ filtered.forEach(function(d) {
             '<span class="item-tanggal">' + item.tanggal + '</span>' +
             '<span class="item-operator">' + (item.operator || '—') + '</span>' +
             '<span class="item-resi">' + item.resi + '</span>' +
-            '<button class="btn-copy" onclick="copyResi(this,\'' + item.resi + '\')">' + COPY_ICON_SVG + '</button>' +
+            '<button class="btn-copy" onclick="copyResi(this,\'' + item.resi + '\')" title="Salin nomor resi" aria-label="Salin nomor resi">' + COPY_ICON_SVG + '</button>' +
             '<div class="item-actions">' +
-              '<button class="btn-status btn-done' + doneActive + '" onclick="markStatus(' + item.id + ',\'Valid\',this)" title="Valid">&#10003;</button>' +
-              '<button class="btn-status btn-err' + errActive + '" onclick="markStatus(' + item.id + ',\'Error\',this)" title="Error">&#10007;</button>' +
+              '<button class="btn-status btn-done' + doneActive + '" onclick="markStatus(' + item.id + ',\'Valid\',this)" title="Tandai Valid" aria-label="Tandai Valid"' + (doneActive ? ' aria-pressed="true"' : ' aria-pressed="false"') + '>&#10003;</button>' +
+              '<button class="btn-status btn-err' + errActive + '" onclick="markStatus(' + item.id + ',\'Error\',this)" title="Tandai Error" aria-label="Tandai Error"' + (errActive ? ' aria-pressed="true"' : ' aria-pressed="false"') + '>&#10007;</button>' +
             '</div>';
           detail.appendChild(div);
         });
@@ -1230,7 +1569,7 @@ filtered.forEach(function(d) {
       applyStatus(prevStatus);
       updatePendingBadge();
       console.error("[markStatus] Gagal update status:", err);
-      alert("Gagal memperbarui status: " + (err.message || err));
+      showToastScan("Gagal memperbarui status. Coba lagi.", "dup");
     });
   }
 </script>
