@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 
 const badgeVariants = cva(
-  "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-[0.625rem] font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-2.5!",
+  "group/badge inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-[10px] py-[3px] text-xs font-semibold whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-2.5!",
   {
     variants: {
       variant: {
@@ -18,6 +18,13 @@ const badgeVariants = cva(
         ghost:
           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
+        neutral: "bg-muted text-muted-foreground",
+        info: "bg-[color-mix(in_oklch,var(--primary)_13%,var(--card))] text-[oklch(0.45_0.11_250)]",
+        success: "bg-[color-mix(in_oklch,oklch(0.62_0.17_155)_13%,var(--card))] text-[oklch(0.45_0.13_155)]",
+        warning: "bg-[color-mix(in_oklch,oklch(0.75_0.15_65)_13%,var(--card))] text-[oklch(0.47_0.14_65)]",
+        purple: "bg-[color-mix(in_oklch,oklch(0.72_0.16_305)_13%,var(--card))] text-[oklch(0.42_0.13_300)]",
+        red: "bg-[color-mix(in_oklch,oklch(0.577_0.245_27.325)_13%,var(--card))] text-[oklch(0.47_0.14_65)]",
+        indigo: "bg-[color-mix(in_oklch,oklch(0.72_0.09_255)_13%,var(--card))] text-[oklch(0.4_0.1_250)]",
       },
     },
     defaultVariants: {
