@@ -15,10 +15,11 @@
 <!-- ============ FRAGMENT: PUBLIC VIEW ============ -->
 <div id="fragment-public" style="display:none">
   <div class="topbar">
-    <div class="brand" data-feather-brand></div>
+    <div class="brand"><span class="brand-dot" aria-hidden="true"></span>LATCH</div>
     <div class="topbar-actions">
-      <button class="icon-btn raised pressable" id="btnAdminSwitch" title="Admin"><i data-feather="lock"></i></button>
-      <button class="icon-btn raised pressable" id="themeToggle" title="Tema"><i data-feather="moon"></i></button>
+      <button class="icon-btn raised pressable" id="btnHelp" title="Bantuan" aria-label="Buka bantuan"><i data-feather="help-circle"></i></button>
+      <button class="icon-btn raised pressable" id="btnAdminSwitch" title="Admin" aria-label="Masuk mode admin"><i data-feather="lock"></i></button>
+      <button class="icon-btn raised pressable" id="themeToggle" title="Tema" aria-label="Ubah tema"><i data-feather="moon"></i></button>
     </div>
   </div>
 
@@ -26,6 +27,7 @@
     <div>
       <div class="atm-title">LATCH</div>
       <div class="atm-tagline">LINK ATTACH by Supersub</div>
+      <div class="atm-stat"><span class="atm-count" id="atmCount">0</span> link tersimpan</div>
     </div>
     <div>
       <hr class="atm-divider">
@@ -54,11 +56,12 @@
 <!-- ============ FRAGMENT: ADMIN DASHBOARD ============ -->
 <div id="fragment-admin" style="display:none">
   <div class="topbar">
-    <div class="brand" data-feather-brand></div>
+    <div class="brand"><span class="brand-dot" aria-hidden="true"></span>LATCH</div>
     <div class="topbar-actions">
-      <button class="icon-btn raised pressable" id="btnPublicSwitch" title="Lihat Publik"><i data-feather="eye"></i></button>
-      <button class="icon-btn raised pressable" id="themeToggleDash" title="Tema"><i data-feather="moon"></i></button>
-      <button class="icon-btn raised pressable" id="btnLogout" title="Keluar"><i data-feather="log-out"></i></button>
+      <button class="icon-btn raised pressable" id="btnHelp" title="Bantuan" aria-label="Buka bantuan"><i data-feather="help-circle"></i></button>
+      <button class="icon-btn raised pressable" id="btnPublicSwitch" title="Lihat Publik" aria-label="Lihat tampilan publik"><i data-feather="eye"></i></button>
+      <button class="icon-btn raised pressable" id="themeToggleDash" title="Tema" aria-label="Ubah tema"><i data-feather="moon"></i></button>
+      <button class="icon-btn raised pressable" id="btnLogout" title="Keluar" aria-label="Keluar dari admin"><i data-feather="log-out"></i></button>
     </div>
   </div>
 
@@ -79,7 +82,7 @@
     <div class="dash-main" id="dashMain"></div>
   </div>
 
-  <button class="dash-nav-toggle pressable" id="dashNavToggle"><i data-feather="folder"></i></button>
+  <button class="dash-nav-toggle pressable" id="dashNavToggle" aria-label="Buka daftar kategori"><i data-feather="folder"></i></button>
 </div>
 
 <!-- ============ FRAGMENT: MODALS ============ -->
@@ -88,10 +91,10 @@
   <div class="overlay-bg" id="overlayBg"></div>
 
   <!-- Drawer: Add/Edit Link -->
-  <div class="drawer" id="linkDrawer">
+  <div class="drawer" id="linkDrawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
     <div class="drawer-header">
       <h3 id="drawerTitle">Tambah Link</h3>
-      <button class="drawer-close" id="drawerClose"><i data-feather="x"></i></button>
+      <button class="drawer-close" id="drawerClose" aria-label="Tutup"><i data-feather="x"></i></button>
     </div>
     <div class="drawer-body">
       <div class="field">
@@ -129,17 +132,17 @@
   </div>
 
   <!-- Bottom sheet: category nav (mobile) -->
-  <div class="bottom-sheet" id="categorySheet">
+  <div class="bottom-sheet" id="categorySheet" role="dialog" aria-modal="true" aria-label="Pilih kategori">
     <div class="sheet-handle"></div>
     <div class="sheet-title">Kategori</div>
     <div id="sheetCategoryList"></div>
   </div>
 
   <!-- Modal: Login -->
-  <div class="modal" id="loginModal">
+  <div class="modal" id="loginModal" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
     <div class="modal-backdrop"></div>
     <div class="modal-box">
-      <div class="modal-title">Login Admin</div>
+      <div class="modal-title" id="loginModalTitle">Login Admin</div>
       <div class="field">
         <label for="pinInput">PIN</label>
         <input type="password" id="pinInput" inputmode="numeric" placeholder="••••" autocomplete="off">
@@ -153,11 +156,11 @@
   </div>
 
   <!-- Modal: Delete confirm -->
-  <div class="modal" id="deleteModal">
+  <div class="modal" id="deleteModal" role="alertdialog" aria-modal="true" aria-labelledby="deleteModalTitle">
     <div class="modal-backdrop"></div>
     <div class="modal-box">
-      <div class="modal-title">Hapus item ini?</div>
-      <p style="font-size:13px;color:var(--text-tertiary);text-align:center" id="deleteModalText">Tindakan ini tidak dapat dibatalkan.</p>
+      <div class="modal-title" id="deleteModalTitle">Hapus item ini?</div>
+      <p class="delete-modal-note" id="deleteModalText">Tindakan ini tidak dapat dibatalkan.</p>
       <div class="modal-actions">
         <button class="btn btn-ghost raised pressable" id="deleteCancel">Batal</button>
         <button class="btn btn-primary pressable" id="deleteConfirm" style="background:var(--accent)">Hapus</button>
@@ -166,7 +169,7 @@
   </div>
 
   <!-- Modal: Category editor -->
-  <div class="modal" id="categoryModal">
+  <div class="modal" id="categoryModal" role="dialog" aria-modal="true" aria-labelledby="categoryModalTitle">
     <div class="modal-backdrop"></div>
     <div class="modal-box" style="max-width:420px">
       <div class="modal-title" id="categoryModalTitle">Kelola Kategori</div>
@@ -191,11 +194,11 @@
   </div>
 
   <!-- Modal: Import CSV -->
-  <div class="modal" id="importModal">
+  <div class="modal" id="importModal" role="dialog" aria-modal="true" aria-labelledby="importModalTitle">
     <div class="modal-backdrop"></div>
     <div class="modal-box" style="max-width:380px">
-      <div class="modal-title">Import CSV</div>
-      <p style="font-size:12px;color:var(--text-tertiary);margin-bottom:10px">Format kolom: Title,URL,Category,Badge</p>
+      <div class="modal-title" id="importModalTitle">Import CSV</div>
+      <p class="modal-note">Format kolom: Title,URL,Category,Badge,Description</p>
       <label class="file-drop" id="fileDropLabel">
         <i data-feather="upload-cloud"></i>
         <div id="fileDropText">Pilih atau tarik file .csv ke sini</div>
@@ -210,12 +213,20 @@
   </div>
 
   <!-- Modal: keyboard shortcut help -->
-  <div class="modal" id="helpModal">
+  <div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
     <div class="modal-backdrop"></div>
     <div class="modal-box">
-      <div class="modal-title">Keyboard Shortcuts</div>
+      <div class="modal-title" id="helpModalTitle">Bantuan &amp; Shortcut</div>
+      <div class="help-section-title">Arti badge</div>
+      <div class="badge-legend">
+        <span><i class="badge-dot badge-hot" aria-hidden="true"></i>Penting</span>
+        <span><i class="badge-dot badge-daily" aria-hidden="true"></i>Harian</span>
+        <span><i class="badge-dot badge-core" aria-hidden="true"></i>Inti</span>
+        <span><i class="badge-dot badge-archive" aria-hidden="true"></i>Arsip</span>
+      </div>
+      <div class="help-section-title">Keyboard shortcut</div>
       <div class="kbd-row"><span>Fokus pencarian</span><span class="kbd">Ctrl+K</span></div>
-      <div class="kbd-row"><span>Buka link pertama</span><span class="kbd">Ctrl+L</span></div>
+      <div class="kbd-row"><span>Buka link pertama</span><span class="kbd">Alt+L</span></div>
       <div class="kbd-row"><span>Tutup modal / hapus pencarian</span><span class="kbd">Esc</span></div>
       <div class="kbd-row"><span>Tampilkan bantuan ini</span><span class="kbd">?</span></div>
       <div class="modal-actions">
@@ -225,7 +236,7 @@
   </div>
 
   <div class="loading-overlay" id="loadingOverlay">
-    <div class="brand" style="font-size:16px" data-feather-brand></div>
+    <div class="brand"><span class="brand-dot" aria-hidden="true"></span>LATCH</div>
     <div class="loading-grid" id="skeletonGrid"></div>
   </div>
 
@@ -233,10 +244,14 @@
 
 <!-- ============ FRAGMENT: FOOTER / TOAST ============ -->
 <div id="fragment-footer" style="display:none">
-  <div class="toast-wrap" id="toastWrap"></div>
-  <button class="back-to-top raised pressable hidden" id="backToTop"><i data-feather="arrow-up"></i></button>
+  <div class="offline-banner hidden" id="offlineBanner" role="status">
+    <i data-feather="wifi-off" aria-hidden="true"></i>
+    <span>Mode luring — menampilkan data tersimpan terakhir. Perubahan tidak tersimpan.</span>
+  </div>
+  <div class="toast-wrap" id="toastWrap" role="status" aria-live="polite"></div>
+  <button class="back-to-top raised pressable hidden" id="backToTop" aria-label="Kembali ke atas"><i data-feather="arrow-up"></i></button>
   <footer class="app-footer">
-    LATCH — Link Attach · dibuat dengan Supabase sebagai database
+    LATCH — Link Attach · gudang link pribadi
   </footer>
 </div>
 
@@ -245,6 +260,8 @@
 <script src="https://unpkg.com/feather-icons@4.29.2/dist/feather.min.js"></script>
 <script src="js/app.js"></script>
     <script>
+        // Aturan 1: embedded = navbar milik hub, brand lokal disembunyikan.
+        document.body.classList.toggle('is-embedded', window.self !== window.top);
         window.addEventListener('message', function(e) {
             if (e.data && e.data.type === 'SET_THEME' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
                 document.documentElement.setAttribute('data-theme', e.data.theme);
