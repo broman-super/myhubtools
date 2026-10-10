@@ -42,7 +42,7 @@ Dibuka di dalam hub REYNAHUB (iframe) atau file `dist/index.html` lokal. Tema da
 
 ## Brand Commitments
 
-Tidak ada komitmen brand yang mengikat untuk tool ini. Keputusan final yang disetujui (2026-09-11): tampilan mengikuti **preset shadcn mist** (biru), **bukan** Design System REYNAHUB merah (`docs/DESIGN.md`). Nama produk yang sah: "RND Roadmap Tracker".
+Tidak ada komitmen brand yang mengikat untuk tool ini. Keputusan final yang disetujui (2026-09-11): tampilan mengikuti **preset shadcn mist** (biru), **bukan** Design System REYNAHUB merah (`docs/guidebook/design.md`). Nama produk yang sah: "RND Roadmap Tracker".
 
 ## Evidence on Hand
 

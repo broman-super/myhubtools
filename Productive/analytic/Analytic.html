@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../src/styles/tools.css">
-    <title>SAS - SALES ANALYTIC SIMPLIFY - Bento Edition</title>
+    <title>Sales Analytic</title>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
@@ -24,7 +24,7 @@
     <style>
         :root {
             --bg: #f8fafc;
-            --card: #ffffff;
+            --surface: #ffffff;
             --primary: #ff0000;
             --primary-solid: #c81e1e;
             --primary-strong: #b91c1c;
@@ -40,14 +40,23 @@
             --warning-light: #fef3c7;
             --border: #e2e8f0;
             --text: #0f172a;
-            --text-muted: #64748b;
-            --accent: #f1f5f9;
+            --muted: #64748b;
+            --surface2: #f1f5f9;
+            --focus-ring: 2px solid var(--primary);
+            --on-primary: #ffffff;
+            --overlay: rgba(15, 23, 42, 0.5);
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.16);
+            --z-modal: 9999;
+            --z-overlay: 10000;
+            --z-toast: 2147483000;
         }
 
         [data-theme="dark"] {
             color-scheme: dark;
             --bg: #0f172a;
-            --card: #1e293b;
+            --surface: #1e293b;
             --primary: #ff3b3b;
             --primary-solid: #c81e1e;
             --primary-strong: #fca5a5;
@@ -63,8 +72,12 @@
             --warning-light: rgba(245, 158, 11, 0.2);
             --border: #334155;
             --text: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #0f172a;
+            --muted: #94a3b8;
+            --surface2: #0f172a;
+            --on-primary: #ffffff;
+            --overlay: rgba(2, 6, 23, 0.78);
+            --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.35);
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
         }
 
         html {
@@ -73,20 +86,30 @@
         }
 
         :focus-visible {
-            outline: 2px solid var(--primary);
+            outline: var(--focus-ring) !important;
             outline-offset: 2px;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        ::selection {
+            background: var(--primary-light);
         }
 
         body {
             margin: 0;
             padding: 24px;
-            font-family: 'Plus Jakarta Sans';
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            line-height: 1.5;
             min-width: 360px;
             overflow-x: auto;
         }
 
         .nav-bar {
-            background: var(--card);
+            background: var(--surface);
             padding: 16px 24px;
             border-radius: 20px;
             border: 1px solid var(--border);
@@ -94,12 +117,17 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--shadow-sm);
             transition: all 0.3s ease;
         }
 
+        /* ponytail: saat dibuka lewat hub (iframe), hub yang pegang brand/navbar.
+           Hanya brand (h1) yang disembunyikan — kontrol tool (tab, filter tanggal,
+           import, cetak) tetap tampil supaya tool tetap bisa dipakai. */
+        .is-embedded .nav-bar h1 { display: none !important; }
+
         .nav-bar h1 {
-            font-family: 'Geomini', 'Plus Jakarta Sans';
+            font-family: 'Geomini', 'Plus Jakarta Sans', sans-serif;
             font-size: 24px;
             font-weight: 900;
             color: var(--primary);
@@ -111,19 +139,38 @@
 
         .nav-controls {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
         }
 
+        /* Kelompok kontrol agar toolbar tetap runtut saat wrap/flex; pemisah
+           antar-group memisahkan konteks: navigasi | preferensi | mutasi | periode. */
+        .nav-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .nav-group + .nav-group {
+            padding-left: 12px;
+            border-left: 1px solid var(--border);
+        }
+
+        /* Hit area minimal 44px untuk semua kontrol toolbar (icon-only pun raba-ramah) */
+        .nav-bar button,
+        .nav-bar #reportrange {
+            min-height: 44px;
+        }
+
         .theme-toggle {
-            background: var(--accent);
+            background: var(--surface2);
             border: 1px solid var(--border);
             color: var(--text);
             padding: 8px 12px;
             min-height: 44px;
             border-radius: 8px;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 800;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -136,8 +183,10 @@
 
         /* Pill Toggle untuk Compare Mode */
         .compare-pill {
-            display: flex;
-            background: var(--accent);
+            display: inline-grid;
+            grid-auto-flow: column;
+            grid-auto-columns: 1fr;
+            background: var(--surface2);
             border: 1px solid var(--border);
             border-radius: 8px;
             overflow: hidden;
@@ -150,20 +199,21 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            gap: 6px;
             border: none;
             background: transparent;
-            color: var(--text-muted);
+            color: var(--muted);
             font-size: 11px;
             font-weight: 700;
             cursor: pointer;
             transition: 0.2s;
             white-space: nowrap;
-            font-family: 'Geomini', 'Plus Jakarta Sans';
+            font-family: 'Geomini', 'Plus Jakarta Sans', sans-serif;
         }
 
         .compare-pill button.active {
             background: var(--primary-solid);
-            color: white;
+            color: var(--on-primary);
             border-radius: 6px;
         }
 
@@ -180,11 +230,11 @@
         }
 
         .bento-item {
-            background: var(--card);
+            background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 24px;
             padding: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+            box-shadow: var(--shadow-md);
             transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
             display: flex;
             flex-direction: column;
@@ -195,7 +245,7 @@
 
         .bento-item:hover {
             transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            box-shadow: var(--shadow-lg);
             border-color: var(--primary);
         }
 
@@ -244,6 +294,11 @@
 
             .nav-controls {
                 flex-wrap: wrap;
+            }
+
+            .nav-group + .nav-group {
+                border-left: none;
+                padding-left: 0;
             }
 
             #reportrange {
@@ -397,10 +452,10 @@
         }
 
         .bento-title {
-            font-family: 'Geomini', 'Plus Jakarta Sans';
+            font-family: 'Geomini', 'Plus Jakarta Sans', sans-serif;
             font-size: 14px;
             font-weight: 800;
-            color: var(--text-muted);
+            color: var(--muted);
             text-transform: uppercase;
             letter-spacing: 1px;
             display: flex;
@@ -409,7 +464,7 @@
         }
 
         .bento-value {
-            font-family: 'Geomini', 'Plus Jakarta Sans';
+            font-family: 'Geomini', 'Plus Jakarta Sans', sans-serif;
             font-size: 32px;
             font-weight: 900;
             line-height: 1.1;
@@ -420,7 +475,7 @@
         .bento-sub {
             font-size: 12px;
             font-weight: 600;
-            color: var(--text-muted);
+            color: var(--muted);
         }
 
         .chart-box {
@@ -490,7 +545,7 @@
             border: none;
             margin: 0 0 0 6px;
             padding: 0;
-            background: var(--accent);
+            background: var(--surface2);
             color: var(--text);
             font: inherit;
             font-size: 10px;
@@ -502,7 +557,7 @@
 
         #kpiTip {
             position: fixed;
-            z-index: 2147483000;
+            z-index: var(--z-toast);
             pointer-events: none;
             display: none;
             background: var(--text);
@@ -514,7 +569,7 @@
             line-height: 1.4;
             max-width: 280px;
             white-space: pre-wrap;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow-md);
         }
 
         #kpiTip.show {
@@ -523,7 +578,7 @@
 
         .dataTables_wrapper .dataTables_length select,
         .dataTables_wrapper .dataTables_filter input {
-            background: var(--accent);
+            background: var(--surface2);
             border: 1px solid var(--border);
             color: var(--text);
             border-radius: 6px;
@@ -537,19 +592,19 @@
         }
 
         table.dataTable tbody tr {
-            background-color: var(--card);
+            background-color: var(--surface);
             border-bottom: 1px solid var(--border);
             transition: 0.2s;
         }
 
         table.dataTable tbody tr:hover {
-            background-color: var(--accent);
+            background-color: var(--surface2);
         }
 
         /* daterangepicker (CDN) — ikut tema gelap */
         [data-theme="dark"] .daterangepicker,
         [data-theme="dark"] .daterangepicker .calendar-table {
-            background: var(--card);
+            background: var(--surface);
             border-color: var(--border);
         }
 
@@ -563,7 +618,7 @@
         [data-theme="dark"] .daterangepicker td.off.in-range,
         [data-theme="dark"] .daterangepicker td.off.end-date {
             background: var(--bg);
-            color: var(--text-muted);
+            color: var(--muted);
         }
 
         [data-theme="dark"] .daterangepicker td.available:hover,
@@ -573,7 +628,7 @@
 
         [data-theme="dark"] .daterangepicker .ranges li.active {
             background: var(--primary);
-            color: #fff;
+            color: var(--on-primary);
         }
 
         [data-theme="dark"] .daterangepicker td.active,
@@ -584,14 +639,14 @@
 
         [data-theme="dark"] .daterangepicker select,
         [data-theme="dark"] .daterangepicker input[type="text"] {
-            background: var(--accent);
+            background: var(--surface2);
             color: var(--text);
             border-color: var(--border);
         }
 
         table.dataTable thead th {
             border-bottom: 2px solid var(--border);
-            color: var(--text-muted);
+            color: var(--muted);
             font-size: 11px;
             text-transform: uppercase;
         }
@@ -603,7 +658,7 @@
         }
 
         .dataTables_info {
-            color: var(--text-muted) !important;
+            color: var(--muted) !important;
             font-size: 11px;
         }
 
@@ -620,7 +675,7 @@
         }
 
         .item-row:hover {
-            background: var(--accent);
+            background: var(--surface2);
         }
 
         .tag-warn {
@@ -674,10 +729,10 @@
 
         /* Premium Upload Improvements CSS */
         .upload-modal-content {
-            background: var(--card);
+            background: var(--surface);
             padding: 30px;
             border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--shadow-lg);
             border: 1px solid var(--border);
             width: 95%;
             max-width: 520px;
@@ -727,7 +782,7 @@
         .mapping-label {
             font-size: 11px;
             font-weight: 800;
-            color: var(--text-muted);
+            color: var(--muted);
             text-transform: uppercase;
             display: flex;
             justify-content: space-between;
@@ -735,7 +790,7 @@
         }
 
         .mapping-badge {
-            font-size: 9px;
+            font-size: 10px;
             padding: 2px 6px;
             border-radius: 4px;
             font-weight: 800;
@@ -761,7 +816,7 @@
             padding: 8px 12px;
             border-radius: 8px;
             border: 1px solid var(--border);
-            background: var(--card);
+            background: var(--surface);
             color: var(--text);
             font-size: 12px;
             font-weight: 700;
@@ -800,13 +855,13 @@
         }
 
         .preview-table th {
-            background: var(--accent);
-            color: var(--text-muted);
+            background: var(--surface2);
+            color: var(--muted);
             padding: 8px 12px;
             font-weight: 800;
             border-bottom: 1px solid var(--border);
             text-transform: uppercase;
-            font-size: 9px;
+            font-size: 10px;
             white-space: nowrap;
         }
 
@@ -825,7 +880,7 @@
         }
 
         .preview-table tr:hover td {
-            background: var(--accent);
+            background: var(--surface2);
         }
 
         .step-indicator {
@@ -840,8 +895,8 @@
             width: 24px;
             height: 24px;
             border-radius: 50%;
-            background: var(--accent);
-            color: var(--text-muted);
+            background: var(--surface2);
+            color: var(--muted);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -853,13 +908,13 @@
 
         .step-circle.active {
             background: var(--primary);
-            color: white;
+            color: var(--on-primary);
             border-color: var(--primary);
         }
 
         .step-circle.done {
             background: var(--success);
-            color: white;
+            color: var(--on-primary);
             border-color: var(--success);
         }
 
@@ -887,12 +942,8 @@
                 padding: 0 !important;
             }
 
-            /* Paksa kedua tab tampil (override inline display:none dari showTab) — tetap GRID agar layout 3 kolom jalan */
-            #mainContainer,
-            #biayaContainer {
-                display: grid !important;
-            }
-
+            /* Print hanya tab yang AKTIF (Dashboard ATAU Biaya) — container non-aktif
+               dibiarkan display:none inline dari showTab(), jadi otomatis tidak tercetak */
             #biayaContainer.biaya-kosong {
                 display: none !important;
             }
@@ -958,18 +1009,18 @@
                 grid-column: 1 / -1 !important;
                 font-size: 9px;
                 font-weight: 700;
-                color: var(--text-muted);
+                color: var(--muted);
                 text-transform: uppercase;
                 letter-spacing: 0.5px;
                 margin-bottom: 8px;
             }
 
-            /* Kurasi print: sembunyikan panel teks (hemat kertas), pertahankan KPI + chart inti + tabel */
+            /* Kurasi print: sembunyikan panel teks (hemat kertas), pertahankan KPI + chart inti + tabel
+               Catatan: RANKING KATEGORI (#biayaRankList) DIPERTAHANKAN — muncul setelah Komposisi Kategori */
             .bento-item:has(#basketIntel),
             .bento-item:has(#opexList),
             .bento-item:has(#rfmList),
             .bento-item:has(#localWarningBox),
-            .bento-item:has(#biayaRankList),
             .bento-item:has(#kpiGoldenDay),
             .bento-item:has(#chartMargin),
             .bento-item:has(#chartHari) { display: none !important; }
@@ -1094,25 +1145,32 @@
         .btn-busy { opacity: .6; cursor: progress; }
         .btn-busy .btn-spin { display: inline-block; width: .9em; height: .9em; margin-right: .45em; vertical-align: -2px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: btn-spin .6s linear infinite; }
         @keyframes btn-spin { to { transform: rotate(360deg); } }
-        @media (prefers-reduced-motion: reduce) { .btn-busy .btn-spin { animation: none; } }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
     </style>
 </head>
 
 <body>
+    <script>document.body.classList.toggle('is-embedded', window.self !== window.top);</script>
     <div id="loginOverlay"
-        style="position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+        style="position:fixed; inset:0; background:var(--bg); z-index:var(--z-modal); display:flex; flex-direction:column; justify-content:center; align-items:center;">
         <div
-            style="background:var(--card); padding:40px; border-radius:24px; box-shadow:0 10px 30px rgba(0,0,0,0.1); border:1px solid var(--border); width:90%; max-width:400px; text-align:center;">
-            <h3 style="font-family:'Geomini','Plus Jakarta Sans'; color:var(--primary); margin-bottom:10px;">Sales Analytic
-                Simplify</h3>
-            <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px; font-weight:600;">Area Terbatas.
+            style="background:var(--surface); padding:40px; border-radius:24px; box-shadow:var(--shadow-md); border:1px solid var(--border); width:90%; max-width:400px; text-align:center;">
+            <h3 style="font-family:'Geomini', 'Plus Jakarta Sans', sans-serif; color:var(--primary); margin-bottom:12px; font-size:18px;">Sales Analytic</h3>
+            <p style="color:var(--muted); font-size:14px; margin-bottom:16px; font-weight:600;">Area Terbatas.
                 Masukkan Password.</p>
-            <input type="password" id="pwdInput"
-                style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); background:var(--accent); color:var(--text); margin-bottom:16px; font-weight:800; outline:none; text-align:center; box-sizing:border-box;"
+            <input type="password" id="pwdInput" autofocus aria-label="Password"
+                style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); background:var(--surface2); color:var(--text); margin-bottom:16px; font-weight:800; outline:none; text-align:center; box-sizing:border-box;"
                 placeholder="Password">
             <button onclick="verifyPwd()"
-                style="width:100%; padding:12px; background:var(--primary-solid); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer;">LOGIN</button>
-            <p id="pwdError"
+                style="width:100%; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px;">LOGIN</button>
+            <p id="pwdError" role="alert" aria-live="assertive"
                 style="color:var(--danger); font-size:12px; margin-top:10px; font-weight:800; display:none;">Password
                 Salah!</p>
         </div>
@@ -1122,28 +1180,29 @@
         <div id="loadingRoadmap"
             style="margin-top:24px; display:flex; align-items:center;"></div>
         <p id="loadingRoadmapLabel"
-            style="margin-top:12px; font-weight:800; font-size:11px; color:var(--text-muted); min-height:14px;"></p>
+            style="margin-top:12px; font-weight:800; font-size:11px; color:var(--muted); min-height:14px;"></p>
         <p id="loadingErrorText"
             style="margin-top:8px; font-weight:800; font-size:11px; color:var(--danger); display:none; max-width:420px; text-align:center;"></p>
+        <button id="loadingRetryBtn" onclick="location.reload()"
+            style="margin-top:14px; display:none; padding:10px 26px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:10px; font-weight:800; font-size:12px; cursor:pointer;">Coba Lagi</button>
     </div>
 
     <!-- Processing / Syncing Overlay -->
     <div id="processingOverlay"
-        style="display:none; position:fixed; inset:0; background:rgba(15, 23, 42, 0.75); backdrop-filter:blur(8px); z-index:10000; flex-direction:column; justify-content:center; align-items:center; transition: all 0.3s ease;">
+        style="display:none; position:fixed; inset:0; background:var(--overlay); backdrop-filter:blur(8px); z-index:var(--z-overlay); flex-direction:column; justify-content:center; align-items:center; transition: all 0.3s ease;">
         <div
-            style="background:var(--card); padding:40px; border-radius:28px; border:1px solid var(--border); box-shadow:0 25px 50px -12px rgba(0, 0, 0, 0.25); text-align:center; max-width:420px; width:90%; animation:scaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); position:relative;">
+            style="background:var(--surface); padding:40px; border-radius:28px; border:1px solid var(--border); box-shadow:var(--shadow-lg); text-align:center; max-width:420px; width:90%; animation:scaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); position:relative;">
             <div id="processingVisual"
                 style="margin-bottom:24px; display:flex; justify-content:center; align-items:center; min-height:60px;">
                 <div id="processingSpinner"
-                    style="border:4px solid var(--accent); border-top:4px solid var(--primary); border-radius:50%; width:50px; height:50px; animation:spin 1s linear infinite;">
+                    style="border:4px solid var(--surface2); border-top:4px solid var(--primary); border-radius:50%; width:50px; height:50px; animation:spin 1s linear infinite;">
                 </div>
             </div>
             <h3 id="processingTitle"
-                style="font-family:'Geomini','Plus Jakarta Sans'; color:var(--text); margin-bottom:12px; font-size:20px; font-weight:800;">
+                style="font-family:'Geomini', 'Plus Jakarta Sans', sans-serif; color:var(--text); margin-bottom:12px; font-size:18px; font-weight:800;">
                 Memproses Data...</h3>
-            <p id="processingDesc" style="color:var(--text-muted); font-size:13px; line-height:1.6; font-weight:500;">
-                Mohon jangan menutup halaman atau melakukan refresh. Data sedang dikirim ke database secara
-                aman.</p>
+            <p id="processingDesc" style="color:var(--muted); font-size:13px; line-height:1.6; font-weight:500;">
+                Mohon jangan menutup halaman atau melakukan refresh. Data sedang dikirim ke server.</p>
 
             <!-- Progress Bar & Persentase Visual -->
             <div id="processingProgressBarContainer"
@@ -1157,34 +1216,35 @@
             </div>
 
             <button id="processingCloseBtn" onclick="hideProcessingOverlay()"
-                style="display:none; margin-top:20px; padding:10px 20px; background:var(--primary-solid); color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer; font-size:12px;">TUTUP</button>
+                style="display:none; margin-top:20px; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px;">TUTUP</button>
         </div>
     </div>
 
     <!-- Expense Modal (OPEX) -->
-    <div id="expenseModal"
-        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; flex-direction:column; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+    <div id="expenseModal" role="dialog" aria-modal="true" aria-labelledby="expenseModalTitle"
+        style="display:none; position:fixed; inset:0; background:var(--overlay); z-index:var(--z-modal); flex-direction:column; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
         <div
-            style="background:var(--card); padding:30px; border-radius:24px; box-shadow:0 10px 30px rgba(0,0,0,0.2); border:1px solid var(--border); width:90%; max-width:400px; position:relative; animation:fadeInUp 0.3s ease;">
+            style="background:var(--surface); padding:30px; border-radius:24px; box-shadow:var(--shadow-md); border:1px solid var(--border); width:90%; max-width:400px; position:relative; animation:fadeInUp 0.3s ease;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 style="font-family:'Geomini','Plus Jakarta Sans'; color:var(--text); margin:0; font-size:18px;">Catat
+                <h3 id="expenseModalTitle" style="font-family:'Geomini', 'Plus Jakarta Sans', sans-serif; color:var(--text); margin:0; font-size:18px;">Catat
                     Pengeluaran (OPEX)</h3>
                 <button onclick="document.getElementById('expenseModal').style.display='none'"
-                    style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1; font-weight:800;">&times;</button>
+                    aria-label="Tutup"
+                    style="background:none; border:none; cursor:pointer; color:var(--muted); font-size:24px; line-height:1; font-weight:800;">&times;</button>
             </div>
-            <p style="color:var(--text-muted); font-size:12px; margin-bottom:15px; font-weight:500;">Masukkan biaya
-                operasional di bawah ini. Data akan otomatis tercatat ke tabel "Biaya" di database.</p>
+            <p style="color:var(--muted); font-size:12px; margin-bottom:16px; font-weight:500;">Catat biaya
+                operasional di bawah ini. Tersimpan otomatis sebagai data Biaya.</p>
 
             <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
                 <div>
-                    <label
-                        style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">Tanggal</label>
+                    <label for="inputExpenseDate"
+                        style="font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:6px; display:block;">Tanggal</label>
                     <input type="date" id="inputExpenseDate"
                         style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-weight:700; outline:none; font-size:14px;">
                 </div>
                 <div>
-                    <label
-                        style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">Kategori
+                    <label for="inputExpenseCategory"
+                        style="font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:6px; display:block;">Kategori
                         Biaya</label>
                     <input type="text" id="inputExpenseCategory" list="expenseCategories"
                         placeholder="Contoh: IKLAN, GAJI, ONGKIR, dll."
@@ -1198,8 +1258,8 @@
                     </datalist>
                 </div>
                 <div>
-                    <label
-                        style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:6px; display:block;">Nominal
+                    <label for="inputExpenseAmount"
+                        style="font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:6px; display:block;">Nominal
                         Biaya (Rp)</label>
                     <input type="number" id="inputExpenseAmount" placeholder="Contoh: 1500000"
                         style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-weight:800; outline:none; font-size:14px;">
@@ -1207,42 +1267,44 @@
             </div>
 
             <button onclick="saveExpenseToGAS()" id="btnSaveExpense"
-                style="width:100%; padding:14px; background:var(--primary-solid); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:14px; transition:0.2s;">CATAT
+                style="width:100%; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px; transition:0.2s;">CATAT
                 PENGELUARAN</button>
         </div>
     </div>
 
     <!-- Settings Modal -->
-    <div id="settingsModal"
-        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; flex-direction:column; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+    <div id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle"
+        style="display:none; position:fixed; inset:0; background:var(--overlay); z-index:var(--z-modal); flex-direction:column; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
         <div
-            style="background:var(--card); padding:30px; border-radius:24px; box-shadow:0 10px 30px rgba(0,0,0,0.2); border:1px solid var(--border); width:90%; max-width:400px; position:relative; animation:fadeInUp 0.3s ease;">
+            style="background:var(--surface); padding:30px; border-radius:24px; box-shadow:var(--shadow-md); border:1px solid var(--border); width:90%; max-width:400px; position:relative; animation:fadeInUp 0.3s ease;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 style="font-family:'Geomini','Plus Jakarta Sans'; color:var(--text); margin:0; font-size:18px;">Pengaturan
+                <h3 id="settingsModalTitle" style="font-family:'Geomini', 'Plus Jakarta Sans', sans-serif; color:var(--text); margin:0; font-size:18px;">Pengaturan
                     Target</h3>
                 <button onclick="document.getElementById('settingsModal').style.display='none'"
-                    style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1; font-weight:800;">&times;</button>
+                    aria-label="Tutup"
+                    style="background:none; border:none; cursor:pointer; color:var(--muted); font-size:24px; line-height:1; font-weight:800;">&times;</button>
             </div>
-            <p style="color:var(--text-muted); font-size:12px; margin-bottom:15px; font-weight:500;">Masukkan target
-                omzet bulan ini. Data akan disimpan otomatis ke dalam database (Settings).</p>
-            <input type="number" id="inputTargetSales" placeholder="Contoh: 820000000"
+            <p style="color:var(--muted); font-size:12px; margin-bottom:16px; font-weight:500;">Masukkan target
+                omzet bulan ini. Perubahan tersimpan otomatis.</p>
+            <input type="number" id="inputTargetSales" placeholder="Contoh: 820000000" aria-label="Target omzet bulan ini"
                 style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text); margin-bottom:16px; font-weight:800; outline:none; font-size:16px;">
             <button onclick="saveTargetToGAS()" id="btnSaveTarget"
-                style="width:100%; padding:14px; background:var(--primary-solid); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:14px; transition:0.2s;">SIMPAN
+                style="width:100%; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px; transition:0.2s;">SIMPAN
                 TARGET</button>
         </div>
     </div>
 
     <!-- Upload Excel Modal -->
-    <div id="uploadExcelModal"
-        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; flex-direction:column; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+    <div id="uploadExcelModal" role="dialog" aria-modal="true" aria-labelledby="uploadModalTitle"
+        style="display:none; position:fixed; inset:0; background:var(--overlay); z-index:var(--z-modal); flex-direction:column; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
         <div class="upload-modal-content" id="uploadModalContent">
             <!-- Header -->
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h3 style="font-family:'Geomini','Plus Jakarta Sans'; color:var(--text); margin:0; font-size:18px;"
-                    id="uploadModalTitle">Import Excel Penjualan (Bulk Upsert)</h3>
+                <h3 style="font-family:'Geomini', 'Plus Jakarta Sans', sans-serif; color:var(--text); margin:0; font-size:18px;"
+                    id="uploadModalTitle">Import Excel Penjualan (Massal)</h3>
                 <button onclick="closeUploadModal()"
-                    style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1; font-weight:800;">&times;</button>
+                    aria-label="Tutup"
+                    style="background:none; border:none; cursor:pointer; color:var(--muted); font-size:24px; line-height:1; font-weight:800;">&times;</button>
             </div>
 
             <!-- Step Indicators -->
@@ -1259,7 +1321,7 @@
 
             <!-- STEP 1: UPLOAD FILE -->
             <div id="panelUploadStep1">
-                <p style="color:var(--text-muted); font-size:12px; margin-bottom:15px; font-weight:500;">
+                <p style="color:var(--muted); font-size:12px; margin-bottom:16px; font-weight:500;">
                     Unggah file Excel penjualan Anda. Sistem akan memfilter data secara cerdas:
                     <br>• Baris baru akan <b>ditambahkan (Insert)</b>
                     <br>• Baris yang ada perubahan akan <b>diperbarui (Update)</b>
@@ -1271,7 +1333,7 @@
                     style="border: 2px dashed var(--border); border-radius: 16px; padding: 40px 20px; text-align: center; background: var(--bg); cursor: pointer; transition: 0.2s;"
                     onpointerover="this.style.borderColor='var(--primary)'"
                     onpointerout="this.style.borderColor='var(--border)'">
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)"
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"
                         stroke-width="2" style="margin-bottom:12px;">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
@@ -1280,19 +1342,19 @@
                     </svg>
                     <div style="font-weight: 800; font-size: 14px; color: var(--text); margin-bottom: 4px;">Tarik &
                         Lepas File Excel di sini</div>
-                    <div style="font-size: 11px; color: var(--text-muted);">atau klik untuk memilih file (.xlsx, .xls,
+                    <div style="font-size: 11px; color: var(--muted);">atau klik untuk memilih file (.xlsx, .xls,
                         .csv)</div>
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
                     <button onclick="closeUploadModal()"
-                        style="padding: 12px 24px; background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px;">BATAL</button>
+                        style="padding: 12px 20px; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px;">BATAL</button>
                 </div>
             </div>
 
             <!-- STEP 2: COLUMN MAPPING & LIVE PREVIEW -->
             <div id="panelUploadStep2" style="display: none;">
-                <p style="color:var(--text-muted); font-size:12px; margin-bottom:10px; font-weight:500;">
+                <p style="color:var(--muted); font-size:12px; margin-bottom:10px; font-weight:500;">
                     Sistem mendeteksi kolom Excel Anda. Silakan cocokkan kolom di bawah jika belum sesuai.
                 </p>
 
@@ -1305,7 +1367,7 @@
                     <!-- Right: Live Preview Table -->
                     <div class="preview-container">
                         <div
-                            style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">
+                            style="font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Pratinjau Data Riil (5 Baris Pertama)
                         </div>
                         <div class="preview-table-wrapper">
@@ -1331,11 +1393,11 @@
                 <!-- Footer Buttons -->
                 <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
                     <button onclick="goToUploadStep(1)"
-                        style="padding: 12px 20px; background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px;">
+                        style="padding: 12px 20px; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px;">
                         HAPUS & UPLOAD ULANG
                     </button>
                     <button onclick="runDataAnalysis()" id="btnRunAnalysis"
-                        style="padding: 12px 30px; background: var(--primary-solid); color: white; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px; transition: 0.2s;">
+                        style="padding: 12px 20px; background: var(--primary-solid); color: var(--on-primary); border: none; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px; transition: 0.2s;">
                         LANJUT ANALISIS DATA
                     </button>
                 </div>
@@ -1348,43 +1410,43 @@
                     <div
                         style="background: var(--bg); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 20px;">
                         <div
-                            style="font-size: 11px; font-weight: 800; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Hasil Analisis Data (Bulk Upsert):
+                            style="font-size: 11px; font-weight: 800; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Hasil Analisis Data:
                         </div>
                         <div style="display: flex; justify-content: space-between; gap: 10px; text-align: center;">
                             <div
-                                style="flex: 1; background: var(--accent); padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border);">
+                                style="flex: 1; background: var(--surface2); padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border);">
                                 <span style="display: block; font-size: 20px; font-weight: 900; color: var(--text);"
                                     id="previewTotalRows">0</span>
-                                <span style="font-size: 9px; font-weight: 800; color: var(--text-muted);">TOTAL
+                                <span style="font-size: 10px; font-weight: 800; color: var(--muted);">TOTAL
                                     BARIS</span>
                             </div>
                             <div
-                                style="flex: 1; background: rgba(22, 163, 74, 0.1); padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(22, 163, 74, 0.2);">
+                                style="flex: 1; background: var(--success-light); padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border);">
                                 <span style="display: block; font-size: 20px; font-weight: 900; color: var(--success);"
                                     id="previewNewRows">0</span>
-                                <span style="font-size: 9px; font-weight: 800; color: var(--success);">BARIS BARU</span>
+                                <span style="font-size: 10px; font-weight: 800; color: var(--success);">BARIS BARU</span>
                             </div>
                             <div
-                                style="flex: 1; background: rgba(217, 119, 6, 0.1); padding: 12px 8px; border-radius: 12px; border: 1px solid rgba(217, 119, 6, 0.2);">
+                                style="flex: 1; background: var(--warning-light); padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border);">
                                 <span style="display: block; font-size: 20px; font-weight: 900; color: var(--warning);"
                                     id="previewUpdateRows">0</span>
-                                <span style="font-size: 9px; font-weight: 800; color: var(--warning);">PERLU
+                                <span style="font-size: 10px; font-weight: 800; color: var(--warning);">PERLU
                                     UPDATE</span>
                             </div>
                             <div
-                                style="flex: 1; background: var(--accent); padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border);">
+                                style="flex: 1; background: var(--surface2); padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border);">
                                 <span
-                                    style="display: block; font-size: 20px; font-weight: 900; color: var(--text-muted);"
+                                    style="display: block; font-size: 20px; font-weight: 900; color: var(--muted);"
                                     id="previewSkipRows">0</span>
-                                <span style="font-size: 9px; font-weight: 800; color: var(--text-muted);">SKIP
+                                <span style="font-size: 10px; font-weight: 800; color: var(--muted);">SKIP
                                     (DUPLIKAT)</span>
                             </div>
                         </div>
                     </div>
 
                     <div
-                        style="font-size: 11px; font-weight: 800; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase;">
+                        style="font-size: 11px; font-weight: 800; color: var(--muted); margin-bottom: 8px; text-transform: uppercase;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> LOG DETAIL TRANSAKSI:
                     </div>
                     <div class="excel-log-container" id="excelLogContainer" style="max-height: 200px;"></div>
@@ -1393,12 +1455,12 @@
                 <!-- Footer Buttons -->
                 <div style="display: flex; gap: 10px; margin-top: 25px; justify-content: flex-end;">
                     <button onclick="goToUploadStep(2)"
-                        style="padding: 12px 20px; background: none; border: 1px solid var(--border); color: var(--text-muted); border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px;">
+                        style="padding: 12px 20px; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px;">
                         KEMBALI KE PEMETAAN
                     </button>
                     <button onclick="sendExcelToGAS()" id="btnSubmitUpload" disabled
-                        style="padding: 12px 30px; background: var(--primary-solid); color: white; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px; opacity: 0.5; transition: 0.2s;">
-                        KIRIM KE SPREADSHEET
+                        style="padding: 12px 20px; background: var(--primary-solid); color: var(--on-primary); border: none; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px; opacity: 0.5; transition: 0.2s;">
+                        KIRIM DATA
                     </button>
                 </div>
             </div>
@@ -1409,86 +1471,94 @@
         <h1><svg class="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path d="M3 3v18h18" />
                 <path d="m19 9-5 5-4-4-3 3" />
-            </svg> SAS - SALES ANALYTIC SIMPLIFY</h1>
-        <div id="syncStatus" style="font-size: 11px; color: var(--text-muted); font-weight: 500; margin-left: 20px;">Mengecek data...</div>
+            </svg> SAS - SALES ANALYTIC</h1>
+        <div id="syncStatus" style="font-size: 11px; color: var(--muted); font-weight: 500; margin-left: 20px;">Mengecek data...</div>
         <div class="nav-controls">
-            <div class="compare-pill" style="margin-right:2px;" title="Pilih tampilan dashboard">
-                <button id="tabMain" class="active" onclick="showTab('main')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg> Dashboard</button>
-                <button id="tabBiaya" onclick="showTab('biaya')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Biaya</button>
+            <div class="nav-group">
+                <div class="compare-pill" style="margin-right:2px;" title="Pilih tampilan dashboard">
+                    <button id="tabMain" class="active" onclick="showTab('main')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg> Dashboard</button>
+                    <button id="tabBiaya" onclick="showTab('biaya')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Biaya</button>
+                </div>
             </div>
-            <button class="theme-toggle" onclick="document.getElementById('settingsModal').style.display='flex'"
-                title="Pengaturan Target" style="padding: 8px 10px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path
-                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                    </path>
-                </svg>
-            </button>
-            <button class="theme-toggle" onclick="bukaModalBiaya()"
-                title="Catat Pengeluaran (OPEX)" style="padding: 8px 10px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-            </button>
-            <button class="theme-toggle" onclick="document.getElementById('uploadExcelModal').style.display='flex'"
-                title="Import Excel Penjualan (Bulk)" aria-label="Import Excel Penjualan (Bulk) — Faktur/Retur" style="padding: 8px 10px; color: var(--success);">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-            </button>
-            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
-                <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2">
-                    <circle cx="12" cy="12" r="5" />
-                    <line x1="12" y1="1" x2="12" y2="3" />
-                    <line x1="12" y1="21" x2="12" y2="23" />
-                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                    <line x1="1" y1="12" x2="3" y2="12" />
-                    <line x1="21" y1="12" x2="23" y2="12" />
-                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                </svg>
-            </button>
-            <input type="text" id="reportrange"
-                style="background: var(--card); color: var(--text); cursor: pointer; padding: 10px 15px; border: 1px solid var(--border); border-radius: 8px; width: 100%; min-width: 220px; font-weight: 700; font-size: 12px; outline:none; text-align:center;">
-            <input type="hidden" id="startDate"><input type="hidden" id="endDate">
-            <input type="hidden" id="comparisonMode" value="rolling">
-            <button class="no-print" onclick="window.print()" title="Cetak / Export PDF (A4)"
-                style="background: var(--primary-solid); color: #fff; cursor: pointer; padding: 10px 16px; border: none; border-radius: 8px; font-weight: 800; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                Cetak
-            </button>
-            <!-- Pill Toggle: Compare Mode -->
-            <div class="compare-pill" title="Mode Komparasi: Pilih cara sistem membandingkan periode">
-                <button id="pillRolling" class="active" onclick="setCompareMode('rolling')">↩ Periode
-                    Sebelumnya</button>
-                <button id="pillMonthly" onclick="setCompareMode('monthly')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Bulan Lalu</button>
+            <div class="nav-group">
+                <button class="theme-toggle" onclick="document.getElementById('settingsModal').style.display='flex'"
+                    title="Pengaturan Target" aria-label="Pengaturan Target" style="padding: 8px 12px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                </button>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode" aria-label="Ganti Mode Gelap/Terang">
+                    <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                </button>
+            </div>
+            <div class="nav-group">
+                <button class="theme-toggle" onclick="bukaModalBiaya()"
+                    title="Catat Pengeluaran (OPEX)" aria-label="Catat Pengeluaran (OPEX)" style="padding: 8px 12px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
+                <button class="theme-toggle" onclick="document.getElementById('uploadExcelModal').style.display='flex'"
+                    title="Import Excel Penjualan (Bulk)" aria-label="Import Excel Penjualan (Bulk) — Faktur/Retur" style="padding: 8px 12px; color: var(--success);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="nav-group">
+                <input type="text" id="reportrange" aria-label="Pilih rentang tanggal" title="Pilih rentang tanggal"
+                    style="background: var(--surface); color: var(--text); cursor: pointer; padding: 10px 15px; border: 1px solid var(--border); border-radius: 8px; width: 100%; min-width: 200px; font-weight: 700; font-size: 12px; outline:none; text-align:center;">
+                <input type="hidden" id="startDate"><input type="hidden" id="endDate">
+                <input type="hidden" id="comparisonMode" value="rolling">
+                <button class="no-print" onclick="window.print()" title="Cetak / Export PDF (A4)"
+                    style="background: var(--primary-solid); color: var(--on-primary); cursor: pointer; padding: 8px 12px; border: none; border-radius: 8px; font-weight: 800; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    Cetak
+                </button>
+                <!-- Pill Toggle: Compare Mode -->
+                <div class="compare-pill" title="Mode Komparasi: Pilih cara sistem membandingkan periode">
+                    <button id="pillRolling" class="active" onclick="setCompareMode('rolling')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg> Periode
+                        Sebelumnya</button>
+                    <button id="pillMonthly" onclick="setCompareMode('monthly')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Bulan Lalu</button>
+                </div>
             </div>
         </div>
     </div>
 
         <div class="bento-container" id="mainContainer">
             <div id="printRangeHeader" class="print-range-subheader" style="display:none;"></div>
-            <div id="emptyState" style="display:none; grid-column:1 / -1; box-sizing:border-box; background:var(--card); border:1px dashed var(--border); border-radius:16px; padding:18px 20px; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+            <div id="emptyState" style="display:none; grid-column:1 / -1; box-sizing:border-box; background:var(--surface); border:1px dashed var(--border); border-radius:16px; padding:18px 20px; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
                 <div style="display:flex; align-items:center; gap:14px;">
-                    <span style="font-size:24px; line-height:1;">📦</span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
                     <div>
                         <div style="font-weight:800; font-size:14px;">Belum ada data penjualan di rentang tanggal ini.</div>
-                        <div style="font-size:12px; color:var(--text-muted); font-weight:600;">Impor file Excel (Faktur/Retur) untuk memulai, atau geser jangkauan tanggal ke periode yang sudah berisi data.</div>
+                        <div style="font-size:12px; color:var(--muted); font-weight:600;">Impor file Excel (Faktur/Retur) untuk memulai, atau geser jangkauan tanggal ke periode yang sudah berisi data.</div>
                     </div>
                 </div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     <button onclick="document.getElementById('uploadExcelModal').style.display='flex';"
-                        style="min-height:44px; padding:10px 16px; background:var(--primary-solid); color:white; border:none; border-radius:10px; font-weight:800; font-size:12px; cursor:pointer;">Import Excel</button>
+                        style="min-height:44px; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:12px; font-weight:800; font-size:13px; cursor:pointer;">Import Excel</button>
                     <button onclick="document.getElementById('emptyState').style.display='none';"
-                        style="min-height:44px; padding:10px 16px; background:var(--accent); color:var(--text-muted); border:1px solid var(--border); border-radius:10px; font-weight:800; font-size:12px; cursor:pointer;">Tutup</button>
+                        style="min-height:44px; padding:12px 20px; background:var(--surface2); color:var(--muted); border:1px solid var(--border); border-radius:12px; font-weight:800; font-size:13px; cursor:pointer;">Tutup</button>
                 </div>
             </div>
         <!-- ROW 1 -->
@@ -1509,13 +1579,13 @@
                     data-static-tooltip="Omzet Bersih = (Total Penjualan) − (Total Retur) dalam rentang terpilih.">?</span>
             </div>
             <div id="kpiSalesVs"
-                style="font-size:12px; font-weight:800; display:flex; gap:6px; color:var(--text-muted); margin-bottom:12px;">
+                style="font-size:12px; font-weight:800; display:flex; gap:6px; color:var(--muted); margin-bottom:12px;">
             </div>
             <div class="progress-bg">
                 <div class="progress-fill" id="kpiSalesProgress" style="width:0%;"></div>
             </div>
             <div class="kpi-avg-row"
-                style="display:flex; justify-content:space-between; align-items:center; font-size:10px; font-weight:800; color:var(--text-muted);">
+                style="display:flex; justify-content:space-between; align-items:center; font-size:10px; font-weight:800; color:var(--muted);">
                 <span style="display:inline-flex; align-items:center;"><span id="kpiSalesPct">0%</span><span
                         class="help-icon static"
                         data-static-tooltip="AVG = (Omzet bersih bulan berjalan) ÷ (hari yang sudah lewat di bulan itu). Pembagi memakai hari terakhir data bila data belum masuk (lag ±7 hari).">?</span></span>
@@ -1544,7 +1614,7 @@
                     data-static-tooltip="Nominal Retur = total nilai (Rp) transaksi berstatus 'Retur' dalam rentang terpilih.">?</span>
             </div>
             <div id="kpiReturVs"
-                style="font-size:12px; font-weight:800; display:flex; gap:6px; color:var(--text-muted); margin-bottom:12px;">
+                style="font-size:12px; font-weight:800; display:flex; gap:6px; color:var(--muted); margin-bottom:12px;">
             </div>
             <div style="display:flex; align-items:center; gap:6px; margin-top:auto;">
                 <div class="bento-sub" id="kpiReturDetail" style="color:var(--danger);">0 Unit | 0% Loss</div>
@@ -1569,9 +1639,9 @@
                     data-static-tooltip="Laba Bersih = (Omzet Bersih − Total HPP Produk Terjual) − (Total Semua Pengeluaran / Biaya Opex).">?</span>
             </div>
             <div id="kpiNetVs"
-                style="font-size:12px; font-weight:800; display:flex; gap:6px; color:var(--text-muted); margin-bottom:12px;">
+                style="font-size:12px; font-weight:800; display:flex; gap:6px; color:var(--muted); margin-bottom:12px;">
             </div>
-            <div id="kpiOpexDetail" style="margin-top:auto; font-size:12px; font-weight:600; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+            <div id="kpiOpexDetail" style="margin-top:auto; font-size:12px; font-weight:600; color:var(--muted); display:flex; align-items:center; gap:6px;">
                 <span>Biaya: Rp 0 | Margin: 0%</span><span class="help-icon static"
                     data-static-tooltip="Margin = (Laba Bersih ÷ Omzet Bersih) × 100%. CAC = (Total Biaya Opex) ÷ (Jumlah Pelanggan Baru / Transaksi Perdana).">?</span>
             </div>
@@ -1587,9 +1657,9 @@
                 <span class="help-icon static"
                     data-static-tooltip="Piutang = Omzet Bersih 7 hari terakhir (proxy).">?</span>
             </div>
-            <div id="kpiPiutangVs" style="font-size:12px; font-weight:800; display:flex; gap:6px; color:var(--text-muted); margin-bottom:12px;">
+            <div id="kpiPiutangVs" style="font-size:12px; font-weight:800; display:flex; gap:6px; color:var(--muted); margin-bottom:12px;">
             </div>
-            <div id="kpiPiutangDetail" style="margin-top:auto; font-size:12px; font-weight:600; color:var(--text-muted); display:flex; align-items:center; gap:6px;">
+            <div id="kpiPiutangDetail" style="margin-top:auto; font-size:12px; font-weight:600; color:var(--muted); display:flex; align-items:center; gap:6px;">
                 <span>Lunas: Rp 0 | Retur: Rp 0</span><span class="help-icon static" data-static-tooltip="Lunas = Omzet − Piutang − Retur">?</span>
             </div>
         </div>
@@ -1606,8 +1676,8 @@
             <div style="display:flex; flex-direction:column; gap:16px; margin-top:10px;">
                 <div>
                     <div
-                        style="font-size:10px; font-weight:800; color:var(--text-muted); margin-bottom:4px; display:flex; align-items:center; gap:6px;">
-                        <span style="color:var(--success)">●</span> HARI GACOR
+                        style="font-size:10px; font-weight:800; color:var(--muted); margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                        <span style="color:var(--success)">●</span> HARI TERLARIS
                     </div>
                     <div style="display:flex; align-items:center; gap:6px;">
                         <div style="font-size:16px; font-weight:900; color:var(--text);" id="kpiGoldenDay">-</div>
@@ -1618,7 +1688,7 @@
                 <div style="height:1px; background:var(--border); width:100%;"></div>
                 <div>
                     <div
-                        style="font-size:10px; font-weight:800; color:var(--text-muted); margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                        style="font-size:10px; font-weight:800; color:var(--muted); margin-bottom:4px; display:flex; align-items:center; gap:6px;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--warning)" stroke="var(--warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> TOP KONTRIBUTOR
                     </div>
                     <div style="display:flex; align-items:center; gap:6px;">
@@ -1662,12 +1732,12 @@
             <div class="bento-header">
                 <div class="bento-title">TOP PRODUK & MOMENTUM</div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end;">
-                    <select id="filterProdukKategori" onchange="onFilterProdukKategoriChange()"
-                        style="padding:6px 12px; font-size:11px; border-radius:6px; border:1px solid var(--border); background:var(--accent); color:var(--text); font-weight:700; outline:none; max-width:200px;">
+                    <select id="filterProdukKategori" onchange="onFilterProdukKategoriChange()" aria-label="Filter kategori produk"
+                        style="padding:6px 12px; font-size:11px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-weight:700; outline:none; max-width:200px;">
                         <option value="ALL">SEMUA KATEGORI</option>
                     </select>
-                    <select id="filterResellerPelanggan" onchange="prosesData()"
-                        style="display:none; padding:6px 12px; font-size:11px; border-radius:6px; border:1px solid var(--border); background:var(--accent); color:var(--text); font-weight:700; outline:none; max-width:260px;">
+                    <select id="filterResellerPelanggan" onchange="prosesData()" aria-label="Filter reseller atau pelanggan"
+                        style="display:none; padding:6px 12px; font-size:11px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-weight:700; outline:none; max-width:260px;">
                         <option value="ALL">SEMUA RESELLER</option>
                     </select>
                 </div>
@@ -1700,7 +1770,7 @@
 
         <div class="bento-item col-span-4">
             <div class="bento-header">
-                <div class="bento-title">PETA WAKTU GACOR</div>
+                <div class="bento-title">PETA WAKTU TERLARIS</div>
             </div>
             <div class="chart-box large"><canvas id="chartHari"></canvas></div>
         </div>
@@ -1714,7 +1784,7 @@
             <div id="basketIntel" style="display:flex; flex-direction:column; gap:16px; margin-top:10px; flex:1;"></div>
 
             <div class="bento-header" style="margin-top:24px;">
-                <div class="bento-title" style="color:var(--danger)">RADAR KEBOCORAN BIAYA</div>
+                <div class="bento-title" style="color:var(--danger)">DETEKSI KEBOCORAN BIAYA</div>
             </div>
             <div id="opexList" style="display:flex; flex-direction:column; gap:8px; flex:1;"></div>
         </div>
@@ -1723,7 +1793,7 @@
         <div class="bento-item col-span-4">
             <div class="bento-header">
                 <div class="bento-title">VIP SEGMENTATION & CHURN <span class="help-icon"
-                        data-tooltip="Melacak Status Loyalitas Pelanggan: SULTAN (Sering Belanja), AKTIF, dan AWAS KABUR (Tidak transaksi >14 Hari). Dibagi ke kelompok Reseller (B2B) dan Marketplace/Umum (B2C).">?</span>
+                        data-tooltip="Melacak Status Loyalitas Pelanggan: SETIA (Sering Belanja), AKTIF, dan BERISIKO CHURN (Tidak transaksi >14 Hari). Dibagi ke kelompok Reseller (B2B) dan Marketplace/Umum (B2C).">?</span>
                 </div>
             </div>
             <div id="rfmList"
@@ -1732,83 +1802,83 @@
             <div id="vipInsight" style="margin-top:auto; padding-top:15px;"></div>
         </div>
 
-        <div class="bento-item col-span-8" style="border-color:var(--primary); background:var(--accent);">
+        <div class="bento-item col-span-8" style="border-color:var(--primary); background:var(--surface2);">
             <div class="bento-header">
-                <div class="bento-title" style="color:var(--primary)">INSTANT DIAGNOSTICS (LOCAL ENGINE)</div>
+                <div class="bento-title" style="color:var(--primary)">DIAGNOSA OTOMATIS</div>
             </div>
             <div id="localWarningBox" style="font-size:13px; line-height:1.6; color:var(--text); margin-bottom:16px;">
-                Menganalisis anomali...</div>
+                Menganalisis data...</div>
             <details id="mdPromptBox"
-                style="display:none; margin-bottom:16px; border:1px solid var(--border); border-radius:12px; background:var(--card);">
+                style="display:none; margin-bottom:16px; border:1px solid var(--border); border-radius:12px; background:var(--surface);">
                 <summary
-                    style="cursor:pointer; padding:10px 14px; font-size:11px; font-weight:800; color:var(--text-muted);">
-                    Markdown prompt otomatis (disusun local engine — hanya dikirim saat menekan Tanya Gemini)</summary>
+                    style="cursor:pointer; padding:10px 14px; font-size:11px; font-weight:800; color:var(--muted);">
+                    Prompt yang akan dikirim ke AI (dikirim hanya saat menekan Tanya Gemini)</summary>
                 <pre id="mdPromptPreview"
                     style="margin:0; padding:12px 14px; font-size:11px; line-height:1.5; color:var(--text); background:var(--bg); border-top:1px solid var(--border); white-space:pre-wrap; word-break:break-word; max-height:280px; overflow:auto;"></pre>
             </details>
             <div id="aiResultBox"
-                style="display:none; background:var(--card); color:var(--text); border-radius:12px; padding:20px; font-size:13px; line-height:1.6; margin-bottom:16px; border:1px solid var(--border); box-shadow:inset 0 2px 4px rgba(0,0,0,0.05);">
+                style="display:none; background:var(--surface); color:var(--text); border-radius:12px; padding:20px; font-size:13px; line-height:1.6; margin-bottom:16px; border:1px solid var(--border); box-shadow:inset 0 2px 4px rgba(0,0,0,0.05);">
                 <div id="aiContent"></div>
             </div>
             <button onclick="mintaSaranAI()"
-                style="background:var(--primary-solid); color:white; border:none; padding:12px 20px; border-radius:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:auto; transition:0.2s;">
+                style="background:var(--primary-solid); color:var(--on-primary); border:none; padding:12px 20px; border-radius:12px; font-weight:800; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:auto; transition:0.2s;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg> TANYA GEMINI UNTUK SOLUSI
+                </svg> TANYA GEMINI
             </button>
         </div>
     </div>
 
     <!-- Upload Excel Biaya Modal (Bulk) -->
-    <div id="uploadBiayaModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9999; flex-direction:column; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+    <div id="uploadBiayaModal" role="dialog" aria-modal="true" aria-labelledby="uploadBiayaModalTitle" style="display:none; position:fixed; inset:0; background:var(--overlay); z-index:var(--z-modal); flex-direction:column; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
         <div class="upload-modal-content" id="uploadBiayaModalContent" style="max-width:520px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h3 style="font-family:'Geomini','Plus Jakarta Sans'; color:var(--text); margin:0; font-size:18px;">Import Excel Biaya (Bulk)</h3>
-                <button onclick="closeBiayaUploadModal()" style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:24px; line-height:1; font-weight:800;">&times;</button>
+                <h3 id="uploadBiayaModalTitle" style="font-family:'Geomini', 'Plus Jakarta Sans', sans-serif; color:var(--text); margin:0; font-size:18px;">Import Excel Biaya (Massal)</h3>
+                <button onclick="closeBiayaUploadModal()" aria-label="Tutup" style="background:none; border:none; cursor:pointer; color:var(--muted); font-size:24px; line-height:1; font-weight:800;">&times;</button>
             </div>
-            <p style="color:var(--text-muted); font-size:12px; margin-bottom:15px; font-weight:500;">
+            <p style="color:var(--muted); font-size:12px; margin-bottom:16px; font-weight:500;">
                 Unggah file Excel/CSV laporan biaya (format jurnal). Kolom dibaca: <b>No Bukti</b>, <b>Keterangan Jurnal</b>, <b>Debit</b> (Nominal), dan <b>Tanggal</b> (opsional).<br>
                 Jika kolom Tanggal kosong, tanggal diambil dari <b>No Bukti</b> (mis. <code>110202.2026.08.00008</code> → <code>2026-08-02</code>). Platform (TikTok/Shopee) &amp; Nama Toko (Supersub/KYX) otomatis ditandai dari Keterangan. Baris duplikat otomatis dilewati.
             </p>
             <div id="biayaDropzone" style="border:2px dashed var(--border); border-radius:16px; padding:40px 20px; text-align:center; background:var(--bg); cursor:pointer; transition:0.2s;">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="margin-bottom:12px;">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="margin-bottom:12px;">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
                     <line x1="12" y1="18" x2="12" y2="12"></line>
                     <polyline points="9 15 12 12 15 15"></polyline>
                 </svg>
                 <div style="font-weight:800; font-size:14px; color:var(--text); margin-bottom:4px;">Tarik &amp; Lepas File di sini</div>
-                <div style="font-size:11px; color:var(--text-muted);">atau klik untuk memilih file (.xlsx, .xls, .csv)</div>
+                <div style="font-size:11px; color:var(--muted);">atau klik untuk memilih file (.xlsx, .xls, .csv)</div>
             </div>
             <input type="file" id="biayaFileInput" accept=".xlsx, .xls, .csv" style="display:none;">
             <div id="biayaPreviewBox" style="display:none; margin-top:15px;">
                 <div style="background:var(--bg); border:1px solid var(--border); border-radius:16px; padding:16px; text-align:center;">
                     <span style="font-size:22px; font-weight:900; color:var(--text);" id="biayaTotalRows">0</span>
-                    <span style="font-size:11px; font-weight:800; color:var(--text-muted);"> BARIS VALID SIAP DIIMPORT</span>
+                    <span style="font-size:11px; font-weight:800; color:var(--muted);"> BARIS VALID SIAP DIIMPORT</span>
                 </div>
                 <div style="margin-top:12px; max-height:220px; overflow:auto; border:1px solid var(--border); border-radius:12px;">
                     <table style="width:100%; font-size:11px; border-collapse:collapse;">
-                        <thead style="position:sticky; top:0; background:var(--accent);"><tr><th style="padding:8px; text-align:left; color:var(--text-muted);">No Bukti</th><th style="padding:8px; text-align:left; color:var(--text-muted);">Keterangan</th><th style="padding:8px; text-align:left; color:var(--text-muted);">Kategori →</th><th style="padding:8px; text-align:left; color:var(--text-muted);">Alasan</th><th style="padding:8px; text-align:right; color:var(--text-muted);">Nominal</th></tr></thead>
+                        <thead style="position:sticky; top:0; background:var(--surface2);"><tr><th style="padding:8px; text-align:left; color:var(--muted);">No Bukti</th><th style="padding:8px; text-align:left; color:var(--muted);">Keterangan</th><th style="padding:8px; text-align:left; color:var(--muted);">Kategori →</th><th style="padding:8px; text-align:left; color:var(--muted);">Alasan</th><th style="padding:8px; text-align:right; color:var(--muted);">Nominal</th></tr></thead>
                         <tbody id="biayaPreviewTableBody"></tbody>
                     </table>
                 </div>
-                <div style="font-size:10px; color:var(--text-muted); margin-top:6px; text-align:center;" id="biayaPreviewInfo"></div>
+                <div style="font-size:10px; color:var(--muted); margin-top:6px; text-align:center;" id="biayaPreviewInfo"></div>
             </div>
             <div id="biayaMappingBox" style="display:none; margin-top:15px; background:var(--bg); border:1px solid var(--border); border-radius:16px; padding:16px;">
                 <div style="font-size:12px; font-weight:800; color:var(--danger); margin-bottom:10px;">Header tidak terdeteksi otomatis — pilih kolom manual:</div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <label style="font-size:11px; color:var(--text);">No Bukti <select id="mapNoBukti" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text);"></select></label>
-                    <label style="font-size:11px; color:var(--text);">Keterangan Jurnal <span style="color:var(--danger);">*</span> <select id="mapKeterangan" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text);"></select></label>
-                    <label style="font-size:11px; color:var(--text);">Debit/Nominal <span style="color:var(--danger);">*</span> <select id="mapDebit" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text);"></select></label>
-                    <label style="font-size:11px; color:var(--text);">Tanggal (opsional) <select id="mapTanggal" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text);"></select></label>
-                    <label style="font-size:11px; color:var(--text);">Kategori Biaya (opsional) <select id="mapKategori" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text);"></select></label>
+                    <label style="font-size:11px; color:var(--text);">No Bukti <select id="mapNoBukti" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text);"></select></label>
+                    <label style="font-size:11px; color:var(--text);">Keterangan Jurnal <span style="color:var(--danger);">*</span> <select id="mapKeterangan" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text);"></select></label>
+                    <label style="font-size:11px; color:var(--text);">Debit/Nominal <span style="color:var(--danger);">*</span> <select id="mapDebit" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text);"></select></label>
+                    <label style="font-size:11px; color:var(--text);">Tanggal (opsional) <select id="mapTanggal" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text);"></select></label>
+                    <label style="font-size:11px; color:var(--text);">Kategori Biaya (opsional) <select id="mapKategori" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text);"></select></label>
                 </div>
-                <button onclick="applyBiayaMapping()" style="margin-top:12px; width:100%; padding:10px; background:var(--primary-solid); color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer;">TERAPKAN MAPPING</button>
-                <div style="font-size:10px; color:var(--text-muted); margin-top:6px; text-align:center;">Header terdeteksi: <span id="biayaDetectedHeaders"></span></div>
+                <button onclick="applyBiayaMapping()" style="margin-top:12px; width:100%; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px;">TERAPKAN PEMETAAN</button>
+                <div style="font-size:10px; color:var(--muted); margin-top:6px; text-align:center;">Header terdeteksi: <span id="biayaDetectedHeaders"></span></div>
             </div>
             <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
-                <button onclick="closeBiayaUploadModal()" style="padding:12px 20px; background:none; border:1px solid var(--border); color:var(--text-muted); border-radius:12px; font-weight:800; cursor:pointer; font-size:13px;">BATAL</button>
-                <button onclick="sendBiayaToGAS()" id="btnSubmitBiayaUpload" disabled style="padding:12px 30px; background:var(--primary-solid); color:white; border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px; opacity:0.5; transition:0.2s;">KIRIM KE DATABASE</button>
+                <button onclick="closeBiayaUploadModal()" style="padding:12px 20px; background:none; border:1px solid var(--border); color:var(--muted); border-radius:12px; font-weight:800; cursor:pointer; font-size:13px;">BATAL</button>
+                <button onclick="sendBiayaToGAS()" id="btnSubmitBiayaUpload" disabled style="padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px; opacity:0.5; transition:0.2s;">KIRIM DATA</button>
             </div>
         </div>
     </div>
@@ -1817,23 +1887,23 @@
     <div class="bento-container" id="biayaContainer" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; grid-column:1 / -1;">
             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <span style="font-family:'Geomini','Plus Jakarta Sans'; color:var(--text); font-size:18px; font-weight:800;">DASHBOARD BIAYA (OPEX)</span>
-                <span class="help-icon" data-static-tooltip="Seluruh angka di tab ini dihitung dari baris tabel 'biaya' di database pada rentang tanggal aktif. Mode komparasi membandingkan dengan rentang periode sebelumnya. Lain-lain = Kategori kosong/LAIN* → derive dari Keterangan Jurnal hanya 5 frasa iklan (shopee/tiktok/kyx/supersub/topup), selain itu tetap Lain-lain.">?</span>
+                <span style="font-family:'Geomini', 'Plus Jakarta Sans', sans-serif; color:var(--text); font-size:18px; font-weight:800;">DASHBOARD BIAYA (OPEX)</span>
+                <span class="help-icon" data-static-tooltip="Seluruh angka di tab ini dihitung dari data Biaya pada rentang tanggal aktif. Mode komparasi membandingkan dengan rentang periode sebelumnya. Lain-lain = Kategori kosong/LAIN* → derive dari Keterangan Jurnal hanya 5 frasa iklan (shopee/tiktok/kyx/supersub/topup), selain itu tetap Lain-lain.">?</span>
             </div>
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                <label style="font-size:11px; font-weight:700; color:var(--text-muted); display:flex; align-items:center; gap:6px;">Omzet:
-                    <select id="biayaOmzetMode" style="padding:6px 10px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text); font-weight:700; font-size:11px;">
+                <label style="font-size:11px; font-weight:700; color:var(--muted); display:flex; align-items:center; gap:6px;">Omzet:
+                    <select id="biayaOmzetMode" style="padding:6px 10px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text); font-weight:700; font-size:11px;">
                         <option value="bersih">Omzet Bersih</option>
                         <option value="kotor">Omzet Kotor</option>
                     </select>
                 </label>
                 <button class="theme-toggle" onclick="bukaModalBiaya()"
-                    title="Catat Pengeluaran (OPEX)" style="padding:10px 14px; display:inline-flex; align-items:center; gap:6px; background:var(--warning); color:#fff; border:none; font-weight:800; font-size:12px;">
+                    title="Catat Pengeluaran (OPEX)" style="padding:8px 12px; display:inline-flex; align-items:center; gap:6px; background:var(--warning); color:var(--on-primary); border:none; font-weight:800; font-size:12px;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     Catat Biaya
                 </button>
                 <button class="theme-toggle" onclick="openBiayaUploadModal()"
-                    title="Upload Bulk Biaya — Keterangan Jurnal → Kategori" aria-label="Upload Bulk Biaya — Keterangan Jurnal → Kategori" style="padding:10px 14px; display:inline-flex; align-items:center; gap:6px; background:var(--warning); color:#fff; border:none; font-weight:800; font-size:12px;">
+                    title="Upload Bulk Biaya — Keterangan Jurnal → Kategori" aria-label="Upload Bulk Biaya — Keterangan Jurnal → Kategori" style="padding:8px 12px; display:inline-flex; align-items:center; gap:6px; background:var(--warning); color:var(--on-primary); border:none; font-weight:800; font-size:12px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-size="9" font-weight="800" fill="currentColor" stroke="none">Rp</text></svg>
                     Upload Biaya
                 </button>
@@ -1847,7 +1917,7 @@
                 <div class="badge primary">OPEX</div>
             </div>
             <div class="bento-value" id="biayaKpiTotal">Rp 0</div>
-            <div id="biayaKpiTotalDelta" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">±0% vs periode lalu</div>
+            <div id="biayaKpiTotalDelta" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">±0% vs periode lalu</div>
         </div>
 
         <div class="bento-item col-span-3">
@@ -1856,7 +1926,7 @@
                 <div class="badge primary">EFISIENSI</div>
             </div>
             <div class="bento-value" id="biayaKpiRatio">0%</div>
-            <div id="biayaKpiRatioDelta" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">dari omzet bersih</div>
+            <div id="biayaKpiRatioDelta" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">dari omzet bersih</div>
         </div>
 
         <div class="bento-item col-span-3">
@@ -1865,7 +1935,7 @@
                 <div class="badge primary">RATA-RATA</div>
             </div>
             <div class="bento-value" id="biayaKpiPerNota">Rp 0</div>
-            <div id="biayaKpiPerNotaInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">0 nota</div>
+            <div id="biayaKpiPerNotaInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">0 nota</div>
         </div>
 
         <div class="bento-item col-span-3">
@@ -1874,7 +1944,7 @@
                 <div class="badge primary">TOP 1</div>
             </div>
             <div class="bento-value" id="biayaKpiTopCat" style="font-size:18px;">—</div>
-            <div id="biayaKpiTopCatShare" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">0% dari total biaya</div>
+            <div id="biayaKpiTopCatShare" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">0% dari total biaya</div>
         </div>
 
         <!-- ROW 1B: OMZET + BIAYA IKLAN + ROAS/ROI (L1) -->
@@ -1884,7 +1954,7 @@
                 <div class="badge primary">OMZET</div>
             </div>
             <div class="bento-value" id="biayaKpiOmzet">Rp 0</div>
-            <div id="biayaKpiOmzetInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">-</div>
+            <div id="biayaKpiOmzetInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">-</div>
         </div>
         <div class="bento-item col-span-3">
             <div class="bento-header">
@@ -1892,7 +1962,7 @@
                 <div class="badge primary">IKLAN</div>
             </div>
             <div class="bento-value" id="biayaKpiIklan">Rp 0</div>
-            <div id="biayaKpiIklanInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">-</div>
+            <div id="biayaKpiIklanInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">-</div>
         </div>
         <div class="bento-item col-span-3">
             <div class="bento-header">
@@ -1900,7 +1970,7 @@
                 <div class="badge primary">ROAS</div>
             </div>
             <div class="bento-value" id="biayaKpiRoasTotal">0.0x</div>
-            <div id="biayaKpiRoasTotalInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">-</div>
+            <div id="biayaKpiRoasTotalInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">-</div>
         </div>
         <div class="bento-item col-span-3">
             <div class="bento-header">
@@ -1908,7 +1978,7 @@
                 <div class="badge primary">ROI</div>
             </div>
             <div class="bento-value" id="biayaKpiRoiIklan">0%</div>
-            <div id="biayaKpiRoiIklanInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">-</div>
+            <div id="biayaKpiRoiIklanInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">-</div>
         </div>
         <div class="bento-item col-span-3">
             <div class="bento-header">
@@ -1917,14 +1987,14 @@
             </div>
             <div style="display:flex; flex-direction:column; gap:6px;">
                 <div>
-                    <div style="font-size:10px; font-weight:700; color:var(--text-muted);">ROAS</div>
+                    <div style="font-size:10px; font-weight:700; color:var(--muted);">ROAS</div>
                     <div class="bento-value" id="biayaKpiRoasShopee" style="font-size:18px;">0.0x</div>
-                    <div id="biayaKpiRoasShopeeInfo" style="font-size:10px; font-weight:700; color:var(--text-muted);">-</div>
+                    <div id="biayaKpiRoasShopeeInfo" style="font-size:10px; font-weight:700; color:var(--muted);">-</div>
                 </div>
                 <div style="border-top:1px solid var(--border); padding-top:6px;">
-                    <div style="font-size:10px; font-weight:700; color:var(--text-muted);">ROI</div>
+                    <div style="font-size:10px; font-weight:700; color:var(--muted);">ROI</div>
                     <div style="font-size:14px; font-weight:800;" id="biayaKpiRoiShopee">0%</div>
-                    <div id="biayaKpiRoiShopeeInfo" style="font-size:10px; font-weight:700; color:var(--text-muted);">-</div>
+                    <div id="biayaKpiRoiShopeeInfo" style="font-size:10px; font-weight:700; color:var(--muted);">-</div>
                 </div>
             </div>
         </div>
@@ -1935,14 +2005,14 @@
             </div>
             <div style="display:flex; flex-direction:column; gap:6px;">
                 <div>
-                    <div style="font-size:10px; font-weight:700; color:var(--text-muted);">ROAS</div>
+                    <div style="font-size:10px; font-weight:700; color:var(--muted);">ROAS</div>
                     <div class="bento-value" id="biayaKpiRoasTiktok" style="font-size:18px;">0.0x</div>
-                    <div id="biayaKpiRoasTiktokInfo" style="font-size:10px; font-weight:700; color:var(--text-muted);">-</div>
+                    <div id="biayaKpiRoasTiktokInfo" style="font-size:10px; font-weight:700; color:var(--muted);">-</div>
                 </div>
                 <div style="border-top:1px solid var(--border); padding-top:6px;">
-                    <div style="font-size:10px; font-weight:700; color:var(--text-muted);">ROI</div>
+                    <div style="font-size:10px; font-weight:700; color:var(--muted);">ROI</div>
                     <div style="font-size:14px; font-weight:800;" id="biayaKpiRoiTiktok">0%</div>
-                    <div id="biayaKpiRoiTiktokInfo" style="font-size:10px; font-weight:700; color:var(--text-muted);">-</div>
+                    <div id="biayaKpiRoiTiktokInfo" style="font-size:10px; font-weight:700; color:var(--muted);">-</div>
                 </div>
             </div>
         </div>
@@ -1952,7 +2022,7 @@
                 <div class="badge primary">LABA</div>
             </div>
             <div class="bento-value" id="biayaKpiLaba">Rp 0</div>
-            <div id="biayaKpiLabaInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--text-muted);">-</div>
+            <div id="biayaKpiLabaInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">-</div>
         </div>
 
         <!-- ROW 2: TREN BIAYA + OMSET -->
@@ -1981,13 +2051,13 @@
                 <div class="bento-title">RANKING KATEGORI <span class="help-icon" data-static-tooltip="Urutan kategori berdasarkan total biaya, dengan selisih terhadap periode sebelumnya.">?</span></div>
             </div>
             <div id="biayaRankList" style="display:flex; flex-direction:column; gap:8px;"></div>
-            <div style="font-size:10px; color:var(--text-muted); margin-top:10px; padding:8px; background:var(--accent); border-radius:8px;">Lain-lain = Kategori kosong/LAIN* → derive dari Keterangan Jurnal hanya 5 frasa iklan (SHOPEE/TIKTOK/KYX/SUPERSUB/TOPUP), selain itu tetap Lain-lain.</div>
+            <div style="font-size:10px; color:var(--muted); margin-top:10px; padding:8px; background:var(--surface2); border-radius:8px;">Lain-lain = Kategori kosong/LAIN* → derive dari Keterangan Jurnal hanya 5 frasa iklan (SHOPEE/TIKTOK/KYX/SUPERSUB/TOPUP), selain itu tetap Lain-lain.</div>
         </div>
 
         <!-- ROW 4: TABEL PER-ENTRI -->
         <div class="bento-item col-span-12">
             <div class="bento-header">
-                <div class="bento-title">DETAIL PER-ENTRI BIAYA <span class="help-icon" data-static-tooltip="Semua baris biaya pada rentang aktif. Edit membuka kembali form Catat Biaya; Hapus menghapus baris dari database.">?</span></div>
+                <div class="bento-title">DETAIL PER-ENTRI BIAYA <span class="help-icon" data-static-tooltip="Semua baris biaya pada rentang aktif. Edit membuka kembali form Catat Biaya; Hapus menghapus baris.">?</span></div>
             </div>
             <div style="overflow-x:auto;">
                 <table id="biayaTable" class="display" style="width:100%;">
@@ -2078,12 +2148,12 @@
             window.isProcessingGAS = true;
 
             // Set state loading spin
-            visual.innerHTML = '<div id="processingSpinner" style="border:4px solid var(--accent); border-top:4px solid var(--primary); border-radius:50%; width:50px; height:50px; animation:spin 1s linear infinite;"></div>';
+            visual.innerHTML = '<div id="processingSpinner" style="border:4px solid var(--surface2); border-top:4px solid var(--primary); border-radius:50%; width:50px; height:50px; animation:spin 1s linear infinite;"></div>';
             if (titleEl) {
                 titleEl.innerText = title || 'Memproses Data...';
                 titleEl.style.color = 'var(--text)';
             }
-            if (descEl) descEl.innerText = desc || 'Mohon jangan menutup halaman atau melakukan refresh. Data sedang diproses secara aman.';
+            if (descEl) descEl.innerText = desc || 'Mohon jangan menutup halaman atau melakukan refresh. Data sedang diproses.';
             if (closeBtn) closeBtn.style.display = 'none';
 
             // Sembunyikan progress bar jika dipanggil secara standar
@@ -2152,7 +2222,7 @@
                 titleEl.innerText = title || 'Proses Sukses!';
                 titleEl.style.color = 'var(--success)';
             }
-            if (descEl) descEl.innerHTML = desc || 'Data berhasil disimpan dan disinkronkan ke database.';
+            if (descEl) descEl.innerHTML = desc || 'Data berhasil disimpan.';
             if (closeBtn) closeBtn.style.display = 'none';
 
             if (duration > 0) {
@@ -2216,11 +2286,56 @@
         function showRefreshToast() {
             const toast = document.createElement('div');
             toast.innerHTML = `${ICONS.warning}&nbsp; Data tersimpan. Dashboard perlu dimuat ulang. <a href="#" id="analyticReloadNotice" style="color:var(--primary);font-weight:700;">Refresh</a>`;
-            toast.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:2147483000;background:var(--card);border:1px solid var(--warning);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text);box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:300px;';
+            toast.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:var(--z-toast);background:var(--surface);border:1px solid var(--warning);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text);box-shadow:var(--shadow-md);max-width:300px;';
             document.body.appendChild(toast);
             const btn = document.getElementById('analyticReloadNotice');
             if (btn) btn.onclick = (e) => { e.preventDefault(); location.reload(); };
             setTimeout(() => toast.remove(), 8000);
+        }
+
+        // Toast netral untuk validasi/peringatan ringan (menggantikan alert())
+        function showToast(message, type = 'warning') {
+            const accent = type === 'error' ? 'var(--danger)' : (type === 'success' ? 'var(--success)' : 'var(--warning)');
+            const toast = document.createElement('div');
+            toast.setAttribute('role', 'status');
+            toast.textContent = message;
+            toast.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:var(--z-toast);background:var(--surface);border:1px solid ' + accent + ';border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text);box-shadow:var(--shadow-md);max-width:320px;white-space:pre-line;cursor:pointer;';
+            toast.setAttribute('title', 'Klik untuk menutup');
+            document.body.appendChild(toast);
+            toast.onclick = () => toast.remove();
+            setTimeout(() => toast.remove(), type === 'error' ? 6000 : 4000);
+        }
+
+        // Dialog konfirmasi bergaya (menggantikan confirm()) — mengembalikan Promise<boolean>
+        function confirmDialog(message, confirmLabel = 'Hapus') {
+            return new Promise(resolve => {
+                const wrap = document.createElement('div');
+                wrap.setAttribute('role', 'dialog');
+                wrap.setAttribute('aria-modal', 'true');
+                wrap.style.cssText = 'position:fixed;inset:0;background:var(--overlay);backdrop-filter:blur(4px);z-index:calc(var(--z-overlay) + 50);display:flex;justify-content:center;align-items:center;';
+                const card = document.createElement('div');
+                card.style.cssText = 'background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow-lg);padding:24px;width:90%;max-width:380px;';
+                card.innerHTML = '<p style="margin:0 0 6px;font-weight:800;font-size:15px;color:var(--text);" id="confirmDialogTitle">Konfirmasi</p><p style="margin:0 0 18px;font-size:13px;color:var(--muted);line-height:1.5;" id="confirmDialogDesc"></p>';
+                card.querySelectorAll('p')[1].textContent = message;
+                wrap.setAttribute('aria-labelledby', 'confirmDialogTitle');
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;';
+                const cancel = document.createElement('button');
+                cancel.textContent = 'Batal';
+                cancel.style.cssText = 'min-height:44px;padding:10px 16px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;';
+                const ok = document.createElement('button');
+                ok.textContent = confirmLabel;
+                ok.style.cssText = 'min-height:44px;padding:10px 16px;background:var(--danger);color:var(--on-primary);border:none;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;';
+                row.appendChild(cancel); row.appendChild(ok); card.appendChild(row); wrap.appendChild(card);
+                document.body.appendChild(wrap);
+                function done(val) { wrap.remove(); document.removeEventListener('keydown', onKey); resolve(val); }
+                function onKey(e) { if (e.key === 'Escape') { e.preventDefault(); done(false); } }
+                cancel.onclick = () => done(false);
+                ok.onclick = () => done(true);
+                wrap.addEventListener('mousedown', e => { if (e.target === wrap) done(false); });
+                document.addEventListener('keydown', onKey);
+                ok.focus();
+            });
         }
 
         // Sinkronisasi data asinkron dari spreadsheet ke dashboard secara in-place
@@ -2258,7 +2373,7 @@
                     const staleBanner = document.getElementById('aiStaleWarning');
                     if (!staleBanner) {
                         const bannerHtml = `
-                            <div id="aiStaleWarning" style="margin-bottom:15px; padding:10px 15px; background:var(--accent); border:1px dashed var(--warning); border-radius:10px; font-size:12px; color:var(--text); font-weight:700; display:flex; align-items:center; gap:8px; animation:scaleUp 0.3s ease;">
+                            <div id="aiStaleWarning" style="margin-bottom:15px; padding:10px 15px; background:var(--surface2); border:1px dashed var(--warning); border-radius:10px; font-size:12px; color:var(--text); font-weight:700; display:flex; align-items:center; gap:8px; animation:scaleUp 0.3s ease;">
                                 ${ICONS.warning}
                                 <span>Rekomendasi di bawah mungkin usang karena data dashboard telah diperbarui. Silakan tanya kembali untuk strategi terbaru!</span>
                             </div>
@@ -2705,7 +2820,7 @@
                     alwaysShowCalendars: true,
                     startDate: startDefault,
                     endDate: endDefault,
-                    locale: { format: 'DD/MM/YYYY', customRangeLabel: 'Custom', applyLabel: 'Terapkan', cancelLabel: 'Batal' }
+                    locale: { format: 'DD/MM/YYYY', customRangeLabel: 'Kustom', applyLabel: 'Terapkan', cancelLabel: 'Batal' }
                 }, function (start, end) {
                     $('#reportrange').val(start.format('DD MMM YYYY') + ' - ' + end.format('DD MMM YYYY'));
                     applyRange(start, end);
@@ -2743,7 +2858,7 @@
             // Tombol trigger (mirip shadcn): ikon kalender + teks rentang
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.style.cssText = 'display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:10px 15px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text); cursor:pointer; font-weight:700; font-size:12px; outline:none;';
+            btn.style.cssText = 'display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:10px 15px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text); cursor:pointer; font-weight:700; font-size:12px; outline:none;';
             const icon = document.createElement('span');
             icon.style.cssText = 'display:inline-flex; flex-shrink:0;';
             icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
@@ -2754,7 +2869,7 @@
 
             // Popover
             const pop = document.createElement('div');
-            pop.style.cssText = 'position:absolute; top:calc(100% + 8px); right:0; z-index:9999; display:none; background:var(--card); border:1px solid var(--border); border-radius:14px; box-shadow:0 12px 32px rgba(15,23,42,0.12); padding:16px; min-width:580px; max-width:94vw;';
+            pop.style.cssText = 'position:absolute; top:calc(100% + 8px); right:0; z-index:var(--z-modal); display:none; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:0 12px 32px rgba(15,23,42,0.12); padding:16px; min-width:580px; max-width:94vw;';
             pop.style.boxSizing = 'border-box';
 
             // Layout: preset selalu di kiri, kalender selalu di kanan (nowrap = tak pernah bertumpuk)
@@ -2784,7 +2899,7 @@
             nav.style.cssText = 'display:flex; justify-content:space-between; margin-bottom:10px;';
             const navPrev = document.createElement('button'); navPrev.type = 'button'; navPrev.textContent = '‹';
             const navNext = document.createElement('button'); navNext.type = 'button'; navNext.textContent = '›';
-            const navStyle = 'padding:4px 12px; border:1px solid var(--border); border-radius:7px; background:transparent; color:var(--text-muted); cursor:pointer; font-weight:900; font-size:15px; line-height:1; transition:background 0.15s, color 0.15s;';
+            const navStyle = 'padding:4px 12px; border:1px solid var(--border); border-radius:7px; background:transparent; color:var(--muted); cursor:pointer; font-weight:900; font-size:15px; line-height:1; transition:background 0.15s, color 0.15s;';
             navPrev.style.cssText = navStyle;
             navNext.style.cssText = navStyle;
             nav.appendChild(navPrev);
@@ -2797,7 +2912,7 @@
 
             const hint = document.createElement('div');
             hint.id = 'nativeRangeHint';
-            hint.style.cssText = 'font-size:10px; color:var(--text-muted); font-weight:600; margin-top:10px; text-align:center;';
+            hint.style.cssText = 'font-size:10px; color:var(--muted); font-weight:600; margin-top:10px; text-align:center;';
             hint.textContent = 'Klik tanggal pertama lalu tanggal kedua untuk Custom';
             right.appendChild(hint);
 
@@ -2881,7 +2996,7 @@
                 ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].forEach(function (dw) {
                     const w = document.createElement('div');
                     w.textContent = dw;
-                    w.style.cssText = 'text-align:center; font-size:10px; font-weight:800; color:var(--text-muted); padding:4px 0;';
+                    w.style.cssText = 'text-align:center; font-size:10px; font-weight:800; color:var(--muted); padding:4px 0;';
                     grid.appendChild(w);
                 });
                 for (let i = 0; i < monthStart.day(); i++) {
@@ -2900,7 +3015,7 @@
                     const isEnd = selEnd && day.isSame(selEnd, 'day');
                     if (day.isSame(moment(), 'day') && !isStart && !isEnd) st += ' color:var(--primary);';
                     if (inRange && !isStart && !isEnd) st += ' background:var(--primary-light);';
-                    if (isStart || isEnd) st += ' background:var(--primary-solid); color:#fff; font-weight:900;';
+                    if (isStart || isEnd) st += ' background:var(--primary-solid); color:var(--on-primary); font-weight:900;';
                     cell.style.cssText = st;
                     cell.addEventListener('click', function (e) { e.stopPropagation(); onDayClick(day); });
                     grid.appendChild(cell);
@@ -2948,12 +3063,12 @@
                 STAGES.forEach(function (name, i) {
                     if (i > 0) {
                         const line = document.createElement('div');
-                        line.style.cssText = 'width:56px; height:3px; border-radius:2px; background:var(--accent); transition:background 0.3s;';
+                        line.style.cssText = 'width:56px; height:3px; border-radius:2px; background:var(--surface2); transition:background 0.3s;';
                         roadmapEl.appendChild(line);
                         lines.push(line);
                     }
                     const dot = document.createElement('div');
-                    dot.style.cssText = 'width:14px; height:14px; border-radius:50%; border:3px solid var(--accent); background:transparent; box-sizing:border-box; transition:all 0.3s;';
+                    dot.style.cssText = 'width:14px; height:14px; border-radius:50%; border:3px solid var(--surface2); background:transparent; box-sizing:border-box; transition:all 0.3s;';
                     roadmapEl.appendChild(dot);
                     dots.push(dot);
                 });
@@ -2977,11 +3092,13 @@
                 if (status === 'done' && lines[i]) lines[i].style.background = 'var(--primary)';
                 if (roadmapLabel) {
                     roadmapLabel.textContent = detail || '';
-                    roadmapLabel.style.color = status === 'error' ? 'var(--danger)' : 'var(--text-muted)';
+                    roadmapLabel.style.color = status === 'error' ? 'var(--danger)' : 'var(--muted)';
                 }
             }
             function showErr(msg) {
                 if (errText) { errText.textContent = msg; errText.style.display = 'block'; }
+                const rb = document.getElementById('loadingRetryBtn');
+                if (rb) rb.style.display = 'block';
             }
 
             // ponytail: loading screen mengunci front-end sampai SEMUA fungsi siap + data fresh tiba.
@@ -3071,15 +3188,23 @@
                 syncing = false;
                 if (activeStage >= 0) setStage(activeStage, 'error');
                 showErr('Gagal: ' + (e && e.message ? e.message : e) + (memoriLama ? ' — Menampilkan data cache.' : ''));
-                if(syncStatus) syncStatus.innerText = memoriLama ? "Data Offline (Cached)" : "Gagal Sinkronisasi";
+                if(syncStatus) syncStatus.innerText = memoriLama ? "Data offline (dari cache)" : "Gagal sinkronisasi";
                 if (memoriLama) {
                     try {
                         setStage(1, 'active', 'Memakai data cache lokal...');
+                        const rb = document.getElementById('loadingRetryBtn');
+                        if (rb) rb.style.display = 'none';
+                        const banner = document.createElement('div');
+                        banner.id = 'cacheBanner';
+                        banner.setAttribute('role', 'status');
+                        banner.style.cssText = 'display:flex; align-items:center; gap:8px; grid-column:1 / -1; box-sizing:border-box; background:var(--warning-light); color:var(--warning-strong); border:1px solid var(--warning); border-radius:12px; padding:10px 14px; font-weight:700; font-size:12px;';
+                        banner.textContent = 'Koneksi bermasalah — menampilkan data offline (cache lokal). Data terbaru akan dimuat saat koneksi pulih.';
+                        document.getElementById('mainContainer').prepend(banner);
                         olahDataMentah(JSON.parse(memoriLama));
                         setStage(1, 'done');
                     } catch (err) { console.error('Cache error:', err); }
                 } else {
-                    alert("Gagal mengambil data dari " + (DATA_SOURCE === 'supabase' ? 'Supabase' : 'Google Sheet') + ". Cek koneksi dan API!");
+                    showErrorOverlay('Data Gagal Dimuat', 'Data dari ' + (DATA_SOURCE === 'supabase' ? 'Supabase' : 'Google Sheet') + ' tidak bisa diambil. Periksa koneksi internet, lalu muat ulang halaman.');
                 }
                 setStage(2, 'active', 'Merender dashboard dari data yang tersedia...');
                 setupDatePicker();
@@ -3370,7 +3495,7 @@
             let netProfitLalu = (netSalesLalu - dLalu.cogs) - totalBiayaLalu;
 
             function hitungVsText(skrg, lalu, revertColor = false) {
-                if (lalu === 0 && skrg === 0) return `<span style="color:#94a3b8">(-%)</span>`;
+                if (lalu === 0 && skrg === 0) return `<span style="color:var(--muted)">(-%)</span>`;
                 if (lalu === 0 && skrg > 0) return `<span style="color:${revertColor ? 'var(--danger)' : 'var(--success)'}">▲ NEW</span>`;
                 if (lalu === 0 && skrg < 0) return `<span style="color:${revertColor ? 'var(--success)' : 'var(--danger)'}">▼ N/A</span>`;
                 let dff = ((skrg - lalu) / Math.abs(lalu)) * 100;
@@ -3391,7 +3516,7 @@
                 let notaCount = Object.keys(basketData).length;
                 __lastNotaCount = notaCount;
                 updateEmptyState(netSales, notaCount);
-                if (document.getElementById('kpiSalesVs')) document.getElementById('kpiSalesVs').innerHTML = `<span class="help-icon" data-tooltip="Persentase pertumbuhan omzet bersih vs periode pembanding. Nota = 1 pembeli yang belanja dalam 1 hari (proxy transaksi).">?</span> ${hitungVsText(netSales, netSalesLalu)} vs <span style="font-weight:700; color:#cbd5e1;">${formatRp(netSalesLalu)}</span> · <span style="color:var(--text-muted); font-weight:700;">${notaCount.toLocaleString('id-ID')} Nota</span>`;
+                if (document.getElementById('kpiSalesVs')) document.getElementById('kpiSalesVs').innerHTML = `<span class="help-icon" data-tooltip="Persentase pertumbuhan omzet bersih vs periode pembanding. Nota = 1 pembeli yang belanja dalam 1 hari (proxy transaksi).">?</span> ${hitungVsText(netSales, netSalesLalu)} vs <span style="font-weight:700; color:var(--muted);">${formatRp(netSalesLalu)}</span> · <span style="color:var(--muted); font-weight:700;">${notaCount.toLocaleString('id-ID')} Nota</span>`;
                 let barFill = document.getElementById('kpiSalesProgress');
                 if (barFill) {
                     let displayPersen = persen < 0 ? 0 : (persen > 100 ? 100 : persen);
@@ -3484,7 +3609,7 @@
 
                     let qtyDiff = staticMonthlyQty - staticPrevMonthlyQty;
                     let diffArrow = qtyDiff > 0 ? '▲' : (qtyDiff < 0 ? '▼' : '-');
-                    let diffColor = qtyDiff > 0 ? 'var(--success)' : (qtyDiff < 0 ? 'var(--danger)' : '#94a3b8');
+                    let diffColor = qtyDiff > 0 ? 'var(--success)' : (qtyDiff < 0 ? 'var(--danger)' : 'var(--muted)');
                     let diffSign = qtyDiff > 0 ? '+' : '';
                     let diffText = qtyDiff !== 0 ? `<span style="color:${diffColor}; margin-left:4px;">(${diffArrow} ${diffSign}${qtyDiff})</span>` : '';
 
@@ -3492,19 +3617,19 @@
                     elGap.style.justifyContent = 'space-between';
                     elGap.innerHTML = `
                         ${defisitText}
-                        <span style="color:var(--text-muted); font-weight:800; font-size:10px;">
+                        <span style="color:var(--muted); font-weight:800; font-size:10px;">
                             Net QTY: ${staticMonthlyQty} Unit ${diffText}
                         </span>
                     `;
                 }
 
                 if (document.getElementById('kpiRetur')) document.getElementById('kpiRetur').innerText = formatRp(dSkrg.retur);
-                if (document.getElementById('kpiReturVs')) document.getElementById('kpiReturVs').innerHTML = `<span class="help-icon" data-tooltip="Persentase perubahan retur vs periode pembanding. Naik retur = merah.">?</span> ${hitungVsText(dSkrg.retur, dLalu.retur, true)} vs <span style="font-weight:700; color:#cbd5e1;">${formatRp(dLalu.retur)}</span>`;
+                if (document.getElementById('kpiReturVs')) document.getElementById('kpiReturVs').innerHTML = `<span class="help-icon" data-tooltip="Persentase perubahan retur vs periode pembanding. Naik retur = merah.">?</span> ${hitungVsText(dSkrg.retur, dLalu.retur, true)} vs <span style="font-weight:700; color:var(--muted);">${formatRp(dLalu.retur)}</span>`;
                 let pctRetur = netSales > 0 ? (dSkrg.retur / netSales * 100).toFixed(1) : 0;
                 if (document.getElementById('kpiReturDetail')) document.getElementById('kpiReturDetail').innerText = dSkrg.returQty + " Unit | " + pctRetur + "% Loss Rate";
 
                 if (document.getElementById('kpiNetProfit')) document.getElementById('kpiNetProfit').innerText = formatRp(netProfit);
-                if (document.getElementById('kpiNetVs')) document.getElementById('kpiNetVs').innerHTML = `<span class="help-icon" data-tooltip="Persentase perubahan laba bersih vs periode pembanding.">?</span> ${hitungVsText(netProfit, netProfitLalu)} vs <span style="font-weight:700; color:#cbd5e1;">${formatRp(netProfitLalu)}</span>`;
+                if (document.getElementById('kpiNetVs')) document.getElementById('kpiNetVs').innerHTML = `<span class="help-icon" data-tooltip="Persentase perubahan laba bersih vs periode pembanding.">?</span> ${hitungVsText(netProfit, netProfitLalu)} vs <span style="font-weight:700; color:var(--muted);">${formatRp(netProfitLalu)}</span>`;
                 let pelBaruBulanIni = 0;
                 for (let plg in firstPurchaseData) {
                     let pd = firstPurchaseData[plg];
@@ -3546,7 +3671,7 @@
 
                 if (document.getElementById('basketIntel')) {
                     document.getElementById('basketIntel').innerHTML = `
-                    <div style="background:var(--primary-solid); color:white; padding:15px; border-radius:12px; display:flex; flex-direction:column; gap:12px;">
+                    <div style="background:var(--primary-solid); color:var(--on-primary); padding:15px; border-radius:12px; display:flex; flex-direction:column; gap:12px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:12px;">
                             <div>
                                 <div style="font-size:10px; font-weight:800; color:rgba(255,255,255,0.75);">AVG: RESELLER</div>
@@ -3559,7 +3684,7 @@
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <div style="font-size:10px; font-weight:800; color:rgba(255,255,255,0.75);">GLOBAL UNIT/TRX (UPT)</div>
-                            <div style="font-size:14px; font-weight:900; color:#fff;">${UPT} <span style="font-size:10px;">pcs</span></div>
+                            <div style="font-size:14px; font-weight:900; color:var(--on-primary);">${UPT} <span style="font-size:10px;">pcs</span></div>
                         </div>
                     </div>
                     <div style="background:var(--danger-light); padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; ">
@@ -3574,21 +3699,21 @@
 
                 // --- B2B / Reseller ---
                 rfmHtml += `<div style="display:flex; flex-direction:column; min-height:0;">`;
-                rfmHtml += `<div style="font-size:11px; font-weight:800; color:#94a3b8; border-bottom:1px solid var(--border); padding-bottom:5px; margin-bottom:8px; flex-shrink:0;">RESELLER (B2B)</div>`;
+                rfmHtml += `<div style="font-size:11px; font-weight:800; color:var(--muted); border-bottom:1px solid var(--border); padding-bottom:5px; margin-bottom:8px; flex-shrink:0;">RESELLER (B2B)</div>`;
                 rfmHtml += `<div style="flex:1; overflow-y:auto; padding-right:8px; display:flex; flex-direction:column; gap:4px;">`;
 
                 let now = new Date();
                 const topPartner = Object.entries(rekapReseller).sort((a, b) => b[1] - a[1]).slice(0, 50);
-                if (topPartner.length === 0) rfmHtml += `<div style="font-size:11px; color:#94a3b8; text-align:center; padding:10px;">Kosong</div>`;
+                if (topPartner.length === 0) rfmHtml += `<div style="font-size:11px; color:var(--muted); text-align:center; padding:10px;">Kosong</div>`;
                 topPartner.forEach((i, r) => {
                     let pel = i[0], val = i[1], f = freqPelanggan[pel] || 1;
                     let lastD = lastOrder[pel] || now;
                     let daysAgo = Math.floor((now - lastD) / (1000 * 3600 * 24));
 
                     let badge = "";
-                    if (daysAgo > 14) badge = `<span class="tag-warn" style="display:inline-block; margin-top:4px;">AWAS KABUR (${daysAgo}H)</span>`;
-                    else if (f >= 3) badge = `<span class="tag-success" style="display:inline-flex; align-items:center; gap:4px; margin-top:4px; font-weight:900; color:var(--primary); background:var(--accent);">${ICONS.crown} SULTAN (${f}x)</span>`;
-                    else badge = `<span style="background:var(--accent); color:var(--text-muted); padding:4px 8px; border-radius:6px; font-size:10px; font-weight:800; display:inline-block; margin-top:4px;">AKTIF</span>`;
+                    if (daysAgo > 14) badge = `<span class="tag-warn" style="display:inline-block; margin-top:4px;">BERISIKO CHURN (${daysAgo}H)</span>`;
+                    else if (f >= 3) badge = `<span class="tag-success" style="display:inline-flex; align-items:center; gap:4px; margin-top:4px; font-weight:900; color:var(--primary); background:var(--surface2);">${ICONS.crown} SETIA (${f}x)</span>`;
+                    else badge = `<span style="background:var(--surface2); color:var(--muted); padding:4px 8px; border-radius:6px; font-size:10px; font-weight:800; display:inline-block; margin-top:4px;">AKTIF</span>`;
 
                     rfmHtml += `<div class="item-row" style="border-bottom:1px solid var(--border); padding:8px 0; display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; flex-direction:column; gap:2px; max-width:60%;">
@@ -3602,20 +3727,20 @@
 
                 // --- B2C / Marketplace ---
                 rfmHtml += `<div style="display:flex; flex-direction:column; min-height:0;">`;
-                rfmHtml += `<div style="font-size:11px; font-weight:800; color:#94a3b8; border-bottom:1px solid var(--border); padding-bottom:5px; margin-bottom:8px; flex-shrink:0;">MARKETPLACE (B2C)</div>`;
+                rfmHtml += `<div style="font-size:11px; font-weight:800; color:var(--muted); border-bottom:1px solid var(--border); padding-bottom:5px; margin-bottom:8px; flex-shrink:0;">MARKETPLACE (B2C)</div>`;
                 rfmHtml += `<div style="flex:1; overflow-y:auto; padding-right:8px; display:flex; flex-direction:column; gap:4px;">`;
 
                 const topMarketplace = Object.entries(rekapMarketplace).sort((a, b) => b[1] - a[1]).slice(0, 50);
-                if (topMarketplace.length === 0) rfmHtml += `<div style="font-size:11px; color:#94a3b8; text-align:center; padding:10px;">Kosong</div>`;
+                if (topMarketplace.length === 0) rfmHtml += `<div style="font-size:11px; color:var(--muted); text-align:center; padding:10px;">Kosong</div>`;
                 topMarketplace.forEach((i, r) => {
                     let pel = i[0], val = i[1], f = freqPelanggan[pel] || 1;
                     let lastD = lastOrder[pel] || now;
                     let daysAgo = Math.floor((now - lastD) / (1000 * 3600 * 24));
 
                     let badge = "";
-                    if (daysAgo > 14) badge = `<span class="tag-warn" style="display:inline-block; margin-top:4px;">AWAS KABUR (${daysAgo}H)</span>`;
-                    else if (f >= 3) badge = `<span class="tag-success" style="display:inline-flex; align-items:center; gap:4px; margin-top:4px; font-weight:900; color:var(--primary); background:var(--accent);">${ICONS.crown} SULTAN (${f}x)</span>`;
-                    else badge = `<span style="background:var(--accent); color:var(--text-muted); padding:4px 8px; border-radius:6px; font-size:10px; font-weight:800; display:inline-block; margin-top:4px;">AKTIF</span>`;
+                    if (daysAgo > 14) badge = `<span class="tag-warn" style="display:inline-block; margin-top:4px;">BERISIKO CHURN (${daysAgo}H)</span>`;
+                    else if (f >= 3) badge = `<span class="tag-success" style="display:inline-flex; align-items:center; gap:4px; margin-top:4px; font-weight:900; color:var(--primary); background:var(--surface2);">${ICONS.crown} SETIA (${f}x)</span>`;
+                    else badge = `<span style="background:var(--surface2); color:var(--muted); padding:4px 8px; border-radius:6px; font-size:10px; font-weight:800; display:inline-block; margin-top:4px;">AKTIF</span>`;
 
                     rfmHtml += `<div class="item-row" style="border-bottom:1px solid var(--border); padding:8px 0; display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; flex-direction:column; gap:2px; max-width:60%;">
@@ -3627,7 +3752,7 @@
                 });
                 rfmHtml += `</div></div>`;
 
-                if (document.getElementById('rfmList')) document.getElementById('rfmList').innerHTML = rfmHtml || '<div style="padding:15px; text-align:center; color:#94a3b8; font-weight:700; font-size:12px;">Belum ada partner</div>';
+                if (document.getElementById('rfmList')) document.getElementById('rfmList').innerHTML = rfmHtml || '<div style="padding:15px; text-align:center; color:var(--muted); font-weight:700; font-size:12px;">Belum ada partner</div>';
 
                 let totalKabur = 0;
                 let omzetKabur = 0;
@@ -3646,10 +3771,10 @@
                     <div style="background:var(--danger-light);  padding:10px 12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; flex-direction:column;">
                             <span style="font-size:10px; font-weight:800; color:var(--danger); display:inline-flex; align-items:center; gap:4px;">${ICONS.warning} RISIKO CHURN (>14 HARI)</span>
-                            <span style="font-size:12px; font-weight:700; color:#0f172a;">${totalKabur} Pelanggan Awas Kabur</span>
+                            <span style="font-size:12px; font-weight:700; color:var(--text);">${totalKabur} Pelanggan Berisiko Churn</span>
                         </div>
                         <div style="text-align:right; display:flex; flex-direction:column;">
-                            <span style="font-size:10px; font-weight:800; color:#94a3b8;">POTENSI OMZET HILANG</span>
+                            <span style="font-size:10px; font-weight:800; color:var(--muted);">POTENSI OMZET HILANG</span>
                             <span style="font-size:14px; font-weight:900; color:var(--danger);">${formatRp(omzetKabur)}</span>
                         </div>
                     </div>`;
@@ -3667,7 +3792,7 @@
                     const tb = document.getElementById('dtProduk');
                     if (tb) {
                         const tbody = tb.querySelector('tbody');
-                        if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted)">Tidak Ditemukan Top Produk Di Periode ini</td></tr>';
+                        if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--muted)">Tidak Ditemukan Top Produk Di Periode ini</td></tr>';
                     }
                     return;
                 }
@@ -3682,19 +3807,19 @@
                     let returRate = d.qty > 0 ? (d.returQty / d.qty) * 100 : 0;
                     let returStr = returRate > 0
                         ? `<span style="color:var(--danger);font-weight:800;">${returRate.toFixed(1)}%</span>`
-                        : `<span style="color:var(--text-muted);">${returRate.toFixed(1)}%</span>`;
+                        : `<span style="color:var(--muted);">${returRate.toFixed(1)}%</span>`;
 
                     let t = rekapTrendProd[prod] || { skrg: 0, lalu: 0 };
                     let diff = t.skrg - t.lalu;
                     let momDff = t.lalu > 0 ? (diff / t.lalu) * 100 : (t.skrg > 0 ? 100 : 0);
                     let momArrow = diff > 0 ? '▲' : '▼';
                     let momColor = diff > 0 ? 'var(--success)' : 'var(--danger)';
-                    if (t.lalu === 0 && t.skrg === 0) { momArrow = '-'; momColor = 'var(--text-muted)'; }
+                    if (t.lalu === 0 && t.skrg === 0) { momArrow = '-'; momColor = 'var(--muted)'; }
 
                     let trHtml = `<tr>
                         <td style="font-weight:800;">${r + 1}</td>
                         <td style="font-weight:800; color:var(--text);">${prod}</td>
-                        <td data-order="${marginPct.toFixed(4)}"><span style="color:${marginColor}; font-weight:800; background:var(--accent); padding:2px 6px; border-radius:4px; border:1px solid var(--border); font-size:10px;">${marginPct.toFixed(0)}%</span></td>
+                        <td data-order="${marginPct.toFixed(4)}"><span style="color:${marginColor}; font-weight:800; background:var(--surface2); padding:2px 6px; border-radius:4px; border:1px solid var(--border); font-size:10px;">${marginPct.toFixed(0)}%</span></td>
                         <td data-order="${returRate.toFixed(4)}">${returStr}</td>
                         <td data-order="${d.qty}" style="font-weight:900;">${d.qty}</td>
                         <td data-order="${momDff.toFixed(4)}" style="color:${momColor}; font-weight:800;">${momArrow} ${Math.abs(momDff).toFixed(0)}%</td>
@@ -3719,15 +3844,15 @@
                 <div style="display:flex; justify-content:space-between; margin-top:10px;">
                     <div style="flex:1; text-align:center;">
                         <div style="color:var(--danger); font-size:18px; font-weight:900;">${opRat}%</div>
-                        <div style="color:#64748b; font-size:10px; font-weight:800;">OPEX (BEBAN)</div>
+                        <div style="color:var(--muted); font-size:10px; font-weight:800;">OPEX (BEBAN)</div>
                     </div>
                     <div style="flex:1; text-align:center; border-left:1px solid var(--border);">
                         <div style="color:var(--success); font-size:18px; font-weight:900;">${netRat}%</div>
-                        <div style="color:#64748b; font-size:10px; font-weight:800;">NET MARGIN</div>
+                        <div style="color:var(--muted); font-size:10px; font-weight:800;">NET MARGIN</div>
                     </div>
                     <div style="flex:1; text-align:center; border-left:1px solid var(--border);">
-                        <div style="color:#f59e0b; font-size:18px; font-weight:900;">${leakRat}%</div>
-                        <div style="color:#64748b; font-size:10px; font-weight:800;">BOCOR RETUR</div>
+                        <div style="color:var(--warning); font-size:18px; font-weight:900;">${leakRat}%</div>
+                        <div style="color:var(--muted); font-size:10px; font-weight:800;">BOCOR RETUR</div>
                     </div>
                 </div>
             `;
@@ -3748,14 +3873,14 @@
                     let momentumHtml = `<span style="color:${momColor}; font-weight:800; font-size:10px;">${momArrow} ${Math.abs(momDff).toFixed(0)}% (${formatRp(Math.abs(diff))})</span>`;
 
                     let warnaTeks = warnaKategori[index % warnaKategori.length];
-                    return `<div class="item-row" style="font-weight: 700; border-bottom: 1px solid var(--accent); display: flex; justify-content: space-between; padding: 10px 12px; align-items: center;">
+                    return `<div class="item-row" style="font-weight: 700; border-bottom: 1px solid var(--surface2); display: flex; justify-content: space-between; padding: 10px 12px; align-items: center;">
                             <div style="display:flex; flex-direction:column; gap:4px;">
                                 <div><span style="color: var(--text); background-color: ${warnaTeks}30; padding: 4px 10px; border-radius: 6px; display: inline-block; font-size: 11px;">${k}</span></div>
                                 ${momentumHtml}
                             </div>
                             <div style="text-align: right;">
-                                <span style="font-weight: 800; color: #0f172a; display:block;">${formatRp(v)}</span>
-                                <span style="font-size: 10px; color: #64748b;">${p}% Share</span>
+                                <span style="font-weight: 800; color: var(--text); display:block;">${formatRp(v)}</span>
+                                <span style="font-size: 10px; color: var(--muted);">${p}% Share</span>
                             </div>
                         </div>`;
                 }).join('');
@@ -3957,7 +4082,7 @@
 
                 charts['margin'] = new Chart(document.getElementById('chartMargin').getContext('2d'), {
                     type: 'doughnut',
-                    data: { labels: ['Net Profit', 'Beban OPEX'], datasets: [{ data: [actualNet, actualOpex], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 2, borderColor: 'var(--card)', hoverOffset: 4 }] },
+                    data: { labels: ['Net Profit', 'Beban OPEX'], datasets: [{ data: [actualNet, actualOpex], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 2, borderColor: cssVar_('--surface'), hoverOffset: 4 }] },
                     options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
                 });
             }
@@ -3975,13 +4100,13 @@
                     datasets: [{
                         data: sortedKat.map(x => x[1]),
                         backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6'],
-                        borderWidth: 3, borderColor: 'var(--card)', hoverOffset: 5
+                        borderWidth: 3, borderColor: cssVar_('--surface'), hoverOffset: 5
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } } }
             });
 
-            // 5. MODUL 2: PETA WAKTU GACOR (HARI)
+            // 5. MODUL 2: PETA WAKTU TERLARIS (HARI)
             if (document.getElementById('chartHari') && rekapHari) {
                 const ctxHari = document.getElementById('chartHari').getContext('2d');
                 const listUrutanHari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
@@ -4006,7 +4131,7 @@
                         plugins: {
                             legend: { display: false },
                             datalabels: {
-                                anchor: 'end', align: 'top', color: 'var(--text-muted)', font: { weight: '800', size: 9 }, offset: 2,
+                                anchor: 'end', align: 'top', color: cssVar_('--muted'), font: { weight: '800', size: 9 }, offset: 2,
                                 formatter: function (value) { return value > 0 ? (value / 1000000).toFixed(1) + 'M' : ''; }
                             }
                         },
@@ -4125,7 +4250,7 @@
             if (churnCount > 3) {
                 warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; "><b>CHURN URGENT — ${churnCount} Pelanggan Hilang:</b> Potensi omzet tertahan <b>${formatRp(churnOmzet)}</b>. Hubungi mereka hari ini dengan penawaran eksklusif!</div>`);
             } else if (churnCount > 0) {
-                warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; "><b>PANTAU CHURN — ${churnCount} Pelanggan >14 Hari:</b> Potensi omzet ${formatRp(churnOmzet)} sedang tidur. Follow-up sebelum benar-benar kabur!</div>`);
+                warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; "><b>PANTAU CHURN — ${churnCount} Pelanggan >14 Hari:</b> Potensi omzet ${formatRp(churnOmzet)} sedang tidak aktif. Follow-up sebelum benar-benar berhenti!</div>`);
             }
 
             if (warnings.length === 0) {
@@ -4229,12 +4354,12 @@
 
         async function saveTargetToGAS() {
             const targetVal = document.getElementById('inputTargetSales').value;
-            if (!targetVal || targetVal <= 0) return alert('Masukkan angka valid!');
+            if (!targetVal || targetVal <= 0) return showToast('Masukkan nominal target yang valid (angka lebih dari 0).', 'error');
 
             // Tutup settings modal agar tidak menumpuk
             document.getElementById('settingsModal').style.display = 'none';
 
-            showProcessingOverlay('Menyimpan Target...', 'Mohon tunggu, target omzet baru sedang disimpan ke database.');
+            showProcessingOverlay('Menyimpan Target...', 'Target omzet sedang dikirim ke server.');
 
             try {
                 const res = await fetch(API_URL + "?action=saveTarget&value=" + targetVal);
@@ -4244,7 +4369,7 @@
                     localStorage.removeItem("intel_pro_cache_v3");
 
                     // Konfirmasi sukses LANGSUNG: target sudah tersimpan di DB.
-                    showSuccessOverlay('Target Berhasil Disimpan!', 'Target omzet terupdate telah diterapkan pada dashboard secara dinamis.', 1500);
+                    showSuccessOverlay('Target Tersimpan', 'Target baru diterapkan pada dashboard.', 1500);
 
                     // Dynamic Sync di latar belakang; gagal hanya tampilkan toast kecil.
                     syncDashboardData().then(ok => { if (!ok) showRefreshToast(); });
@@ -4253,7 +4378,7 @@
                 }
             } catch (err) {
                 console.error("Gagal menyimpan target:", err);
-                showErrorOverlay('Gagal Menyimpan Target!', 'Terjadi kesalahan saat berkomunikasi dengan Google Apps Script: ' + err.message);
+                showErrorOverlay('Gagal Menyimpan Target', 'Target belum tersimpan. Periksa koneksi lalu coba lagi; bila masih gagal, hubungi admin.');
             }
         }
 
@@ -4262,14 +4387,14 @@
             const categoryVal = document.getElementById('inputExpenseCategory').value.trim();
             const amountVal = document.getElementById('inputExpenseAmount').value;
 
-            if (!dateVal) return alert('Silakan masukkan tanggal!');
-            if (!categoryVal) return alert('Silakan masukkan kategori biaya!');
-            if (!amountVal || amountVal <= 0) return alert('Masukkan nominal biaya yang valid!');
+            if (!dateVal) return showToast('Silakan masukkan tanggal!', 'error');
+            if (!categoryVal) return showToast('Silakan masukkan kategori biaya!', 'error');
+            if (!amountVal || amountVal <= 0) return showToast('Masukkan nominal biaya yang valid!', 'error');
 
             // Tutup modal OPEX agar tidak menumpuk
             document.getElementById('expenseModal').style.display = 'none';
 
-            showProcessingOverlay('Mencatat Pengeluaran...', 'Mohon tunggu, data biaya operasional sedang disimpan ke database secara aman.');
+            showProcessingOverlay('Mencatat Pengeluaran...', 'Data biaya operasional sedang dikirim ke server.');
 
             // Konversi YYYY-MM-DD ke format d/m/yyyy untuk dikirim ke database
             let dateValDb = dateVal;
@@ -4300,7 +4425,7 @@
                     localStorage.removeItem("intel_pro_cache_v3");
 
                     // Konfirmasi sukses LANGSUNG: biaya sudah tersimpan di DB.
-                    showSuccessOverlay(isEdit ? 'Biaya Diperbarui!' : 'Biaya Berhasil Dicatat!', isEdit ? 'Perubahan biaya berhasil disimpan dan disinkronkan ke dashboard.' : 'Biaya operasional baru berhasil ditambahkan dan disinkronkan ke dalam dashboard.', 1500);
+                    showSuccessOverlay(isEdit ? 'Biaya Diperbarui' : 'Biaya Tercatat', isEdit ? 'Perubahan biaya tersimpan dan dashboard diperbarui.' : 'Biaya operasional baru tersimpan dan dashboard diperbarui.', 1500);
 
                     // Dynamic Sync di latar belakang; gagal hanya tampilkan toast kecil.
                     syncDashboardData().then(ok => {
@@ -4315,14 +4440,14 @@
                 }
             } catch (err) {
                 console.error("Gagal menyimpan biaya:", err);
-                showErrorOverlay('Gagal Mencatat Biaya!', 'Terjadi kesalahan saat berkomunikasi dengan Google Apps Script: ' + err.message);
+                showErrorOverlay('Gagal Mencatat Biaya', 'Biaya belum tercatat. Periksa koneksi lalu coba lagi; bila masih gagal, hubungi admin.');
             }
         }
 
         async function mintaSaranAI() {
             const box = document.getElementById('aiResultBox');
             const content = document.getElementById('aiContent');
-            box.style.display = 'block'; content.innerHTML = '<span style="color:#f59e0b;display:inline-flex;align-items:center;gap:4px;">Gemini memproses strategi... '+ICONS.bolt+'</span>';
+            box.style.display = 'block'; content.innerHTML = '<span style="color:var(--warning);display:inline-flex;align-items:center;gap:4px;">Gemini memproses strategi... '+ICONS.bolt+'</span>';
             try {
                 const res = await fetch(API_URL, {
                     method: 'POST',
@@ -4340,7 +4465,7 @@
                     catch (e) { hasilAkhir = JSON.stringify(hasilAkhir); }
                 }
                 content.innerHTML = typeof marked !== 'undefined' ? marked.parse(hasilAkhir) : hasilAkhir.replace(/\n/g, '<br>');
-            } catch (e) { content.innerHTML = '<span style="color:#ef4444;">Gagal menghubungi Gemini.</span>'; }
+            } catch (e) { content.innerHTML = '<span style="color:var(--danger);">Gagal menghubungi Gemini.</span>'; }
         }
 
         function toggleTheme() {
@@ -4354,6 +4479,7 @@
             }
             if (window.parent !== window) { try { window.parent.postMessage({ type: 'THEME_CHANGED', theme: document.documentElement.getAttribute('data-theme') }, '*'); } catch (e) {} }
             if (typeof prosesData === 'function') prosesData();
+            if (typeof isBiayaTabActive === 'function' && isBiayaTabActive() && typeof renderBiayaTab === 'function') renderBiayaTab();
         }
 
         if (window.parent !== window) {
@@ -4534,20 +4660,20 @@
             if (btnSubmit) {
                 btnSubmit.disabled = true;
                 btnSubmit.style.opacity = '0.5';
-                btnSubmit.innerText = 'KIRIM KE SPREADSHEET';
+                btnSubmit.innerText = 'KIRIM DATA';
             }
 
             const dropzone = document.getElementById('dropzone');
             if (dropzone) {
                 dropzone.innerHTML = `
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="margin-bottom:12px;">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="margin-bottom:12px;">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                         <polyline points="14 2 14 8 20 8"></polyline>
                         <line x1="12" y1="18" x2="12" y2="12"></line>
                         <polyline points="9 15 12 12 15 15"></polyline>
                     </svg>
                     <div style="font-weight: 800; font-size: 14px; color: var(--text); margin-bottom: 4px;">Tarik & Lepas File Excel di sini</div>
-                    <div style="font-size: 11px; color: var(--text-muted);">atau klik untuk memilih file (.xlsx, .xls, .csv)</div>
+                    <div style="font-size: 11px; color: var(--muted);">atau klik untuk memilih file (.xlsx, .xls, .csv)</div>
                 `;
             }
 
@@ -4786,7 +4912,7 @@
                     const sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
                     if (sheetData.length === 0) {
-                        alert("File Excel kosong atau tidak valid!");
+                        showToast('File Excel kosong atau tidak valid!', 'error');
                         resetDropzone();
                         return;
                     }
@@ -4857,7 +4983,7 @@
                     }
 
                     if (excelRawRows.length === 0) {
-                        alert("Tidak ada baris data transaksi valid yang ditemukan di file Excel!");
+                        showToast('Tidak ada baris data transaksi valid yang ditemukan di file Excel!', 'error');
                         resetDropzone();
                         return;
                     }
@@ -4870,7 +4996,7 @@
 
                 } catch (err) {
                     console.error(err);
-                    alert("Gagal membaca file Excel: " + err.message);
+                    showToast('Gagal membaca file Excel. Pastikan file berformat .xlsx atau .xls yang valid, lalu coba lagi.', 'error');
                     resetDropzone();
                 }
             };
@@ -4995,7 +5121,7 @@
             let html = '';
 
             if (rowsToPreview.length === 0) {
-                html = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Tidak ada data pratinjau.</td></tr>`;
+                html = `<tr><td colspan="6" style="text-align: center; color: var(--muted);">Tidak ada data pratinjau.</td></tr>`;
             } else {
                 rowsToPreview.forEach(row => {
                     const rawNo = row[mappingState.noTransaksi] || "";
@@ -5043,7 +5169,7 @@
             }
 
             if (missingEssential.length > 0) {
-                alert(`Silakan lengkapi pemetaan kolom esensial berikut: \n• ${missingEssential.join('\n• ')}`);
+                showToast(`Silakan lengkapi pemetaan kolom esensial berikut:\n• ${missingEssential.join('\n• ')}`, 'error');
                 return;
             }
 
@@ -5301,14 +5427,14 @@
 
                     if (isDifferent) {
                         updated++;
-                        statusBadge = '<span class="tag-warn" style="font-size:9px;">UPDATE</span>';
+                        statusBadge = '<span class="tag-warn" style="font-size:10px;">UPDATE</span>';
                     } else {
                         skipped++;
-                        statusBadge = '<span class="tag-success" style="background:var(--accent); color:var(--text-muted); font-size:9px;">SKIP</span>';
+                        statusBadge = '<span class="tag-success" style="background:var(--surface2); color:var(--muted); font-size:10px;">SKIP</span>';
                     }
                 } else {
                     added++;
-                    statusBadge = '<span class="tag-success" style="font-size:9px;">BARU</span>';
+                    statusBadge = '<span class="tag-success" style="font-size:10px;">BARU</span>';
                 }
 
                 logHtml += `
@@ -5346,7 +5472,7 @@
             const dropzone = document.getElementById('dropzone');
             dropzone.innerHTML = `
                 <div style="color: var(--success); font-weight: 800; font-size: 14px; margin-bottom: 4px; display:inline-flex; align-items:center; gap:4px;">${ICONS.check} File Berhasil Dianalisis!</div>
-                <div style="font-size: 11px; color: var(--text-muted);">${rows.length} baris siap diproses. Klik tombol di bawah untuk kirim.</div>
+                <div style="font-size: 11px; color: var(--muted);">${rows.length} baris siap diproses. Klik tombol di bawah untuk kirim.</div>
             `;
         }
 
@@ -5359,7 +5485,7 @@
         }
 
         function sendExcelToGAS() {
-            if (!uploadedData || uploadedData.length === 0) return alert("Pilih file Excel terlebih dahulu!");
+            if (!uploadedData || uploadedData.length === 0) return showToast('Pilih file Excel terlebih dahulu!', 'error');
             lockBtn(document.getElementById('btnSubmitUpload'), 'Mengirim...');
 
             // Tampilkan overlay dengan progress bar diaktifkan
@@ -5385,15 +5511,15 @@
                 if (currentProgress < 30) {
                     // Fase 1: Unggah awal (cepat)
                     currentProgress += Math.random() * 3 + 2; // Naik 2-5% per tick
-                    statusText = 'Mengirim data transaksi ke server database...';
+                    statusText = 'Mengirim data transaksi ke server...';
                 } else if (currentProgress < 75) {
                     // Fase 2: Ingest data di server
                     currentProgress += Math.random() * 1.5 + 0.5; // Naik 0.5-2% per tick
-                    statusText = 'Data diterima! Menghubungkan ke database...';
+                    statusText = 'Data diterima! Menghubungkan ke server...';
                 } else if (currentProgress < 95) {
                     // Fase 3: Pencocokan baris (asimtotik melambat)
                     currentProgress += (95 - currentProgress) * 0.05;
-                    statusText = 'Menyimpan & memfilter baris transaksi baru di database. Mohon tunggu...';
+                    statusText = 'Menyimpan & memfilter baris transaksi baru ke server...';
                 }
 
                 updateProcessingProgress(currentProgress, statusText);
@@ -5431,7 +5557,7 @@
                         // Konfirmasi sukses LANGSUNG: data sudah tersimpan di DB.
                         // Jangan ditahan menunggu sync — sync gagal ≠ import gagal.
                         const detailMsg = `<b>Import Berhasil!</b><br>• Baris Baru: <b>${data.added}</b><br>• Baris Update: <b>${data.updated}</b><br>• Baris Skip (Duplikat): <b>${data.skipped}</b>`;
-                        showSuccessOverlay('Bulk Upload Berhasil!', detailMsg, 4000);
+                        showSuccessOverlay('Import Penjualan Selesai', detailMsg, 4000);
 
                         // Dynamic Sync tanpa reload, jalan di latar belakang.
                         // Sync gagal hanya memunculkan toast kecil Refresh.
@@ -5447,8 +5573,8 @@
                     unlockBtn(document.getElementById('btnSubmitUpload'));
                     console.error("Gagal melakukan upload:", err);
                     showErrorOverlay(
-                        'Gagal Melakukan Upload!',
-                        'Terjadi kesalahan saat menghubungi Google Apps Script: ' + err.message
+                        'Gagal Mengimpor',
+                        'Data belum terkirim. Periksa koneksi lalu coba lagi; bila masih gagal, hubungi admin.'
                     );
                 });
         }
@@ -5466,7 +5592,12 @@
                 document.getElementById('loginOverlay').style.display = 'none';
                 initDashboard();
             } else {
-                document.getElementById('pwdError').style.display = 'block';
+                var errEl = document.getElementById('pwdError');
+                errEl.textContent = 'Password salah. Periksa kembali lalu coba lagi.';
+                errEl.style.display = 'block';
+                var inp = document.getElementById('pwdInput');
+                inp.focus();
+                inp.select();
             }
         }
         document.getElementById('pwdInput').addEventListener('keypress', function (e) {
@@ -5594,7 +5725,7 @@
                     const wb = XLSX.read(data, { type: 'array' });
                     const ws = wb.Sheets[wb.SheetNames[0]];
                     const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-                    if (!rows.length) return alert('File kosong.');
+                    if (!rows.length) return showToast('File kosong atau tidak berisi baris data.', 'error');
                     let headerRowIdx = 0;
                     let headers = rows[0].map(h => String(h == null ? '' : h).trim().toLowerCase());
                     // cari baris header yang sebenarnya (skip judul merge di atas)
@@ -5655,7 +5786,7 @@
                     const info = document.getElementById('biayaPreviewInfo');
                     if (tb) {
                         const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                        tb.innerHTML = out.slice(0,8).map(r=> { const alasan = r._alasan || getBiayaDeriveReason_(r['Keterangan Jurnal'], r._katBefore || ''); return `<tr style="border-top:1px solid var(--border);"><td style="padding:6px 8px; color:var(--text);">${esc(r['No Bukti'])}</td><td style="padding:6px 8px; color:var(--text); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${esc(r['Keterangan Jurnal'])}">${esc(r['Keterangan Jurnal'])}</td><td style="padding:6px 8px; font-weight:800; color:var(--primary);">${esc(r['Kategori Biaya'])}</td><td style="padding:6px 8px; color:var(--text-muted); font-size:10px;">${esc(alasan)}</td><td style="padding:6px 8px; text-align:right; color:var(--text);">${r.Debit.toLocaleString('id-ID')}</td></tr>`; }).join('') || '<tr><td colspan="5" style="padding:10px; text-align:center; color:var(--text-muted);">-</td></tr>';
+                        tb.innerHTML = out.slice(0,8).map(r=> { const alasan = r._alasan || getBiayaDeriveReason_(r['Keterangan Jurnal'], r._katBefore || ''); return `<tr style="border-top:1px solid var(--border);"><td style="padding:6px 8px; color:var(--text);">${esc(r['No Bukti'])}</td><td style="padding:6px 8px; color:var(--text); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${esc(r['Keterangan Jurnal'])}">${esc(r['Keterangan Jurnal'])}</td><td style="padding:6px 8px; font-weight:800; color:var(--primary);">${esc(r['Kategori Biaya'])}</td><td style="padding:6px 8px; color:var(--muted); font-size:10px;">${esc(alasan)}</td><td style="padding:6px 8px; text-align:right; color:var(--text);">${r.Debit.toLocaleString('id-ID')}</td></tr>`; }).join('') || '<tr><td colspan="5" style="padding:10px; text-align:center; color:var(--muted);">-</td></tr>';
                     }
                     if (info) {
                         const cnt = {};
@@ -5666,10 +5797,10 @@
                     const btn = document.getElementById('btnSubmitBiayaUpload');
                     btn.disabled = out.length === 0;
                     btn.style.opacity = out.length === 0 ? '0.5' : '1';
-                    if (out.length === 0) alert('Tidak ada baris valid (periksa No Bukti, Keterangan Jurnal, Debit).');
+                    if (out.length === 0)                     showToast('Tidak ada baris valid (periksa No Bukti, Keterangan Jurnal, Debit).', 'error');
                 } catch (err) {
                     console.error(err);
-                    alert('Gagal membaca file: ' + err.message);
+                    showToast('Gagal membaca file. Pastikan file Excel (.xlsx/.xls) yang valid, lalu coba lagi.', 'error');
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -5716,7 +5847,7 @@
             const iDeb = getIdx('mapDebit');
             const iDate = getIdx('mapTanggal');
             const iCat = getIdx('mapKategori');
-            if (iKet < 0 || iDeb < 0) return alert('Pilih minimal Keterangan Jurnal dan Debit/Nominal');
+            if (iKet < 0 || iDeb < 0) return showToast('Pilih minimal Keterangan Jurnal dan Debit/Nominal.', 'error');
             const rows = window._biayaRawRows;
             const headerRowIdx = window._biayaHeaderRowIdx || 0;
             const out = [];
@@ -5746,16 +5877,16 @@
             const info = document.getElementById('biayaPreviewInfo');
             if (tb) {
                 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                tb.innerHTML = out.slice(0,8).map(r=> { const alasan = r._alasan || getBiayaDeriveReason_(r['Keterangan Jurnal'], r._katBefore || ''); return `<tr style="border-top:1px solid var(--border);"><td style="padding:6px 8px; color:var(--text);">${esc(r['No Bukti'])}</td><td style="padding:6px 8px; color:var(--text); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${esc(r['Keterangan Jurnal'])}">${esc(r['Keterangan Jurnal'])}</td><td style="padding:6px 8px; font-weight:800; color:var(--primary);">${esc(r['Kategori Biaya'])}</td><td style="padding:6px 8px; color:var(--text-muted); font-size:10px;">${esc(alasan)}</td><td style="padding:6px 8px; text-align:right; color:var(--text);">${r.Debit.toLocaleString('id-ID')}</td></tr>`; }).join('') || '<tr><td colspan="5" style="padding:10px; text-align:center; color:var(--text-muted);">-</td></tr>';
+                tb.innerHTML = out.slice(0,8).map(r=> { const alasan = r._alasan || getBiayaDeriveReason_(r['Keterangan Jurnal'], r._katBefore || ''); return `<tr style="border-top:1px solid var(--border);"><td style="padding:6px 8px; color:var(--text);">${esc(r['No Bukti'])}</td><td style="padding:6px 8px; color:var(--text); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${esc(r['Keterangan Jurnal'])}">${esc(r['Keterangan Jurnal'])}</td><td style="padding:6px 8px; font-weight:800; color:var(--primary);">${esc(r['Kategori Biaya'])}</td><td style="padding:6px 8px; color:var(--muted); font-size:10px;">${esc(alasan)}</td><td style="padding:6px 8px; text-align:right; color:var(--text);">${r.Debit.toLocaleString('id-ID')}</td></tr>`; }).join('') || '<tr><td colspan="5" style="padding:10px; text-align:center; color:var(--muted);">-</td></tr>';
             }
             if (info) info.textContent = out.length > 8 ? `Menampilkan 8 dari ${out.length} baris` : '';
             const btn = document.getElementById('btnSubmitBiayaUpload');
             btn.disabled = out.length === 0;
             btn.style.opacity = out.length === 0 ? '0.5' : '1';
-            if (out.length === 0) alert('Tidak ada baris valid (periksa No Bukti, Keterangan Jurnal, Debit).');
+            if (out.length === 0)                     showToast('Tidak ada baris valid (periksa No Bukti, Keterangan Jurnal, Debit).', 'error');
         }
         function sendBiayaToGAS() {
-            if (!_biayaUploadRows.length) return alert('Pilih file Excel terlebih dahulu!');
+            if (!_biayaUploadRows.length) return showToast('Pilih file Excel terlebih dahulu!', 'error');
             lockBtn(document.getElementById('btnSubmitBiayaUpload'), 'Mengirim...');
             showProcessingOverlayWithProgress('Mengunggah Biaya Bulk...', 'Menghubungkan ke server...');
             const payload = { action: 'bulkUpsertBiaya', rows: _biayaUploadRows };
@@ -5764,8 +5895,8 @@
             const progressTimer = setInterval(() => {
                 if (!window.isProcessingGAS) { clearInterval(progressTimer); return; }
                 if (currentProgress < 30) { currentProgress += Math.random() * 3 + 2; statusText = 'Mengirim data biaya ke server...'; }
-                else if (currentProgress < 75) { currentProgress += Math.random() * 1.5 + 0.5; statusText = 'Data diterima! Menghubungkan ke database...'; }
-                else if (currentProgress < 95) { currentProgress += (95 - currentProgress) * 0.05; statusText = 'Menyimpan & memfilter duplikat di database...'; }
+                else if (currentProgress < 75) { currentProgress += Math.random() * 1.5 + 0.5; statusText = 'Data diterima! Menghubungkan ke server...'; }
+                else if (currentProgress < 95) { currentProgress += (95 - currentProgress) * 0.05; statusText = 'Menyimpan & memfilter baris duplikat...'; }
                 updateProcessingProgress(currentProgress, statusText);
             }, 200);
             fetch(API_URL, {
@@ -5785,7 +5916,7 @@
                         unlockBtn(document.getElementById('btnSubmitBiayaUpload'));
                         // Konfirmasi sukses LANGSUNG: data sudah tersimpan di DB.
                         const msg = `<b>Import Biaya Berhasil!</b><br>• Baris Baru: <b>${data.added}</b><br>• Baris Skip (Duplikat): <b>${data.skipped}</b>`;
-                        showSuccessOverlay('Bulk Upload Biaya Berhasil!', msg, 4000);
+                        showSuccessOverlay('Import Biaya Selesai', msg, 4000);
                         // Dynamic Sync di latar belakang; gagal hanya tampilkan toast kecil.
                         syncDashboardData().then(ok => { if (!ok) showRefreshToast(); });
                     } else { throw new Error(data.message || 'Gagal memproses bulk biaya'); }
@@ -5794,7 +5925,7 @@
                     clearInterval(progressTimer);
                     unlockBtn(document.getElementById('btnSubmitBiayaUpload'));
                     console.error(err);
-                    showErrorOverlay('Gagal Upload Biaya!', 'Terjadi kesalahan: ' + err.message);
+                    showErrorOverlay('Gagal Mengimpor Biaya', 'Data biaya belum terkirim. Periksa koneksi lalu coba lagi; bila masih gagal, hubungi admin.');
                 });
         }
 
@@ -5858,7 +5989,7 @@
             } catch (err) {
                 console.error('Gagal memuat data biaya:', err);
                 const tbody = document.getElementById('biayaTableBody');
-                if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="color:var(--danger); text-align:center; padding:20px;">Gagal memuat data biaya: ' + err.message + '</td></tr>';
+                if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="color:var(--danger); text-align:center; padding:20px;">Gagal memuat data biaya. Periksa koneksi lalu coba lagi.</td></tr>';
             }
         }
 
@@ -5963,6 +6094,9 @@
             });
         }
 
+        // ponytail: canvas (Chart.js) tidak bisa membaca var(); resolve ke nilai token aktual saat render.
+        function cssVar_(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
         function renderBiayaKomposisi() {
             const el = document.getElementById('biayaChartKomposisi');
             if (!el) return;
@@ -5971,7 +6105,7 @@
             if (!slice.length) {
                 _biayaChartKomposisi = new Chart(el.getContext('2d'), {
                     type: 'doughnut',
-                    data: { labels: ['Belum ada data'], datasets: [{ data: [1], backgroundColor: ['var(--accent)'] }] },
+                    data: { labels: ['Belum ada data'], datasets: [{ data: [1], backgroundColor: [cssVar_('--surface2')] }] },
                     options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false } } }
                 });
                 return;
@@ -5980,7 +6114,7 @@
                 type: 'doughnut',
                 data: {
                     labels: slice.map(x => x[0]),
-                    datasets: [{ data: slice.map(x => x[1]), backgroundColor: _BIYA_PALETTE, borderWidth: 2, borderColor: 'var(--card)', hoverOffset: 4 }]
+                    datasets: [{ data: slice.map(x => x[1]), backgroundColor: _BIYA_PALETTE, borderWidth: 2, borderColor: cssVar_('--surface'), hoverOffset: 4 }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false, cutout: '65%',
@@ -6006,14 +6140,14 @@
                     <div style="flex:1; min-width:0;">
                         <div style="display:flex; justify-content:space-between; gap:8px; margin-bottom:4px; align-items:baseline;">
                             <span style="font-weight:800; color:var(--text); font-size:12px;">${k}</span>
-                            <span style="font-weight:700; color:var(--text-muted); font-size:12px; white-space:nowrap;">${fmtRpBiaya(v)} <span style="color:var(--text-muted);">· ${share.toFixed(0)}%</span> ${d}</span>
+                            <span style="font-weight:700; color:var(--muted); font-size:12px; white-space:nowrap;">${fmtRpBiaya(v)} <span style="color:var(--muted);">· ${share.toFixed(0)}%</span> ${d}</span>
                         </div>
-                        <div style="height:6px; background:var(--accent); border-radius:99px; overflow:hidden;">
+                        <div style="height:6px; background:var(--surface2); border-radius:99px; overflow:hidden;">
                             <div style="height:100%; width:${Math.min(100, share)}%; background:${share >= 30 ? 'var(--danger)' : 'var(--warning)'}; border-radius:99px;"></div>
                         </div>
                     </div>
                 </div>`;
-            }).join('') || '<div style="color:var(--text-muted); font-size:13px; padding:10px;">Belum ada biaya pada rentang ini.</div>';
+            }).join('') || '<div style="color:var(--muted); font-size:13px; padding:10px;">Belum ada biaya pada rentang ini.</div>';
         }
 
         function deriveBiayaSubKat_(ket) {
@@ -6083,7 +6217,7 @@
                         <button onclick="editBiayaRow(${id})" class="theme-toggle" title="Edit" style="padding:6px 10px; color:var(--primary); font-weight:800; font-size:11px;">EDIT</button>
                         <button onclick="deleteBiayaRow(${id}, this)" class="theme-toggle" title="Hapus" style="padding:6px 10px; color:var(--danger); font-weight:800; font-size:11px;">HAPUS</button>
                     </div></td></tr>`;
-            }).join('') || '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:20px;">Belum ada biaya pada rentang ini.</td></tr>';
+            }).join('') || '<tr><td colspan="4" style="text-align:center; color:var(--muted); padding:20px;">Belum ada biaya pada rentang ini.</td></tr>';
             if ($.fn.DataTable.isDataTable('#biayaTable')) { $('#biayaTable').DataTable().destroy(); }
             _biayaDataTable = null;
             if (window.$ && $.fn.DataTable && (_biayaRowsCur || []).length > 0) {
@@ -6242,7 +6376,7 @@
         }
 
         async function deleteBiayaRow(id, btn) {
-            if (!confirm('Hapus baris biaya ini? Tindakan tidak bisa dibatalkan.')) return;
+            if (!(await confirmDialog('Hapus baris biaya ini? Tindakan tidak bisa dibatalkan.'))) return;
             lockBtn(btn, 'Menghapus...');
             try {
                 const res = await fetch(API_URL + '?action=deleteBiaya&id=' + encodeURIComponent(id));
@@ -6250,10 +6384,10 @@
                 if (data.status !== 'success') throw new Error(data.message || 'Gagal menghapus biaya');
                 _biayaRangeKey = null; // paksa refetch pada render berikutnya
                 if (isBiayaTabActive()) await renderBiayaTab();
-                showSuccessOverlay('Biaya Dihapus!', 'Baris biaya berhasil dihapus dari database.', 1500);
+                showSuccessOverlay('Biaya Dihapus', 'Baris biaya dihapus.', 1500);
             } catch (err) {
                 console.error('Gagal menghapus biaya:', err);
-                showErrorOverlay('Gagal Menghapus!', err.message);
+                showErrorOverlay('Gagal Menghapus', 'Baris biaya gagal dihapus. Coba lagi; bila masih gagal, hubungi admin.');
             } finally {
                 unlockBtn(btn);
             }
@@ -6400,6 +6534,55 @@
                 document.documentElement.setAttribute('data-theme', e.data.theme);
             }
         });
+    </script>
+    <script>
+        // ponytail: satu pengendali a11y untuk semua modal — Esc, trap Tab, klik backdrop, fokus.
+        (function () {
+            var MODALS = ['expenseModal', 'settingsModal', 'uploadExcelModal', 'uploadBiayaModal'];
+            var closers = {
+                uploadExcelModal: function () { if (typeof closeUploadModal === 'function') closeUploadModal(); },
+                uploadBiayaModal: function () { if (typeof closeBiayaUploadModal === 'function') closeBiayaUploadModal(); }
+            };
+            function isOpen(el) { return el && el.style.display !== 'none' && getComputedStyle(el).display !== 'none'; }
+            function openModal() { for (var i = MODALS.length - 1; i >= 0; i--) { var el = document.getElementById(MODALS[i]); if (isOpen(el)) return el; } return null; }
+            function closeModal(el) { if (closers[el.id]) closers[el.id](); else el.style.display = 'none'; }
+            function focusables(el) {
+                return Array.prototype.filter.call(
+                    el.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'),
+                    function (n) { return n.offsetParent !== null; }
+                );
+            }
+            document.addEventListener('keydown', function (e) {
+                var el = openModal();
+                if (!el) return;
+                if (e.key === 'Escape') { e.preventDefault(); closeModal(el); return; }
+                if (e.key === 'Tab') {
+                    var f = focusables(el);
+                    if (!f.length) return;
+                    var first = f[0], last = f[f.length - 1];
+                    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+                }
+            });
+            MODALS.forEach(function (id) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener('mousedown', function (e) { if (e.target === el) closeModal(el); });
+                var wasOpen = false, returnFocus = null;
+                new MutationObserver(function () {
+                    var open = isOpen(el);
+                    if (open && !wasOpen) {
+                        wasOpen = true;
+                        returnFocus = document.activeElement;
+                        var f = focusables(el);
+                        if (f.length) setTimeout(function () { f[0].focus(); }, 0);
+                    } else if (!open && wasOpen) {
+                        wasOpen = false;
+                        if (returnFocus && returnFocus.focus) { try { returnFocus.focus(); } catch (err) { } }
+                    }
+                }).observe(el, { attributes: true, attributeFilter: ['style'] });
+            });
+        })();
     </script>
 </body>
 
