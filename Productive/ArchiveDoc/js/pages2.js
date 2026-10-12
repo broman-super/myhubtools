@@ -386,14 +386,23 @@ window.SPT = window.SPT || {};
         ckSection(ev), false) + '</div>' +
       flowBar +
       '<div class="work-cols">' +
+      '<div class="phase-block" data-phase="1">' +
+      '<div class="phase-head"><span class="phase-num">Fase 1</span><span class="phase-title">Persiapan Sebelum Keberangkatan</span></div>' +
       psec('01', 'SPPD & Dana Cair', A.tabSppd(ev), 'SPPD ' + sppdLabel + (ruteN ? ' · ' + ruteN + ' rute' : '') + ' · Dana cair ' + ui.fmt(fin.danaCair), 'ps-1', next.sel === 'ps-1') +
       psec('02', 'Jadwal & Milestone', tabTimeline(ev), ms.length ? msDone + ' dari ' + ms.length + ' tahap selesai' : 'Belum ada tahap', 'ps-2', next.sel === 'ps-2') +
       psec('03', 'Produk & Qty (Aset Jual)', tabProduk(ev), eps.length ? eps.length + ' produk dicatat' : 'Belum ada produk', 'ps-3', next.sel === 'ps-3') +
       psec('04', 'Item Persiapan (Aset & Alat)', tabPrepItems(ev), items.length ? items.length + ' item · ' + itemDone + ' dibawa' : 'Belum ada item', 'ps-4', next.sel === 'ps-4') +
+      '</div>' +
+      '<div class="phase-block" data-phase="2">' +
+      '<div class="phase-head"><span class="phase-num">Fase 2</span><span class="phase-title">Saat Keberangkatan</span></div>' +
       psec('05', 'Uang — Penjualan', tabPenjualan(ev), sales.length ? sales.length + ' transaksi · ' + ui.fmt(fin.totalSales) : 'Belum ada penjualan', 'ps-5', next.sel === 'ps-5') +
       psec('06', 'Uang — Pengeluaran & Penyesuaian', tabKeuangan(ev), expenses.length ? expenses.length + ' pengeluaran · saldo ' + ui.fmt(fin.saldo) : 'Saldo ' + ui.fmt(fin.saldo), 'ps-6', next.sel === 'ps-6') +
+      '</div>' +
+      '<div class="phase-block" data-phase="3">' +
+      '<div class="phase-head"><span class="phase-num">Fase 3</span><span class="phase-title">Kepulangan / Laporan</span></div>' +
       psec('07', 'Cross-check Berangkat/Pulang', tabCrossCheck(ev), cc, 'ps-7', next.sel === 'ps-7') +
       psec('08', 'Uang — Laporan', tabLaporan(ev), 'Saldo akhir ' + ui.fmt(fin.saldo), 'ps-8', next.sel === 'ps-8') +
+      '</div>' +
       '</div>';
   }
 
