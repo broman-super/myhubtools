@@ -25,6 +25,7 @@ index.html          SPA Shell (landing + workspace + sidebar + iframe router)
   │   ├── outbound-track/outbound-track.html  Package Tracker (logistics scan)
   │   ├── activity-tracker/tracking.html  Activity Tracker
   │   ├── retur-track/retur-track.html   Retur Tracker
+  │   ├── ArchiveDoc/index.html       SPPD Toolbox (opsional sinkron cloud: gas/sppdtoolbox.gs)
   │   ├── pdf-merger/PDFM_V2.html     PDF Merger + Label Parser
   │   └── resi-generator/Index.html   Resi Generator
   ├── dak/form-dak.html              Form Pengajuan DAK
@@ -177,6 +178,11 @@ Penyatuan berkas PDF + ekstraksi label resi (Shopee, TikTok, dll) dengan parse p
 
 #### Resi Generator (`Productive/resi-generator/Index.html`)
 Generator nomor dan label resi otomatis, multi-ekspedisi (JNE, POS, J&T, J&T Cargo, Baraka, Ojol), logo otomatis, preview cetak.
+
+---
+
+#### SPPD Toolbox (`Productive/ArchiveDoc/index.html`)
+Manajemen SPPD/perjalanan dinas: event, budget berwallet, transport, produk & penjualan, pengeluaran, checklist, dan laporan. Data tersimpan di browser; sinkron cloud opsional via `gas/sppdtoolbox.gs` (Supabase, skema `sppd_schema.sql`).
 
 ---
 
