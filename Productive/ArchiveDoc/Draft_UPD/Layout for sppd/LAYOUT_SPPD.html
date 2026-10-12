@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Form Pengajuan Biaya Perjalanan Dinas</title>
+<style>
+  :root{
+    --border:#111;
+    --blue:#08a9df;
+    --green:#c6e2b5;
+    --bg:#f3f4f6;
+    --font:Arial, Helvetica, sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:#111;
+    font-family:var(--font);
+    font-size:13px;
+  }
+  .toolbar{
+    position:sticky; top:0; z-index:10;
+    display:flex; gap:8px; justify-content:center; flex-wrap:wrap;
+    padding:12px;
+    background:#111;
+  }
+  button{
+    border:0; border-radius:6px; padding:9px 15px;
+    cursor:pointer; font-weight:700;
+  }
+  .btn-primary{background:#18b8ea;color:#fff}
+  .btn-light{background:#fff;color:#111}
+  .btn-danger{background:#d9363e;color:#fff}
+  .sheet{
+    width:1120px;
+    margin:24px auto;
+    background:#fff;
+    padding:28px 38px 38px;
+    box-shadow:0 4px 25px rgba(0,0,0,.12);
+  }
+  h1{
+    text-align:center; font-size:28px; margin:0 0 26px;
+    letter-spacing:.2px;
+  }
+  table{border-collapse:collapse;width:100%}
+  td,th{border:2px solid var(--border);padding:5px 7px;vertical-align:middle}
+  .label{font-weight:700;white-space:nowrap}
+  input, textarea, select{
+    width:100%; border:0; outline:0; background:transparent;
+    font:inherit; color:inherit;
+  }
+  input:focus, textarea:focus, select:focus{
+    background:#fff8cf; outline:1px solid #e0b900;
+  }
+  textarea{resize:vertical; min-height:25px}
+  .logo{
+    height:88px; text-align:center; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px;
+  }
+  .transport{display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+  .transport label{font-weight:400;display:flex;align-items:center;gap:5px}
+  .transport input[type=radio]{width:auto}
+  .section-title{font-weight:700;margin:0}
+  .target-no{width:42px;text-align:center}
+  .target-table td{height:28px}
+  .blue-head{background:var(--blue);font-weight:700;text-align:center}
+  .expense-table .no{width:52px;text-align:center}
+  .money{text-align:right;white-space:nowrap}
+  .money-input{text-align:right}
+  .spj-head{background:#dfe8f6;text-align:center;font-weight:700}
+  .spj-table th{height:42px}
+  .spj-table td{text-align:center}
+  .spj-table .person{text-align:left}
+  .spj-table input{min-width:60px}
+  .spj-table .money-input{text-align:right}
+  .subtotal td{font-weight:700}
+  .green-total{background:var(--green);font-weight:700}
+  .total-label{text-align:right;font-weight:700;font-size:14px}
+  .signatures{
+    margin-top:16px;
+  }
+  .sig-role{text-align:center;font-weight:700;height:30px}
+  .sig-space{height:105px}
+  .sig-info td{height:24px}
+  .sig-info .sig-label{font-weight:700;width:70px}
+  .small{font-size:11px}
+  .hint{
+    margin:10px 0 0;color:#666;font-size:11px;text-align:center
+  }
+  .hidden{display:none}
+  @media print{
+    @page{size:A4 landscape;margin:7mm}
+    body{background:#fff;font-size:10px}
+    .toolbar,.hint{display:none!important}
+    .sheet{
+      width:100%; margin:0; padding:0; box-shadow:none;
+    }
+    h1{font-size:20px;margin:0 0 10px}
+    td,th{border:1.5px solid #111;padding:3px 4px}
+    .logo{height:65px}
+    .sig-space{height:70px}
+  }
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <button class="btn-primary" onclick="window.print()">🖨 Cetak / Simpan PDF</button>
+  <button class="btn-light" onclick="saveForm()">💾 Simpan di Browser</button>
+  <button class="btn-light" onclick="loadForm()">↻ Muat Data</button>
+  <button class="btn-danger" onclick="resetForm()">Reset</button>
+</div>
+
+<main class="sheet">
+  <h1>FORM PENGAJUAN BIAYA PERJALANAN DINAS</h1>
+
+  <table>
+    <tr>
+      <td class="label" style="width:145px">PEMBERI TUGAS</td>
+      <td style="width:190px"><input id="pemberiTugas" value="Direktur"></td>
+      <td class="label" style="width:130px">DEPARTEMEN</td>
+      <td style="width:210px"><input id="departemen" value="SUPERSUB"></td>
+      <td rowspan="3" class="logo" style="width:170px">[PT. ELFIQA KARYA TRIANGGA]</td>
+    </tr>
+    <tr>
+      <td class="label">TANGGAL DAN JAM<br>BERANGKAT</td>
+      <td><input id="tglBerangkat" type="date"><div><input id="jamBerangkat" type="time"></div></td>
+      <td class="label">TANGGAL DAN JAM KEMBALI</td>
+      <td><input id="tglKembali" type="date"><div><input id="jamKembali" type="time"></div></td>
+    </tr>
+    <tr>
+      <td class="label">TRANSPORTASI</td>
+      <td colspan="3">
+        <div class="transport">
+          <label><input type="radio" name="transport" value="Kendaraan Pribadi" checked> Kendaraan Pribadi</label>
+          <label><input type="radio" name="transport" value="Travel"> Travel</label>
+          <label><input type="radio" name="transport" value="Kereta Api"> Kereta Api</label>
+          <label><input type="radio" name="transport" value="Pesawat Terbang"> Lainnya : Pesawat Terbang</label>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td class="label">KOTA TUJUAN</td>
+      <td colspan="4"><input id="kotaTujuan" value="BANYUMAS"></td>
+    </tr>
+    <tr>
+      <td class="label" rowspan="3">TARGET PEKERJAAN</td>
+      <td class="target-no">1</td>
+      <td colspan="3"><input id="target1" value="Membuka Stan di Event MAG Enduro 2026"></td>
+    </tr>
+    <tr><td class="target-no">2</td><td colspan="3"><input id="target2"></td></tr>
+    <tr><td class="target-no">3</td><td colspan="3"><input id="target3"></td></tr>
+  </table>
+
+  <table style="margin-top:0">
+    <tr><td colspan="4" class="section-title">BIAYA-BIAYA :</td></tr>
+    <tr class="blue-head">
+      <td style="width:52px">NO</td><td>ITEMS</td><td style="width:120px">JUMLAH</td><td style="width:170px">KETERANGAN</td>
+    </tr>
+    <tbody id="expenseBody"></tbody>
+    <tr><td></td><td></td><td class="money" id="expenseTotal">Rp 0</td><td></td></tr>
+  </table>
+
+  <table class="spj-table" style="margin-top:0">
+    <tr><td colspan="11" class="section-title">BIAYA SPJ</td></tr>
+    <tr class="spj-head">
+      <th rowspan="2" style="width:42px">No</th>
+      <th rowspan="2" style="width:150px">Yang Bertugas</th>
+      <th colspan="3">Uang Weekday</th>
+      <th colspan="3">Uang Weekend</th>
+      <th colspan="3">Penginapan</th>
+      <th rowspan="2" style="width:105px">Lain lain<br><span class="small">Konsumsi</span></th>
+    </tr>
+    <tr class="spj-head">
+      <th>Qty</th><th>@</th><th>Jumlah</th>
+      <th>Qty</th><th>@</th><th>Jumlah</th>
+      <th>Qty</th><th>@</th><th>Jumlah</th>
+    </tr>
+    <tbody id="spjBody"></tbody>
+    <tr class="subtotal">
+      <td></td><td></td>
+      <td></td><td></td><td class="money" id="weekdayTotal">Rp 0</td>
+      <td></td><td></td><td class="money" id="weekendTotal">Rp 0</td>
+      <td></td><td></td><td class="money green-total" id="lodgingTotal">Rp 0</td>
+      <td class="money" id="otherTotal">Rp 0</td>
+    </tr>
+    <tr>
+      <td></td><td></td><td colspan="9" class="total-label">TOTAL BIAYA</td>
+      <td class="money" id="grandTotal">Rp 0</td>
+    </tr>
+  </table>
+
+  <table class="signatures">
+    <tr>
+      <td class="sig-role">Maker</td><td class="sig-role">Checker</td><td class="sig-role">Signer</td>
+    </tr>
+    <tr><td class="sig-space"></td><td class="sig-space"></td><td class="sig-space"></td></tr>
+    <tr class="sig-info">
+      <td><span class="sig-label">Nama</span> : <input id="makerNama" value="Firman M."></td>
+      <td><span class="sig-label">Nama</span> : <input id="checkerNama" value="R.M Taqwalegawa"></td>
+      <td><span class="sig-label">Nama</span> : <input id="signerNama" value="Kusna S."></td>
+    </tr>
+    <tr class="sig-info">
+      <td><span class="sig-label">Jabatan</span> : <input id="makerJabatan" value="Supervisor"></td>
+      <td><span class="sig-label">Jabatan</span> : <input id="checkerJabatan" value="Head of HRD"></td>
+      <td><span class="sig-label">Jabatan</span> : <input id="signerJabatan" value="Direktur"></td>
+    </tr>
+    <tr class="sig-info">
+      <td><span class="sig-label">Tanggal</span> : <input id="makerTanggal" type="date"></td>
+      <td><span class="sig-label">Tanggal</span> : <input id="checkerTanggal" type="date"></td>
+      <td><span class="sig-label">Tanggal</span> : <input id="signerTanggal" type="date"></td>
+    </tr>
+  </table>
+  <p class="hint">Template mengikuti struktur laporan referensi. Nilai dapat diubah langsung di halaman, lalu dicetak dengan ukuran A4 landscape.</p>
+</main>
+
+<script>
+const expenseDefaults = [
+  ["A","BBM Pertalite",300000,""],
+  ["B","Kas Kecil",200000,"Untuk Kembalian"],
+  ["C","","",""],["D","","",""],["E","","",""],["F","","",""]
+];
+const spjDefaults = [
+  ["FIRMAN",2,100000,1,150000,2,495454],
+  ["R.M TAQWA",2,100000,1,150000,0,0],
+  ["",0,0,0,0,0,0],
+  ["",0,0,0,0,0,0],
+  ["",0,0,0,0,0,0]
+];
+
+function rupiah(n){
+  n = Number(n)||0;
+  return "Rp " + Math.round(n).toLocaleString("id-ID");
+}
+function num(v){ return Number(String(v).replace(/[^\d.-]/g,'')) || 0; }
+
+function buildExpense(){
+  const body=document.getElementById("expenseBody");
+  body.innerHTML="";
+  expenseDefaults.forEach((r,i)=>{
+    body.insertAdjacentHTML("beforeend",`
+      <tr>
+        <td style="text-align:center">${r[0]}</td>
+        <td><input data-exp="item" data-i="${i}" value="${r[1]}"></td>
+        <td><input data-exp="amount" data-i="${i}" class="money-input" inputmode="numeric" value="${r[2]||""}" oninput="calc()"></td>
+        <td><input data-exp="note" data-i="${i}" value="${r[3]}"></td>
+      </tr>`);
+  });
+}
+function buildSPJ(){
+  const body=document.getElementById("spjBody");
+  body.innerHTML="";
+  spjDefaults.forEach((r,i)=>{
+    body.insertAdjacentHTML("beforeend",`
+      <tr data-spj-row="${i}">
+        <td>${i+1}</td>
+        <td class="person"><input data-spj="person" value="${r[0]}"></td>
+        <td><input data-spj="wq" type="number" min="0" value="${r[1]}" oninput="calc()"></td>
+        <td><input data-spj="wa" inputmode="numeric" value="${r[2]||0}" oninput="calc()"></td>
+        <td class="money" data-spj-total="wt">Rp 0</td>
+        <td><input data-spj="eq" type="number" min="0" value="${r[3]}" oninput="calc()"></td>
+        <td><input data-spj="ea" inputmode="numeric" value="${r[4]||0}" oninput="calc()"></td>
+        <td class="money" data-spj-total="et">Rp 0</td>
+        <td><input data-spj="lq" type="number" min="0" value="${r[5]}" oninput="calc()"></td>
+        <td><input data-spj="la" inputmode="numeric" value="${r[6]||0}" oninput="calc()"></td>
+        <td class="money" data-spj-total="lt">Rp 0</td>
+        <td><input data-spj="other" inputmode="numeric" value="0" oninput="calc()"></td>
+      </tr>`);
+  });
+}
+function calc(){
+  let expense=0;
+  document.querySelectorAll('[data-exp="amount"]').forEach(x=>expense+=num(x.value));
+  document.getElementById("expenseTotal").textContent=rupiah(expense);
+
+  let wt=0, et=0, lt=0, ot=0;
+  document.querySelectorAll('[data-spj-row]').forEach(row=>{
+    const w=num(row.querySelector('[data-spj="wq"]').value)*num(row.querySelector('[data-spj="wa"]').value);
+    const e=num(row.querySelector('[data-spj="eq"]').value)*num(row.querySelector('[data-spj="ea"]').value);
+    const l=num(row.querySelector('[data-spj="lq"]').value)*num(row.querySelector('[data-spj="la"]').value);
+    const o=num(row.querySelector('[data-spj="other"]').value);
+    row.querySelector('[data-spj-total="wt"]').textContent=rupiah(w);
+    row.querySelector('[data-spj-total="et"]').textContent=rupiah(e);
+    row.querySelector('[data-spj-total="lt"]').textContent=rupiah(l);
+    wt+=w; et+=e; lt+=l; ot+=o;
+  });
+  document.getElementById("weekdayTotal").textContent=rupiah(wt);
+  document.getElementById("weekendTotal").textContent=rupiah(et);
+  document.getElementById("lodgingTotal").textContent=rupiah(lt);
+  document.getElementById("otherTotal").textContent=rupiah(ot);
+  document.getElementById("grandTotal").textContent=rupiah(expense+wt+et+lt+ot);
+}
+
+const fields = ["pemberiTugas","departemen","tglBerangkat","jamBerangkat","tglKembali","jamKembali","kotaTujuan",
+"target1","target2","target3","makerNama","checkerNama","signerNama","makerJabatan","checkerJabatan","signerJabatan",
+"makerTanggal","checkerTanggal","signerTanggal"];
+
+function collect(){
+  const data={};
+  fields.forEach(id=>data[id]=document.getElementById(id).value);
+  data.transport=document.querySelector('input[name="transport"]:checked')?.value||"";
+  data.expenses=[...document.querySelectorAll('#expenseBody tr')].map(tr=>[...tr.querySelectorAll('input')].map(x=>x.value));
+  data.spj=[...document.querySelectorAll('#spjBody tr')].map(tr=>[...tr.querySelectorAll('input')].map(x=>x.value));
+  return data;
+}
+function apply(data){
+  fields.forEach(id=>{if(data[id]!==undefined) document.getElementById(id).value=data[id]});
+  if(data.transport){
+    const r=document.querySelector(`input[name="transport"][value="${CSS.escape(data.transport)}"]`);
+    if(r) r.checked=true;
+  }
+  if(data.expenses) document.querySelectorAll('#expenseBody tr').forEach((tr,i)=>{
+    if(data.expenses[i]) tr.querySelectorAll('input').forEach((x,j)=>x.value=data.expenses[i][j]??"");
+  });
+  if(data.spj) document.querySelectorAll('#spjBody tr').forEach((tr,i)=>{
+    if(data.spj[i]) tr.querySelectorAll('input').forEach((x,j)=>x.value=data.spj[i][j]??"");
+  });
+  calc();
+}
+function saveForm(){
+  localStorage.setItem("supersub_sppd_form",JSON.stringify(collect()));
+  alert("Data tersimpan di browser ini.");
+}
+function loadForm(){
+  const raw=localStorage.getItem("supersub_sppd_form");
+  if(!raw){alert("Belum ada data tersimpan.");return}
+  apply(JSON.parse(raw)); alert("Data berhasil dimuat.");
+}
+function resetForm(){
+  if(!confirm("Reset semua isian ke template awal?")) return;
+  location.reload();
+}
+buildExpense(); buildSPJ();
+document.getElementById("makerTanggal").value="2026-06-19";
+calc();
+</script>
+</body>
+</html>

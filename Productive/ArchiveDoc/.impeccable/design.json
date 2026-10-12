@@ -1,0 +1,234 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-12T00:00:00.000Z",
+  "title": "Design System: SPPD Toolbox (REYNAHUB)",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Accent Red (hub)",
+        "canonical": "#ff0000",
+        "dark": "#ff3b3b",
+        "tonalRamp": ["#7A0000", "#B30000", "#E60000", "#FF0000", "#FF3B3B", "#FF7B7B", "#FFA3A3", "#FFD4D4", "#FFE6E6"]
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Accent Hover",
+        "canonical": "#e60000",
+        "dark": "#ff6b6b",
+        "tonalRamp": ["#7A0000", "#B30000", "#E60000", "#FF0000", "#FF3B3B", "#FF7B7B", "#FFA3A3", "#FFD4D4", "#FFE6E6"]
+      },
+      "accent-soft": {
+        "role": "secondary",
+        "displayName": "Accent Soft",
+        "canonical": "#ffe6e6",
+        "dark": "rgba(255,59,59,0.18)",
+        "tonalRamp": ["#FFA3A3", "#FFD4D4", "#FFE0E0", "#FFE6E6", "#FFEEEE", "#FFF5F5", "#FFFAFA", "#FFFDfd", "#FFFFFF"]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#0f172a",
+        "dark": "#1e293b",
+        "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9"]
+      },
+      "bg": {
+        "role": "neutral",
+        "displayName": "Background",
+        "canonical": "#f8fafc",
+        "dark": "#090d16",
+        "tonalRamp": ["#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc", "#ffffff"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "#ffffff",
+        "dark": "#121826",
+        "tonalRamp": ["#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc", "#ffffff"]
+      },
+      "surface-2": {
+        "role": "neutral",
+        "displayName": "Surface 2 (hover)",
+        "canonical": "#f1f5f9",
+        "dark": "#1e293b",
+        "tonalRamp": ["#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc", "#ffffff"]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border",
+        "canonical": "rgba(15,23,42,0.06)",
+        "dark": "rgba(255,255,255,0.07)",
+        "tonalRamp": ["#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc", "#fbfcfd", "#fdfefe", "#ffffff", "#ffffff", "#ffffff"]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Text",
+        "canonical": "#0f172a",
+        "dark": "#f1f5f9",
+        "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9"]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "canonical": "#64748b",
+        "dark": "#94a3b8",
+        "tonalRamp": ["#334155", "#475569", "#525252", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc"]
+      },
+      "success": {
+        "role": "secondary",
+        "displayName": "Success",
+        "canonical": "#22C55E",
+        "tonalRamp": ["#064E3B", "#047857", "#059669", "#10B981", "#22C55E", "#4ADE80", "#86EFAC", "#A7F3D0", "#ECFDF5"]
+      },
+      "warning": {
+        "role": "secondary",
+        "displayName": "Warning",
+        "canonical": "#F59E0B",
+        "tonalRamp": ["#78350F", "#B45309", "#D97706", "#F59E0B", "#FBBF24", "#FCD34D", "#FDE68A", "#FEF3C7", "#FFFBEB"]
+      },
+      "danger": {
+        "role": "secondary",
+        "displayName": "Danger",
+        "canonical": "#EF4444",
+        "tonalRamp": ["#7F1D1D", "#991B1B", "#B91C1C", "#DC2626", "#EF4444", "#F87171", "#FCA5A5", "#FECACA", "#FEE2E2"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display / Numerals", "purpose": "Geomini — page titles, section titles, and every money/quantity value. Never for long sentences." },
+      "body": { "displayName": "Body", "purpose": "Plus Jakarta Sans — body text, table cells, descriptions, placeholders." },
+      "label": { "displayName": "Eyebrow / Label", "purpose": "Plus Jakarta Sans 11-12px uppercase structured labels: stat-card labels, nav group eyebrows, section kickers, table headers." }
+    },
+    "shadows": [
+      { "name": "ambient-low", "value": "0 4px 6px -1px rgba(0,0,0,0.02)", "purpose": "The house card lift (light; rgba(0,0,0,0.3) in dark)." },
+      { "name": "modal-drop", "value": "0 20px 40px rgba(0,0,0,0.15)", "purpose": "The one heavy shadow; modal only, over a 45%-black blurred backdrop (rgba(0,0,0,0.6) in dark)." }
+    ],
+    "motion": [
+      { "name": "state", "value": "opacity, background, border-color, color 0.15s", "purpose": "Hover/press state transitions on buttons, tabs, chips, links." },
+      { "name": "press", "value": "transform 0.05s scale(0.98)", "purpose": "Active press feedback on buttons." },
+      { "name": "toast-in", "value": "0.2s ease-out translateY(8px) -> none", "purpose": "Toast entry." },
+      { "name": "modal-in", "value": "0.18s ease-out translateY(10px) scale(0.98) -> none", "purpose": "Modal entry." },
+      { "name": "reduced", "value": "prefers-reduced-motion: reduce -> animation none", "purpose": "All decorative animation surrenders to the OS preference." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px", "purpose": "Forms split to two columns; stat-card numerals step to full 2.25rem." },
+      { "name": "lg", "value": "1024px", "purpose": "Card padding steps to 28px 32px; desktop nav shows." },
+      { "name": "xl", "value": "1500px", "purpose": "Work surface splits to CSS 2-column; container queries collapse internal grids at column <=819px." },
+      { "name": "wide", "value": "1440px", "purpose": "Two-column forms get wider gap 18px 20px." },
+      { "name": "container", "value": "819px / 820px", "purpose": "Container-query threshold inside a `.psec` column: <=819px stacks, >=820px splits." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single forward action: advance the task, save, submit. Hub accent fill, white text, 12px corners.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Simpan Perubahan</button>",
+      "css": ".ds-btn-primary { display:inline-flex; align-items:center; justify-content:center; gap:6px; background:var(--accent,#ff0000); color:#fff; border:none; border-radius:12px; padding:10px 16px; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; transition:background 0.15s, transform 0.05s; } .ds-btn-primary:hover { background:var(--accent-hover,#e60000); } .ds-btn-primary:active { transform:scale(0.98); } .ds-btn-primary:focus-visible { outline:2px solid var(--accent,#ff0000); outline-offset:2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary, non-committal action: cancel, view, list-level controls. Surface sheet with a hairline border.",
+      "html": "<button class=\"ds-btn-ghost\" type=\"button\">Batal</button>",
+      "css": ".ds-btn-ghost { display:inline-flex; align-items:center; justify-content:center; gap:6px; background:var(--surface,#fff); color:var(--text-primary,#0f172a); border:1px solid var(--border,rgba(15,23,42,0.06)); border-radius:12px; padding:10px 16px; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; transition:border-color 0.15s, transform 0.05s; } .ds-btn-ghost:hover { border-color:var(--text-primary,#0f172a); } .ds-btn-ghost:active { transform:scale(0.98); } .ds-btn-ghost:focus-visible { outline:2px solid var(--accent,#ff0000); outline-offset:2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Sheet field with hairline stroke and a 12px radius. Focus flares the border to the accent with a 3px tinted ring.",
+      "html": "<label class=\"ds-label\" for=\"ds-field\">Nomor SPPD</label><input id=\"ds-field\" class=\"ds-input\" type=\"text\" placeholder=\"039/SPPD/UKM/2026\">",
+      "css": ".ds-label { display:block; font-size:12px; font-weight:700; margin-bottom:6px; color:var(--text-secondary,#64748b); } .ds-input { width:100%; box-sizing:border-box; background:var(--surface,#fff); border:1px solid var(--border,rgba(15,23,42,0.06)); border-radius:12px; padding:10px 12px; font-size:14px; font-family:inherit; color:var(--text-primary,#0f172a); transition:border-color 0.15s, box-shadow 0.15s; } .ds-input:focus { outline:none; border-color:var(--accent,#ff0000); box-shadow:0 0 0 3px var(--ring-accent,rgba(255,0,0,0.10)); } .ds-input::placeholder { color:var(--text-secondary,#64748b); }"
+    },
+    {
+      "name": "Surface Card",
+      "kind": "card",
+      "refersTo": "card-surface",
+      "description": "The sheet: white, 18px corners, hairline border, soft ambient lift.",
+      "html": "<div class=\"ds-card\"><span class=\"ds-card-kicker\">Dana Awal</span><div class=\"ds-card-num\">Rp 2.190.907</div></div>",
+      "css": ".ds-card { background:var(--surface,#fff); border:1px solid var(--border,rgba(15,23,42,0.06)); border-radius:18px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.02); padding:24px; } .ds-card-kicker { display:block; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-secondary,#64748b); } .ds-card-num { margin-top:8px; font-family:'Geomini','Plus Jakarta Sans',system-ui,sans-serif; font-size:2.25rem; line-height:0.9; font-weight:800; color:#0f172a; font-variant-numeric:tabular-nums; overflow-wrap:break-word; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge-pill",
+      "description": "Route-status pill: tint fill, deep text, 999px radius. Green when approved, amber when submitted, blue when complete.",
+      "html": "<span class=\"ds-badge\"><span class=\"ds-badge-dot\"></span>Disetujui</span>",
+      "css": ".ds-badge { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; background:#ECFDF5; color:#059669; } .ds-badge-dot { width:6px; height:6px; border-radius:999px; background:currentColor; }"
+    },
+    {
+      "name": "Wallet Badge",
+      "kind": "chip",
+      "refersTo": "badge-pill",
+      "description": "One of four fixed wallet chips — Bank (blue tint), QRIS (neutral tint), Kas (green tint), E-Money (accent tint).",
+      "html": "<span class=\"ds-wallet ds-wallet-kas\">Kas</span><span class=\"ds-wallet ds-wallet-qu\">QRIS</span><span class=\"ds-wallet ds-wallet-bank\">Bank</span>",
+      "css": ".ds-wallet { display:inline-flex; align-items:center; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; margin-right:4px; } .ds-wallet-kas { background:#ECFDF5; color:#059669; } .ds-wallet-qu { background:#f1f5f9; color:#0f172a; } .ds-wallet-bank { background:#EFF6FF; color:#1D4ED8; }"
+    },
+    {
+      "name": "Segmented Tab",
+      "kind": "nav",
+      "refersTo": "tabseg-active",
+      "description": "Pill segmented control on a surface shell. Ink swipe for the active segment (never red), red reserved for direction.",
+      "html": "<div class=\"ds-tabseg\"><button class=\"ds-tabseg-item\" type=\"button\">Persiapan</button><button class=\"ds-tabseg-item ds-tabseg-active\" type=\"button\">Berangkat</button><button class=\"ds-tabseg-item\" type=\"button\">Pelaksanaan</button></div>",
+      "css": ".ds-tabseg { display:flex; gap:6px; background:#fff; border:1px solid rgba(15,23,42,0.06); border-radius:999px; padding:4px; overflow-x:auto; } .ds-tabseg-item { flex:1 1 auto; min-width:max-content; text-align:center; padding:8px 18px; border-radius:999px; font-size:13px; font-weight:700; color:#64748b; background:transparent; border:none; cursor:pointer; white-space:nowrap; transition:background-color 0.15s, color 0.15s; } .ds-tabseg-item:hover { color:#0f172a; } .ds-tabseg-active { background:#0f172a; color:#fff; } .ds-tabseg-item:focus-visible { outline:2px solid #ff0000; outline-offset:2px; }"
+    },
+    {
+      "name": "Nav Pill",
+      "kind": "nav",
+      "refersTo": "navlink-active",
+      "description": "Top-bar / group navigation pill. Active state is an accent-soft pill with accent-hover text; grouped by eyebrow labels.",
+      "html": "<nav style=\"display:flex;align-items:center;gap:2px\"><span class=\"ds-nav-group\">Kerja</span><a class=\"ds-navlink\" href=\"#\">Dashboard</a><span class=\"ds-navlink ds-navlink-active\" href=\"#\">Event &amp; Tugas</span></nav>",
+      "css": ".ds-nav-group { align-self:center; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.09em; color:#64748b; padding:0 4px 0 2px; } .ds-navlink { display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:999px; font-size:14px; font-weight:600; color:#64748b; white-space:nowrap; text-decoration:none; transition:color 0.15s, background-color 0.15s; } .ds-navlink:hover { color:#0f172a; background:#f1f5f9; } .ds-navlink-active { color:#e60000; background:#ffe6e6; } .ds-navlink:focus-visible { outline:2px solid #ff0000; outline-offset:2px; border-radius:8px; }"
+    },
+    {
+      "name": "Papan Dinas Hero",
+      "kind": "custom",
+      "refersTo": "card-surface",
+      "description": "The signature work-surface hero: the official dispatch sheet — accent numeral, ink progress track.",
+      "html": "<div class=\"ds-papan\"><div class=\"ds-papan-kicker\">Siap Berangkat</div><div class=\"ds-papan-num\">100%</div><div class=\"ds-papan-bar\"><span class=\"ds-papan-fill\" style=\"width:100%\"></span></div><span class=\"ds-papan-check ds-papan-ok\">Siap berangkat</span></div>",
+      "css": ".ds-papan { position:relative; overflow:hidden; background:var(--surface,#fff); color:var(--text-primary,#0f172a); border:1px solid var(--border,rgba(15,23,42,0.06)); border-radius:18px; padding:28px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.02); } .ds-papan::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:var(--accent,#ff0000); } .ds-papan-kicker { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-secondary,#64748b); } .ds-papan-num { margin-top:8px; font-family:'Geomini','Plus Jakarta Sans',system-ui,sans-serif; font-weight:800; font-size:56px; line-height:0.9; letter-spacing:0; font-variant-numeric:tabular-nums; color:var(--accent,#ff0000); } .ds-papan-bar { height:8px; background:var(--border,rgba(15,23,42,0.06)); border-radius:999px; overflow:hidden; margin:16px 0 8px; } .ds-papan-fill { display:block; height:100%; background:var(--ink,#0f172a); border-radius:999px; } .ds-papan-check { display:inline-block; font-size:12px; font-weight:700; border-radius:999px; padding:4px 10px; background:#ECFDF5; color:#047857; margin-top:8px; }"
+    },
+    {
+      "name": "Flow Pill",
+      "kind": "chip",
+      "refersTo": "tabseg-active",
+      "description": "Stage pill in the flowbar: white at rest, accent for the next step, green tint when the stage is done.",
+      "html": "<span class=\"ds-flow\">Persiapan</span><span class=\"ds-flow ds-flow-next\">Berangkat</span><span class=\"ds-flow ds-flow-done\">Pelaksanaan</span>",
+      "css": ".ds-flow { display:inline-block; border:1px solid rgba(15,23,42,0.06); border-radius:999px; background:#fff; color:#0f172a; font-size:12px; font-weight:700; padding:4px 10px; margin-right:6px; } .ds-flow-next { background:#ff0000; border-color:#ff0000; color:#fff; } .ds-flow-done { background:#ECFDF5; border-color:#A7F3D0; color:#047857; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "REYNAHUB house language, applied to a field task",
+    "overview": "The SPPD Toolbox is one webtool inside REYNAHUB and speaks the hub's one visual language: the same red accent (#ff0000, dark #ff3b3b), the same Geomini + Plus Jakarta Sans type, the same soft surfaces (#ffffff on #f8fafc), the same 18px radius and 0 4px 6px -1px rgba(0,0,0,0.02) lift, and the same light/dark theming. What stays local to the tool is the workflow — one task is one screen of eight numbered collapsible sections, mobile-first, from SPPD to accountability. Color is rationed: the accent marks this section, this step, this next button. The system stays anti-slop: no gradients, no glass, no glow, no second accent; flat at rest, and it moves only in 150–200ms opacity/transform micro-motions that die under prefers-reduced-motion.",
+    "keyCharacteristics": [
+      "Hub tokens only — accent #ff0000 (dark #ff3b3b), bg #f8fafc, surface #ffffff, border rgba(15,23,42,.06), text #0f172a, muted #64748b.",
+      "Geomini display face for every title and every money/quantity value; Plus Jakarta Sans for body and labels; tabular-nums alignment.",
+      "Soft low-elevation surfaces — 18px cards, 12px fields, 999px pills, one hairline border, ambient lift only.",
+      "Full light/dark theme via [data-theme] (hub bridge when embedded, local toggle otherwise).",
+      "Mobile-first one-hand operation: single column until a column stays wide enough, 48px tap targets.",
+      "Minimal motion (opacity/transform, ~150–200ms); honors prefers-reduced-motion."
+    ],
+    "rules": [
+      { "name": "The Red Discipline Rule", "body": "The accent marks decisions: the CTA that advances the task, the number of the section you are in, the next step. Active navigation and bulk progress render in Ink instead, so red never dilutes into screen-wide decoration.", "section": "colors" },
+      { "name": "The Tabular Figures Rule", "body": "Every money or quantity value renders in the Geomini display face with font-variant-numeric: tabular-nums (letter-spacing: 0) so digits never jitter and columns stay aligned as balances change.", "section": "typography" },
+      { "name": "The Still-Sheet Rule", "body": "Surfaces lie flat with a barely-there ambient shadow; the heavy shadow is reserved exclusively for the modal.", "section": "elevation" },
+      { "name": "The Usable-Column Rule", "body": "Grids never create a column too narrow to read a form or a table on a field phone. Splits happen only where the wide column stays >=820px; otherwise everything stacks.", "section": "layout" }
+    ],
+    "dos": [
+      "Do use hub tokens and var() — never a raw hex for a themed surface.",
+      "Do set every Rupiah and quantity in Geomini with tabular-nums so columns sit still while balances change.",
+      "Do keep surfaces soft-cornered (18px cards, 999px pills) and hairline-outlined.",
+      "Do let flat surfaces breathe; the ambient shadow is the lift, not a border.",
+      "Do honor prefers-reduced-motion — transitions and keyframes die to none/auto."
+    ],
+    "donts": [
+      "Don't ship gradients, glassmorphism, or glow.",
+      "Don't give a second screen-role to the accent; active nav and bulk progress are ink, not red.",
+      "Don't add a second accent hue — status is its own semantic tint set, and only in pills.",
+      "Don't force two columns where a form or table would collapse to a sliver — splits appear only when the column stays >=820px.",
+      "Don't change the print-mode <style> blocks — the printable SPPD/report output must stay byte-stable for the official document format."
+    ]
+  }
+}
