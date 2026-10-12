@@ -1,0 +1,115 @@
+// KONTEN EXEMPLAR - cetakan frame 5-seksi SETELAH Rancangan SPPD.md
+// LOKASI: C:\Users\Kael\Documents\AI Project\ArchiveDoc\_defects\printHTML_FRAME5_PATCH.txt
+// TIDAK MENYENTUH APP. Untuk kamu tempel manual ke editor (pages2.js, ganti isi function printHTML).
+// Verifikasi isi dulu: cari marker @CLEAN@ di akhir (harus ada, tanpa mojibake).
+//
+// Rancangan SPPD.md = 5 seksi:
+//   1. Informasi Umum Perjalanan        (Pemberi tugas, departemen, waktu, tujuan, moda, target)
+//   2. Rincian Biaya Operasional (Lain) (BBM, kas kecil, total)
+//   3. Rincian Biaya SPJ (Personil)     (nama, weekday, weekend, penginapan, total per personil)
+//   4. Total Keseluruhan                (operasional + SPJ personil = grand total)
+//   5. Status Persetujuan (Approval)    (maker/checker/signer + tanggal)
+//
+// Data SELALU live (anti-fabrikasi): sppd.danaAwal, transports, expenses, sales,
+// financeSummary, settings. Seksi yang kosong disembunyikan.
+
+// ===== SALIN BLOK DI BAWAH INI (dari baris 'function printHTML' hingga '}' penutup) =====
+function printHTML(ev) {
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+  }); }
+  function fmt(n) {
+    var v = Number(n) || 0;
+    var neg = v < 0; var x = Math.abs(v);
+    var r = Math.round(x).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return (neg ? '-' : '') + 'Rp ' + r;
+  }
+
+  var evObj = store.getEvent(ev.id);
+  var fin = store.financeSummary(ev.id);
+  var st = store.settings();
+  var sppd = store.getSppd(ev.id) || {};
+
+  // ---- Seksi 1: Informasi Umum Perjalanan ----
+  var infoInfo =
+    '<h3>1. Informasi Umum Perjalanan</h3>' +
+    '<table><tbody>' +
+    '<tr><th>Pemberi Tugas</th><td>' + esc(st.nama || sppd.pemberiTugas || '-') + '</td></tr>' +
+    '<tr><th>Departemen</th><td>' + esc(sppd.departemen || st.instansi || '-') + '</td></tr>' +
+    '<tr><th>Waktu Berangkat</th><td>' + esc(ev.tanggalMulai || sppd.tanggalBerangkat || '-') + ' (' + esc(sppd.jamBerangkat || '-') + ')</td></tr>' +
+    '<tr><th>Waktu Kembali</th><td>' + esc(ev.tanggalSelesai || sppd.tanggalKembali || '-') + ' (' + esc(sppd.jamKembali || '-') + ')</td></tr>' +
+    '<tr><th>Kota Tujuan</th><td>' + esc(ev.lokasi || sppd.tujuan || '-') + '</td></tr>' +
+    '<tr><th>Moda Transportasi</th><td>' + esc(sppd.moda || '-') + '</td></tr>' +
+    '<tr><th>Target Pekerjaan</th><td>' + esc(sppd.target || ev.nama || '-') + '</td></tr>' +
+    '</tbody></table>';
+
+  // ---- Seksi 2: Rincian Biaya Operasional (Lain-lain) ----
+  var opsRows = '';
+  var opsTotal = 0;
+  var opsItems = store.expenses(ev.id);
+  if (opsItems && opsItems.length) {
+    opsRows = opsItems.map(function (e) {
+      var j = Number(e.jumlah) || 0; opsTotal += j;
+      return '<tr><td>' + esc(e.kategori || 'Operasional') + '</td><td>' + esc(e.deskripsi || '') + '</td><td class="t">' + fmt(j) + '</td></tr>';
+    }).join('');
+  }
+  var opsSection = (opsRows || sppd.biayaOperasional) ?
+    '<h3>2. Rincian Biaya Operasional (Lain-lain)</h3>' +
+    '<table><thead><tr><th>No</th><th>Item</th><th>Jumlah</th></tr></thead><tbody>' +
+    (opsRows || '<tr><td colspan="3" class="note">Belum ada catatan operasional live; gunakan angka SPPD bila diisi.</td></tr>') +
+    '</tbody></table>' : '';
+
+  // ---- Seksi 3: Rincian Biaya SPJ (Personil) ----
+  var personRows = '';
+  var spjTotal = 0;
+  var personil = sppd.personil || [];
+  if (personil && personil.length) {
+    personRows = personil.map(function (p) {
+      var wk = Number(p.weekday) || 0, we = Number(p.weekend) || 0, pg = Number(p.penginapan) || 0;
+      var tot = wk + we + pg; spjTotal += tot;
+      return '<tr><td>' + esc(p.nama || '-') + '</td><td class="t">' + fmt(wk) + '</td><td class="t">' + fmt(we) + '</td><td class="t">' + fmt(pg) + '</td><td class="t">' + fmt(tot) + '</td></tr>';
+    }).join('');
+  }
+  var spjSection = (personRows || sppd.spjRows) ?
+    '<h3>3. Rincian Biaya SPJ (Personil)</h3>' +
+    '<table><thead><tr><th>Nama Personil</th><th>Uang Weekday</th><th>Uang Weekend</th><th>Penginapan</th><th>Total Individu</th></tr></thead><tbody>' +
+    (personRows || '<tr><td colspan="5" class="note">Belum ada data personil live.</td></tr>') +
+    '</tbody></table>' : '';
+
+  // ---- Seksi 4: Total Keseluruhan ----
+  var grandTotal = (fin ? (Number(fin.pengeluaran) || 0) : 0) + spjTotal;
+  var totalSection =
+    '<h3>4. Total Keseluruhan</h3>' +
+    '<table><tbody>' +
+    '<tr><td>Total Biaya Operasional</td><td class="t">' + fmt(fin ? Number(fin.pengeluaran) || 0 : 0) + '</td></tr>' +
+    '<tr><td>Total Biaya SPJ Personil</td><td class="t">' + fmt(spjTotal) + '</td></tr>' +
+    '<tr class="tot"><td>GRAND TOTAL</td><td class="t mono">' + fmt(grandTotal) + '</td></tr>' +
+    '</tbody></table>';
+
+  // ---- Seksi 5: Status Persetujuan ----
+  var appr = sppd.approval || st.approval || {};
+  var approvalSection =
+    '<h3>5. Status Persetujuan (Approval)</h3>' +
+    '<table><thead><tr><th>Peran</th><th>Nama</th><th>Jabatan</th><th>Tanggal TTD</th></tr></thead><tbody>' +
+    '<tr><td>Maker</td><td>' + esc(appr.makerNama) + '</td><td>' + esc(appr.makerJabatan) + '</td><td>' + esc(appr.makerTanggal) + '</td></tr>' +
+    '<tr><td>Checker</td><td>' + esc(appr.checkerNama) + '</td><td>' + esc(appr.checkerJabatan) + '</td><td>' + esc(appr.checkerTanggal) + '</td></tr>' +
+    '<tr><td>Signer</td><td>' + esc(appr.signerNama) + '</td><td>' + esc(appr.signerJabatan) + '</td><td>' + esc(appr.signerTanggal) + '</td></tr>' +
+    '</tbody></table>';
+
+  var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + esc(ev.nama) + ' - SPPD</title>' +
+    '<style>body{font-family:Helvetica,Arial,sans-serif;color:#111;padding:32px;max-width:760px;margin:0 auto;font-size:13px}' +
+    'h1{font-size:19px;text-align:center;margin:0 0 2px}h2{font-size:12px;text-align:center;color:#444;margin:0 0 22px;font-weight:400}' +
+    'h3{font-size:13px;margin:22px 0 6px;border-bottom:2px solid #0d0d0d;padding-bottom:3px;font-weight:700}' +
+    'table{width:100%;border-collapse:collapse;margin:8px 0}th,td{border:1px solid #bbb;padding:6px 8px;text-align:left;vertical-align:top}' +
+    'thead th{background:#f1f1f1;font-weight:700}.t{text-align:right}.mono{font-variant-numeric:tabular-nums}.tot td{font-weight:800}' +
+    '.note{color:#777;font-style:italic}.qr{text-align:center;font-size:10px;color:#888;margin-top:26px}@media print{button{display:none}}</style>' +
+    '</head><body>' +
+    '<h1>FORM PENGAJUAN BIAYA PERJALANAN DINAS</h1>' +
+    '<h2>' + esc(st.nama || '') + (st.instansi ? ' — ' + esc(st.instansi) : '') + '</h2>' +
+    infoInfo + opsSection + spjSection + totalSection + approvalSection +
+    '<div class="qr">Dokumen dibuat otomatis dari data live ArchiveDoc. ' + new Date().toLocaleDateString('id-ID') + '</div>' +
+    '</body></html>';
+
+  return html;
+}
+// @CLEAN@

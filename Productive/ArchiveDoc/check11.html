@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>check11 — wallet alokasi SPPD</title></head>
+<body>
+<pre id="out">running…</pre>
+<div id="app"></div>
+<script src="js/store.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/pages.js"></script>
+<script src="js/pages2.js"></script>
+<script>
+var out = [], pass = 0, fail = 0;
+function ok(name, cond, extra) {
+  if (cond) { pass++; out.push('PASS ' + name); }
+  else { fail++; out.push('FAIL ' + name + (extra ? ' :: ' + extra : '')); }
+}
+var store = window.SPT.store;
+
+localStorage.clear();
+var db = store.load();
+
+// 1. seed budget punya wallet
+var b1 = store.sppdBudget('evt-1');
+ok('seed-5-baris', b1.length === 5, 'len=' + b1.length);
+ok('semua-baris-punya-wallet', b1.every(function (b) { return !!b.wallet; }),
+   JSON.stringify(b1.map(function (b) { return b.kategori + '=' + b.wallet; })));
+ok('wallet-bank-untuk-hotel', b1[0].wallet === 'Bank', b1[0].wallet);
+ok('wallet-e-money-uang-saku', b1[3].wallet === 'E-Money', b1[3].wallet);
+
+// 2. budgetRealisasi expose wallet + perWallet
+var r = store.budgetRealisasi('evt-1');
+ok('rows-punya-wallet', r.rows.every(function (x) { return !!x.wallet; }));
+ok('perWallet-ada', Array.isArray(r.perWallet) && r.perWallet.length === 4, 'len=' + (r.perWallet && r.perWallet.length));
+ok('perWallet-kategori-lengkap', r.perWallet.map(function (w) { return w.wallet; }).join(',') === 'Bank,QRIS,Kas,E-Money',
+   r.perWallet.map(function (w) { return w.wallet; }).join(','));
+var bank = r.perWallet.filter(function (w) { return w.wallet === 'Bank'; })[0];
+ok('perWallet-bank-2jt25', bank.alokasi === 2250000, 'got ' + bank.alokasi);
+ok('total-alokasi-tetap', r.totalAlokasi === 2850000, 'got ' + r.totalAlokasi);
+ok('selisih-tetap', r.selisihDanaAwal === 350000, 'got ' + r.selisihDanaAwal);
+var sumWallet = r.perWallet.reduce(function (a, w) { return a + w.alokasi; }, 0);
+ok('sum-perWallet-==-total', sumWallet === r.totalAlokasi, sumWallet + ' vs ' + r.totalAlokasi);
+
+// 3. budgetWallet: E-Money dipaksa, default Kas
+ok('emoney-dipaksa', store.budgetWallet('E-Money', 'Kas') === 'E-Money');
+ok('unknown-default-kas', store.budgetWallet('Penginapan', 'Zombie') === 'Kas');
+ok('pilihan-dihormati', store.budgetWallet('Penginapan', 'QRIS') === 'QRIS');
+
+// 4. simpan item baru dengan wallet
+store.saveSppdBudgetItem('evt-1', { kategori: 'Sewa Transport', alokasi: 300000, ket: 'Minibus 3 hari', wallet: 'QRIS' });
+var b2 = store.sppdBudget('evt-1');
+var baru = b2.filter(function (b) { return b.kategori === 'Sewa Transport'; })[0];
+ok('item-baru-tersimpan', !!baru, 'len=' + b2.length);
+ok('wallet-item-baru', baru && baru.wallet === 'QRIS', baru && baru.wallet);
+
+// 5. E-Money dipaksa walau user pilih Bank
+store.saveSppdBudgetItem('evt-1', { kategori: 'E-Money', alokasi: 75000, ket: 'Top up', wallet: 'Bank' });
+var em = store.sppdBudget('evt-1').filter(function (b) { return b.kategori === 'E-Money'; })[0];
+ok('emoney-dipaksa-saat-simpan', em && em.wallet === 'E-Money', em && em.wallet);
+
+// 6. normalisasi pada load ulang (pakai data mentah tanpa wallet)
+var db2 = store.load();
+db2.sppd.forEach(function (s) { (s.budget || []).forEach(function (x) { delete x.wallet; }); });
+// paksa simpan ulang tiap baris lewat API (argumen pertama = eventId)
+db2.sppd.forEach(function (s) {
+  (s.budget || []).forEach(function (b) {
+    store.saveSppdBudgetItem(s.eventId, { id: b.id, kategori: b.kategori, alokasi: b.alokasi, ket: b.ket });
+  });
+});
+var semua = store.load().sppd.filter(function (s) { return s.budget.length; });
+var semuaAda = semua.every(function (s) { return s.budget.every(function (b) { return !!b.wallet; }); });
+ok('semua-sppd-ter-normalisasi', semuaAda,
+   JSON.stringify(semua.map(function (s) { return s.noSurat + ':' + s.budget.map(function (b) { return b.kategori + '=' + b.wallet; }).join(','); })));
+
+// 7. importJSON menormalisasi wallet
+var dump = JSON.parse(JSON.stringify(store.load()));
+dump.sppd.forEach(function (s) { (s.budget || []).forEach(function (b) { delete b.wallet; }); });
+try { store.importJSON(JSON.stringify(dump)); } catch (e) {}
+var setelahImport = store.load().sppd.filter(function (s) { return s.budget.length; });
+ok('import-normalisasi-wallet', setelahImport.every(function (s) { return s.budget.every(function (b) { return !!b.wallet; }); }));
+
+// 8. badge wallet ter-render
+localStorage.clear();
+var htmlBadge = window.SPT.walletBadge('E-Money');
+ok('badge-wallet-render', htmlBadge.indexOf('E-Money') >= 0 && htmlBadge.indexOf('badge') >= 0, htmlBadge);
+ok('badge-escape-aman', window.SPT.walletBadge('<script>').indexOf('<script>') === -1);
+
+out.push('');
+out.push('TOTAL ' + (pass + fail) + ' | PASS ' + pass + ' | FAIL ' + fail);
+document.getElementById('out').textContent = out.join('\n');
+</script>
+</body></html>
