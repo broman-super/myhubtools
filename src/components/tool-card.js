@@ -37,6 +37,13 @@ var ToolCard = {
       desc: 'Pelacakan roadmap produk baru Divisi R&D: tahapan, checklist, dan evaluasi kelayakan.',
       search: 'rnd roadmap tracker produk baru riset pengembangan tahapan evaluasi'
     },
+    {
+      group: 'productive',
+      hash: '#productive/sppd',
+      title: 'SPPD Toolbox',
+      desc: 'Kelola perjalanan dinas (SPPD): budget, transport, produk, penjualan, checklist, dan laporan.',
+      search: 'sppd perjalanan dinas budget transport produk laporan arsip'
+    },
     // Universal
     {
       group: 'universal',
@@ -117,7 +124,7 @@ var ToolCard = {
       card.appendChild(badge);
     }
     // Badge penanda webtool baru
-    if (config.hash === '#utilities/faktur') {
+    if (config.hash === '#productive/sppd') {
       var newBadge = document.createElement('span');
       newBadge.className = 'card-badge card-badge-new';
       newBadge.textContent = 'BARU';

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f8fafc">
+  <title>SPPD Toolbox — Manajemen Tugas PIC</title>
+
+  <script>
+    /* Hub contract: titik sambung cloud. Kosong = prototipe localStorage.
+       Isi dengan URL .../exec hasil deploy gas/sppdtoolbox.gs. */
+    window.SPT_GAS_URL = window.SPT_GAS_URL || 'https://script.google.com/macros/s/AKfycbw8qmEeEBt_XLg0dEeDaKB1drz1mfR6__sveY0M1GbGjcmx03ayk4dJgkf9D5EdR--H/exec';
+
+    /* Anti-flash (standalone): terapkan tema tersimpan sebelum render.
+       Saat embedded, hub yang mengirim tema lewat postMessage. */
+    (function () {
+      if (window.self !== window.top) return;
+      try {
+        var t = localStorage.getItem('reynahub-theme') || 'system';
+        if (t === 'system') t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Font rumah (Plus Jakarta Sans + Geomini) dimuat dari loader bersama hub.
+       Sama seperti sibling lain (mis. Productive/analytic) → satu sumber font. -->
+  <link rel="stylesheet" href="../../src/styles/tools.css">
+  <!-- Tailwind yang DI-BUILD (css/tailwind.css) menggantikan CDN runtime:
+       browser tidak lagi mengunduh + menjalankan compiler Tailwind tiap load.
+       Setelah menambah/mengganti class, bangun ulang (lihat tailwind.config.js).
+       PENTING: tailwind.css WAJIB dimuat SETELAH styles.css — dulu CDN
+       menyuntik stilenya di akhir, jadi utilitas Tailwind menang tie-break
+       (mis. p-6 vs .card-pad, leading-none vs .stat-num). Urutan ini
+       mempertahankan perilaku yang sama. -->
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/tailwind.css">
+
+  <style>
+    /* Hub contract §2: sembunyikan chrome yang menduplikasi hub saat di-iframe.
+       Hanya brand yang disembunyikan (pola sama dengan analytic/latch) —
+       <nav> tetap tampil karena ini navigasi internal tool, bukan duplikat hub. */
+    .is-embedded .topbar .brand { display: none !important; }
+    .is-embedded .site-footer { display: none !important; }
+
+    /* Utilitas Tailwind di-build ke hex literal (tak bisa ikut [data-theme]).
+       Di-remap ke token rumah; dimuat SETELAH tailwind.css → menang tie-break. */
+    .font-display { font-family: var(--font-display); }
+    .font-body { font-family: var(--font-body); }
+    .bg-base { background-color: var(--bg); }
+    .bg-surface { background-color: var(--surface); }
+    .bg-surface\/95 { background-color: color-mix(in srgb, var(--surface) 95%, transparent); }
+    .bg-line { background-color: var(--border); }
+    .bg-accent { background-color: var(--accent); }
+    .bg-ink { background-color: var(--ink); }
+    .text-ink { color: var(--text-primary); }
+    .text-muted { color: var(--text-secondary); }
+    .text-accent { color: var(--accent); }
+    .border-line { border-color: var(--border); }
+    .accent-\[\#E11D2E\] { accent-color: var(--accent); }
+    .border-\[\#E11D2E\] { border-color: var(--accent); }
+    #theme-toggle:hover { background: var(--surface-2); }
+  </style>
+</head>
+
+<body class="bg-base text-ink font-body antialiased min-h-screen flex flex-col">
+
+  <a class="skip-link" href="#app" data-action="skip:app">Lewati ke konten utama</a>
+
+  <header class="topbar sticky top-0 z-40 bg-surface/95 backdrop-blur border-b border-line">
+    <div class="mx-auto max-w-[1800px] px-4 sm:px-6 lg:px-8 flex items-center gap-3 h-16">
+      <button data-action="nav:mobile" class="md:hidden p-2 -ml-2 text-ink" aria-label="Menu" aria-expanded="false" aria-controls="mobilenav">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a href="#/dashboard" class="brand font-display font-extrabold text-xl tracking-tight text-ink" data-action="nav:go" data-href="#/dashboard">
+        SPPD<span class="text-accent">Toolbox</span>
+      </a>
+      <nav id="topnav" aria-label="Navigasi utama" class="hidden md:flex items-center gap-1 ml-6 flex-1 overflow-x-auto"></nav>
+      <span class="ml-auto text-xs text-muted hidden sm:block" id="nav-chips"></span>
+      <span id="conn-badge" class="text-xs font-bold whitespace-nowrap px-2 py-1 text-muted" title="Status penyimpanan"></span>
+      <button id="theme-toggle" class="p-2 text-ink rounded-full" aria-label="Ganti tema" title="Ganti tema">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+    </div>
+    <nav id="mobilenav" aria-label="Navigasi utama (ponsel)" class="md:hidden hidden border-t border-line bg-surface overflow-x-auto flex gap-1 px-3 py-2"></nav>
+  </header>
+
+  <main id="app" class="flex-1 w-full mx-auto max-w-[1800px] px-4 sm:px-6 lg:px-8 py-6 lg:py-8"></main>
+
+  <footer class="site-footer border-t border-line mt-8">
+    <div class="mx-auto max-w-[1800px] px-4 sm:px-6 lg:px-8 py-5 text-xs text-muted flex flex-wrap justify-between gap-2">
+      <span>SPPD Toolbox — Prototype v0.6 · Tiap event punya satu Layar Kerja dengan 8 seksi: SPPD, Jadwal, Produk &amp; Item, Uang, dan Laporan.</span>
+      <span id="conn-footer">Belum tersambung ke GAS &amp; Supabase — data tersimpan di browser ini. Lihat halaman Pengaturan.</span>
+    </div>
+  </footer>
+
+  <div id="modal-root"></div>
+  <div id="toast-root" class="fixed bottom-4 right-4 z-50 space-y-2 w-[min(92vw,360px)]"></div>
+
+  <script src="js/ui.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/pages.js"></script>
+  <script src="js/pages2.js"></script>
+  <script src="js/actions.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+    /* Hub contract §2: bridge tema. Listener DULU, baru request-theme. */
+    (function () {
+      var root = document.documentElement;
+      var embedded = window.self !== window.top;
+      function apply(t) {
+        if (t === 'system') t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+        root.setAttribute('data-theme', t);
+      }
+      if (embedded) {
+        document.body.classList.add('is-embedded');
+        window.addEventListener('message', function (e) {
+          if (e.data && e.data.type === 'SET_THEME') apply(e.data.theme);
+        });
+        window.parent.postMessage({ type: 'request-theme' }, '*'); // SETELAH listener
+      } else {
+        apply((function () { try { return localStorage.getItem('reynahub-theme') || 'system'; } catch (e) { return 'system'; } })());
+      }
+      var btn = document.getElementById('theme-toggle');
+      if (btn) btn.addEventListener('click', function () {
+        var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        apply(next);
+        if (embedded) { try { window.parent.postMessage({ type: 'THEME_CHANGED', theme: next }, '*'); } catch (e) {} }
+        else { try { localStorage.setItem('reynahub-theme', next); } catch (e) {} }
+      });
+    })();
+  </script>
+</body>
+</html>
