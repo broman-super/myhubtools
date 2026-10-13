@@ -359,6 +359,15 @@ window.SPT = window.SPT || {};
           window.SPT.downloadHtml('Form-Pengajuan-Biaya-Perjalanan-Dinas-' + (d.event || 'sppd') + '.html', root.outerHTML);
         }
       },
+      'sppd:viewPrint': function (el, d) {
+        if (window.SPT && window.SPT._sppdActiveTab) { window.SPT._sppdActiveTab[d.event] = 'print'; }
+        window.location.hash = '#/events/' + d.event;
+        setTimeout(function () {
+          var btn = document.querySelector('[data-action="scroll:to"][data-sel="#ps-1"]');
+          if (btn) { btn.click(); }
+          render();
+        }, 0);
+      },
       'danaCair:add': function (el, d) {
         var sumber2 = ui.readVal('dc-sumber');
         var nominal2 = ui.num('dc-nominal');
