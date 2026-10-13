@@ -282,6 +282,20 @@ window.SPT = window.SPT || {};
       '<input id="' + id + '" type="number" step="500" class="input" value="' + (value || 0) + '" placeholder="+ masuk / − keluar"></div>';
   };
 
+  A.downloadHtml = function (filename, html) {
+    try {
+      var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename || 'form.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 200);
+    } catch (e) { console.error(e); }
+  };
+
   /* ---------- tanggal ---------- */
   var ID_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
   A.fmtDateId = function (iso) {

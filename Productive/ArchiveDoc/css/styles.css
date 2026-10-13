@@ -454,6 +454,32 @@ a:focus-visible, button:focus-visible, .tab-btn:focus-visible,
 }
 .psec-fold:hover { border-color: var(--accent); color: var(--accent); }
 
+/* SPPD sub-tabs (ps-1) */
+.sppd-subtabs {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 6px; margin-bottom: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.sppd-tab {
+  padding: 6px 10px; border-radius: var(--radius-xs);
+  font-size: .96rem; font-weight: 800;
+  color: var(--text-secondary); background: transparent;
+  border: 1px solid transparent; cursor: pointer;
+}
+.sppd-tab:hover { background: var(--surface); color: var(--text-primary); }
+.sppd-tab.is-active {
+  background: var(--surface); color: var(--text-primary);
+  border-color: var(--border); box-shadow: var(--shadow-card);
+}
+.sppd-tabpane { display: none; }
+.sppd-tabpane.is-active { display: block; }
+.sppd-print-wrap { overflow-x: auto; padding: 4px 0; }
+.paper.is-edit .ed { outline: 1px dashed color-mix(in srgb, var(--accent) 40%, transparent); }
+.paper.is-edit .ed:focus { background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+.sppd-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-bottom: 10px; }
+
 /* Phase group */
 .phase-block { margin-bottom: 24px; }
 .phase-head {
