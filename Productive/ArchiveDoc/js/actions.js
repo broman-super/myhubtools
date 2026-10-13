@@ -327,19 +327,49 @@ window.SPT = window.SPT || {};
     },
 
     /* ---------- dana cair ---------- */
-    'danaCair:add': function (el, d) {
-      var sumber = ui.readVal('dc-sumber');
-      var nominal = ui.num('dc-nominal');
-      if (!sumber) { ui.toast('Sumber dana wajib diisi', 'error'); return; }
-      if (nominal <= 0) { ui.toast('Nominal harus lebih dari 0', 'error'); return; }
-      store.saveDanaCair({
-        eventId: d.event, sumber: sumber, rekening: ui.readVal('dc-rekening'),
-        nominal: nominal, tanggalCair: ui.readVal('dc-tgl') || '',
-        status: ui.readVal('dc-status') || 'belum', catatan: ''
-      });
-      ui.toast('Sumber dana dicatat ' + ui.fmt(nominal), 'success');
-      A.reload();
-    },
+      'danaCair:add': function (el, d) {
+        var sumber = ui.readVal('dc-sumber');
+        var nominal = ui.num('dc-nominal');
+        if (!sumber) { ui.toast('Sumber dana wajib diisi', 'error'); return; }
+        if (nominal <= 0) { ui.toast('Nominal harus lebih dari 0', 'error'); return; }
+        store.saveDanaCair({
+          eventId: d.event, sumber: sumber, rekening: ui.readVal('dc-rekening'), tanggalCair: ui.readVal('dc-tgl'), nominal: nominal, status: ui.readVal('dc-status') || 'belum'
+        });
+        closeModalSafe(); ui.toast('Sumber dana ditambahkan'); render();
+      },
+      'danaCair:status': function (el, d) {
+        var st = el.value; store.updateDanaCair(d.id, { status: st }); render();
+      },
+      'danaCair:delete': function (el, d) {
+        undoDelete('Sumber dana dihapus', function () { store.deleteDanaCair(d.id); });
+      },
+      'sppd:tab': function (el, d) {
+        var pane = el.getAttribute('data-pane') || 'data';
+        if (window.SPT && window.SPT._sppdActiveTab) { window.SPT._sppdActiveTab[d.event] = pane; }
+        render();
+      },
+      'sppd:print:edit': function (el, d) {
+        var stp = window.SPT && window.SPT._sppdPrintState && window.SPT._sppdPrintState[d.event];
+        if (stp) { stp.edit = !stp.edit; }
+        render();
+      },
+      'sppd:print:download': function (el, d) {
+        var root = document.getElementById('paper-sppd-' + d.event);
+        if (root && window.SPT && window.SPT.downloadHtml) {
+          window.SPT.downloadHtml('Form-Pengajuan-Biaya-Perjalanan-Dinas-' + (d.event || 'sppd') + '.html', root.outerHTML);
+        }
+      },
+      'danaCair:add': function (el, d) {
+        var sumber2 = ui.readVal('dc-sumber');
+        var nominal2 = ui.num('dc-nominal');
+        if (!sumber2) { ui.toast('Sumber dana wajib diisi', 'error'); return; }
+        if (nominal2 <= 0) { ui.toast('Nominal harus lebih dari 0', 'error'); return; }
+        store.saveDanaCair({
+          eventId: d.event, sumber: sumber2, rekening: ui.readVal('dc-rekening'), tanggalCair: ui.readVal('dc-tgl'), nominal: nominal2, status: ui.readVal('dc-status') || 'belum', catatan: ''
+        });
+        ui.toast('Sumber dana dicatat ' + ui.fmt(nominal2), 'success');
+        A.reload();
+      },
 
     'danaCair:delete': function (el, d) {
       undoDelete('Sumber dana dihapus', function () { store.deleteDanaCair(d.id); });

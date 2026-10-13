@@ -363,13 +363,165 @@ window.SPT = window.SPT || {};
       }).join('') + '</div>';
   }
 
+  function slugify(s) {
+    return String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+  A._sppdPrintState = A._sppdPrintState || {};
+  A._sppdActiveTab = A._sppdActiveTab || {};
+
+  function sppdPrintForm(ev) {
+    var stPrint = A._sppdPrintState[ev.id] || { edit: false, logoSrc: '', wmSrc: '', ttd: {} };
+    A._sppdPrintState[ev.id] = stPrint;
+    var s = store.getSppd(ev.id);
+    var fin = store.financeSummary(ev.id);
+    var ms = store.milestones(ev.id);
+    var eps = store.eventProducts(ev.id);
+    var items = store.prepItems(ev.id);
+    var sales = store.sales(ev.id);
+    var expenses = store.expenses(ev.id);
+
+    var berangkat = ev.tanggalMulai || '';
+    var kembali = ev.tanggalSelesai || '';
+    var tujuanKota = ev.lokasi || s.tujuan || '';
+    var target1 = ms[0] ? ms[0].judul : '';
+    var target2 = ms[1] ? ms[1].judul : '';
+    var target3 = ms[2] ? ms[2].judul : '';
+
+    var trList = store.transports(ev.id);
+    var trMode = '';
+    for (var i = 0; i < trList.length; i++) {
+      if (trList[i].leg === 'Berangkat') { trMode = trList[i].mode; break; }
+      if (trList[i].leg === 'Pulang' && !trMode) { trMode = trList[i].mode; break; }
+    }
+    var trLabel = '';
+    if (trMode === 'pribadi') trLabel = 'Kendaraan Pribadi';
+    else if (trMode === 'sewa') trLabel = 'Sewa Kendaraan';
+    else if (trMode === 'umum') trLabel = 'Transport Umum';
+    else trLabel = 'Kendaraan Pribadi';
+
+    var cbPribadi = (trLabel === 'Kendaraan Pribadi') ? ' on' : '';
+    var cbTravel = (trLabel === 'Sewa Kendaraan' || trLabel === 'Travel') ? ' on' : '';
+    var cbKereta = (trLabel === 'Kereta Api' || trLabel === 'Transport Umum') ? ' on' : '';
+    var cbLain = (!cbPribadi && !cbTravel && !cbKereta) ? ' on' : '';
+    var lainText = (!cbLain) ? 'Lainnya : ' : 'Lainnya : ' + trLabel;
+
+    var sppdBudgetItems = store.sppdBudget(ev.id);
+    var biayaA = 0, biayaB = 0, biayaC = 0, biayaD = 0, biayaE = 0;
+    for (var b = 0; b < sppdBudgetItems.length; b++) {
+      var kb = sppdBudgetItems[b];
+      var kat = (kb.kategori || '').toLowerCase();
+      var al = Number(kb.alokasi) || 0;
+      if (kat.indexOf('bensin') >= 0 || kat.indexOf('bbm') >= 0) { biayaA += al; continue; }
+      if (kat.indexOf('penginap') >= 0) { biayaB += al; continue; }
+      if (kat.indexOf('kas kecil') >= 0 || kat.indexOf('kaskecil') >= 0) { biayaC += al; continue; }
+      if (kat.indexOf('tol') >= 0) { biayaD += al; continue; }
+      biayaE += al;
+    }
+    var dcList = store.danaCair(ev.id);
+    for (var d = 0; d < dcList.length; d++) {
+      var xs = dcList[d];
+      var sm = (xs.sumber || '').toLowerCase();
+      var nm = Number(xs.nominal) || 0;
+      if (sm.indexOf('bensin') >= 0 || sm.indexOf('bbm') >= 0) { biayaA += nm; continue; }
+      if (sm.indexOf('penginap') >= 0) { biayaB += nm; continue; }
+      if (sm.indexOf('kas kecil') >= 0) { biayaC += nm; continue; }
+      if (sm.indexOf('tol') >= 0) { biayaD += nm; continue; }
+    }
+
+    function rp(n) { var x = Number(n) || 0; return 'Rp' + (false ? ' ' : '') + x.toLocaleString('id-ID'); }
+    function num(v){ return v ? v.toString().replace(/\D/g,'') : ''; }
+    function valRp(n){ var x=Number(n)||0; return x? rp(x):''; }
+
+    var spjRows = [];
+    for (var sr = 0; sr < Math.max(1, Math.min(6, sales.length + expenses.length || 3)); sr++) { spjRows.push(sr); }
+
+    var wmHtml = '';
+    if (stPrint.wmSrc) {
+      wmHtml = '<div class="wm" id="wm"><img id="wmImg" alt="" src="' + stPrint.wmSrc + '"></div>';
+    } else {
+      wmHtml = '<div class="wm" id="wm"><span class="wmtext" id="wmText">[ WATERMARK DUMMY ]<br>PT. ELFIQA KARYA TRIANGGA</span><img id="wmImg" alt="" hidden></div>';
+    }
+    var logoHtml = '';
+    if (stPrint.logoSrc) {
+      logoHtml = '<div class="logo" id="logo" data-action="sppd:print:logo"><img id="logoImg" alt="Logo" src="' + stPrint.logoSrc + '"><div class="cap ed" id="logoCap">[PT. ELFIQA KARYA TRIANGGA]</div></div>';
+    } else {
+      logoHtml = '<div class="logo" id="logo" data-action="sppd:print:logo"><img id="logoImg" alt="Logo" hidden><div class="dummy" id="logoDummy">LOGO</div><div class="cap ed" id="logoCap">[PT. ELFIQA KARYA TRIANGGA]</div></div>';
+    }
+
+    var ttdMImg = stPrint.ttd && stPrint.ttd.makerSrc ? '<img alt="" src="' + stPrint.ttd.makerSrc + '">' : '<img alt="" hidden>';
+    var ttdCImg = stPrint.ttd && stPrint.ttd.checkerSrc ? '<img alt="" src="' + stPrint.ttd.checkerSrc + '">' : '<img alt="" hidden>';
+    var ttdSImg = stPrint.ttd && stPrint.ttd.signerSrc ? '<img alt="" src="' + stPrint.ttd.signerSrc + '">' : '<img alt="" hidden>';
+    var hasM = (stPrint.ttd && stPrint.ttd.makerSrc) ? ' has' : '';
+    var hasC = (stPrint.ttd && stPrint.ttd.checkerSrc) ? ' has' : '';
+    var hasS = (stPrint.ttd && stPrint.ttd.signerSrc) ? ' has' : '';
+
+    var paperCls = stPrint.edit ? 'paper is-edit' : 'paper';
+    var editLabel = stPrint.edit ? 'Lihat (Preview)' : 'Edit';
+
+    var spjTbody = '';
+    for (var r = 0; r < spjRows.length; r++) {
+      var rn = r + 1;
+      spjTbody += '<tr class="spjrow"><td class="c n">' + rn + '</td><td class="ed"></td>' +
+        '<td class="q"><input class="" value=""></td><td><input class="m" value=""></td><td class="r wd"></td>' +
+        '<td class="q"><input class="" value=""></td><td><input class="m" value=""></td><td class="r we"></td>' +
+        '<td class="q"><input class="" value=""></td><td><input class="m" value=""></td><td class="r pg"></td>' +
+        '<td><input class="m" value=""></td><td></td><td class="ed"></td></tr>';
+    }
+
+    var html = '<div class="sppd-actions">' +
+      '<button class="btn btn-sm btn-ghost" data-action="sppd:print:edit" data-event="' + ev.id + '">' + editLabel + '</button>' +
+      '<button class="btn btn-sm btn-ghost" data-action="sppd:print:download" data-event="' + ev.id + '">Download .html</button>' +
+      '<button class="btn btn-sm btn-ink" onclick="window.print()">Cetak (PDF)</button>' +
+      '</div>' +
+      '<div class="sppd-print-wrap"><div class="zoomer"><div class="' + paperCls + '" id="paper-sppd-' + ev.id + '">' +
+      wmHtml +
+      '<h1>FORM PENGAJUAN BIAYA PERJALANAN DINAS</h1>' +
+      '<table class="main" id="main">' +
+      '<colgroup><col style="width:3%"><col style="width:8%"><col style="width:4%"><col style="width:7%"><col style="width:8%"><col style="width:4%"><col style="width:7%"><col style="width:8%"><col style="width:4%"><col style="width:7%"><col style="width:8%"><col style="width:8%"><col style="width:11%"><col style="width:13%"></colgroup>' +
+      '<tr><td class="l" colspan="2">Pemberi Tugas</td><td class="ed b" colspan="3">Direktur</td><td class="l" colspan="3">Departemen</td><td class="ed" colspan="4">SUPERSUB</td><td colspan="2" rowspan="2" style="padding:0">' + logoHtml + '</td></tr>' +
+      '<tr><td class="l" colspan="2" style="height:9mm">Tanggal dan Jam Berangkat</td><td class="ed" colspan="3">' + ui.esc(berangkat) + '</td><td class="l" colspan="3">Tanggal dan Jam Kembali</td><td class="ed" colspan="4">' + ui.esc(kembali) + '</td></tr>' +
+      '<tr><td class="l" colspan="2">Transportasi</td><td class="on' + cbPribadi + '" colspan="3"><span class="cb' + cbPribadi + '"><i></i>&nbsp;<span class="ed">Kendaraan Pribadi</span></span></td><td colspan="3"><span class="cb' + cbTravel + '"><i></i>&nbsp;<span class="ed">Travel</span></span></td><td colspan="4"><span class="cb' + cbKereta + '"><i></i>&nbsp;<span class="ed">Kereta Api</span></span></td><td colspan="2" class="ed">' + ui.esc(lainText) + '</td></tr>' +
+      '<tr><td class="l" colspan="2">Kota Tujuan</td><td class="ed" colspan="12">' + ui.esc(tujuanKota) + '</td></tr>' +
+      '<tr><td class="l" colspan="2" rowspan="3">Target Pekerjaan</td><td class="c">1</td><td class="ed" colspan="11">' + ui.esc(target1) + '</td></tr>' +
+      '<tr><td class="c">2</td><td class="ed" colspan="11">' + ui.esc(target2) + '</td></tr>' +
+      '<tr><td class="c">3</td><td class="ed" colspan="11">' + ui.esc(target3) + '</td></tr>' +
+      '<tr><td class="l" colspan="14" style="border-bottom:3px solid #000">Biaya-Biaya :</td></tr>' +
+      '<tr><td class="hd">NO</td><td class="hd" colspan="11">ITEMS</td><td class="hd">JUMLAH</td><td class="hd">KETERANGAN</td></tr>' +
+      '<tr><td class="c">A</td><td class="ed" colspan="11">Bensin</td><td><input class="m top" value="' + num(biayaA) + '"></td><td class="ed"></td></tr>' +
+      '<tr><td class="c">B</td><td class="ed" colspan="11">Penginapan</td><td><input class="m top" value="' + num(biayaB) + '"></td><td class="ed"></td></tr>' +
+      '<tr><td class="c">C</td><td class="ed" colspan="11">Kas Kecil</td><td><input class="m top" value="' + num(biayaC) + '"></td><td class="ed">Untuk Kembalian</td></tr>' +
+      '<tr><td class="c">D</td><td class="ed" colspan="11">TOL</td><td><input class="m top" value="' + num(biayaD) + '"></td><td class="ed"></td></tr>' +
+      '<tr><td class="c">E</td><td class="ed" colspan="11"></td><td><input class="m top" value="' + num(biayaE) + '"></td><td class="ed"></td></tr>' +
+      '<tr><td class="l" colspan="12" style="border-bottom:3px solid #000">Biaya SPJ</td><td></td><td></td></tr>' +
+      '<tr><td class="sh" rowspan="2" style="background:#d9e1f2">No</td><td class="sh" rowspan="2">Yang Bertugas</td><td class="sh" colspan="3">Uang Weekday</td><td class="sh" colspan="3">Uang Weekend</td><td class="sh" colspan="3">Penginapan</td><td class="sh">Lain lain</td><td rowspan="2"></td><td rowspan="2"></td></tr>' +
+      '<tr><td class="sh">Qty</td><td class="sh">@</td><td class="sh">Jumlah</td><td class="sh">Qty</td><td class="sh">@</td><td class="sh">Jumlah</td><td class="sh">Qty</td><td class="sh">@</td><td class="sh">Jumlah</td><td class="sh">Konsumsi</td></tr>' +
+      spjTbody +
+      '<tr style="font-weight:700"><td colspan="2"></td><td></td><td></td><td class="r" id="sWd">Rp0</td><td></td><td></td><td class="r" id="sWe">Rp0</td><td></td><td></td><td class="r" id="sPg">Rp0</td><td class="r" id="sKs">Rp0</td><td class="r" id="sSpj" style="border-bottom:3px solid #000">Rp 0</td><td></td></tr>' +
+      '<tr style="font-weight:700;border-top:3px solid #000"><td colspan="12" class="r" style="border-top:3px solid #000">TOTAL BIAYA</td><td class="r" id="grand" style="border-top:3px solid #000">' + ui.fmt(fin.totalBiaya || (biayaA+biayaB+biayaC+biayaD+biayaE)) + '</td><td style="border-top:3px solid #000"></td></tr>' +
+      '</table>' +
+      '<table class="sig"><colgroup><col style="width:9%"><col style="width:24.3%"><col style="width:9%"><col style="width:24.3%"><col style="width:9%"><col style="width:24.4%"></colgroup>' +
+      '<tr><th colspan="2">Maker</th><th colspan="2">Checker</th><th colspan="2">Signer</th></tr>' +
+      '<tr><td class="sb" colspan="2"><div class="sign' + hasM + '" data-sign data-role="maker" data-event="' + ev.id + '">' + ttdMImg + '<span class="hint">Klik untuk unggah TTD (atau biarkan kosong untuk TTD basah)</span><button class="x" title="Hapus TTD">×</button></div></td><td class="sb" colspan="2"><div class="sign' + hasC + '" data-sign data-role="checker" data-event="' + ev.id + '">' + ttdCImg + '<span class="hint">Klik untuk unggah TTD (atau biarkan kosong untuk TTD basah)</span><button class="x" title="Hapus TTD">×</button></div></td><td class="sb" colspan="2"><div class="sign' + hasS + '" data-sign data-role="signer" data-event="' + ev.id + '">' + ttdSImg + '<span class="hint">Klik untuk unggah TTD (atau biarkan kosong untuk TTD basah)</span><button class="x" title="Hapus TTD">×</button></div></td></tr>' +
+      '<tr><td class="lb">Nama</td><td class="ed" style="font-weight:700">: </td><td class="lb">Nama</td><td class="ed" style="font-weight:700">: </td><td class="lb">Nama</td><td class="ed" style="font-weight:700">: </td></tr>' +
+      '<tr><td class="lb">Jabatan</td><td class="ed">: </td><td class="lb">Jabatan</td><td class="ed">: </td><td class="lb">Jabatan</td><td class="ed">: </td></tr>' +
+      '<tr><td class="lb">Tanggal</td><td class="ed">: </td><td class="lb">Tanggal</td><td class="ed">: </td><td class="lb">Tanggal</td><td class="ed">: </td></tr>' +
+      '</table>' +
+      '</div></div></div>';
+    return html;
+  }
+
   function tabSppd(ev) {
     var s = store.getSppd(ev.id);
     var realisasiHtml = s.tampilkanRealisasi
       ? '<div class="sm:col-span-2">' + ui.moneyInput('spp-realisasi', 'Realisasi (dana yang benar-benar terpakai)', s.realisasi) + '</div>'
       : '';
-    return moneySummary(ev) +
-      '<div class="card card-pad mb-6">' +
+    var active = A._sppdActiveTab[ev.id] || 'print';
+    A._sppdActiveTab[ev.id] = active;
+    var paneDataCls = active === 'data' ? 'sppd-tabpane is-active' : 'sppd-tabpane';
+    var panePrintCls = active === 'print' ? 'sppd-tabpane is-active' : 'sppd-tabpane';
+    var tabDataCls = active === 'data' ? 'sppd-tab is-active' : 'sppd-tab';
+    var tabPrintCls = active === 'print' ? 'sppd-tab is-active' : 'sppd-tab';
+    var dataPane = '<div class="card card-pad mb-6">' +
       '<h2 class="font-extrabold text-lg mb-4">Surat Perjalanan Dinas</h2>' +
       '<div class="form-grid form-grid-2">' +
       '<div><label class="label" for="spp-no">Nomor Surat</label><input id="spp-no" class="input" value="' + ui.esc(s.noSurat) + '" placeholder="mis. 039/SPPD/2026"></div>' +
@@ -394,6 +546,11 @@ window.SPT = window.SPT || {};
       sppdBudgetBlock(ev) +
       danaCairBlock(ev) +
       transportsBlock(ev);
+    return moneySummary(ev) +
+      '<div class="card card-pad mb-4"><div class="sppd-subtabs" role="tablist" aria-label="SPPD Tabs">' +
+      '<button class="' + tabDataCls + '" type="button" role="tab" aria-selected="' + (active === 'data') + '" data-action="sppd:tab" data-event="' + ev.id + '" data-pane="data">Data SPPD</button>' +
+      '<button class="' + tabPrintCls + '" type="button" role="tab" aria-selected="' + (active === 'print') + '" data-action="sppd:tab" data-event="' + ev.id + '" data-pane="print">Form Cetak (Preview)</button>' +
+      '</div><div class="' + paneDataCls + '" data-pane="data">' + dataPane + '</div><div class="' + panePrintCls + '" data-pane="print">' + sppdPrintForm(ev) + '</div></div>';
   }
 
   function transportsBlock(ev) {
