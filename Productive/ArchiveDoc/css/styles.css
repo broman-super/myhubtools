@@ -641,6 +641,7 @@ a:focus-visible, button:focus-visible, .tab-btn:focus-visible,
   background: color-mix(in srgb, var(--bg) 70%, transparent);
   backdrop-filter: blur(4px) saturate(1.05);
   -webkit-backdrop-filter: blur(4px) saturate(1.05);
+  pointer-events: none;
 }
 .loader-overlay.is-active { display: flex; }
 .loader-card {
@@ -649,6 +650,7 @@ a:focus-visible, button:focus-visible, .tab-btn:focus-visible,
   background: var(--surface); border: 1px solid var(--border);
   box-shadow: var(--shadow-modal);
   color: var(--text-primary);
+  pointer-events: auto;
 }
 .loader-text { font-size: 13px; font-weight: 800; letter-spacing: .02em; color: var(--text-secondary); }
 .spinner {

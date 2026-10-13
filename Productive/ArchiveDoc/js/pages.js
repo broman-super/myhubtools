@@ -672,4 +672,5 @@ window.SPT = window.SPT || {};
     archive: archive
   };
   A.roadmapAttModal = roadmapAttModal;
+  A.sppdPrintForm = sppdPrintForm;
 })(window.SPT);
