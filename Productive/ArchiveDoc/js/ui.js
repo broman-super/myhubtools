@@ -468,4 +468,23 @@ window.SPT = window.SPT || {};
       : '<span class="doc-chip' + (att.noSurat ? ' surat' : '') + '">' + inner + '</span>';
   };
 
+  A.loaderHtml = function (msg) {
+    msg = msg || 'Memuat data...';
+    return '<div class="loader-overlay" id="global-loader">' +
+      '<div class="loader-card">' +
+      '<div class="spinner"></div>' +
+      '<div class="loader-text">' + A.esc(msg) + '</div>' +
+      '</div></div>';
+  };
+  A.showLoader = function (msg) {
+    var root = A.$('#loader-root');
+    if (root && !A.$('#global-loader')) { root.innerHTML = A.loaderHtml(msg); }
+    var el = A.$('#global-loader');
+    if (el) { el.classList.add('is-active'); }
+  };
+  A.hideLoader = function () {
+    var el = A.$('#global-loader');
+    if (el) { el.classList.remove('is-active'); }
+  };
+
 })(window.SPT);

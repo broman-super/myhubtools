@@ -28,6 +28,8 @@ window.SPT = window.SPT || {};
   var _pushTimer = null;
   var _conn = 'local';           // 'local' | 'online' | 'error'
   var _connListeners = [];
+  var _loading = false;
+  var _loadListeners = [];
 
   function hasCloud() { return !!GAS_URL; }
   function onConn(fn) { _connListeners.push(fn); try { fn(_conn); } catch (e) {} }
@@ -36,14 +38,38 @@ window.SPT = window.SPT || {};
     _conn = s;
     _connListeners.forEach(function (fn) { try { fn(s); } catch (e) {} });
   }
+  function onLoading(fn) { _loadListeners.push(fn); try { fn(_loading); } catch (e) {} }
+  function setLoading(v) {
+    if (_loading === v) { return; }
+    _loading = v;
+    _loadListeners.forEach(function (fn) { try { fn(v); } catch (e) {} });
+    if (window.SPT) {
+      if (v) { if (window.SPT.showLoader) window.SPT.showLoader('Menyinkronkan data...'); }
+      else { if (window.SPT.hideLoader) window.SPT.hideLoader(); }
+    } else {
+      var el = document.getElementById('global-loader');
+      if (el) el.classList.toggle('is-active', !!v);
+    }
+  }
   function gasCall(action, payload) {
-    return fetch(GAS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: action, payload: payload || {} })
-    }).then(function (r) { return r.json(); }).then(function (j) {
-      if (!j || !j.ok) { throw new Error((j && j.error) || 'Respons GAS tidak dikenal'); }
-      return j.data;
+    var ctrl = null;
+    var tmo = null;
+    if (typeof AbortController !== 'undefined') ctrl = new AbortController();
+    return new Promise(function (resolve, reject) {
+      if (ctrl) {
+        tmo = setTimeout(function () { try { ctrl.abort(); } catch (e) {} reject(new Error('Timeout sinkronisasi cloud (30s)')); }, 30000);
+      }
+      fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: action, payload: payload || {} }),
+        signal: ctrl ? ctrl.signal : undefined
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        if (!j || !j.ok) throw new Error((j && j.error) || 'Respons GAS tidak dikenal');
+        resolve(j.data);
+      }).catch(function (err) { reject(err); }).finally(function () {
+        if (tmo) clearTimeout(tmo);
+      });
     });
   }
   /* Dataset contoh lama (seedDemo) yang sempat bocor ke localStorage & cloud.
@@ -69,27 +95,28 @@ window.SPT = window.SPT || {};
   }
   function remoteLoad(cb) {
     if (!hasCloud()) { setConn('local'); if (cb) cb(new Error('cloud-off')); return; }
+    setLoading(true);
     gasCall('full', {}).then(function (data) {
       var empty = !data || ((data.events || []).length === 0 && (data.products || []).length === 0);
       if (empty) {
-        save();               // DB cloud masih kosong → jangan timpa lokal, unggah seed
+        save();               // DB cloud masih kosong �+' jangan timpa lokal, unggah seed
       } else {
         var legacy = hasLegacyDemo(data);
         normalizeDb(data);
         try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {}
-        if (legacy) { save(); }   // DB sudah direset kosong → bersihkan cloud juga
+        if (legacy) { save(); }   // DB sudah direset kosong �+' bersihkan cloud juga
       }
       setConn('online');
       if (cb) cb(null);
-    }).catch(function (err) { setConn('error'); if (cb) cb(err); });
+    }).catch(function (err) { setConn('error'); if (cb) cb(err); }).finally(function () { setLoading(false); });
   }
   function schedulePush() {
     if (!hasCloud()) { return; }
     clearTimeout(_pushTimer);
     _pushTimer = setTimeout(function () {
-      gasCall('save', load()).then(function () { setConn('online'); })
-        .catch(function () { setConn('error'); });
-    }, 1200);
+      setLoading(true);
+      gasCall('save', load()).then(function () { setConn('online'); }).catch(function () { setConn('error'); }).finally(function () { setLoading(false); });
+    }, 800);
   }
 
   var WALLETS = ['Bank', 'QRIS', 'Kas', 'E-Money'];

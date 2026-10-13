@@ -264,7 +264,11 @@
     render();
     store.onConn(paintConn);
     if (store.hasCloud()) {
-      store.remoteLoad(function (err) { if (!err) { A.reload(); } });
+      if (window.SPT && window.SPT.showLoader) { window.SPT.showLoader('Menyinkronkan data...'); }
+      store.remoteLoad(function (err) {
+        if (window.SPT && window.SPT.hideLoader) { window.SPT.hideLoader(); }
+        if (!err) { A.reload(); }
+      });
     }
   }
 
