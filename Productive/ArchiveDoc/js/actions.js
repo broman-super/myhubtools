@@ -360,13 +360,15 @@ window.SPT = window.SPT || {};
         }
       },
       'sppd:viewPrint': function (el, d) {
-        if (window.SPT && window.SPT._sppdActiveTab) { window.SPT._sppdActiveTab[d.event] = 'print'; }
-        window.location.hash = '#/events/' + d.event;
-        setTimeout(function () {
-          var btn = document.querySelector('[data-action="scroll:to"][data-sel="#ps-1"]');
-          if (btn) { btn.click(); }
-          render();
-        }, 0);
+        var ev = { id: d.event };
+        try {
+          var evs = (window.SPT && window.SPT.store && window.SPT.store.events) ? window.SPT.store.events() : [];
+          for (var i = 0; i < evs.length; i++) { if (evs[i].id === d.event) { ev = evs[i]; break; } }
+        } catch (e) {}
+        var formHtml = (window.SPT && window.SPT.sppdPrintForm) ? window.SPT.sppdPrintForm(ev) : '';
+        var modal = '<div class="card-pad" style="max-width:min(98vw,1200px);max-height:90vh;overflow:auto">' + formHtml + '</div>';
+        if (window.SPT && window.SPT.modal) { window.SPT.modal(modal, { static: false }); }
+        else { try { window.SPT.modal(modal); } catch (ex) {} }
       },
       'danaCair:add': function (el, d) {
         var sumber2 = ui.readVal('dc-sumber');
