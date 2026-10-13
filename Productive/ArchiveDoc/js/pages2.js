@@ -347,6 +347,7 @@ window.SPT = window.SPT || {};
       '<div class="flex flex-wrap items-center gap-2 mt-3">' +
       '<button class="btn btn-sm btn-ghost" data-action="scroll:to" data-sel="#ps-cek">Cek Persiapan (<span data-ck-count="hero">' + ckDone + '/' + cks.length + '</span>)</button>' +
       '<button class="btn btn-sm btn-ghost" data-action="report:event" data-event="' + ev.id + '">Cetak Laporan</button>' +
+      '<button class="btn btn-sm btn-ghost" data-action="sppd:viewPrint" data-event="' + ev.id + '">Lihat Form SPPD</button>' +
       '<button class="btn btn-sm btn-ghost" data-action="scroll:to" data-sel="#ps-1">Edit SPPD</button>' +
       (s.linkDokumen ? '<a class="btn btn-sm btn-ghost" href="' + ui.esc(s.linkDokumen) + '" target="_blank" rel="noopener">Download Dokumen</a>' : '') +
       '</div></div>';
