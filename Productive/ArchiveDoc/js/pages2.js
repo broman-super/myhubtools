@@ -100,7 +100,7 @@ window.SPT = window.SPT || {};
       '<div class="text-sm font-extrabold mb-3">Tambah Milestone</div>' +
       '<div class="form-grid form-grid-2">' +
       '<div><label class="label" for="mil-judul">Judul Milestone</label><input id="mil-judul" class="input" placeholder="mis. Leg 1 selesai" aria-label="Judul milestone"></div>' +
-      '<div><label class="label" for="mil-tgl">Tanggal</label><input id="mil-tgl" type="date" class="input" aria-label="Tanggal milestone"></div>' +
+      '<div><label class="label" for="mil-tgl">Tanggal</label>' + ui.dateField('mil-tgl', 'Tanggal', ui.isoToday()) + '</div>' +
       '<div class="sm:col-span-2 flex justify-end"><button class="btn btn-primary" data-action="milestone:add" data-event="' + ev.id + '">Tambah</button></div>' +
       '</div></div>';
   }
@@ -156,7 +156,7 @@ window.SPT = window.SPT || {};
       '<p class="text-xs text-muted mb-4">Pencatatan manual — total dihitung otomatis. Qty dibatasi sisa stok (dibawa − terjual − rusak/hilang).</p>' +
       '<div class="form-grid form-grid-2">' +
       '<div><label class="label" for="sa-produk">Produk</label><select id="sa-produk" class="select">' + optHtml + '</select></div>' +
-      '<div><label class="label" for="sa-tgl">Tanggal</label><input id="sa-tgl" type="date" class="input" value="' + ui.isoToday() + '"></div>' +
+      '<div><label class="label" for="sa-tgl">Tanggal</label>' + ui.dateField('sa-tgl', 'Tanggal', ui.isoToday()) + '</div>' +
       '<div><label class="label" for="sa-qty">Qty</label><input id="sa-qty" type="number" min="1" value="1" class="input"></div>' +
       '<div>' + ui.moneyInput('sa-harga', 'Harga Satuan', defaultHarga) + '</div>' +
       '<div><label class="label" for="sa-wallet">Metode / Wallet</label><select id="sa-wallet" class="select"><option value="Cash">Cash (Kas)</option><option value="QRIS">QRIS</option><option value="Transfer">Transfer (Bank)</option><option value="E-Money">E-Money</option></select></div>' +
@@ -211,7 +211,7 @@ window.SPT = window.SPT || {};
       '<p class="text-xs text-muted mb-4">Biaya transport dihitung otomatis dari seksi 01 (SPPD & Perjalanan).</p>' +
       '<div class="form-grid form-grid-2">' +
       '<div><label class="label" for="ex-kategori">Kategori</label><select id="ex-kategori" class="select">' + catOpt + '</select></div>' +
-      '<div><label class="label" for="ex-tgl">Tanggal</label><input id="ex-tgl" type="date" class="input" value="' + ui.isoToday() + '"></div>' +
+      '<div><label class="label" for="ex-tgl">Tanggal</label>' + ui.dateField('ex-tgl', 'Tanggal', ui.isoToday()) + '</div>' +
       '<div><label class="label" for="ex-deskripsi">Deskripsi</label><input id="ex-deskripsi" class="input" placeholder="mis. sewa meja, makan kru"></div>' +
       '<div>' + ui.moneyInput('ex-jumlah', 'Jumlah', 0) + '</div>' +
       '<div><label class="label" for="ex-wallet">Dibayar dari Wallet</label><select id="ex-wallet" class="select"><option>Kas</option><option>Bank</option><option>QRIS</option><option>E-Money</option></select></div>' +
@@ -229,7 +229,7 @@ window.SPT = window.SPT || {};
       '<p class="text-xs text-muted mb-4">Koreksi kas di luar penjualan/biaya: setoran, selisih hitung kas, dana talangan. Masuk pakai angka positif, keluar negatif.</p>' +
       '<div class="adj-form form-grid form-grid-2 mb-4">' +
       '<div><label class="label" for="adj-keterangan">Keterangan</label><input id="adj-keterangan" class="input" placeholder="mis. selisih hitung kas"></div>' +
-      '<div><label class="label" for="adj-tanggal">Tanggal</label><input id="adj-tanggal" type="date" class="input" value="' + ui.isoToday() + '"></div>' +
+      '<div><label class="label" for="adj-tanggal">Tanggal</label>' + ui.dateField('adj-tanggal', 'Tanggal', ui.isoToday()) + '</div>' +
       '<div>' + ui.signedInput('adj-jumlah', 'Nominal (±)', 0) + '</div>' +
       '<div><label class="label" for="adj-wallet">Wallet tujuan</label><select id="adj-wallet" class="select"><option>Kas</option><option>Bank</option><option>QRIS</option><option>E-Money</option></select></div>' +
       '<div class="sm:col-span-2 flex items-end justify-end"><button class="btn btn-primary" data-action="kasadj:add" data-event="' + ev.id + '">+ Catat Penyesuaian</button></div>' +

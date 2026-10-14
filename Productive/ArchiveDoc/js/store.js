@@ -121,6 +121,68 @@ window.SPT = window.SPT || {};
 
   var WALLETS = ['Bank', 'QRIS', 'Kas', 'E-Money'];
   var METODE_TO_WALLET = { Cash: 'Kas', QRIS: 'QRIS', Transfer: 'Bank', 'E-Money': 'E-Money' };
+
+  /* ===== NEW: SPPD Wizard Data Structure (6 steps) ===== */
+  // Mirrors Supabase schema: sppd_header + child tables
+  // All linked by eventId
+  var SPPD_BIAYA_MAX = 8;
+  var SPPD_SPJ_MAX_ROWS = 6;
+  
+  function newSppdWizard() {
+    return {
+      // Step 1: Perusahaan
+      perusahaan: {
+        nama: 'PT. ELFIQA KARYA TRIANGGA',
+        logo: '',
+        wmMode: 'teks',
+        wmImg: '',
+        wmText: 'PT. ELFIQA KARYA TRIANGGA'
+      },
+      // Step 2: Info Perjalanan
+      pemberiTugas: 'Direktur',
+      departemen: 'SUPERSUB',
+      tglBerangkat: '',
+      jamBerangkat: '09.00 WIB',
+      tglKembali: '',
+      ketKembali: 'sampai dengan selesai',
+      transport: { pribadi: true, travel: false, kereta: false, lainnya: '' },
+      kota: '',
+      target: ['', '', ''],
+      // Step 3: Biaya Umum (max 8)
+      biaya: [
+        { item: 'Bensin', jumlah: 0, ket: '' },
+        { item: 'Penginapan', jumlah: 0, ket: '' },
+        { item: 'Kas Kecil', jumlah: 0, ket: '' },
+        { item: 'TOL', jumlah: 0, ket: '' },
+        { item: '', jumlah: 0, ket: '' },
+        { item: '', jumlah: 0, ket: '' },
+        { item: '', jumlah: 0, ket: '' },
+        { item: '', jumlah: 0, ket: '' }
+      ],
+      // Step 4: Biaya SPJ - 4 daftar independen
+      petugas: [''],
+      uangSaku: [{ wq: 0, wa: 0, eq: 0, ea: 0 }],
+      penginapan: [{ qty: 0, a: 0 }],
+      konsumsi: [0],
+      // Step 5: Penandatangan
+      ttd: {
+        maker: { nama: '', jabatan: '', tanggal: '', img: '' },
+        checker: { nama: '', jabatan: '', tanggal: '', img: '' },
+        signer: { nama: '', jabatan: '', tanggal: '', img: '' }
+      },
+      // Meta
+      status: 'konsep',
+      noSurat: '',
+      tanggalTerbit: '',
+      tujuan: '',
+      kegiatan: '',
+      instansi: '',
+      catatan: '',
+      danaAwal: 0,
+      realisasi: 0,
+      tampilkanRealisasi: false
+    };
+  }
   function walletKey(w) { return WALLETS.indexOf(w) >= 0 ? w : 'Kas'; }
   function normWallets(db) {
     (db.sales || []).forEach(function (s) { if (!s.wallet) s.wallet = walletKey(METODE_TO_WALLET[s.metode] || 'Kas'); });
@@ -230,6 +292,7 @@ window.SPT = window.SPT || {};
     if (!DB.kasAdj) DB.kasAdj = [];
     if (!DB.prepItems) DB.prepItems = [];
     if (!DB.danaCair) DB.danaCair = [];
+    if (!DB.sppdWizard) DB.sppdWizard = {};
     DB.sppd.forEach(function (s) { if (!s.budget) s.budget = []; });
     normBudgetWallet(DB);
     DB.prepItems.forEach(function (p) { if (p.status !== 'selesai') p.status = 'belum'; });
@@ -580,6 +643,109 @@ if (!DB.itemCats || !DB.itemCats.length) DB.itemCats = builtinItemCats();
     };
   }
 
+  /* ============================================================
+     NEW: SPPD Wizard (6 steps) — single SPPD per event
+     Mirrors Supabase schema: sppd_header + child tables
+     All linked by eventId
+     ============================================================ */
+
+  function getSppdWizard(eventId) {
+    var db = load();
+    if (!db.sppdWizard) db.sppdWizard = {};
+    var w = db.sppdWizard[eventId];
+    if (!w) {
+      w = newSppdWizard();
+      db.sppdWizard[eventId] = w;
+      save();
+    }
+    return w;
+  }
+
+  function saveSppdWizard(eventId, data) {
+    var db = load();
+    if (!db.sppdWizard) db.sppdWizard = {};
+    db.sppdWizard[eventId] = data;
+    save();
+  }
+
+  function deleteSppdWizard(eventId) {
+    var db = load();
+    if (db.sppdWizard) {
+      delete db.sppdWizard[eventId];
+      save();
+    }
+  }
+
+  /* Sync wizard data to legacy SPPD + budget (for backward compat) */
+  function syncWizardToLegacy(eventId) {
+    var w = getSppdWizard(eventId);
+    var s = getSppd(eventId);
+    
+    // Header fields
+    s.noSurat = w.noSurat;
+    s.tanggalTerbit = w.tanggalTerbit;
+    s.tujuan = w.tujuan;
+    s.kegiatan = w.kegiatan;
+    s.instansi = w.instansi;
+    s.status = w.status;
+    s.danaAwal = w.danaAwal;
+    s.realisasi = w.realisasi;
+    s.tampilkanRealisasi = w.tampilkanRealisasi;
+    s.catatan = w.catatan;
+    
+    // Budget items from wizard biaya (optional sync)
+    // Legacy budget stays separate for now
+    
+    saveSppd(s);
+  }
+
+  /* Build unified data object for print renderer (A.sppdPrintForm) */
+  function getSppdPrintData(eventId) {
+    var w = getSppdWizard(eventId);
+    var ev = getEvent(eventId);
+    var s = getSppd(eventId);
+    var dc = danaCair(eventId);
+    var fin = financeSummary(eventId);
+    
+    return {
+      id: eventId,
+      eventNama: ev ? ev.nama : '',
+      eventLokasi: ev ? ev.lokasi : '',
+      // Perusahaan
+      perusahaan: w.perusahaan,
+      // Header
+      pemberiTugas: w.pemberiTugas,
+      departemen: w.departemen,
+      tglBerangkat: w.tglBerangkat,
+      jamBerangkat: w.jamBerangkat,
+      tglKembali: w.tglKembali,
+      ketKembali: w.ketKembali,
+      transport: w.transport,
+      kota: w.kota,
+      target: w.target,
+      // Biaya umum
+      biaya: w.biaya,
+      // SPJ - 4 daftar independen
+      petugas: w.petugas,
+      uangSaku: w.uangSaku,
+      penginapan: w.penginapan,
+      konsumsi: w.konsumsi,
+      // TTD
+      sign: w.ttd,
+      // Legacy compat
+      danaAwal: w.danaAwal || s.danaAwal,
+      realisasi: w.realisasi || s.realisasi,
+      status: w.status,
+      noSurat: w.noSurat || s.noSurat,
+      // Alokasi (from legacy budget)
+      budget: sppdBudget(eventId),
+      // Dana cair
+      danaCair: dc,
+      // Finance summary
+      finance: fin
+    };
+  }
+
   /* ---------- item persiapan (non-produk) ---------- */
   function prepItems(eventId) {
     return load().prepItems.filter(function (p) { return p.eventId === eventId; });
@@ -805,6 +971,10 @@ if (!DB.itemCats || !DB.itemCats.length) DB.itemCats = builtinItemCats();
     BUDGET_POS: BUDGET_POS, sppdBudget: sppdBudget, saveSppdBudgetItem: saveSppdBudgetItem,
     deleteSppdBudgetItem: deleteSppdBudgetItem, budgetTotal: budgetTotal, budgetRealisasi: budgetRealisasi,
     budgetWallet: budgetWallet,
+    // NEW: SPPD Wizard
+    newSppdWizard: newSppdWizard, getSppdWizard: getSppdWizard, saveSppdWizard: saveSppdWizard,
+    deleteSppdWizard: deleteSppdWizard, syncWizardToLegacy: syncWizardToLegacy,
+    getSppdPrintData: getSppdPrintData, SPPD_BIAYA_MAX: SPPD_BIAYA_MAX, SPPD_SPJ_MAX_ROWS: SPPD_SPJ_MAX_ROWS,
     prepItems: prepItems, prepItemsDone: prepItemsDone, prepBiaya: prepBiaya, savePrepItem: savePrepItem, deletePrepItem: deletePrepItem,
     checklistTemplates: checklistTemplates, checklistItems: checklistItems, checklistDone: checklistDone, saveChecklistItem: saveChecklistItem,
     itemCats: itemCats, itemTemplates: itemTemplates, saveItemCat: saveItemCat, saveItemTemplate: saveItemTemplate,

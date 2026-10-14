@@ -675,3 +675,73 @@ a:focus-visible, button:focus-visible, .tab-btn:focus-visible,
   .psec-fold { width: 40px; height: 40px; }
   .tabseg-item, .flow-pill, .tab-btn { min-height: 40px; display: inline-flex; align-items: center; }
 }
+
+/* ============================================================
+   WIZARD SPPD (modal 6 langkah) + chip tampilan "file"
+   ============================================================ */
+.wz { display: flex; flex-direction: column; gap: 14px; }
+
+/* stepper */
+.wz-steps { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; }
+.wz-step {
+  flex: 1 0 auto; min-width: 110px; text-align: left; cursor: pointer;
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--muted); font: 600 12px/1.3 inherit;
+}
+.wz-step b { display: block; font-size: 10px; letter-spacing: .06em; opacity: .7; margin-bottom: 2px; }
+.wz-step.done { color: var(--text-primary); border-color: color-mix(in srgb, var(--success) 45%, var(--border)); background: var(--success-tint, #ECFDF5); }
+.wz-step.done b::after { content: " \2713"; color: var(--success-deep, #047857); }
+.wz-step.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.wz-step:disabled { opacity: .5; cursor: not-allowed; }
+
+/* baris input wizard */
+.wz-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.wz-row .input { min-height: 38px; }
+.wz-row .input:first-of-type { flex: 1 1 auto; min-width: 0; }
+.wz-letter {
+  flex: 0 0 26px; height: 26px; display: grid; place-items: center;
+  border-radius: var(--radius-pill); background: var(--surface-2); color: var(--text-primary);
+  font: 800 12px inherit;
+}
+.wz-ck { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.wz-ck input { width: 16px; height: 16px; }
+
+/* SPJ 4 daftar */
+.wz-spjgrid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 640px) { .wz-spjgrid { grid-template-columns: 1fr 1fr; } }
+.wz-sh { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 8px; }
+.wz-signcard { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 10px; }
+.form-grid-3 { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 640px) { .form-grid-3 { grid-template-columns: repeat(3, 1fr); } }
+
+/* unggah gambar */
+.wz-imgrow { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+.wz-imgrow img { max-height: 64px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; }
+
+/* footer wizard */
+.wz-foot {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  position: sticky; bottom: 0; padding: 10px 0 0;
+}
+.wz-total { flex: 1; font: 800 15px/1 inherit; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+
+/* preview review di dalam wizard (iframe skala) */
+.wz-review .vw { background: #7f8590; border-radius: var(--radius-sm); padding: 8px; overflow: hidden; }
+.wz-review .vw iframe { border: 0; background: #fff; display: block; transform-origin: top left; }
+
+/* chip tampilan "file" SPPD */
+.chip-card { display: flex; flex-direction: column; gap: 10px; }
+.chip-card .chip-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.sppd-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+@media (max-width: 767px) {
+  .wz-steps { flex-wrap: nowrap; }
+  .wz-step { min-width: 92px; font-size: 11px; }
+  .wz-row { flex-wrap: wrap; }
+  .wz-row .input { flex: 1 1 100%; min-width: 0; }
+  .wz-row .input[type="number"] { flex: 1 1 45%; }
+  .chip-card .chip-actions .btn { flex: 1 1 45%; min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wz-step, .chip-card { transition: none; }
+}
