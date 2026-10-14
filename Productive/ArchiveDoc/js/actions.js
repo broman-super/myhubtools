@@ -26,6 +26,99 @@ window.SPT = window.SPT || {};
     A.reload();
   }
 
+  /* ============================================================
+     WIZARD helpers — re-render isi modal tanpa menutupnya,
+     preview layar review, dan resize gambar (logo/TTD/watermark).
+     ============================================================ */
+  A._wzRender = function (eventId) {
+    A._wzEv = eventId;
+    var root = ui.$('#wz-root');
+    if (!root) { return; }
+    var html = A.sppdWizardModal({ id: eventId });
+    var tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    var fresh = tmp.firstElementChild;
+    if (fresh) { root.parentNode.replaceChild(fresh, root); } else { root.innerHTML = html; }
+    A._wzBind(eventId);
+    A._wzSyncPreview();
+  };
+
+  A._wzSyncPreview = function () {
+    var f = ui.$('#wz-pv');
+    if (!f || !A._wzEv) { return; }
+    var data = store.getSppdWizard(A._wzEv);
+    var html = A.buildSppdHtml ? A.buildSppdHtml(data) : '';
+    f.srcdoc = html;
+    f.style.width = '1123px'; f.style.height = '850px';
+    f.style.zoom = Math.min(1, Math.max(0.28, (f.parentElement.clientWidth - 8) / 1123));
+    f.style.transformOrigin = 'top left';
+  };
+
+  /* ponytail: canvas resize sederhana; TTD/logo/wm cukup kecil sebelum base64 */
+  A._wzResizeImage = function (file, key, cb) {
+    var maxW = key === 'wm' ? 900 : (key === 'logo' ? 400 : 500);
+    var fr = new FileReader();
+    fr.onload = function () {
+      var im = new Image();
+      im.onload = function () {
+        var w = Math.min(maxW, im.width);
+        var cv = document.createElement('canvas');
+        cv.width = w; cv.height = im.height * w / im.width;
+        cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
+        cb(cv.toDataURL('image/png'));
+      };
+      im.onerror = function () { ui.toast('Gambar tidak bisa dibaca', 'error'); };
+      im.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  };
+
+  /* Binding input wizard: setiap [data-wz] menulis ke state wizard (live)
+     lewat setPath; total & preview ikut diperbarui.
+     ponytail: satu listener di modal aktif, re-attach setiap render. */
+  A._wzBind = function (eventId) {
+    var modal = (ui.$('#modal-root') || {});
+    var root = ui.$('#wz-root');
+    if (!root) { return; }
+    if (root._wzBound) { return; }
+    root._wzBound = true;
+    root.addEventListener('input', function (e) {
+      var t = e.target;
+      var path = t.getAttribute('data-wz');
+      if (!path) { return; }
+      var data = store.getSppdWizard(eventId);
+      A._wzSetPath(data, path, t.type === 'checkbox' ? t.checked : (t.getAttribute('data-n') ? (t.value === '' ? 0 : Number(t.value)) : t.value));
+      store.saveSppdWizard(eventId, data);
+      var tot = ui.$('#wz-total');
+      if (tot) { tot.textContent = ui.fmt(A._wzTotal(data)); }
+      A._wzSyncPreview();
+    });
+    root.addEventListener('change', function (e) {
+      var t = e.target;
+      if (t.getAttribute && t.getAttribute('data-wz')) { A._wzSyncPreview(); }
+    });
+  };
+
+  A._wzSetPath = function (obj, path, val) {
+    var keys = path.split('.');
+    var o = obj;
+    for (var i = 0; i < keys.length - 1; i++) {
+      var k = keys[i];
+      if (!o[k]) { o[k] = {}; }
+      o = o[k];
+    }
+    o[keys[keys.length - 1]] = val;
+  };
+
+  A._wzTotal = function (d) {
+    var tot = 0;
+    (d.biaya || []).forEach(function (b) { tot += Number(b.jumlah) || 0; });
+    (d.uangSaku || []).forEach(function (u) { tot += ((Number(u.wq) || 0) * (Number(u.wa) || 0)) + ((Number(u.eq) || 0) * (Number(u.ea) || 0)); });
+    (d.penginapan || []).forEach(function (p) { tot += (Number(p.qty) || 0) * (Number(p.a) || 0); });
+    (d.konsumsi || []).forEach(function (k) { tot += Number(k) || 0; });
+    return tot;
+  };
+
   A.actions = {
 
     'nav:go': function (el, d) {
@@ -354,22 +447,181 @@ window.SPT = window.SPT || {};
         render();
       },
       'sppd:print:download': function (el, d) {
-        var root = document.getElementById('paper-sppd-' + d.event);
-        if (root && window.SPT && window.SPT.downloadHtml) {
-          window.SPT.downloadHtml('Form-Pengajuan-Biaya-Perjalanan-Dinas-' + (d.event || 'sppd') + '.html', root.outerHTML);
-        }
+        var data = store.getSppdWizard(d.event);
+        var html = (window.SPT && window.SPT.buildSppdHtml) ? window.SPT.buildSppdHtml(data) : '';
+        if (!html) { ui.toast('Render form belum tersedia', 'error'); return; }
+        window.SPT.downloadHtml('Form-Pengajuan-Biaya-Perjalanan-Dinas-' + (data.noSurat || d.event || 'sppd') + '.html', html);
       },
       'sppd:viewPrint': function (el, d) {
-        var ev = { id: d.event };
-        try {
-          var evs = (window.SPT && window.SPT.store && window.SPT.store.events) ? window.SPT.store.events() : [];
-          for (var i = 0; i < evs.length; i++) { if (evs[i].id === d.event) { ev = evs[i]; break; } }
-        } catch (e) {}
-        var formHtml = (window.SPT && window.SPT.sppdPrintForm) ? window.SPT.sppdPrintForm(ev) : '';
-        var modal = '<div class="card-pad" style="max-width:min(98vw,1200px);max-height:90vh;overflow:auto">' + formHtml + '</div>';
-        if (window.SPT && window.SPT.modal) { window.SPT.modal(modal, { static: false }); }
-        else { try { window.SPT.modal(modal); } catch (ex) {} }
+        var data = store.getSppdWizard(d.event);
+        var html = (window.SPT && window.SPT.buildSppdHtml) ? window.SPT.buildSppdHtml(data) : '';
+        if (!html) { ui.toast('Render form belum tersedia', 'error'); return; }
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'padding:8px';
+        var frame = document.createElement('iframe');
+        frame.setAttribute('title', 'Pratinjau form SPPD');
+        frame.style.cssText = 'width:100%;height:78vh;border:0;background:#8a8f99;border-radius:8px';
+        frame.srcdoc = html;
+        wrap.appendChild(frame);
+        var bar = document.createElement('div');
+        bar.className = 'sppd-actions';
+        bar.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px';
+        bar.innerHTML =
+          '<button type="button" class="btn btn-sm btn-ink" data-action="sppd:frame:print">Cetak / Simpan PDF</button>' +
+          '<button type="button" class="btn btn-sm btn-ghost" data-action="sppd:print:download" data-event="' + d.event + '">Unduh .html</button>';
+        wrap.insertBefore(bar, frame);
+        A.modal(wrap.outerHTML, { static: false });
       },
+      'sppd:frame:print': function () {
+        var f = ui.$('#modal-root iframe');
+        try { if (f && f.contentWindow) { f.contentWindow.focus(); f.contentWindow.print(); } } catch (e) { ui.toast('Gagal mencetak. Coba Unduh .html lalu cetak dari file.', 'error'); }
+      },
+
+      /* ============================================================
+         WIZARD SPPD (6 langkah) — modal inline di ps-1
+         ============================================================ */
+      'sppd:wizard:open': function (el, d) {
+        A._sppdWizard = A._sppdWizard || {};
+        if (!A._sppdWizard[d.event]) { A._sppdWizard[d.event] = { step: 0, maxStep: 0 }; }
+        var wz = (window.SPT && window.SPT.sppdWizardModal) ? window.SPT.sppdWizardModal({ id: d.event }) : '';
+        A.modal('<div style="max-width:min(96vw,1000px);max-height:92vh;overflow:auto">' + wz + '</div>', { static: true });
+        A._wzEv = d.event;
+        A._wzBind(d.event);
+        A._wzSyncPreview();
+      },
+      'sppd:wizard:step': function (el, d) {
+        var n = parseInt(el.getAttribute('data-step'), 10) || 0;
+        var st = A._sppdWizard[d.event];
+        if (!st) { return; }
+        if (n > st.maxStep) { return; }
+        st.step = n;
+        A._wzRender(d.event);
+      },
+      'sppd:wizard:next': function (el, d) {
+        var st = A._sppdWizard[d.event];
+        var data = store.getSppdWizard(d.event);
+        if (!window.SPT.sppdWizardValidate(st.step, data)) {
+          ui.toast('Lengkapi Kota Tujuan, Tanggal Berangkat, dan Target Pekerjaan 1.', 'error');
+          return;
+        }
+        st.step = Math.min(5, st.step + 1);
+        st.maxStep = Math.max(st.maxStep, st.step);
+        A._wzRender(d.event);
+      },
+      'sppd:wizard:prev': function (el, d) {
+        var st = A._sppdWizard[d.event];
+        st.step = Math.max(0, st.step - 1);
+        A._wzRender(d.event);
+      },
+      'sppd:wizard:addbiaya': function (el, d) {
+        var data = store.getSppdWizard(d.event);
+        if (data.biaya.length >= 8) { ui.toast('Maksimal 8 item biaya', 'error'); return; }
+        data.biaya.push({ item: '', jumlah: 0, ket: '' });
+        store.saveSppdWizard(d.event, data);
+        A._wzRender(d.event);
+      },
+      'sppd:wizard:delbiaya': function (el, d) {
+        var data = store.getSppdWizard(d.event);
+        if (data.biaya.length <= 1) { return; }
+        data.biaya.pop();
+        store.saveSppdWizard(d.event, data);
+        A._wzRender(d.event);
+      },
+      'sppd:wizard:addrow': function (el, d) {
+        var key = el.getAttribute('data-list');
+        var data = store.getSppdWizard(d.event);
+        var cur = data[key] || [];
+        if (cur.length >= 6) { ui.toast('Maksimal 6 baris', 'error'); return; }
+        if (key === 'petugas') { cur.push(''); }
+        else if (key === 'konsumsi') { cur.push(0); }
+        else if (key === 'penginapan') { cur.push({ qty: 0, a: 0 }); }
+        else { cur.push({ wq: 0, wa: 0, eq: 0, ea: 0 }); }
+        data[key] = cur;
+        store.saveSppdWizard(d.event, data);
+        A._wzRender(d.event);
+      },
+      'sppd:wizard:delrow': function (el, d) {
+        var key = el.getAttribute('data-list');
+        var data = store.getSppdWizard(d.event);
+        var cur = data[key] || [];
+        if (cur.length <= 1) { return; }
+        cur.pop();
+        data[key] = cur;
+        store.saveSppdWizard(d.event, data);
+        A._wzRender(d.event);
+      },
+      'sppd:wizard:wmmode': function (el, d) {
+        var data = store.getSppdWizard(d.event);
+        data.perusahaan.wmMode = el.value;
+        store.saveSppdWizard(d.event, data);
+      },
+      'sppd:wizard:upload': function (el, d) {
+        A._wzPick = { event: d.event, key: el.getAttribute('data-img') };
+        var inp = ui.$('#wz-file');
+        if (!inp) {
+          inp = document.createElement('input');
+          inp.type = 'file'; inp.id = 'wz-file'; inp.accept = 'image/*';
+          inp.style.display = 'none';
+          inp.addEventListener('change', function (e) {
+            var f = e.target.files && e.target.files[0];
+            e.target.value = '';
+            if (!f || !A._wzPick) { return; }
+            A._wzResizeImage(f, A._wzPick.key, function (b64) {
+              var ev = A._wzPick.event, key = A._wzPick.key;
+              var data = store.getSppdWizard(ev);
+              if (key === 'logo') { data.perusahaan.logo = b64; }
+              else if (key === 'wm') { data.perusahaan.wmImg = b64; data.perusahaan.wmMode = 'gambar'; }
+              else if (key.indexOf('ttd:') === 0) { data.ttd[key.slice(4)].img = b64; }
+              store.saveSppdWizard(ev, data);
+              A._wzRender(ev);
+            });
+          });
+          document.body.appendChild(inp);
+        }
+        inp.click();
+      },
+      'sppd:wizard:imgclear': function (el, d) {
+        var key = el.getAttribute('data-img');
+        var data = store.getSppdWizard(d.event);
+        if (key === 'logo') { data.perusahaan.logo = ''; }
+        else if (key === 'wm') { data.perusahaan.wmImg = ''; }
+        else if (key.indexOf('ttd:') === 0) { data.ttd[key.slice(4)].img = ''; }
+        store.saveSppdWizard(d.event, data);
+        A._wzRender(d.event);
+      },
+      'sppd:wizard:save': function (el, d) {
+        var data = store.getSppdWizard(d.event);
+        if (!window.SPT.sppdWizardValidate(1, data)) {
+          ui.toast('Data belum lengkap. Kembali ke Langkah 2.', 'error');
+          return;
+        }
+        data.status = data.status || 'konsep';
+        data.danaAwal = data.danaAwal || 0;
+        store.saveSppdWizard(d.event, data);
+        store.syncWizardToLegacy(d.event);
+        modalCloseAll();
+        ui.toast('Data SPPD disimpan', 'success');
+        A.reload();
+      },
+      'sppd:wizard:delete': function (el, d) {
+        ui.confirm('Hapus SPPD ini?', 'Data SPPD event ini akan dihapus. Dana Cair & alokasi tidak ikut terhapus.', function () {
+          store.deleteSppdWizard(d.event);
+          modalCloseAll();
+          ui.toast('SPPD dihapus', 'success');
+          A.reload();
+        }, { confirm: 'Hapus SPPD' });
+      },
+      'sppd:wizard:print': function () {
+        var f = ui.$('#wz-pv');
+        try { if (f && f.contentWindow) { f.contentWindow.focus(); f.contentWindow.print(); } } catch (e) { ui.toast('Gagal mencetak. Coba Unduh .html lalu cetak dari file.', 'error'); }
+      },
+      'sppd:wizard:download': function (el, d) {
+        var data = store.getSppdWizard(d.event);
+        var html = window.SPT.buildSppdHtml ? window.SPT.buildSppdHtml(data) : '';
+        if (!html) { ui.toast('Render form belum tersedia', 'error'); return; }
+        window.SPT.downloadHtml('Form-Pengajuan-Biaya-Perjalanan-Dinas-' + (data.noSurat || d.event || 'sppd') + '.html', html);
+      },
+
       'danaCair:add': function (el, d) {
         var sumber2 = ui.readVal('dc-sumber');
         var nominal2 = ui.num('dc-nominal');

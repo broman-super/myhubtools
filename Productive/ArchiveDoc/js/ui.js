@@ -325,7 +325,7 @@ window.SPT = window.SPT || {};
       '<span class="date-text">' + (fmt || 'Pilih tanggal') + '</span>' +
       '<svg class="date-ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7zm12 6H5v12h14V8z" fill="currentColor"/></svg>' +
       '</button>' +
-      '<input id="' + id + '" type="date" class="input date-native" value="' + A.esc(valueISO || '') + '">' +
+      '<input id="' + id + '" type="date" class="input date-native" value="' + A.esc(valueISO || '') + '"' + (opts.attr ? ' ' + opts.attr : '') + '>' +
       '<div class="date-popover" id="' + popId + '" data-date-popover="' + wrapId + '" role="dialog" aria-modal="false" aria-label="Kalender ' + A.esc(label || '') + '"></div>' +
       '</div></div>';
     return html;
