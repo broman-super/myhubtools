@@ -128,6 +128,23 @@ if (typeof global.window.SPT !== 'undefined' && global.window.SPT.store && globa
   ok(modal.indexOf('Perusahaan') > -1 && modal.indexOf('Review') > -1 && modal.indexOf('Simpan') > -1, 'semua nama langkah ada');
   ok(modal.indexOf('wz-foot') > -1, 'footer navigasi wizard ada');
   ok(modal.indexOf('undefined') === -1, 'tidak ada "undefined" di wizard modal');
+
+  /* --- 5. tabSppd render (regresi: realisasiHtml / w.status) --- */
+  if (T.tabSppd) {
+    var pane = T.tabSppd({ id: 'ev-regresi' });
+    ok(typeof pane === 'string' && pane.length > 100, 'tabSppd tanpa wizard tetap render');
+    ok(pane.indexOf('Buat SPPD Baru') > -1, 'tabSppd tawarkan buat SPPD baru');
+    ok(pane.indexOf('undefined') === -1, 'tabSppd tanpa wizard tanpa "undefined"');
+    /* wizard kosong hasil getSppdWizard tidak membuat chip */
+    ok(pane.indexOf('chip-card') === -1, 'wizard kosong → tidak ada chip');
+
+    /* wizard terisi → chip muncul */
+    var wFilled = T.store ? T.store.getSppdWizard('ev-regresi') : null;
+    if (wFilled) { wFilled.noSurat = '039/SPPD/UKM/2026'; T.store.saveSppdWizard('ev-regresi', wFilled); }
+    var pane2 = T.tabSppd({ id: 'ev-regresi' });
+    ok(pane2.indexOf('chip-card') > -1, 'wizard terisi → chip muncul');
+    ok(pane2.indexOf('039/SPPD/UKM/2026') > -1, 'chip menampilkan nomor surat');
+  }
 } else {
   console.log('skip - store tidak dimuat');
 }

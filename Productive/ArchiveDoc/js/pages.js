@@ -810,8 +810,16 @@ window.SPT = window.SPT || {};
   function tabSppd(ev) {
     var s = store.getSppd(ev.id);
     var w = store.getSppdWizard(ev.id);
-    var hasWizard = w && (w.noSurat || w.kota || w.petugas[0] || w.biaya.some(function(b){return b.item || b.jumlah}));
-    var statusLabel = { konsep: 'Konsep', diajukan: 'Diajukan', disetujui: 'Disetujui', selesai: 'Selesai' }[w.status] || 'Konsep';
+    var realisasiHtml = s.tampilkanRealisasi
+      ? '<div class="sm:col-span-2">' + ui.moneyInput('spp-realisasi', 'Realisasi (dana yang benar-benar terpakai)', s.realisasi) + '</div>'
+      : '';
+    var hasWizard = w && !!(
+      w.noSurat || w.kota || w.tglBerangkat ||
+      (w.petugas || []).some(function (n) { return n; }) ||
+      (w.biaya || []).some(function (b) { return Number(b.jumlah) > 0; }) ||
+      (w.ttd && w.ttd.signer && w.ttd.signer.nama)
+    );
+    var statusLabel = { konsep: 'Konsep', diajukan: 'Diajukan', disetujui: 'Disetujui', selesai: 'Selesai' }[(w && w.status)] || 'Konsep';
     
     // Chip view if wizard exists, else show "Buat SPPD" button
     var chipHtml = '';
