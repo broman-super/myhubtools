@@ -369,6 +369,8 @@ window.SPT = window.SPT || {};
   A._sppdPrintState = A._sppdPrintState || {};
   A._sppdActiveTab = A._sppdActiveTab || {};
 
+  /* legacy, sengaja dipertahankan — renderer aktif sekarang buildSppdHtml.
+     Masih dirujuk aksi lama (sppd:print:edit); jangan dihapus. */
   function sppdPrintForm(ev) {
     var stPrint = A._sppdPrintState[ev.id] || { edit: false, logoSrc: '', wmSrc: '', ttd: {} };
     A._sppdPrintState[ev.id] = stPrint;
@@ -526,13 +528,14 @@ window.SPT = window.SPT || {};
   function wzStepper(st) {
     return '<div class="wz-steps">' + WZ_STEPS.map(function (t, i) {
       var cls = i === st.step ? 'wz-step on' : (i <= st.maxStep ? 'wz-step done' : 'wz-step');
-      return '<button type="button" class="' + cls + '" data-action="sppd:wizard:step" data-step="' + i + '">' +
+      return '<button type="button" class="' + cls + '" data-action="sppd:wizard:step" data-step="' + i + '"' +
+        (i > st.maxStep ? ' disabled' : '') + '>' +
         '<b>LANGKAH ' + (i + 1) + '</b>' + ui.esc(t) + '</button>';
     }).join('') + '</div>';
   }
   function wzNav(ev, st) {
     return '<div class="wz-foot">' +
-      '<div class="wz-total" id="wz-total">' + ui.fmt(wzTotal(store.getSppdWizard(ev.id))) + '</div>' +
+      '<div class="wz-total">Total biaya: <span id="wz-total">' + ui.fmt(wzTotal(store.getSppdWizard(ev.id))) + '</span></div>' +
       '<button type="button" class="btn btn-ghost" data-action="sppd:wizard:prev"' + (st.step ? '' : ' disabled') + '>&larr; Kembali</button>' +
       (st.step < WZ_STEPS.length - 1
         ? '<button type="button" class="btn btn-primary" data-action="sppd:wizard:next">Lanjut &rarr;</button>'
@@ -556,15 +559,34 @@ window.SPT = window.SPT || {};
       '</div></div>';
   }
 
+  /* Kepala wizard: judul (nama event), langkah aktif, status penyimpanan,
+     plus bar progres — pengganti baris meta polos. */
+  function wzHead(st, judul) {
+    var pct = Math.round(((st.step + 1) / WZ_STEPS.length) * 100);
+    return '<div class="wz-head">' +
+      '<div>' +
+      '<div class="wz-title">' + ui.esc(judul) + '</div>' +
+      '<div class="wz-subtitle">' + ui.esc(WZ_STEPS[st.step]) + ' · Langkah ' + (st.step + 1) + ' dari ' + WZ_STEPS.length + '</div>' +
+      '</div>' +
+      '<span class="wz-store">Data tersimpan di browser ini' +
+      (store.hasCloud() ? ' · sinkron cloud aktif' : '') + '</span>' +
+      '</div>' +
+      '<div class="wz-progress" role="progressbar" aria-label="Progres langkah" aria-valuemin="1" aria-valuemax="' + WZ_STEPS.length + '" aria-valuenow="' + (st.step + 1) + '">' +
+      '<i style="width:' + pct + '%"></i></div>';
+  }
+
   function sppdWizardModal(ev) {
     var st = wzState(ev);
     var d = store.getSppdWizard(ev.id);
-    return '<div class="wz" id="wz-root">' + wzStepper(st) +
-      '<div class="card card-pad">' + sppdWizardStepHTML(st.step, d) + '</div>' +
+    var evo = store.getEvent(ev.id);
+    return '<div class="wz" id="wz-root">' +
+      wzHead(st, (evo && evo.nama) || 'Form SPPD') +
+      wzStepper(st) +
+      '<div class="card card-pad">' + sppdWizardStepHTML(st.step, d, ev.id) + '</div>' +
       wzNav(ev, st) + '</div>';
   }
 
-  function sppdWizardStepHTML(n, d) {
+  function sppdWizardStepHTML(n, d, evId) {
     var h = '', i;
     if (n === 0) {
       h += '<div class="form-grid form-grid-2">' +
@@ -578,6 +600,11 @@ window.SPT = window.SPT || {};
         '</select></div>' +
         (d.perusahaan.wmMode === 'gambar' ? '<div class="sm:col-span-2"><span class="label">Gambar Watermark</span>' + wzImg(d.perusahaan.wmImg, 'wm', 'watermark') + '</div>' : '') +
         '</div>' +
+        '<div class="wz-signcard mt-3"><h4 class="wz-sh">Jadikan default</h4>' +
+        '<p class="text-xs text-muted mb-2">Simpan nama, logo, dan watermark ini agar otomatis terisi di setiap SPPD baru.</p>' +
+        '<button type="button" class="btn btn-sm" data-action="sppd:wizard:saveprof">Simpan sebagai default perusahaan</button>' +
+        (store.settings().sppdProfile ? ' <span class="text-xs text-muted">Profil default tersimpan.</span>' : '') +
+        '</div>' +
         '<p class="text-xs text-muted mt-3">Identitas ini tampil di kanan-atas form resmi.</p>';
     } else if (n === 1) {
       var T = d.transport;
@@ -585,8 +612,8 @@ window.SPT = window.SPT || {};
         '<div><label class="label" for="wz-ptugas">Pemberi Tugas</label><input id="wz-ptugas" class="input" value="' + ui.esc(d.pemberiTugas) + '" data-wz="pemberiTugas"></div>' +
         '<div><label class="label" for="wz-dept">Departemen</label><input id="wz-dept" class="input" value="' + ui.esc(d.departemen) + '" data-wz="departemen"></div>' +
         '<div>' + ui.dateField('wz-tglb', 'Tanggal Berangkat *', d.tglBerangkat, { attr: 'data-wz="tglBerangkat"' }) + '</div>' +
-        '<div><label class="label" for="wz-jamb">Jam Berangkat</label><input id="wz-jamb" class="input" value="' + ui.esc(d.jamBerangkat) + '" data-wz="jamBerangkat" placeholder="09.00 WIB"></div>' +
-        '<div>' + ui.dateField('wz-tglk', 'Tanggal Kembali *', d.tglKembali, { attr: 'data-wz="tglKembali"' }) + '</div>' +
+        '<div>' + ui.timeField('wz-jamb', 'Jam Berangkat', d.jamBerangkat, { attr: 'data-wz="jamBerangkat"' }) + '</div>' +
+        '<div>' + ui.dateField('wz-tglk', 'Tanggal Kembali', d.tglKembali, { attr: 'data-wz="tglKembali"' }) + '</div>' +
         '<div><label class="label" for="wz-ketk">Keterangan Kembali</label><input id="wz-ketk" class="input" value="' + ui.esc(d.ketKembali) + '" data-wz="ketKembali" placeholder="sampai dengan selesai"></div>' +
         '<div class="sm:col-span-2"><span class="label">Transportasi</span><div class="flex flex-wrap gap-3 mt-1">' +
         [['pribadi', 'Kendaraan Pribadi'], ['travel', 'Travel'], ['kereta', 'Kereta Api']].map(function (o) {
@@ -600,44 +627,47 @@ window.SPT = window.SPT || {};
         '<div><label class="label" for="wz-t3">Target 3</label><input id="wz-t3" class="input" value="' + ui.esc(d.target[2]) + '" data-wz="target.2"></div>' +
         '</div>';
     } else if (n === 2) {
-      h += '<p class="text-xs text-muted mb-3">Maksimal 8 item. Jumlah kosong tampil "-" di form resmi.</p>';
+      var cap = store.SPPD_BIAYA_MAX;
+      h += '<p class="text-xs text-muted mb-3">Maksimal ' + cap + ' item. Jumlah kosong tampil "-" di form resmi.</p>';
       for (i = 0; i < d.biaya.length; i++) {
         var b = d.biaya[i];
         h += '<div class="wz-row">' +
           '<span class="wz-letter">' + 'ABCDEFGH'[i] + '</span>' +
-          '<input class="input" value="' + ui.esc(b.item) + '" data-wz="biaya.' + i + '.item" placeholder="Item">' +
-          '<input class="input" type="number" min="0" value="' + (Number(b.jumlah) || '') + '" data-wz="biaya.' + i + '.jumlah" data-n="1" placeholder="Jumlah (Rp)">' +
-          '<input class="input" value="' + ui.esc(b.ket) + '" data-wz="biaya.' + i + '.ket" placeholder="Keterangan">' +
+          '<input class="input" value="' + ui.esc(b.item) + '" data-wz="biaya.' + i + '.item" placeholder="Item" aria-label="Item biaya ' + (i + 1) + '">' +
+          '<input class="input" type="number" min="0" value="' + (Number(b.jumlah) || '') + '" data-wz="biaya.' + i + '.jumlah" data-n="1" placeholder="Jumlah (Rp)" aria-label="Jumlah item biaya ' + (i + 1) + '">' +
+          '<input class="input" value="' + ui.esc(b.ket) + '" data-wz="biaya.' + i + '.ket" placeholder="Keterangan" aria-label="Keterangan item biaya ' + (i + 1) + '">' +
           '</div>';
       }
       h += '<div class="flex flex-wrap gap-2 mt-3">' +
-        '<button type="button" class="btn btn-sm" data-action="sppd:wizard:addbiaya"' + (d.biaya.length >= 8 ? ' disabled' : '') + '>+ Tambah Item (' + d.biaya.length + '/8)</button>' +
+        '<button type="button" class="btn btn-sm" data-action="sppd:wizard:addbiaya"' + (d.biaya.length >= cap ? ' disabled' : '') + '>+ Tambah Item (' + d.biaya.length + '/' + cap + ')</button>' +
         '<button type="button" class="btn btn-sm btn-ghost" data-action="sppd:wizard:delbiaya"' + (d.biaya.length <= 1 ? ' disabled' : '') + '>&minus; Hapus Item Terakhir</button>' +
         '</div>';
     } else if (n === 3) {
-      h += '<p class="text-xs text-muted mb-3">Keempat daftar berdiri sendiri (tidak terikat per orang). Baris form = daftar terbanyak, maks. 6 per daftar.</p>';
+      h += '<p class="text-xs text-muted mb-3">Keempat daftar berdiri sendiri (tidak terikat per orang). Baris form = daftar terbanyak, maks. ' + store.SPPD_SPJ_MAX_ROWS + ' per daftar.</p>';
       h += '<div class="wz-spjgrid">';
       h += '<div><h4 class="wz-sh">Yang Bertugas</h4>';
       for (i = 0; i < d.petugas.length; i++) {
-        h += '<div class="wz-row"><input class="input" value="' + ui.esc(d.petugas[i]) + '" data-wz="petugas.' + i + '" placeholder="Nama petugas ' + (i + 1) + '"></div>';
+        h += '<div class="wz-nrow"><input class="input" value="' + ui.esc(d.petugas[i]) + '" data-wz="petugas.' + i + '" placeholder="Nama petugas ' + (i + 1) + '" aria-label="Petugas ' + (i + 1) + '"></div>';
       }
       h += '</div><div><h4 class="wz-sh">Uang Saku (Qty &times; Tarif)</h4>';
       for (i = 0; i < d.uangSaku.length; i++) {
         var u = d.uangSaku[i];
-        h += '<div class="wz-row"><input class="input" type="number" min="0" value="' + (Number(u.wq) || '') + '" data-wz="uangSaku.' + i + '.wq" data-n="1" placeholder="WD Qty">' +
-          '<input class="input" type="number" min="0" value="' + (Number(u.wa) || '') + '" data-wz="uangSaku.' + i + '.wa" data-n="1" placeholder="WD @">' +
-          '<input class="input" type="number" min="0" value="' + (Number(u.eq) || '') + '" data-wz="uangSaku.' + i + '.eq" data-n="1" placeholder="WE Qty">' +
-          '<input class="input" type="number" min="0" value="' + (Number(u.ea) || '') + '" data-wz="uangSaku.' + i + '.ea" data-n="1" placeholder="WE @"></div>';
+        h += '<div class="wz-nrow"><input class="input" type="number" min="0" value="' + (Number(u.wq) || '') + '" data-wz="uangSaku.' + i + '.wq" data-n="1" placeholder="WD Qty" aria-label="Weekday Qty baris ' + (i + 1) + '">' +
+          '<input class="input" type="number" min="0" value="' + (Number(u.wa) || '') + '" data-wz="uangSaku.' + i + '.wa" data-n="1" placeholder="WD @" aria-label="Weekday tarif baris ' + (i + 1) + '">' +
+          '<input class="input" type="number" min="0" value="' + (Number(u.eq) || '') + '" data-wz="uangSaku.' + i + '.eq" data-n="1" placeholder="WE Qty" aria-label="Weekend Qty baris ' + (i + 1) + '">' +
+          '<input class="input" type="number" min="0" value="' + (Number(u.ea) || '') + '" data-wz="uangSaku.' + i + '.ea" data-n="1" placeholder="WE @" aria-label="Weekend tarif baris ' + (i + 1) + '">' +
+          '<div class="wz-sub" id="wz-su' + i + '"></div></div>';
       }
       h += '</div><div><h4 class="wz-sh">Penginapan (Qty &times; Tarif)</h4>';
       for (i = 0; i < d.penginapan.length; i++) {
         var p = d.penginapan[i];
-        h += '<div class="wz-row"><input class="input" type="number" min="0" value="' + (Number(p.qty) || '') + '" data-wz="penginapan.' + i + '.qty" data-n="1" placeholder="Qty malam">' +
-          '<input class="input" type="number" min="0" value="' + (Number(p.a) || '') + '" data-wz="penginapan.' + i + '.a" data-n="1" placeholder="Tarif/malam"></div>';
+        h += '<div class="wz-nrow"><input class="input" type="number" min="0" value="' + (Number(p.qty) || '') + '" data-wz="penginapan.' + i + '.qty" data-n="1" placeholder="Qty malam" aria-label="Jumlah malam baris ' + (i + 1) + '">' +
+          '<input class="input" type="number" min="0" value="' + (Number(p.a) || '') + '" data-wz="penginapan.' + i + '.a" data-n="1" placeholder="Tarif/malam" aria-label="Tarif per malam baris ' + (i + 1) + '">' +
+          '<div class="wz-sub" id="wz-sp' + i + '"></div></div>';
       }
       h += '</div><div><h4 class="wz-sh">Konsumsi (Nominal)</h4>';
       for (i = 0; i < d.konsumsi.length; i++) {
-        h += '<div class="wz-row"><input class="input" type="number" min="0" value="' + (Number(d.konsumsi[i]) || '') + '" data-wz="konsumsi.' + i + '" data-n="1" placeholder="Nominal konsumsi ' + (i + 1) + '"></div>';
+        h += '<div class="wz-nrow"><input class="input" type="number" min="0" value="' + (Number(d.konsumsi[i]) || '') + '" data-wz="konsumsi.' + i + '" data-n="1" placeholder="Nominal konsumsi ' + (i + 1) + '" aria-label="Konsumsi baris ' + (i + 1) + '"></div>';
       }
       h += '</div></div>';
       h += '<div class="flex flex-wrap gap-2 mt-4">' +
@@ -646,6 +676,7 @@ window.SPT = window.SPT || {};
             '<button type="button" class="btn btn-sm btn-ghost" data-action="sppd:wizard:delrow" data-list="' + o[0] + '">&minus;</button></div>';
         }).join('') + '</div>';
     } else if (n === 4) {
+      h += '<p class="text-xs text-muted mb-3">Tanda tangan opsional — kosongkan bila ingin TTD basah setelah dicetak.</p>';
       [['maker', 'Maker (pembuat)'], ['checker', 'Checker (pemeriksa)'], ['signer', 'Signer (penandatangan)']].forEach(function (r, k) {
         var sg = d.ttd[r[0]];
         h += '<div class="wz-signcard"><h4 class="wz-sh">' + r[1] + '</h4>' +
@@ -660,10 +691,11 @@ window.SPT = window.SPT || {};
       var c = wzTotal(d);
       h += '<div class="wz-review">' +
         '<div class="flex flex-wrap items-center justify-between gap-3 mb-3">' +
-        '<div class="text-sm text-muted">Pratinjau mengikuti form resmi 1 halaman A4 landscape.</div>' +
+        '<div class="text-sm text-muted">Pratinjau mengikuti form resmi 1 halaman A4 landscape. Di layar kecil, geser mendatar atau buka Pratinjau Penuh.</div>' +
         '<div class="font-extrabold mono">Total: ' + ui.fmt(c) + '</div></div>' +
         '<div class="vw" id="wz-vw"><iframe id="wz-pv" title="Pratinjau SPPD"></iframe></div>' +
         '<div class="flex flex-wrap gap-2 mt-3">' +
+        (evId ? '<button type="button" class="btn btn-sm btn-ghost" data-action="sppd:viewPrint" data-event="' + evId + '">Pratinjau Penuh</button>' : '') +
         '<button type="button" class="btn btn-sm" data-action="sppd:wizard:download">Unduh .html</button>' +
         '<button type="button" class="btn btn-sm btn-ghost" data-action="sppd:wizard:print">Cetak / Simpan PDF</button>' +
         '</div></div>';
@@ -671,10 +703,19 @@ window.SPT = window.SPT || {};
     return h;
   }
 
-  /* Validasi minimal: langkah 1 wajib kota, tanggal berangkat, target 1 */
+  /* Validasi minimal: langkah 1 wajib kota, tanggal berangkat, target 1.
+     `missing` mengembalikan path data-wz yang kosong supaya UI bisa
+     menandai + fokus field bermasalah (bukan toast saja). */
+  function sppdWizardMissing(n, d) {
+    if (n !== 1) { return []; }
+    var m = [];
+    if (!String(d.kota || '').trim()) { m.push('kota'); }
+    if (!String(d.tglBerangkat || '').trim()) { m.push('tglBerangkat'); }
+    if (!String((d.target || [])[0] || '').trim()) { m.push('target.0'); }
+    return m;
+  }
   function sppdWizardValidate(n, d) {
-    if (n === 1) { return !!((d.kota || '').trim() && (d.tglBerangkat || '').trim() && ((d.target[0] || '').trim())); }
-    return true;
+    return sppdWizardMissing(n, d).length === 0;
   }
 
   /* ============================================================
@@ -813,13 +854,15 @@ window.SPT = window.SPT || {};
     var realisasiHtml = s.tampilkanRealisasi
       ? '<div class="sm:col-span-2">' + ui.moneyInput('spp-realisasi', 'Realisasi (dana yang benar-benar terpakai)', s.realisasi) + '</div>'
       : '';
+    var noSurat = (w && w.noSurat) || s.noSurat || '';
     var hasWizard = w && !!(
-      w.noSurat || w.kota || w.tglBerangkat ||
+      noSurat || w.kota || w.tglBerangkat ||
       (w.petugas || []).some(function (n) { return n; }) ||
       (w.biaya || []).some(function (b) { return Number(b.jumlah) > 0; }) ||
       (w.ttd && w.ttd.signer && w.ttd.signer.nama)
     );
-    var statusLabel = { konsep: 'Konsep', diajukan: 'Diajukan', disetujui: 'Disetujui', selesai: 'Selesai' }[(w && w.status)] || 'Konsep';
+    /* status dikontrol form lama; 'konsep' (data wizard lama) tetap ditampilkan apa adanya */
+    var statusLabel = { draft: 'Draft', konsep: 'Konsep', diajukan: 'Diajukan', disetujui: 'Disetujui', selesai: 'Selesai' }[s.status || (w && w.status)] || 'Draft';
     
     // Chip view if wizard exists, else show "Buat SPPD" button
     var chipHtml = '';
@@ -831,7 +874,7 @@ window.SPT = window.SPT || {};
         '<div class="flex items-center gap-3">' +
         '<span class="badge" style="background:var(--accent-soft);color:var(--accent)">SPPD</span>' +
         '<div>' +
-        '<div class="font-extrabold text-lg">' + ui.esc(w.noSurat || '(Belum bernomor)') + '</div>' +
+        '<div class="font-extrabold text-lg">' + ui.esc(noSurat || '(Belum bernomor)') + '</div>' +
         '<div class="text-sm text-muted">' + ui.esc(w.kota) + ' · ' + ui.esc(w.tglBerangkat) + ' · ' + statusLabel + '</div>' +
         '<div class="text-xs text-muted mt-1">Biaya: ' + ui.fmt(totalBiaya) + ' · SPJ: ' + spjRows + ' baris · TTD: ' +
           (w.ttd.maker.nama?'M':'–') + (w.ttd.checker.nama?'C':'–') + (w.ttd.signer.nama?'S':'–') + '</div>' +
@@ -1004,4 +1047,5 @@ window.SPT = window.SPT || {};
   A.sppdWizardModal = sppdWizardModal;
   A.sppdWizardStepHTML = sppdWizardStepHTML;
   A.sppdWizardValidate = sppdWizardValidate;
+  A.sppdWizardMissing = sppdWizardMissing;
 })(window.SPT);

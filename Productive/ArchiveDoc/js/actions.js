@@ -26,6 +26,10 @@ window.SPT = window.SPT || {};
     A.reload();
   }
 
+  /* Resolusi event id tombol wizard: tombol dalam modal umumnya tanpa
+     data-event, jadi pakai konteks modal aktif (A._wzEv) sebagai fallback. */
+  function wzId(d) { return (d && d.event) || A._wzEv; }
+
   /* ============================================================
      WIZARD helpers — re-render isi modal tanpa menutupnya,
      preview layar review, dan resize gambar (logo/TTD/watermark).
@@ -44,14 +48,60 @@ window.SPT = window.SPT || {};
   };
 
   A._wzSyncPreview = function () {
+    A._wzLiveSub();
     var f = ui.$('#wz-pv');
     if (!f || !A._wzEv) { return; }
     var data = store.getSppdWizard(A._wzEv);
     var html = A.buildSppdHtml ? A.buildSppdHtml(data) : '';
     f.srcdoc = html;
     f.style.width = '1123px'; f.style.height = '850px';
-    f.style.zoom = Math.min(1, Math.max(0.28, (f.parentElement.clientWidth - 8) / 1123));
+    /* 0.5 minimum: di layar kecil hasilnya masih bisa dibaca + digeser
+       mendatar (.vw overflow-x) — 0.28 membuat teks ~2,4pt. */
+    f.style.zoom = Math.min(1, Math.max(0.5, (f.parentElement.clientWidth - 8) / 1123));
     f.style.transformOrigin = 'top left';
+  };
+
+  /* Subtotal per baris di Langkah SPJ (mirip liveSub() form referensi).
+     No-op bila elemennya tidak ada (langkah lain). */
+  A._wzLiveSub = function () {
+    if (!A._wzEv) { return; }
+    var d = store.getSppdWizard(A._wzEv), e;
+    (d.uangSaku || []).forEach(function (u, k) {
+      e = ui.$('#wz-su' + k);
+      if (e) { e.innerHTML = 'Weekday <b>' + ui.fmt((Number(u.wq) || 0) * (Number(u.wa) || 0)) + '</b> · Weekend <b>' + ui.fmt((Number(u.eq) || 0) * (Number(u.ea) || 0)) + '</b>'; }
+    });
+    (d.penginapan || []).forEach(function (p, k) {
+      e = ui.$('#wz-sp' + k);
+      if (e) { e.innerHTML = 'Jumlah <b>' + ui.fmt((Number(p.qty) || 0) * (Number(p.a) || 0)) + '</b>'; }
+    });
+  };
+
+  /* Tandai field yang kosong + fokus ke yang pertama (validasi tidak
+     cuma toast). Aman dipanggil saat DOM modal tidak ada (test/SSR). */
+  A._wzMarkMissing = function (paths) {
+    var root = ui.$('#wz-root');
+    if (!root || !paths || !paths.length || !root.querySelector) { return; }
+    var first = null;
+    paths.forEach(function (p) {
+      var t = root.querySelector('[data-wz="' + p + '"]');
+      if (!t) { return; }
+      t.setAttribute('aria-invalid', 'true');
+      var wrap = t.closest ? t.closest('.date-wrap') : null;
+      if (wrap) { wrap.setAttribute('aria-invalid', 'true'); }
+      if (!first) { first = (wrap && wrap.querySelector('.date-display')) || t; }
+    });
+    try { if (first && first.focus) { first.focus(); } } catch (e) {}
+  };
+
+  /* Validasi gagal → lompat ke langkah yang bermasalah, render, tandai. */
+  A._wzFailValidation = function (ev) {
+    A._sppdWizard = A._sppdWizard || {};
+    var st = A._sppdWizard[ev] || (A._sppdWizard[ev] = { step: 0, maxStep: 0 });
+    st.step = 1;
+    st.maxStep = Math.max(st.maxStep, 1);
+    A._wzRender(ev);
+    A._wzMarkMissing(window.SPT.sppdWizardMissing(1, store.getSppdWizard(ev)));
+    ui.toast('Lengkapi Tanggal Berangkat, Kota Tujuan, dan Target Pekerjaan 1.', 'error');
   };
 
   /* ponytail: canvas resize sederhana; TTD/logo/wm cukup kecil sebelum base64 */
@@ -86,6 +136,12 @@ window.SPT = window.SPT || {};
       var t = e.target;
       var path = t.getAttribute('data-wz');
       if (!path) { return; }
+      /* user mulai mengisi → hapus tanda field bermasalah */
+      if (t.removeAttribute) {
+        t.removeAttribute('aria-invalid');
+        var wrap = t.closest ? t.closest('.date-wrap') : null;
+        if (wrap) { wrap.removeAttribute('aria-invalid'); }
+      }
       var data = store.getSppdWizard(eventId);
       A._wzSetPath(data, path, t.type === 'checkbox' ? t.checked : (t.getAttribute('data-n') ? (t.value === '' ? 0 : Number(t.value)) : t.value));
       store.saveSppdWizard(eventId, data);
@@ -481,82 +537,111 @@ window.SPT = window.SPT || {};
          WIZARD SPPD (6 langkah) — modal inline di ps-1
          ============================================================ */
       'sppd:wizard:open': function (el, d) {
+        var ev = wzId(d);
+        if (!ev) { return; }
         A._sppdWizard = A._sppdWizard || {};
-        if (!A._sppdWizard[d.event]) { A._sppdWizard[d.event] = { step: 0, maxStep: 0 }; }
-        var wz = (window.SPT && window.SPT.sppdWizardModal) ? window.SPT.sppdWizardModal({ id: d.event }) : '';
+        if (!A._sppdWizard[ev]) { A._sppdWizard[ev] = { step: 0, maxStep: 0 }; }
+        var wz = (window.SPT && window.SPT.sppdWizardModal) ? window.SPT.sppdWizardModal({ id: ev }) : '';
         A.modal('<div style="max-width:min(96vw,1000px);max-height:92vh;overflow:auto">' + wz + '</div>', { static: true });
-        A._wzEv = d.event;
-        A._wzBind(d.event);
+        A._wzEv = ev;
+        A._wzBind(ev);
         A._wzSyncPreview();
       },
       'sppd:wizard:step': function (el, d) {
+        var ev = wzId(d);
         var n = parseInt(el.getAttribute('data-step'), 10) || 0;
-        var st = A._sppdWizard[d.event];
+        var st = ev ? A._sppdWizard && A._sppdWizard[ev] : null;
         if (!st) { return; }
         if (n > st.maxStep) { return; }
         st.step = n;
-        A._wzRender(d.event);
+        A._wzRender(ev);
       },
       'sppd:wizard:next': function (el, d) {
-        var st = A._sppdWizard[d.event];
-        var data = store.getSppdWizard(d.event);
-        if (!window.SPT.sppdWizardValidate(st.step, data)) {
-          ui.toast('Lengkapi Kota Tujuan, Tanggal Berangkat, dan Target Pekerjaan 1.', 'error');
-          return;
-        }
+        var ev = wzId(d);
+        if (!ev) { return; }
+        A._sppdWizard = A._sppdWizard || {};
+        var st = A._sppdWizard[ev] || (A._sppdWizard[ev] = { step: 0, maxStep: 0 });
+        var data = store.getSppdWizard(ev);
+        if (!window.SPT.sppdWizardValidate(st.step, data)) { A._wzFailValidation(ev); return; }
         st.step = Math.min(5, st.step + 1);
         st.maxStep = Math.max(st.maxStep, st.step);
-        A._wzRender(d.event);
+        A._wzRender(ev);
       },
       'sppd:wizard:prev': function (el, d) {
-        var st = A._sppdWizard[d.event];
+        var ev = wzId(d);
+        if (!ev || !A._sppdWizard || !A._sppdWizard[ev]) { return; }
+        var st = A._sppdWizard[ev];
         st.step = Math.max(0, st.step - 1);
-        A._wzRender(d.event);
+        A._wzRender(ev);
       },
       'sppd:wizard:addbiaya': function (el, d) {
-        var data = store.getSppdWizard(d.event);
-        if (data.biaya.length >= 8) { ui.toast('Maksimal 8 item biaya', 'error'); return; }
+        var ev = wzId(d);
+        if (!ev) { return; }
+        var data = store.getSppdWizard(ev);
+        if (data.biaya.length >= store.SPPD_BIAYA_MAX) { ui.toast('Maksimal ' + store.SPPD_BIAYA_MAX + ' item biaya', 'error'); return; }
         data.biaya.push({ item: '', jumlah: 0, ket: '' });
-        store.saveSppdWizard(d.event, data);
-        A._wzRender(d.event);
+        store.saveSppdWizard(ev, data);
+        A._wzRender(ev);
       },
       'sppd:wizard:delbiaya': function (el, d) {
-        var data = store.getSppdWizard(d.event);
+        var ev = wzId(d);
+        if (!ev) { return; }
+        var data = store.getSppdWizard(ev);
         if (data.biaya.length <= 1) { return; }
         data.biaya.pop();
-        store.saveSppdWizard(d.event, data);
-        A._wzRender(d.event);
+        store.saveSppdWizard(ev, data);
+        A._wzRender(ev);
       },
       'sppd:wizard:addrow': function (el, d) {
+        var ev = wzId(d);
+        if (!ev) { return; }
         var key = el.getAttribute('data-list');
-        var data = store.getSppdWizard(d.event);
+        var data = store.getSppdWizard(ev);
         var cur = data[key] || [];
-        if (cur.length >= 6) { ui.toast('Maksimal 6 baris', 'error'); return; }
+        if (cur.length >= store.SPPD_SPJ_MAX_ROWS) { ui.toast('Maksimal ' + store.SPPD_SPJ_MAX_ROWS + ' baris', 'error'); return; }
         if (key === 'petugas') { cur.push(''); }
         else if (key === 'konsumsi') { cur.push(0); }
         else if (key === 'penginapan') { cur.push({ qty: 0, a: 0 }); }
         else { cur.push({ wq: 0, wa: 0, eq: 0, ea: 0 }); }
         data[key] = cur;
-        store.saveSppdWizard(d.event, data);
-        A._wzRender(d.event);
+        store.saveSppdWizard(ev, data);
+        A._wzRender(ev);
       },
       'sppd:wizard:delrow': function (el, d) {
+        var ev = wzId(d);
+        if (!ev) { return; }
         var key = el.getAttribute('data-list');
-        var data = store.getSppdWizard(d.event);
+        var data = store.getSppdWizard(ev);
         var cur = data[key] || [];
         if (cur.length <= 1) { return; }
         cur.pop();
         data[key] = cur;
-        store.saveSppdWizard(d.event, data);
-        A._wzRender(d.event);
+        store.saveSppdWizard(ev, data);
+        A._wzRender(ev);
       },
       'sppd:wizard:wmmode': function (el, d) {
-        var data = store.getSppdWizard(d.event);
+        var ev = wzId(d);
+        if (!ev) { return; }
+        var data = store.getSppdWizard(ev);
         data.perusahaan.wmMode = el.value;
-        store.saveSppdWizard(d.event, data);
+        store.saveSppdWizard(ev, data);
+        A._wzRender(ev);   /* mode 'gambar' membuka/buka field unggahan watermark */
+      },
+      /* Profil perusahaan default (nama, logo, watermark) — form referensi
+         menyimpannya lewat saveProfile(); di sini cukup ke settings store. */
+      'sppd:wizard:saveprof': function (el, d) {
+        var ev = wzId(d);
+        if (!ev) { return; }
+        var st = store.settings();
+        st.sppdProfile = JSON.parse(JSON.stringify(store.getSppdWizard(ev).perusahaan));
+        store.saveSettings(st);
+        ui.toast('Disimpan sebagai default perusahaan', 'success');
+        A._wzRender(ev);
       },
       'sppd:wizard:upload': function (el, d) {
-        A._wzPick = { event: d.event, key: el.getAttribute('data-img') };
+        var ev = wzId(d);
+        if (!ev) { return; }
+        A._wzPick = { event: ev, key: el.getAttribute('data-img') };
         var inp = ui.$('#wz-file');
         if (!inp) {
           inp = document.createElement('input');
@@ -581,31 +666,34 @@ window.SPT = window.SPT || {};
         inp.click();
       },
       'sppd:wizard:imgclear': function (el, d) {
+        var ev = wzId(d);
+        if (!ev) { return; }
         var key = el.getAttribute('data-img');
-        var data = store.getSppdWizard(d.event);
+        var data = store.getSppdWizard(ev);
         if (key === 'logo') { data.perusahaan.logo = ''; }
         else if (key === 'wm') { data.perusahaan.wmImg = ''; }
         else if (key.indexOf('ttd:') === 0) { data.ttd[key.slice(4)].img = ''; }
-        store.saveSppdWizard(d.event, data);
-        A._wzRender(d.event);
+        store.saveSppdWizard(ev, data);
+        A._wzRender(ev);
       },
       'sppd:wizard:save': function (el, d) {
-        var data = store.getSppdWizard(d.event);
-        if (!window.SPT.sppdWizardValidate(1, data)) {
-          ui.toast('Data belum lengkap. Kembali ke Langkah 2.', 'error');
-          return;
-        }
-        data.status = data.status || 'konsep';
-        data.danaAwal = data.danaAwal || 0;
-        store.saveSppdWizard(d.event, data);
-        store.syncWizardToLegacy(d.event);
+        var ev = wzId(d);
+        if (!ev) { return; }
+        var data = store.getSppdWizard(ev);
+        if (!window.SPT.sppdWizardValidate(1, data)) { A._wzFailValidation(ev); return; }
+        data.status = data.status || 'draft';
+        data.danaAwal = Number(data.danaAwal) || 0;
+        store.saveSppdWizard(ev, data);
+        store.syncWizardToLegacy(ev);
         modalCloseAll();
         ui.toast('Data SPPD disimpan', 'success');
         A.reload();
       },
       'sppd:wizard:delete': function (el, d) {
+        var ev = wzId(d);
+        if (!ev) { return; }
         ui.confirm('Hapus SPPD ini?', 'Data SPPD event ini akan dihapus. Dana Cair & alokasi tidak ikut terhapus.', function () {
-          store.deleteSppdWizard(d.event);
+          store.deleteSppdWizard(ev);
           modalCloseAll();
           ui.toast('SPPD dihapus', 'success');
           A.reload();
@@ -616,10 +704,12 @@ window.SPT = window.SPT || {};
         try { if (f && f.contentWindow) { f.contentWindow.focus(); f.contentWindow.print(); } } catch (e) { ui.toast('Gagal mencetak. Coba Unduh .html lalu cetak dari file.', 'error'); }
       },
       'sppd:wizard:download': function (el, d) {
-        var data = store.getSppdWizard(d.event);
+        var ev = wzId(d);
+        if (!ev) { return; }
+        var data = store.getSppdWizard(ev);
         var html = window.SPT.buildSppdHtml ? window.SPT.buildSppdHtml(data) : '';
         if (!html) { ui.toast('Render form belum tersedia', 'error'); return; }
-        window.SPT.downloadHtml('Form-Pengajuan-Biaya-Perjalanan-Dinas-' + (data.noSurat || d.event || 'sppd') + '.html', html);
+        window.SPT.downloadHtml('Form-Pengajuan-Biaya-Perjalanan-Dinas-' + (data.noSurat || ev || 'sppd') + '.html', html);
       },
 
       'danaCair:add': function (el, d) {
