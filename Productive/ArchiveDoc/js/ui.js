@@ -191,14 +191,14 @@ window.SPT = window.SPT || {};
     if (cancel) { cancel.addEventListener('click', function () { h.close(); }); }
     if (ok) { ok.addEventListener('click', function () { h.close(); onOk(); }); }
   };
-  setTimeout(function(){ try{ A._initDatePickers(document); }catch(e){} },0);
+  setTimeout(function(){ try{ A._initDatePickers(document); A._initTimePickers(document); }catch(e){} },0);
   document.addEventListener('click', function(e){
-    var pop=e.target.closest('.date-popover'); if(pop){ return; }
-    var disp=e.target.closest('[data-date-display]'); if(disp){ return; }
-    A._closeDatePickers();
+    var pop=e.target.closest('.date-popover, .time-popover'); if(pop){ return; }
+    var disp=e.target.closest('[data-date-display],[data-time-display]'); if(disp){ return; }
+    A._closeDatePickers(); A._closeTimePickers();
   }, true);
   document.addEventListener('keydown', function(e){
-    if(e.key==='Escape'){ A._closeDatePickers(); return; }
+    if(e.key==='Escape'){ A._closeDatePickers(); A._closeTimePickers(); return; }
     var pop=document.querySelector('.date-popover.is-open'); if(!pop) return;
     if(e.key==='Tab'){ return; }
     if(e.key==='Enter'&&e.target&&e.target.classList.contains('cal-day')){ e.preventDefault(); var iso=e.target.getAttribute('data-cal-day'); var tid=pop.dataset.targetId; if(iso&&tid){ A._setDate(tid,iso); A._closeDatePickers(); } return; }
@@ -424,19 +424,151 @@ window.SPT = window.SPT || {};
     try{ el.dispatchEvent(new Event('change',{bubbles:true})); }catch(e){}
     try{ el.dispatchEvent(new Event('input',{bubbles:true})); }catch(e){}
   };
+  /* Delegasi di document supaya field yang dirender BELAKANGAN (re-render
+     wizard, tab, isi modal) tetap responsif — dulu di-init sekali saat load,
+     jadi kolom yang muncul setelah itu kliknya mati. */
   A._initDatePickers = function(root){
     root=root||document;
+    if(!A._dpDelegated){
+      A._dpDelegated=true;
+      document.addEventListener('click', function(e){
+        var disp=e.target.closest('[data-date-display]'); if(!disp) return;
+        e.preventDefault();
+        var ww=disp.closest('[data-date-wrap]');
+        var pp=ww&&ww.querySelector('[data-date-popover]');
+        if(pp&&pp.classList.contains('is-open')){ A._closeDatePickers(); }
+        else { A._closeDatePickers(); if(A._closeTimePickers) A._closeTimePickers(); A._openDatePicker(ww); }
+      }, false);
+      document.addEventListener('change', function(e){
+        var nat=e.target&&e.target.closest&&e.target.closest('.date-native');
+        if(nat) A._syncDateDisplay(nat);
+      }, false);
+    }
     var wraps=root.querySelectorAll('[data-date-wrap]');
     for(var i=0;i<wraps.length;i++){
       var w=wraps[i];
-      if(w.dataset.dpInit==='1') continue;
       w.dataset.dpInit='1';
-      var disp=w.querySelector('[data-date-display]');
-      var pop=w.querySelector('[data-date-popover]');
       var nat=w.querySelector('.date-native');
-      if(disp){ disp.addEventListener('click', function(ev){ ev.preventDefault(); var ww=this.closest('[data-date-wrap]'); var pp=ww&&ww.querySelector('[data-date-popover]'); if(pp&&pp.classList.contains('is-open')){ A._closeDatePickers(); } else { A._closeDatePickers(); A._openDatePicker(ww); } }); }
-      if(nat){ nat.addEventListener('change', function(){ A._syncDateDisplay(this); }); A._syncDateDisplay(nat); }
+      if(nat) A._syncDateDisplay(nat);
     }
+  };
+  /* ---------- jam ---------- */
+  function parseHM(s){
+    var m=String(s==null?'':s).match(/(\d{1,2})\s*[:.]\s*(\d{1,2})/); if(!m)return null;
+    var h=parseInt(m[1],10),mi=parseInt(m[2],10);
+    if(h<0||h>23||mi<0||mi>59)return null;
+    return {h:h,m:mi};
+  }
+  function pad2(n){ return (n<10?'0':'')+n; }
+  function fmtHM(h,m){ return pad2(h)+'.'+pad2(m)+' WIB'; }
+
+  /* Field jam: pola sama dengan dateField — tombol display + input tersembunyi
+     ber-id (tetap untuk data-wz/store/renderer) + popover grid jam & select menit. */
+  A.timeField = function(id, label, value, opts){
+    opts=opts||{};
+    var wrapId=A.uid();
+    var v=String(value==null?'':value).trim();
+    return '<div class="date-wrap" data-time-wrap="' + wrapId + '">' +
+      '<span class="label">' + A.esc(label) + '</span>' +
+      '<div class="date-field">' +
+      '<button type="button" class="time-display" data-time-display="' + wrapId + '" aria-haspopup="dialog" aria-expanded="false">' +
+      '<span class="time-text">' + A.esc(v || 'Pilih jam') + '</span>' +
+      '<svg class="date-ico" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 10.6l4.2 2.5-1 1.7-5.2-3.1V6h2z" fill="currentColor"/></svg>' +
+      '</button>' +
+      '<input type="hidden" id="' + id + '" class="time-native" value="' + A.esc(v) + '"' + (opts.attr ? ' ' + opts.attr : '') + '>' +
+      '<div class="time-popover" data-time-popover="' + wrapId + '" role="dialog" aria-label="Pilih jam ' + A.esc(label || '') + '"></div>' +
+      '</div></div>';
+  };
+
+  A._buildTimePop = function(pop, val){
+    if(!pop) return;
+    var p=parseHM(val); var h=p?p.h:9, mi=p?p.m:0;
+    var html='<div class="tp-head"><div class="tp-title">Pilih Jam</div></div>';
+    html+='<div class="tp-hours">';
+    for(var i=0;i<24;i++){ html+='<button type="button" class="tp-h'+(i===h?' is-selected':'')+'" data-time-hour="'+i+'" tabindex="0">'+pad2(i)+'</button>'; }
+    html+='</div>';
+    var mins=[]; for(var m2=0;m2<60;m2+=5){ mins.push(m2); } if(mi%5!==0){ mins.push(mi); mins.sort(function(a,b){return a-b;}); }
+    html+='<div class="cal-foot"><select class="input tp-min" data-time-min aria-label="Menit">';
+    for(var k=0;k<mins.length;k++){ html+='<option value="'+mins[k]+'"'+(mins[k]===mi?' selected':'')+'>'+pad2(mins[k])+' menit</option>'; }
+    html+='</select><span class="tp-links"><button type="button" class="cal-link" data-time-now>Sekarang</button><button type="button" class="cal-link" data-time-clear>Bersihkan</button></span></div>';
+    pop.innerHTML=html;
+  };
+
+  A._openTimePicker = function(wrap){
+    if(!wrap) return;
+    var disp=wrap.querySelector('[data-time-display]');
+    var pop=wrap.querySelector('[data-time-popover]');
+    var nat=wrap.querySelector('.time-native');
+    if(!disp||!pop||!nat) return;
+    A._buildTimePop(pop, nat.value||'');
+    pop.dataset.targetId=nat.id||'';
+    pop.classList.add('is-open');
+    disp.setAttribute('aria-expanded','true');
+    var sel=pop.querySelector('.is-selected')||pop.querySelector('.tp-h');
+    if(sel){ try{ sel.focus(); }catch(e){} }
+  };
+  A._closeTimePickers = function(){
+    var pops=document.querySelectorAll('.time-popover.is-open');
+    for(var i=0;i<pops.length;i++){
+      var p=pops[i];
+      p.classList.remove('is-open');
+      var w=p.closest('[data-time-wrap]'); var d=w&&w.querySelector('[data-time-display]'); if(d) d.setAttribute('aria-expanded','false');
+    }
+  };
+  A._setTime = function(targetId, val){
+    var el=document.getElementById(targetId);
+    if(!el) return;
+    el.value=val||'';
+    var w=el.closest('[data-time-wrap]');
+    var t=w&&w.querySelector('.time-text');
+    if(t){ t.textContent=String(val||'').trim()||'Pilih jam'; }
+    try{ el.dispatchEvent(new Event('change',{bubbles:true})); }catch(e){}
+    try{ el.dispatchEvent(new Event('input',{bubbles:true})); }catch(e){}
+  };
+  A._initTimePickers = function(){
+    if(A._tpDelegated) return;
+    A._tpDelegated=true;
+    document.addEventListener('click', function(e){
+      var disp=e.target.closest('[data-time-display]');
+      if(disp){
+        e.preventDefault();
+        var ww=disp.closest('[data-time-wrap]');
+        var pp=ww&&ww.querySelector('[data-time-popover]');
+        if(pp&&pp.classList.contains('is-open')){ A._closeTimePickers(); }
+        else { A._closeTimePickers(); A._closeDatePickers(); A._openTimePicker(ww); }
+        return;
+      }
+      function popOf(sel){
+        var el=e.target.closest(sel);
+        var pop=el&&el.closest('.time-popover');
+        return pop?{el:el,pop:pop,tid:pop.dataset.targetId}:null;
+      }
+      var hb=popOf('[data-time-hour]');
+      if(hb){
+        var nat=document.getElementById(hb.tid);
+        var p=parseHM(nat?nat.value:''); var mi=p?p.m:0;
+        A._setTime(hb.tid, fmtHM(parseInt(hb.el.getAttribute('data-time-hour'),10), mi));
+        A._closeTimePickers();
+        return;
+      }
+      var nw=popOf('[data-time-now]');
+      if(nw){
+        var d=new Date();
+        A._setTime(nw.tid, fmtHM(d.getHours(), d.getMinutes()));
+        A._closeTimePickers();
+        return;
+      }
+      var cl=popOf('[data-time-clear]');
+      if(cl){ A._setTime(cl.tid, ''); A._closeTimePickers(); return; }
+    }, false);
+    document.addEventListener('change', function(e){
+      var s=e.target&&e.target.closest&&e.target.closest('[data-time-min]');
+      if(!s) return;
+      var pop=s.closest('.time-popover'); if(!pop) return;
+      var nat=document.getElementById(pop.dataset.targetId);
+      var p=parseHM(nat?nat.value:''); var h=p?p.h:9;
+      A._setTime(pop.dataset.targetId, fmtHM(h, parseInt(s.value,10)||0));
+    }, false);
   };
   A.progress = function (done, total) {
     var pct = total > 0 ? Math.round((done / total) * 100) : 0;

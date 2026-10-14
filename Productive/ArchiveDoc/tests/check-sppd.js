@@ -116,7 +116,7 @@ ok(stepHtml.indexOf('Kendaraan Pribadi') > -1, 'step render checkbox transportas
 /* --- 3. data wizard default lengkap (store) --- */
 if (typeof global.window.SPT !== 'undefined' && global.window.SPT.store && global.window.SPT.store.newSppdWizard) {
   var w0 = global.window.SPT.store.newSppdWizard();
-  ok(w0.biaya.length === 8, 'default 8 baris biaya');
+  ok(w0.biaya.length === 5, 'default 5 baris biaya (sesuai form referensi)');
   ok(w0.petugas.length === 1, 'default 1 petugas');
   var h0 = T.buildSppdHtml(w0);
   ok(h0.indexOf('undefined') === -1 && h0.indexOf('NaN') === -1, 'render form kosong tetap bersih');
@@ -127,7 +127,27 @@ if (typeof global.window.SPT !== 'undefined' && global.window.SPT.store && globa
   ok(modal.indexOf('wz-steps') > -1, 'stepper 6 langkah dirender');
   ok(modal.indexOf('Perusahaan') > -1 && modal.indexOf('Review') > -1 && modal.indexOf('Simpan') > -1, 'semua nama langkah ada');
   ok(modal.indexOf('wz-foot') > -1, 'footer navigasi wizard ada');
+  ok(modal.indexOf('wz-head') > -1 && modal.indexOf('wz-title') > -1, 'kepala wizard (judul + langkah) ada');
+  ok(modal.indexOf('role="progressbar"') > -1 && modal.indexOf('aria-valuenow="1"') > -1, 'bar progres langkah dirender');
   ok(modal.indexOf('undefined') === -1, 'tidak ada "undefined" di wizard modal');
+
+  /* 4b. semua langkah dirender bersih + kelengkapan P1/P2 */
+  [0, 1, 2, 3, 4, 5].forEach(function (n) {
+    var sh = T.sppdWizardStepHTML(n, T.store.getSppdWizard('ev-test'), 'ev-test');
+    ok(sh.indexOf('undefined') === -1 && sh.indexOf('NaN') === -1, 'langkah ' + (n + 1) + ' render bersih');
+  });
+  var spj3 = T.sppdWizardStepHTML(3, T.store.getSppdWizard('ev-test'), 'ev-test');
+  ok(spj3.indexOf('aria-label="Weekday Qty baris 1"') > -1, 'input SPJ punya aria-label (bukan placeholder saja)');
+  ok(spj3.indexOf('id="wz-su0"') > -1 && spj3.indexOf('id="wz-sp0"') > -1, 'slot subtotal SPJ dirender');
+  ok(spj3.indexOf('wz-nrow') > -1, 'baris SPJ pakai grid auto-fit (wz-nrow), bukan flex');
+  var rev5 = T.sppdWizardStepHTML(5, T.store.getSppdWizard('ev-test'), 'ev-test');
+  ok(rev5.indexOf('data-action="sppd:viewPrint"') > -1, 'review punya tombol Pratinjau Penuh (layar kecil)');
+  var stp1 = T.sppdWizardStepHTML(1, T.store.getSppdWizard('ev-test'), 'ev-test');
+  ok(stp1.indexOf('Tanggal Kembali *') === -1, 'Tanggal Kembali tidak lagi bertanda * (tak divalidasi)');
+  ok(stp1.indexOf('data-time-display') > -1, 'Jam Berangkat pakai time picker (bukan input teks polos)');
+  ok(stp1.indexOf('id="wz-jamb"') > -1 && stp1.indexOf('data-wz="jamBerangkat"') > -1, 'input jam tersembunyi tetap ber-id untuk data-wz');
+  var tf = T.timeField('tj', 'Jam', '09.00 WIB', { attr: 'data-wz="x"' });
+  ok(tf.indexOf('09.00 WIB') > -1 && tf.indexOf('type="hidden"') > -1, 'timeField menampilkan nilai lama, input tersembunyi');
 
   /* --- 5. tabSppd render (regresi: realisasiHtml / w.status) --- */
   if (T.tabSppd) {

@@ -113,9 +113,10 @@ window.SPT = window.SPT || {};
   function schedulePush() {
     if (!hasCloud()) { return; }
     clearTimeout(_pushTimer);
+    /* push senyap: loader fullscreen hanya untuk muat awal (remoteLoad);
+       status koneksi cukup lewat badge onConn — jangan ganggu user saat mengetik */
     _pushTimer = setTimeout(function () {
-      setLoading(true);
-      gasCall('save', load()).then(function () { setConn('online'); }).catch(function () { setConn('error'); }).finally(function () { setLoading(false); });
+      gasCall('save', load()).then(function () { setConn('online'); }).catch(function () { setConn('error'); });
     }, 800);
   }
 
@@ -148,15 +149,12 @@ window.SPT = window.SPT || {};
       transport: { pribadi: true, travel: false, kereta: false, lainnya: '' },
       kota: '',
       target: ['', '', ''],
-      // Step 3: Biaya Umum (max 8)
+      // Step 3: Biaya Umum (max 8; default 5 baris — sama dgn form referensi)
       biaya: [
         { item: 'Bensin', jumlah: 0, ket: '' },
         { item: 'Penginapan', jumlah: 0, ket: '' },
         { item: 'Kas Kecil', jumlah: 0, ket: '' },
         { item: 'TOL', jumlah: 0, ket: '' },
-        { item: '', jumlah: 0, ket: '' },
-        { item: '', jumlah: 0, ket: '' },
-        { item: '', jumlah: 0, ket: '' },
         { item: '', jumlah: 0, ket: '' }
       ],
       // Step 4: Biaya SPJ - 4 daftar independen
@@ -164,14 +162,14 @@ window.SPT = window.SPT || {};
       uangSaku: [{ wq: 0, wa: 0, eq: 0, ea: 0 }],
       penginapan: [{ qty: 0, a: 0 }],
       konsumsi: [0],
-      // Step 5: Penandatangan
+      // Step 5: Penandatangan (tanggal maker default hari ini, sesuai praktik isi form)
       ttd: {
-        maker: { nama: '', jabatan: '', tanggal: '', img: '' },
+        maker: { nama: '', jabatan: '', tanggal: (A.isoToday ? A.isoToday() : ''), img: '' },
         checker: { nama: '', jabatan: '', tanggal: '', img: '' },
         signer: { nama: '', jabatan: '', tanggal: '', img: '' }
       },
-      // Meta
-      status: 'konsep',
+      // Meta — status memakai kosakata form lama: draft|diajukan|disetujui|selesai
+      status: 'draft',
       noSurat: '',
       tanggalTerbit: '',
       tujuan: '',
@@ -649,12 +647,36 @@ if (!DB.itemCats || !DB.itemCats.length) DB.itemCats = builtinItemCats();
      All linked by eventId
      ============================================================ */
 
+  /* Isi wizard baru dari data yang sudah ada: form lama, event, profil
+     perusahaan default. Dipanggil sekali saat record wizard dibuat. */
+  function seedWizardFromLegacy(w, eventId) {
+    var s = load().sppd.find(function (x) { return x.eventId === eventId; });
+    var ev = getEvent(eventId);
+    var P = settings().sppdProfile;
+    if (s) {
+      ['noSurat', 'tanggalTerbit', 'tujuan', 'kegiatan', 'instansi', 'status', 'catatan']
+        .forEach(function (k) { if (s[k]) { w[k] = s[k]; } });
+      if (Number(s.danaAwal) > 0) { w.danaAwal = Number(s.danaAwal); }
+      if (Number(s.realisasi) > 0) { w.realisasi = Number(s.realisasi); }
+      if (s.tampilkanRealisasi) { w.tampilkanRealisasi = true; }
+    }
+    if (ev) {
+      if (!w.kota) { w.kota = ev.lokasi || ''; }
+      if (!w.tglBerangkat) { w.tglBerangkat = ev.tanggalMulai || ''; }
+      if (!w.tglKembali) { w.tglKembali = ev.tanggalSelesai || ''; }
+      if (!w.tujuan) { w.tujuan = ev.lokasi || ''; }
+      if (!w.kegiatan) { w.kegiatan = ev.nama || ''; }
+    }
+    if (P && typeof P === 'object') { w.perusahaan = Object.assign({}, w.perusahaan, P); }
+  }
+
   function getSppdWizard(eventId) {
     var db = load();
     if (!db.sppdWizard) db.sppdWizard = {};
     var w = db.sppdWizard[eventId];
     if (!w) {
       w = newSppdWizard();
+      seedWizardFromLegacy(w, eventId);
       db.sppdWizard[eventId] = w;
       save();
     }
@@ -676,27 +698,31 @@ if (!DB.itemCats || !DB.itemCats.length) DB.itemCats = builtinItemCats();
     }
   }
 
-  /* Sync wizard data to legacy SPPD + budget (for backward compat) */
+  /* Sinkron wizard ⇄ form lama (SSOT ganda untuk field meta).
+     ponytail: field meta (noSurat, status, danaAwal, dst) hanya punya input
+     di FORM LAMA — jadi form lama menang bila terisi; wizard hanya mengisi
+     saat form lama masih kosong. Nilai kosong TIDAK PERNAH menimpa isi
+     (bug lama: wizard default kosong menghapus Nomor Surat/Status/Dana Awal).
+     Bila nanti wizard dapat input sendiri untuk field tertentu, ubah arah
+     per-field di sini (wizard menang). */
   function syncWizardToLegacy(eventId) {
     var w = getSppdWizard(eventId);
     var s = getSppd(eventId);
-    
-    // Header fields
-    s.noSurat = w.noSurat;
-    s.tanggalTerbit = w.tanggalTerbit;
-    s.tujuan = w.tujuan;
-    s.kegiatan = w.kegiatan;
-    s.instansi = w.instansi;
-    s.status = w.status;
-    s.danaAwal = w.danaAwal;
-    s.realisasi = w.realisasi;
-    s.tampilkanRealisasi = w.tampilkanRealisasi;
-    s.catatan = w.catatan;
-    
-    // Budget items from wizard biaya (optional sync)
-    // Legacy budget stays separate for now
-    
+
+    ['noSurat', 'tanggalTerbit', 'tujuan', 'kegiatan', 'instansi', 'catatan'].forEach(function (k) {
+      if (s[k]) { w[k] = s[k]; } else if (w[k]) { s[k] = w[k]; }
+    });
+    /* kosakata status pakai pilihan form lama; 'konsep' (data lama) → draft */
+    if (s.status) { w.status = s.status; }
+    else if (w.status) { s.status = w.status === 'konsep' ? 'draft' : w.status; }
+    ['danaAwal', 'realisasi'].forEach(function (k) {
+      if (Number(s[k]) > 0) { w[k] = Number(s[k]); } else if (Number(w[k]) > 0) { s[k] = Number(w[k]); }
+    });
+    if (s.tampilkanRealisasi) { w.tampilkanRealisasi = true; }
+    else if (w.tampilkanRealisasi) { s.tampilkanRealisasi = true; }
+
     saveSppd(s);
+    saveSppdWizard(eventId, w);
   }
 
   /* Build unified data object for print renderer (A.sppdPrintForm) */
@@ -735,7 +761,7 @@ if (!DB.itemCats || !DB.itemCats.length) DB.itemCats = builtinItemCats();
       // Legacy compat
       danaAwal: w.danaAwal || s.danaAwal,
       realisasi: w.realisasi || s.realisasi,
-      status: w.status,
+      status: s.status || w.status,
       noSurat: w.noSurat || s.noSurat,
       // Alokasi (from legacy budget)
       budget: sppdBudget(eventId),
