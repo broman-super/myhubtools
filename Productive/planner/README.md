@@ -1,8 +1,8 @@
-# Premium Team Planner
+# TaskSpace — Premium Team Planner
 
 Manajemen perencanaan tugas tim, campaign, event, dan reminder dengan tampilan kalender + timeline, plus view cetak. Backend Google Sheets + GAS.
 
-- **File:** `Productive/planner/taskschedule.html` (±3920 baris)
+- **File:** `Productive/planner/taskschedule.html` (±3.970 baris)
 - **Backend:** `gas/code-taskschedule.gs` (Web App GAS)
 - **Status:** ✅ Stable
 - **Catatan:** file backend pernah di `Productive/planner/`, sekarang dipusatkan di `gas/`.
@@ -22,7 +22,7 @@ Manajemen perencanaan tugas tim, campaign, event, dan reminder dengan tampilan k
 ## 2. Keterkaitan
 
 ### 2.1 Backend GAS
-- `GAS_URL = https://script.google.com/macros/s/AKfycbztQF43rq6TcEJvb1qUheMddor1ESSiVQHX0Hc3NRX6ipunZpiyi9bysIRhTVOL_OJC/exec` (sesuai `taskschedule.html:1859`)
+- `GAS_URL = https://script.google.com/macros/s/AKfycbwfE2068A_QaJpCLYvOTPCLuk5ap28qmQaSzz1pEcctCNK9N5gcMElHT00UH8sxXDtS/exec` (sesuai `taskschedule.html` — **yang LIVE**; URL lama di README sebelumnya sudah basi)
 - **Baca data:** `GET ?action=getTasks` → array objek task.
 - **Tulis data:** `POST` JSON `{ action, data }` dengan header `Content-Type: text/plain;charset=utf-8` (bukan `application/json` — jangan diganti, GAS butuh `postData.contents`).
 - Action tulis didefinisikan di `gas/code-taskschedule.gs` (save/update/delete item per tipe).

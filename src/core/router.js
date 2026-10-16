@@ -31,6 +31,8 @@ class ReynaHubRouter {
 
   getToolPath(hash) {
     var clean = hash.split('?')[0];
+    // Share link publik: #ss-<slug> → planner (share mode; hash tool lama tak tersentuh)
+    if (clean.indexOf('#ss-') === 0) return 'Productive/planner/taskschedule.html';
     var map = {
       '#productive/planner': 'Productive/planner/taskschedule.html',
       '#productive/analytic': 'Productive/analytic/Analytic.html',
