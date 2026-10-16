@@ -5,9 +5,9 @@ var ToolCard = {
     {
       group: 'productive',
       hash: '#productive/planner',
-      title: 'Team Planner',
+      title: 'TaskSpace',
       desc: 'Manajemen perencanaan tugas tim dan sinkronisasi log harian secara real-time.',
-      search: 'team planner manajemen tugas tim real-time'
+      search: 'taskspace team planner manajemen tugas tim real-time'
     },
     {
       group: 'productive',
