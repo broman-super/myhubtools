@@ -131,13 +131,20 @@ function shareRowStr_(r) {
   return String(r || '').toLowerCase().trim();
 }
 
+// Sheets mengubah string '2026-10' menjadi Date saat ditulis — normalkan balik ke yyyy-MM
+function shareMonthStr_(v) {
+  if (v instanceof Date) return Utilities.formatDate(v, Session.getScriptTimeZone(), 'yyyy-MM');
+  var s = String(v || '').trim();
+  return /^\d{4}-\d{2}/.test(s) ? s.slice(0, 7) : '';
+}
+
 // Baca baris share: {slug, month, label} — throw bila slug salah atau tidak ditemukan
 function readShareRow_(ss, slug) {
   var sh = getSharesSheet_(ss);
   var rows = sh.getDataRange().getValues();
   for (var i = 1; i < rows.length; i++) {
     if (shareRowStr_(rows[i][0]) === slug) {
-      return { row: i + 1, slug: slug, month: String(rows[i][1] || '').trim(), label: String(rows[i][2] || '') };
+      return { row: i + 1, slug: slug, month: shareMonthStr_(rows[i][1]), label: String(rows[i][2] || '') };
     }
   }
   return null;
@@ -210,7 +217,7 @@ function listShares_() {
   var out = [];
   for (var i = 1; i < rows.length; i++) {
     if (!rows[i][0]) continue;
-    out.push({ slug: shareRowStr_(rows[i][0]), month: String(rows[i][1] || '').trim(), label: String(rows[i][2] || '') });
+    out.push({ slug: shareRowStr_(rows[i][0]), month: shareMonthStr_(rows[i][1]), label: String(rows[i][2] || '') });
   }
   return out;
 }
