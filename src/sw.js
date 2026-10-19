@@ -1,10 +1,11 @@
 // src/sw.js - Service Worker for REYNAHUB offline caching
-const CACHE_NAME = 'reynahub-v7';
+const CACHE_NAME = 'reynahub-v11';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/src/styles/design-system.css',
-  '/src/styles/components.css'
+  '/src/styles/components.css',
+  '/src/styles/hub-landing.css'
 ];
 
 self.addEventListener('install', (event) => {
