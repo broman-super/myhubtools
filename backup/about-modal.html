@@ -1,0 +1,24 @@
+<!-- BACKUP — Isi modal "About" Landing Page REYNAHUB
+     Sumber : index.html, blok ABOUT MODAL (commit f67deba, 2026-10-19)
+     Restore: tempel blok di bawah ini menggantikan blok ABOUT MODAL di index.html
+              (hapus komentar BACKUP ini sebelum dipakai di produksi).
+     Terkait:
+       - Style      : src/styles/hub-landing.css (.modal-* dan .about-modules)
+       - Logika     : src/app.js (openAbout/closeAbout, fokus dialog, pembangkit daftar
+                      dari ToolCard.configs ke #about-modules, klik item → router.navigate)
+       - Gerbang git: f67deba (git show f67deba:index.html untuk versi lengkap)
+-->
+<!-- ABOUT MODAL -->
+<div id="aboutModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="about-title">
+    <div class="modal-card">
+        <button class="modal-close" id="modal-close-btn" aria-label="Tutup">&times;</button>
+        <div class="modal-title" id="about-title">Tentang REYNAHUB</div>
+        <div class="modal-body">
+            <p><strong>REYNAHUB</strong> adalah wadah kumpulan webtools internal yang dirancang untuk mempercepat aktivitas kerja sehari-hari tim.</p>
+            <p>Setiap modul berotonomi database sendiri di atas <strong>Google Apps Script</strong> dan <strong>Google Sheets</strong>, dan tampil sebagai satu keluarga desain di dalam hub ini.</p>
+            <p><strong>Modul terpasang:</strong></p>
+            <ul id="about-modules" class="about-modules"></ul>
+            <p class="modal-foot">REYNAHUB · reynahub.web.id</p>
+        </div>
+    </div>
+</div>
