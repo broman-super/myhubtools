@@ -699,6 +699,8 @@ html[data-theme="dark"] .hero-sheen {
     overflow: hidden;
     max-height: calc(100dvh - 40px);
     overflow-y: auto;
+    width: 100%;
+    max-width: 620px;
 }
 
 .modal-title {
@@ -755,6 +757,76 @@ html[data-theme="dark"] .hero-sheen {
     line-height: 1.5;
     color: var(--text-muted);
     margin-top: 2px;
+}
+
+.about-profile {
+    display: block;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    margin: 6px auto 2px;
+    background: var(--surface2);
+}
+
+.about-claim {
+    font-family: var(--font-sans);
+    font-weight: 800;
+    font-size: 1.05rem;
+    letter-spacing: -.01em;
+    text-align: center;
+    margin: 10px 0 16px;
+    color: var(--text-main);
+}
+
+.about-rule {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: 16px 0;
+}
+
+.about-h2 {
+    font-family: var(--font-sans);
+    font-size: .92rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+    margin: 18px 0 8px;
+    color: var(--text-main);
+}
+
+.about-names {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.about-name p { margin: 0; }
+
+.about-name > p:first-child {
+    font-size: .86rem;
+    color: var(--text-main);
+}
+
+.about-name strong { font-weight: 800; letter-spacing: .04em; }
+
+.about-name span {
+    font-size: .76rem;
+    color: var(--text-muted);
+    margin-left: 6px;
+}
+
+.about-name-desc {
+    margin-top: 3px;
+    font-size: .84rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
+.about-visi {
+    font-size: .9rem;
+    line-height: 1.65;
+    margin-bottom: 0;
 }
 
 .modal-body li::before { color: var(--text-muted); }

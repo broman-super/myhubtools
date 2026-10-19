@@ -96,8 +96,8 @@
                 <button class="nav-btn" id="theme-btn" title="Ubah Tema" aria-label="Ubah tema">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                 </button>
-                <button class="nav-btn" id="about-btn" title="Tentang Sistem" aria-label="Tentang REYNAHUB">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <button class="nav-btn" id="about-btn" title="Tentang REYNAHUB" aria-label="Tentang REYNAHUB">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                 </button>
             </div>
         </aside>
@@ -145,11 +145,35 @@
     <div id="aboutModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="about-title">
         <div class="modal-card">
             <button class="modal-close" id="modal-close-btn" aria-label="Tutup">&times;</button>
-            <div class="modal-title" id="about-title">Tentang REYNAHUB</div>
+            <div class="modal-title" id="about-title">Tentang Kami</div>
             <div class="modal-body">
-                <p><strong>REYNAHUB</strong> adalah wadah kumpulan webtools internal yang dirancang untuk mempercepat aktivitas kerja sehari-hari tim.</p>
-                <p>Setiap modul berotonomi database sendiri di atas <strong>Google Apps Script</strong> dan <strong>Google Sheets</strong>, dan tampil sebagai satu keluarga desain di dalam hub ini.</p>
-                <p><strong>Modul terpasang:</strong></p>
+                <img class="about-profile" src="assets/profile.jpg" alt="Foto profil Alfathan" width="84" height="84" onerror="this.remove()">
+                <p class="about-claim">Pusat Kedaulatan &amp; Inovasi</p>
+                <p>REYNA HUB tidak dibangun atas dasar kebetulan, melainkan atas dorongan ambisius untuk mendefinisikan ulang standar ekselensi.</p>
+                <p>Didirikan oleh <strong>Alfathan</strong> sebuah nama yang membawa filosofi kepeloporan, penaklukan batasan, dan pembuka era baru—platform ini dirancang sebagai episentrum strategi dan inovasi.</p>
+                <p>Nama <strong>Reyna</strong> merepresentasikan kedaulatan, ketegasan, dan kualitas tertinggi tanpa kompromi, sementara <strong>Hub</strong> menegaskan posisinya sebagai simpul utama tempat peluang dan eksekusi saling bertemu. Di bawah visi strategis Alfathan, REYNA HUB hadir bukan sekadar untuk menjadi bagian dari industri, melainkan untuk memimpin, mendominasi, dan membuka pintu kemenangan bagi setiap fondasi yang dibangun di dalamnya.</p>
+                <hr class="about-rule">
+                <p class="about-h2">Makna di Balik Nama</p>
+                <div class="about-names">
+                    <div class="about-name">
+                        <p><strong>ALFATHAN</strong> <span>Al-Fath</span></p>
+                        <p class="about-name-desc">Berakar dari makna “Pembuka”, “Kemenangan”, dan “Pionir”. Mewakili figur pemimpin, arsitek strategi, dan dorongan ambisius untuk membuka ranah baru.</p>
+                    </div>
+                    <div class="about-name">
+                        <p><strong>REYNA</strong> <span>Reina / Sovereign</span></p>
+                        <p class="about-name-desc">Melambangkan kedaulatan, kekuasaan tertinggi, dan standar ekselensi yang tak tergoyahkan.</p>
+                    </div>
+                    <div class="about-name">
+                        <p><strong>HUB</strong> <span>Episentrum</span></p>
+                        <p class="about-name-desc">Pusat konvergensi tempat seluruh potensi, teknologi, dan strategi menyatu.</p>
+                    </div>
+                </div>
+                <p class="about-h2">Sintesis</p>
+                <p><strong>ALFATHAN</strong> adalah kekuatan visioner yang membuka jalan, sedangkan <strong>REYNA HUB</strong> adalah ranah berdaulat yang ia bangun sebagai pusat kendali dan kemajuan.</p>
+                <p class="about-h2">Visi Kami</p>
+                <p class="about-visi">Menjadikan REYNA HUB sebagai <em>benteng ekselensi</em> tempat gagasan besar bertransformasi menjadi dampak nyata.</p>
+                <hr class="about-rule">
+                <p><strong>Modul Terpasang:</strong></p>
                 <ul id="about-modules" class="about-modules"></ul>
                 <p class="modal-foot">REYNAHUB · reynahub.web.id</p>
             </div>
