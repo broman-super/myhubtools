@@ -32,6 +32,34 @@
     // Render cards
     ToolCard.renderAll();
 
+    // Label manifest diisi dari data kartu (anti-hardcode jumlah modul)
+    var countIn = function(id, sel) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = String(document.querySelectorAll(sel).length);
+    };
+    countIn('count-productive', '#grid-productive .bento-card');
+    countIn('count-universal', '#grid-universal .bento-card');
+    countIn('count-total', '.bento-card');
+
+    // Daftar modul di modal dibangun dari konfigurasi kartu (satu sumber kebenaran)
+    var aboutList = document.getElementById('about-modules');
+    if (aboutList) {
+      var listHtml = '';
+      for (var mi = 0; mi < ToolCard.configs.length; mi++) {
+        var mcfg = ToolCard.configs[mi];
+        listHtml += '<li><button type="button" class="about-link" data-hash="' + mcfg.hash + '">' +
+          '<strong>' + mcfg.title + '</strong><span>' + mcfg.desc + '</span></button></li>';
+      }
+      aboutList.innerHTML = listHtml;
+      aboutList.addEventListener('click', function(e) {
+        var link = e.target.closest('.about-link');
+        if (!link) return;
+        localStorage.setItem('workspace_entered', 'true');
+        closeAbout();
+        router.navigate(link.getAttribute('data-hash'));
+      });
+    }
+
     // Badge RND Roadmap: angka notifikasi dibaca dari localStorage (ditulis oleh tool)
     var updateRndBadge = function() {
       var badge = document.getElementById('badge-rnd-roadmap');
@@ -57,9 +85,32 @@
     ui.enterBtn.addEventListener('click', enterWorkspace);
     ui.asideLogo.addEventListener('click', goHome);
     ui.themeBtn.addEventListener('click', function() { themeManager.toggle(); });
-    ui.aboutBtn.addEventListener('click', function() { ui.about.classList.add('open'); });
-    ui.modalClose.addEventListener('click', function() { ui.about.classList.remove('open'); });
-    ui.about.addEventListener('click', function(e) { if (e.target === ui.about) ui.about.classList.remove('open'); });
+    // Modal: satu jalur buka/tutup dengan manajemen fokus (dialog semantics)
+    var lastFocus = null;
+    function openAbout() {
+      lastFocus = document.activeElement;
+      ui.about.classList.add('open');
+      ui.modalClose.focus();
+    }
+    function closeAbout() {
+      ui.about.classList.remove('open');
+      if (lastFocus && lastFocus.focus) { lastFocus.focus(); }
+      lastFocus = null;
+    }
+    ui.aboutBtn.addEventListener('click', openAbout);
+    ui.modalClose.addEventListener('click', closeAbout);
+    ui.about.addEventListener('click', function(e) { if (e.target === ui.about) closeAbout(); });
+    var enterModules = document.getElementById('enter-modules');
+    if (enterModules) enterModules.addEventListener('click', openAbout);
+    // Focus trap saat modal terbuka
+    ui.about.addEventListener('keydown', function(e) {
+      if (e.key !== 'Tab') return;
+      var f = ui.about.querySelectorAll('button, [href], input, [tabindex]:not([tabindex="-1"])');
+      if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
     var searchTimer;
     ui.search.addEventListener('input', function(e) {
       clearTimeout(searchTimer);
@@ -86,7 +137,7 @@
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
         if (ui.about.classList.contains('open')) {
-          ui.about.classList.remove('open');
+          closeAbout();
         } else if (ui.frameCont.style.display === 'block') {
           goHome();
         }
@@ -218,7 +269,9 @@
 
     for (var i = 0; i < cards.length; i++) {
       var keywords = cards[i].getAttribute('data-search') || '';
-      cards[i].classList.toggle('hidden-card', keywords.indexOf(query) === -1);
+      var hidden = keywords.indexOf(query) === -1;
+      cards[i].classList.toggle('hidden-card', hidden);
+      cards[i].setAttribute('tabindex', hidden ? '-1' : '0');
     }
 
     // Hide sections with no visible cards
@@ -250,9 +303,9 @@
   }
 
   function restoreLanding() {
-    var entered = localStorage.getItem('workspace_entered');
+    // Landing SELALU tampil di awal; hanya deep-link hash yang langsung membuka modul
     var hasHash = window.location.hash !== '' && window.location.hash !== '#';
-    if (entered === 'true' || hasHash) {
+    if (hasHash) {
       ui.landing.style.display = 'none';
       ui.landing.classList.add('hide');
       ui.workspace.classList.add('active');

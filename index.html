@@ -3,46 +3,100 @@
 <head>
     <script>(function(){var s=localStorage.getItem('reynahub-theme')||'system';var d=s==='dark'?'dark':s==='light'?'light':(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>REYNAHUB — Operating System Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>REYNAHUB — Workspace Operasional</title>
     <link rel="stylesheet" href="src/styles/tools.css">
     <link rel="stylesheet" href="src/styles/design-system.css">
     <link rel="stylesheet" href="src/styles/components.css">
+    <link rel="stylesheet" href="src/styles/hub-landing.css">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23FF0000'/%3E%3Ctext x='16' y='22' font-family='Helvetica,Arial,sans-serif' font-size='16' font-weight='700' fill='white' text-anchor='middle'%3ER%3C/text%3E%3C/svg%3E">
 </head>
 <body>
 
-    <!-- LANDING PAGE -->
+    <!--
+    THESIS: REYNAHUB adalah wadah kumpulan webtools yang mempermudah aktivitas
+    kerja harian; halaman awal memperkenalkan siapa pembuatnya lewat banner
+    identitas, lalu membuka ke toolbox.
+    OWN-WORLD: Professional Business Minimalist — permukaan netral, tipografi
+    Plus Jakarta Sans + Geomini, satu aksen merah brand, bayangan lembut,
+    tanpa metafora skeuomorfik.
+    STORY: Tenang dan rangkap profesional → banner diri + CTA → masuk ke
+    toolbox rapi bercari cepat.
+    FIRST VIEWPORT: Bar logo REYNAHUB; banner hero dua kolom — kopy (judul
+    klaim, lead identitas, meta modul, CTA + tautan isi workspace) + panel foto
+    dengan plat monogram; tiga chip modul asli melayang di tepi panel.
+    FORM + FINISH: Radius 12px, hairline border, hover lift 2px, fokus 2px
+    aksen, selection/caret/scrollbar ikut palet.
+    -->
+
+    <!-- LANDING -->
     <div id="landing-page">
-        <div class="hero-logo">REYNAHUB</div>
-        <h1 class="hero-title">Elevate Your <span>Workflow.</span></h1>
-        <p class="hero-desc">Workspace Hub operasional terpadu yang merangkum seluruh instrumen pencatatan, pemetaan tugas tim, dan visualisasi data analisis real-time dalam satu ekosistem minimalis.</p>
-        <button class="hero-btn" id="enter-btn">
-            Akses Workspace
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-        </button>
+        <div class="gate-bar">
+            <div class="gate-logo">REYNAHUB</div>
+            <span class="gate-tag">Workspace Operasional</span>
+        </div>
+        <div class="hero-banner">
+            <div class="hero-art" aria-hidden="true">
+                <span class="art-grid"></span>
+                <span class="art-orb art-orb-a"></span>
+                <span class="art-orb art-orb-b"></span>
+            </div>
+            <div class="hero-content">
+                <div class="hero-copy">
+                    <h1 class="hero-title">Satu meja kerja untuk semua alat harian.</h1>
+                    <p class="hero-lead">Kumpulan webtools yang saya bangun untuk mempermudah aktivitas kerja sehari-hari — analitik, dokumen, logistik, dan koordinasi tim dalam satu tempat.</p>
+                    <p class="hero-meta"><span id="count-total">–</span> modul · Produktif &amp; Universal</p>
+                    <div class="hero-actions">
+                        <button class="hero-cta" id="enter-btn">
+                            Buka Workspace
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </button>
+                        <button class="hero-secondary" id="enter-modules">
+                            Lihat isi workspace
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="hero-media">
+                    <span class="hero-fallback" aria-hidden="true"><b>R</b><em>REYNAHUB</em></span>
+                    <picture>
+                        <source srcset="assets/banner-850.webp" type="image/webp">
+                        <img src="assets/banner.jpg" alt="Ilustrasi profil: menyusun blok puzzle webtools" width="680" height="850" fetchpriority="high" decoding="async" onerror="this.remove()">
+                    </picture>
+                </div>
+            </div>
+            <div class="hero-chips" aria-hidden="true">
+                <span class="art-chip art-chip-1"><i></i><b>Analytic Dashboard</b></span>
+                <span class="art-chip art-chip-2"><i></i><b>Resi Generator</b></span>
+                <span class="art-chip art-chip-3"><i></i><b>SPPD Toolbox</b></span>
+            </div>
+            <span class="hero-sheen" aria-hidden="true"></span>
+        </div>
     </div>
 
     <!-- WORKSPACE -->
     <div id="workspace">
-        <aside>
-            <div class="aside-logo" id="aside-logo">R.</div>
+        <aside class="sidebar">
+            <div class="aside-logo" id="aside-logo">REYNAHUB</div>
             <div class="nav-list">
                 <button class="nav-btn active" data-group="all" title="Semua Modul">
                     <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+                    <span class="nav-label">Semua</span>
                 </button>
                 <button class="nav-btn" data-group="productive" title="Productive">
                     <svg viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
+                    <span class="nav-label">Produktif</span>
                 </button>
                 <button class="nav-btn" data-group="universal" title="Universal Tools">
                     <svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.5 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>
+                    <span class="nav-label">Universal</span>
                 </button>
             </div>
             <div class="nav-bottom">
-                <button class="nav-btn" id="theme-btn" title="Ubah Tema">
+                <button class="nav-btn" id="theme-btn" title="Ubah Tema" aria-label="Ubah tema">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                 </button>
-                <button class="nav-btn" id="about-btn" title="Tentang Sistem">
+                <button class="nav-btn" id="about-btn" title="Tentang Sistem" aria-label="Tentang REYNAHUB">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                 </button>
             </div>
@@ -52,32 +106,32 @@
             <div id="dashboard-view">
                 <header class="dashboard-header">
                     <div class="header-info">
-                        <p>REYNAHUB OPERATING SHELL</p>
-                        <h2>Sistem Workspace Utama</h2>
+                        <h2>Workspace</h2>
+                        <p class="header-meta"><span id="count-productive">–</span> modul produktif · <span id="count-universal">–</span> modul universal</p>
                     </div>
                 </header>
 
                 <div class="search-and-filter">
                     <div class="search-box">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        <input type="text" id="toolSearch" placeholder="Cari modul operasional...">
+                        <input type="text" id="toolSearch" placeholder="Cari modul...">
                     </div>
                 </div>
 
                 <div id="section-productive" class="group-section">
-                    <span class="section-label">01 / Productive</span>
+                    <div class="section-label">Produktif</div>
                     <div class="bento-grid" id="grid-productive"></div>
                 </div>
 
                 <div id="section-universal" class="group-section">
-                    <span class="section-label">02 / Universal Tools</span>
+                    <div class="section-label">Universal</div>
                     <div class="bento-grid" id="grid-universal"></div>
                 </div>
 
-                <div id="search-empty" style="display:none;text-align:center;padding:60px 20px;opacity:0.5;">
-                    <div style="font-size:40px;margin-bottom:12px;"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
-                    <div style="font-size:15px;font-weight:600;">Tidak ditemukan</div>
-                    <div style="font-size:13px;margin-top:4px;">Coba kata kunci lain</div>
+                <div id="search-empty">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <div class="empty-title">Modul tidak ditemukan</div>
+                    <div class="hint">Coba kata kunci lain</div>
                 </div>
             </div>
 
@@ -88,21 +142,16 @@
     </div>
 
     <!-- ABOUT MODAL -->
-    <div id="aboutModal" class="modal-overlay">
+    <div id="aboutModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="about-title">
         <div class="modal-card">
-            <button class="modal-close" id="modal-close-btn">&times;</button>
-            <div class="modal-title">Tentang REYNAHUB_SYS</div>
+            <button class="modal-close" id="modal-close-btn" aria-label="Tutup">&times;</button>
+            <div class="modal-title" id="about-title">Tentang REYNAHUB</div>
             <div class="modal-body">
-                <p><strong>REYNAHUB_SYS</strong> adalah sebuah konsol navigasi operasional minimalis yang didesain untuk mempercepat workflow kerja internal tim.</p>
-                <p>Sistem ini mengadopsi teknik integrasi desentralisasi modular di mana masing-masing modul memiliki otonomi database sendiri yang didukung oleh <strong>Google Apps Script</strong> dan <strong>Google Sheets</strong>.</p>
-                <p><strong>Daftar Modul Terpasang:</strong></p>
-                <ul>
-                    <li><strong>Team Planner & Activity Tracker:</strong> Manajemen koordinasi kerja harian.</li>
-                    <li><strong>SAS Analytic Dashboard:</strong> Analitik grafik performa penjualan Bento-Style.</li>
-                    <li><strong>Logistics Tools:</strong> Resi Generator, Pendataan Paket, Retur Tracker, & PDF Merger.</li>
-                    <li><strong>Document Generator:</strong> Pembuatan form pengajuan DAK otomatis.</li>
-                </ul>
-                <p style="margin-bottom:0;font-size:0.75rem;text-align:center;">REYNAHUB Operating Shell &bull; Versi 3.0 (Minimalist Edition)</p>
+                <p><strong>REYNAHUB</strong> adalah wadah kumpulan webtools internal yang dirancang untuk mempercepat aktivitas kerja sehari-hari tim.</p>
+                <p>Setiap modul berotonomi database sendiri di atas <strong>Google Apps Script</strong> dan <strong>Google Sheets</strong>, dan tampil sebagai satu keluarga desain di dalam hub ini.</p>
+                <p><strong>Modul terpasang:</strong></p>
+                <ul id="about-modules" class="about-modules"></ul>
+                <p class="modal-foot">REYNAHUB · reynahub.web.id</p>
             </div>
         </div>
     </div>
@@ -116,6 +165,30 @@
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('src/sw.js');
     }
+    </script>
+    <script>
+    (function () {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      var banner = document.querySelector('.hero-banner');
+      if (!banner || !window.matchMedia('(hover: hover)').matches) return;
+      var art = banner.querySelector('.hero-art');
+      var chips = banner.querySelector('.hero-chips');
+      var media = banner.querySelector('.hero-media');
+      banner.addEventListener('pointermove', function (e) {
+        var r = banner.getBoundingClientRect();
+        var x = (e.clientX - r.left) / r.width - 0.5;
+        var y = (e.clientY - r.top) / r.height - 0.5;
+        var dx = 'translate(' + (x * 12).toFixed(1) + 'px,' + (y * 9).toFixed(1) + 'px)';
+        if (art) art.style.transform = dx;
+        if (chips) chips.style.transform = dx;
+        if (media) media.style.transform = 'translate(' + (x * -7).toFixed(1) + 'px,' + (y * -5).toFixed(1) + 'px)';
+      });
+      banner.addEventListener('pointerleave', function () {
+        if (art) art.style.transform = '';
+        if (chips) chips.style.transform = '';
+        if (media) media.style.transform = '';
+      });
+    })();
     </script>
 </body>
 </html>

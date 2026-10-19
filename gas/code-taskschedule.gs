@@ -15,15 +15,15 @@ function doPost(e) {
       res.result = getCalendarData_();
     } else if (action === 'saveCalendarItem' || action === 'saveTask' || action === 'saveTasksBatch') {
       // ponytail: lock hanya untuk tulis — baca tanpa lock (single-user tool, tulis = append/update sheet)
-      lock = LockService.getScriptLock(10000);
+      lock = LockService.getScriptLock();
       lock.waitLock(10000);
       res.result = action === 'saveTasksBatch' ? saveTasksBatch_(params.data) : saveCalendarItem_(params.data);
     } else if (action === 'deleteCalendarItem' || action === 'deleteTask') {
-      lock = LockService.getScriptLock(10000);
+      lock = LockService.getScriptLock();
       lock.waitLock(10000);
       res.result = deleteCalendarItem_(params.data.id, params.data.type);
     } else if (action === 'createShare' || action === 'deleteShare') {
-      lock = LockService.getScriptLock(10000);
+      lock = LockService.getScriptLock();
       lock.waitLock(10000);
       res.result = action === 'createShare' ? createShare_(params.data) : deleteShare_(params.data);
     } else {
