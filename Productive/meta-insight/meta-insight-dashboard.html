@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meta Insight Dashboard</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f6f5f1;--card:#fff;--ink:#1d1d1b;--mut:#6b6a64;--line:#e4e2da;--acc:#e4572e;--acc2:#2e86ab;--ok:#2f9e6b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141413;--card:#1e1e1c;--ink:#f1efe8;--mut:#9a988f;--line:#323230;--acc:#ff7a4d;--acc2:#5bb4d8;--ok:#4cc790}}
+:root[data-theme="dark"]{--bg:#141413;--card:#1e1e1c;--ink:#f1efe8;--mut:#9a988f;--line:#323230;--acc:#ff7a4d;--acc2:#5bb4d8;--ok:#4cc790}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:26px;margin:0 0 4px;letter-spacing:-.02em}
+h2{font-size:15px;margin:0 0 12px}
+.sub{color:var(--mut);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+#drop{border:2px dashed var(--line);text-align:center;padding:34px 16px;cursor:pointer}
+#drop.over{border-color:var(--acc)}
+#drop b{color:var(--acc)}
+button,select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.row label{color:var(--mut);font-size:13px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi small{color:var(--mut);display:block;font-size:12px}
+.kpi strong{font-size:24px;letter-spacing:-.02em}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.ins li{margin:6px 0}
+.ins ul{padding-left:18px;margin:0}
+.bars{display:flex;align-items:flex-end;gap:3px;height:170px;border-bottom:1px solid var(--line);overflow-x:auto;padding-top:6px}
+.col{flex:1 0 14px;max-width:36px;display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+.col i{display:block;background:var(--acc2);border-radius:3px 3px 0 0;min-height:2px}
+.col i.v{background:var(--acc)}
+.axis{display:flex;justify-content:space-between;color:var(--mut);font-size:11px;margin-top:4px}
+.legend{font-size:12px;color:var(--mut);margin-bottom:6px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 5px 0 10px;background:var(--acc)}
+.legend span.r::before{background:var(--acc2)}
+.hb{display:grid;grid-template-columns:110px 1fr 70px;gap:8px;align-items:center;margin:7px 0;font-size:13px}
+.hb div.t{background:var(--line);border-radius:6px;height:14px;overflow:hidden}
+.hb div.t i{display:block;height:100%;background:var(--acc);border-radius:6px}
+.stack{display:flex;height:22px;border-radius:6px;overflow:hidden;margin:8px 0}
+.stack i{display:block}
+.chips{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--mut)}
+.chips b{color:var(--ink)}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right}
+th{cursor:pointer;color:var(--mut);font-weight:600;position:sticky;top:0;background:var(--card)}
+th:nth-child(-n+4),td:nth-child(-n+4){text-align:left}
+td.cap{max-width:260px;overflow:hidden;text-overflow:ellipsis}
+a{color:var(--acc2)}
+.tag{padding:2px 8px;border-radius:99px;background:var(--line);font-size:11px}
+.hide{display:none}
+.err{color:#d33}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Meta Insight Dashboard</h1>
+  <p class="sub">Ubah file CSV hasil export Meta (Facebook / Instagram) menjadi grafik dan ringkasan yang mudah dibaca. Data diproses di browser kamu dan tidak dikirim ke mana pun.</p>
+
+  <div class="card" id="drop">
+    <div><b>Klik di sini</b> atau seret file CSV Meta ke sini</div>
+    <div class="sub" style="margin:6px 0 0">Contoh: Sep-20-2026_Oct-19-2026_xxxx.csv · Judul kolom bahasa Inggris &amp; Indonesia sama-sama didukung</div>
+    <input type="file" id="file" accept=".csv,text/csv" class="hide">
+    <div id="msg" class="err"></div>
+  </div>
+
+  <div id="app" class="hide">
+    <div class="row">
+      <label>Akun</label><select id="fAcc"></select>
+      <label>Tipe</label><select id="fType"></select>
+      <span id="range" class="sub" style="margin:0 0 0 auto"></span>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="card ins"><h2>Temuan utama</h2><ul id="ins"></ul></div>
+
+    <div class="card">
+      <h2>Views dan Reach per postingan (urut tanggal terbit)</h2>
+      <div class="legend"><span>Views</span><span class="r">Reach</span></div>
+      <div class="bars" id="timeline"></div>
+      <div class="axis"><span id="ax1"></span><span id="ax2"></span></div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h2>Rata-rata Views per tipe konten</h2><div id="byType"></div></div>
+      <div class="card"><h2>Rata-rata Views per jam tayang</h2><div id="byHour"></div></div>
+    </div>
+
+    <div class="card">
+      <h2>Komposisi interaksi</h2>
+      <div class="stack" id="stack"></div>
+      <div class="chips" id="stackLeg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Semua postingan <span class="sub" style="margin:0;font-size:12px">(klik judul kolom untuk mengurutkan)</span></h2>
+      <div class="tw"><table id="tbl"></table></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const nf=n=>Math.round(n).toLocaleString("id-ID");
+const pf=n=>(n*100).toFixed(2).replace(".",",")+"%";
+let ALL=[],sortKey="views",sortDir=-1;
+
+function parseCSV(t){
+  t=t.replace(/^\uFEFF/,"");const rows=[];let r=[],c="",q=false;
+  for(let i=0;i<t.length;i++){const ch=t[i];
+    if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}
+    else if(ch==='"')q=true;
+    else if(ch===","){r.push(c);c=""}
+    else if(ch==="\n"||ch==="\r"){if(ch==="\r"&&t[i+1]==="\n")i++;r.push(c);c="";if(r.length>1||r[0]!=="")rows.push(r);r=[]}
+    else c+=ch}
+  if(c!==""||r.length){r.push(c);rows.push(r)}
+  return rows}
+
+// Judul kolom Meta bisa bahasa Inggris atau Indonesia (ikut setelan bahasa UI saat export)
+const AEN={"views":"views","reach":"reach","likes":"likes","comments":"comments","shares":"shares","saves":"saves","follows":"follows","publish time":"publish time","duration (sec)":"duration (sec)","post type":"post type","account username":"account username","account name":"account name","description":"description","permalink":"permalink"};
+const AID={"tayangan":"views","jangkauan":"reach","suka":"likes","komentar":"comments","bagikan":"shares","dibagikan":"shares","simpan":"saves","ikuti":"follows","waktu publikasi":"publish time","waktu terbit":"publish time","tanggal publikasi":"publish time","durasi (detik)":"duration (sec)","jenis konten":"post type","tipe konten":"post type","jenis unggasan":"post type","nama pengguna akun":"account username","nama pengguna":"account username","nama akun":"account name","deskripsi":"description","tautan permanen":"permalink"};
+const ALIAS=Object.assign({},AEN,AID),IDHDR=new Set(Object.keys(AID));
+function canonHdr(s){s=String(s).toLowerCase().replace(/\s+/g," ").trim();return ALIAS[s]||s}
+// Tanggal export: M/D/Y (Inggris) atau D/M/Y (Indonesia), jam bisa AM/PM — deteksi dari isi baris + bahasa judul
+function parseDt(s,idMode){
+  const m=String(s||"").match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})\s+(\d{1,2})[.:](\d{2})\s*(am|pm)?/i);
+  if(!m)return null;
+  let a=+m[1],b=+m[2],y=+m[3],h=+m[4],day,mon;
+  if(a>12){day=a;mon=b}else if(b>12){mon=a;day=b}else if(idMode){day=a;mon=b}else{mon=a;day=b}
+  const ap=(m[6]||"").toLowerCase();
+  if(ap==="pm"&&h<12)h+=12;if(ap==="am"&&h===12)h=0;
+  if(y<100)y+=2000;
+  return new Date(y,mon-1,day,h,+m[5])
+}
+
+function load(text){
+  const rows=parseCSV(text);if(rows.length<2)throw new Error("File kosong.");
+  const raw=rows[0].map(x=>String(x).toLowerCase().replace(/\s+/g," ").trim());
+  let idMode=false;
+  const h=raw.map(x=>{if(IDHDR.has(x))idMode=true;return canonHdr(x)});
+  const ix=n=>{let i=h.indexOf(n);if(i<0)i=h.findIndex(x=>x.indexOf(n)===0);return i};
+  const need=["views","reach","likes","publish time"];
+  for(const n of need)if(ix(n)<0)throw new Error("Kolom \""+n+"\" (atau padanan Indonesianya) tidak ditemukan. Kolom di file ini: "+rows[0].map(x=>"\""+x.trim()+"\"").join(", "));
+  const num=(r,n)=>{const i=ix(n);return i<0?0:(parseFloat(r[i])||0)};
+  ALL=rows.slice(1).filter(r=>r.length>5).map(r=>{
+    const d=parseDt(r[ix("publish time")],idMode);
+    const o={acc:r[ix("account username")]||r[ix("account name")]||"-",type:r[ix("post type")]||"-",
+      cap:(r[ix("description")]||"").replace(/\s+/g," ").trim(),link:r[ix("permalink")]||"",date:d,
+      dur:num(r,"duration (sec)"),views:num(r,"views"),reach:num(r,"reach"),likes:num(r,"likes"),
+      shares:num(r,"shares"),follows:num(r,"follows"),comments:num(r,"comments"),saves:num(r,"saves")};
+    o.inter=o.likes+o.comments+o.shares+o.saves;o.er=o.reach?o.inter/o.reach:0;return o}).filter(o=>o.date);
+  if(!ALL.length)throw new Error("Tidak ada baris data.");
+  fill("#fAcc",ALL.map(x=>x.acc),"Semua akun");fill("#fType",ALL.map(x=>x.type),"Semua tipe");
+  $("#app").classList.remove("hide");render()}
+
+function fill(sel,arr,all){const u=[...new Set(arr)].sort();$(sel).innerHTML='<option value="">'+all+'</option>'+u.map(x=>'<option>'+esc(x)+'</option>').join("")}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+const sum=(a,k)=>a.reduce((s,x)=>s+x[k],0);
+const avg=(a,k)=>a.length?sum(a,k)/a.length:0;
+const fd=d=>d?d.toLocaleDateString("id-ID",{day:"numeric",month:"short"}):"-";
+
+function render(){
+  const a=$("#fAcc").value,t=$("#fType").value;
+  const D=ALL.filter(x=>(!a||x.acc===a)&&(!t||x.type===t));
+  if(!D.length){$("#kpis").innerHTML='<div class="kpi">Tidak ada data untuk filter ini.</div>';return}
+  const S=[...D].sort((x,y)=>x.date-y.date);
+  $("#range").textContent=fd(S[0].date)+" – "+fd(S[S.length-1].date)+" · "+D.length+" postingan";
+  const reach=sum(D,"reach"),inter=sum(D,"inter");
+  const K=[["Postingan",D.length],["Total Views",nf(sum(D,"views"))],["Total Reach",nf(reach)],
+    ["Total Interaksi",nf(inter)],["Engagement Rate",pf(reach?inter/reach:0)],["Follow dari konten",nf(sum(D,"follows"))]];
+  $("#kpis").innerHTML=K.map(k=>'<div class="kpi"><small>'+k[0]+'</small><strong>'+k[1]+'</strong></div>').join("");
+
+  // insights
+  const top=[...D].sort((x,y)=>y.views-x.views)[0];
+  const topER=[...D].filter(x=>x.reach>=100).sort((x,y)=>y.er-x.er)[0];
+  const grp=(keyFn)=>{const m={};D.forEach(x=>{(m[keyFn(x)]=m[keyFn(x)]||[]).push(x)});return Object.entries(m)};
+  const types=grp(x=>x.type).map(([k,v])=>({k,n:v.length,views:avg(v,"views"),er:sum(v,"reach")?sum(v,"inter")/sum(v,"reach"):0}));
+  const bt=[...types].sort((x,y)=>y.views-x.views)[0];
+  const sv=sum(D,"saves"),sh=sum(D,"shares");
+  const L=[];
+  L.push("Postingan dengan Views tertinggi: <b>"+nf(top.views)+"</b> views ("+esc(top.type)+", "+fd(top.date)+"). <a href=\""+esc(top.link)+"\" target=\"_blank\" rel=\"noopener\">Buka</a>");
+  if(topER)L.push("Engagement rate tertinggi: <b>"+pf(topER.er)+"</b> pada postingan "+fd(topER.date)+" ("+esc(topER.type)+", reach "+nf(topER.reach)+"). <a href=\""+esc(topER.link)+"\" target=\"_blank\" rel=\"noopener\">Buka</a>");
+  if(types.length>1)L.push("Tipe konten dengan rata-rata Views terbaik: <b>"+esc(bt.k)+"</b> ("+nf(bt.views)+" views per postingan dari "+bt.n+" postingan).");
+  L.push("Rata-rata satu orang melihat konten sekitar <b>"+(reach?(sum(D,"views")/reach).toFixed(2).replace(".",","):"0")+"x</b> (Views dibagi Reach). Semakin tinggi, semakin sering konten ditonton ulang.");
+  if(inter)L.push("Dari semua interaksi, <b>"+pf(sv/inter)+"</b> berupa Save dan <b>"+pf(sh/inter)+"</b> berupa Share. Save dan Share menandakan konten dianggap berguna.");
+  const weak=D.filter(x=>x.views<avg(D,"views")*0.3).length;
+  if(weak)L.push(weak+" postingan punya Views di bawah 30% dari rata-rata. Cek caption, visual pembuka, atau jam tayangnya.");
+  $("#ins").innerHTML=L.map(x=>"<li>"+x+"</li>").join("");
+
+  // timeline
+  const mx=Math.max(...S.map(x=>x.views),1);
+  $("#timeline").innerHTML=S.map(x=>'<div class="col" title="'+fd(x.date)+" · "+esc(x.type)+"&#10;Views "+nf(x.views)+"&#10;Reach "+nf(x.reach)+'"><div style="display:flex;align-items:flex-end;gap:1px;height:100%"><i class="v" style="flex:1;height:'+(x.views/mx*100)+'%"></i><i style="flex:1;background:var(--acc2);height:'+(x.reach/mx*100)+'%"></i></div></div>').join("");
+  $("#ax1").textContent=fd(S[0].date);$("#ax2").textContent=fd(S[S.length-1].date);
+
+  // by type
+  const hb=(rows,fmt)=>{const m=Math.max(...rows.map(r=>r.v),1);return rows.map(r=>'<div class="hb"><span>'+esc(r.k)+' <small style="color:var(--mut)">('+r.n+')</small></span><div class="t"><i style="width:'+(r.v/m*100)+'%"></i></div><b>'+fmt(r.v)+'</b></div>').join("")};
+  $("#byType").innerHTML=hb(types.map(x=>({k:x.k,n:x.n,v:x.views})).sort((x,y)=>y.v-x.v),nf)+
+    '<div class="sub" style="font-size:12px;margin:8px 0 0">Engagement rate: '+types.map(x=>esc(x.k)+" "+pf(x.er)).join(" · ")+'</div>';
+
+  // by hour slot
+  const slot=h=>h>=5&&h<11?"Pagi (05–10)":h>=11&&h<15?"Siang (11–14)":h>=15&&h<19?"Sore (15–18)":"Malam (19–04)";
+  const order=["Pagi (05–10)","Siang (11–14)","Sore (15–18)","Malam (19–04)"];
+  const hs=grp(x=>slot(x.date.getHours())).map(([k,v])=>({k,n:v.length,v:avg(v,"views")})).sort((x,y)=>order.indexOf(x.k)-order.indexOf(y.k));
+  $("#byHour").innerHTML=hb(hs,nf);
+
+  // stack
+  const parts=[["Likes","likes","#e4572e"],["Comments","comments","#2e86ab"],["Shares","shares","#2f9e6b"],["Saves","saves","#e0a526"]];
+  const tot=parts.reduce((s,p)=>s+sum(D,p[1]),0)||1;
+  $("#stack").innerHTML=parts.map(p=>'<i style="width:'+(sum(D,p[1])/tot*100)+'%;background:'+p[2]+'"></i>').join("");
+  $("#stackLeg").innerHTML=parts.map(p=>'<span><span style="color:'+p[2]+'">●</span> '+p[0]+' <b>'+nf(sum(D,p[1]))+'</b></span>').join("");
+
+  table(D)}
+
+const COLS=[["date","Tanggal"],["acc","Akun"],["type","Tipe"],["cap","Caption"],["views","Views"],["reach","Reach"],["likes","Like"],["comments","Komen"],["shares","Share"],["saves","Save"],["follows","Follow"],["er","ER"]];
+function table(D){
+  const R=[...D].sort((x,y)=>{const a=x[sortKey],b=y[sortKey];return (a>b?1:a<b?-1:0)*sortDir});
+  $("#tbl").innerHTML="<thead><tr>"+COLS.map(c=>'<th data-k="'+c[0]+'">'+c[1]+(sortKey===c[0]?(sortDir<0?" ▼":" ▲"):"")+"</th>").join("")+"</tr></thead><tbody>"+
+    R.map(x=>"<tr><td>"+fd(x.date)+"</td><td>"+esc(x.acc)+'</td><td><span class="tag">'+esc(x.type)+'</span></td><td class="cap"><a href="'+esc(x.link)+'" target="_blank" rel="noopener">'+esc(x.cap.slice(0,70)||"(tanpa caption)")+"</a></td><td>"+nf(x.views)+"</td><td>"+nf(x.reach)+"</td><td>"+nf(x.likes)+"</td><td>"+nf(x.comments)+"</td><td>"+nf(x.shares)+"</td><td>"+nf(x.saves)+"</td><td>"+nf(x.follows)+"</td><td>"+pf(x.er)+"</td></tr>").join("")+"</tbody>";
+  document.querySelectorAll("#tbl th").forEach(th=>th.onclick=()=>{const k=th.dataset.k;sortDir=sortKey===k?-sortDir:-1;sortKey=k;render()})}
+
+function handle(f){
+  $("#msg").textContent="";
+  const rd=new FileReader();
+  rd.onload=()=>{try{load(rd.result)}catch(e){$("#msg").textContent=e.message}};
+  rd.readAsText(f)}
+const drop=$("#drop"),inp=$("#file");
+drop.onclick=()=>inp.click();
+inp.onchange=()=>inp.files[0]&&handle(inp.files[0]);
+drop.ondragover=e=>{e.preventDefault();drop.classList.add("over")};
+drop.ondragleave=()=>drop.classList.remove("over");
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove("over");e.dataTransfer.files[0]&&handle(e.dataTransfer.files[0])};
+$("#fAcc").onchange=render;$("#fType").onchange=render;
+})();
+</script>
+</body>
+</html>
