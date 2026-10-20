@@ -5491,10 +5491,13 @@
             // Tampilkan overlay dengan progress bar diaktifkan
             showProcessingOverlayWithProgress('Mengunggah Transaksi Bulk...', 'Menghubungkan ke server...');
 
-            const payload = {
-                action: 'bulkUpsertTransactions',
-                rows: uploadedData
-            };
+            // ponytail: chunk 1000 baris/request — satu POST berisi >10rb baris bikin request batal.
+            // Upsert per baris (dedupe_key) bikin retry aman: baris yang sudah masuk jadi update/skip.
+            const CHUNK_ROWS = 1000;
+            const chunks = [];
+            for (let i = 0; i < uploadedData.length; i += CHUNK_ROWS) chunks.push(uploadedData.slice(i, i + CHUNK_ROWS));
+            let doneChunks = 0;
+            const acc = { added: 0, updated: 0, skipped: 0 };
 
             // Status pengaman proses GAS
             window.isProcessingGAS = true;
@@ -5507,76 +5510,77 @@
                     clearInterval(progressTimer);
                     return;
                 }
-
-                if (currentProgress < 30) {
-                    // Fase 1: Unggah awal (cepat)
-                    currentProgress += Math.random() * 3 + 2; // Naik 2-5% per tick
-                    statusText = 'Mengirim data transaksi ke server...';
-                } else if (currentProgress < 75) {
-                    // Fase 2: Ingest data di server
-                    currentProgress += Math.random() * 1.5 + 0.5; // Naik 0.5-2% per tick
-                    statusText = 'Data diterima! Menghubungkan ke server...';
-                } else if (currentProgress < 95) {
-                    // Fase 3: Pencocokan baris (asimtotik melambat)
-                    currentProgress += (95 - currentProgress) * 0.05;
-                    statusText = 'Menyimpan & memfilter baris transaksi baru ke server...';
-                }
-
+                // Progres nyata dari jumlah chunk selesai (bukan angka acak)
+                const target = (doneChunks / chunks.length) * 90;
+                if (currentProgress < target) currentProgress = Math.min(target, currentProgress + 5);
+                statusText = `Mengirim bagian ${Math.min(doneChunks + 1, chunks.length)}/${chunks.length} (${uploadedData.length} baris)...`;
                 updateProcessingProgress(currentProgress, statusText);
             }, 200);
 
-            fetch(API_URL, {
+            const postChunk = (rows) => fetch(API_URL, {
                 method: 'POST',
                 mode: 'cors',
                 redirect: 'follow',
                 headers: {
                     'Content-Type': 'text/plain;charset=utf-8'
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ action: 'bulkUpsertTransactions', rows })
             })
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Jaringan bermasalah atau status server error (' + response.status + ')');
                     }
                     return response.json();
-                })
-                .then(data => {
-                    clearInterval(progressTimer);
-                    if (data.status === 'success') {
-                        // Selesaikan progres ke 100% lalu konfirmasi (bukan berhenti di ~95%)
-                        updateProcessingProgress(100, 'Data tersimpan!');
-
-                        // Bersihkan cache agar re-render menarik data terbaru
-                        localStorage.removeItem("intel_pro_cache_v3");
-                        localStorage.removeItem(UPLOAD_SNAPSHOT_CACHE_KEY);
-
-                        // Tutup upload modal setelah data sukses dikirim ke GAS
-                        closeUploadModal();
-                        unlockBtn(document.getElementById('btnSubmitUpload'));
-
-                        // Konfirmasi sukses LANGSUNG: data sudah tersimpan di DB.
-                        // Jangan ditahan menunggu sync — sync gagal ≠ import gagal.
-                        const detailMsg = `<b>Import Berhasil!</b><br>• Baris Baru: <b>${data.added}</b><br>• Baris Update: <b>${data.updated}</b><br>• Baris Skip (Duplikat): <b>${data.skipped}</b>`;
-                        showSuccessOverlay('Import Penjualan Selesai', detailMsg, 4000);
-
-                        // Dynamic Sync tanpa reload, jalan di latar belakang.
-                        // Sync gagal hanya memunculkan toast kecil Refresh.
-                        syncDashboardData().then(syncSuccess => {
-                            if (!syncSuccess) showRefreshToast();
-                        });
-                    } else {
-                        throw new Error(data.message || "Gagal memproses bulk upsert");
-                    }
-                })
-                .catch(err => {
-                    clearInterval(progressTimer);
-                    unlockBtn(document.getElementById('btnSubmitUpload'));
-                    console.error("Gagal melakukan upload:", err);
-                    showErrorOverlay(
-                        'Gagal Mengimpor',
-                        'Data belum terkirim. Periksa koneksi lalu coba lagi; bila masih gagal, hubungi admin.'
-                    );
                 });
+
+            const kirimChunk = (i) => {
+                if (i >= chunks.length) {
+                    clearInterval(progressTimer);
+                    // Selesaikan progres ke 100% lalu konfirmasi (bukan berhenti di ~95%)
+                    updateProcessingProgress(100, 'Data tersimpan!');
+
+                    // Bersihkan cache agar re-render menarik data terbaru
+                    localStorage.removeItem("intel_pro_cache_v3");
+                    localStorage.removeItem(UPLOAD_SNAPSHOT_CACHE_KEY);
+
+                    // Tutup upload modal setelah data sukses dikirim ke GAS
+                    closeUploadModal();
+                    unlockBtn(document.getElementById('btnSubmitUpload'));
+
+                    // Konfirmasi sukses LANGSUNG: data sudah tersimpan di DB.
+                    // Jangan ditahan menunggu sync — sync gagal ≠ import gagal.
+                    const detailMsg = `<b>Import Berhasil!</b><br>• Baris Baru: <b>${acc.added}</b><br>• Baris Update: <b>${acc.updated}</b><br>• Baris Skip (Duplikat): <b>${acc.skipped}</b>`;
+                    showSuccessOverlay('Import Penjualan Selesai', detailMsg, 4000);
+
+                    // Dynamic Sync tanpa reload, jalan di latar belakang.
+                    // Sync gagal hanya memunculkan toast kecil Refresh.
+                    syncDashboardData().then(syncSuccess => {
+                        if (!syncSuccess) showRefreshToast();
+                    });
+                    return;
+                }
+                postChunk(chunks[i])
+                    .then(data => {
+                        if (data.status !== 'success') {
+                            throw new Error(data.message || "Gagal memproses bulk upsert");
+                        }
+                        acc.added += data.added || 0;
+                        acc.updated += data.updated || 0;
+                        acc.skipped += data.skipped || 0;
+                        doneChunks++;
+                        kirimChunk(i + 1);
+                    })
+                    .catch(err => {
+                        clearInterval(progressTimer);
+                        unlockBtn(document.getElementById('btnSubmitUpload'));
+                        console.error("Gagal melakukan upload:", err);
+                        showErrorOverlay(
+                            'Gagal Mengimpor',
+                            `Gagal di bagian ${i + 1}/${chunks.length} (${err.message || err}). Bagian yang sudah terkirim tetap tersimpan — coba lagi, baris sama akan otomatis di-skip.`
+                        );
+                    });
+            };
+            kirimChunk(0);
         }
 
         function checkLogin() {
@@ -5889,44 +5893,59 @@
             if (!_biayaUploadRows.length) return showToast('Pilih file Excel terlebih dahulu!', 'error');
             lockBtn(document.getElementById('btnSubmitBiayaUpload'), 'Mengirim...');
             showProcessingOverlayWithProgress('Mengunggah Biaya Bulk...', 'Menghubungkan ke server...');
-            const payload = { action: 'bulkUpsertBiaya', rows: _biayaUploadRows };
+            // ponytail: chunk 1000 baris/request (alasan sama dengan upload transaksi)
+            const CHUNK_ROWS_BIAYA = 1000;
+            const chunks = [];
+            for (let i = 0; i < _biayaUploadRows.length; i += CHUNK_ROWS_BIAYA) chunks.push(_biayaUploadRows.slice(i, i + CHUNK_ROWS_BIAYA));
+            let doneChunks = 0;
+            const acc = { added: 0, skipped: 0 };
             window.isProcessingGAS = true;
             let currentProgress = 0, statusText = 'Menghubungkan ke server...';
             const progressTimer = setInterval(() => {
                 if (!window.isProcessingGAS) { clearInterval(progressTimer); return; }
-                if (currentProgress < 30) { currentProgress += Math.random() * 3 + 2; statusText = 'Mengirim data biaya ke server...'; }
-                else if (currentProgress < 75) { currentProgress += Math.random() * 1.5 + 0.5; statusText = 'Data diterima! Menghubungkan ke server...'; }
-                else if (currentProgress < 95) { currentProgress += (95 - currentProgress) * 0.05; statusText = 'Menyimpan & memfilter baris duplikat...'; }
+                const target = (doneChunks / chunks.length) * 90;
+                if (currentProgress < target) currentProgress = Math.min(target, currentProgress + 5);
+                statusText = `Mengirim bagian ${Math.min(doneChunks + 1, chunks.length)}/${chunks.length} (${_biayaUploadRows.length} baris)...`;
                 updateProcessingProgress(currentProgress, statusText);
             }, 200);
-            fetch(API_URL, {
+            const postChunk = (rows) => fetch(API_URL, {
                 method: 'POST',
                 mode: 'cors',
                 redirect: 'follow',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ action: 'bulkUpsertBiaya', rows })
             })
-                .then(r => { if (!r.ok) throw new Error('Status server ' + r.status); return r.json(); })
-                .then(data => {
+                .then(r => { if (!r.ok) throw new Error('Status server ' + r.status); return r.json(); });
+            const kirimChunk = (i) => {
+                if (i >= chunks.length) {
                     clearInterval(progressTimer);
-                    if (data.status === 'success') {
-                        updateProcessingProgress(100, 'Data tersimpan!');
-                        localStorage.removeItem('intel_pro_cache_v3');
-                        closeBiayaUploadModal();
-                        unlockBtn(document.getElementById('btnSubmitBiayaUpload'));
-                        // Konfirmasi sukses LANGSUNG: data sudah tersimpan di DB.
-                        const msg = `<b>Import Biaya Berhasil!</b><br>• Baris Baru: <b>${data.added}</b><br>• Baris Skip (Duplikat): <b>${data.skipped}</b>`;
-                        showSuccessOverlay('Import Biaya Selesai', msg, 4000);
-                        // Dynamic Sync di latar belakang; gagal hanya tampilkan toast kecil.
-                        syncDashboardData().then(ok => { if (!ok) showRefreshToast(); });
-                    } else { throw new Error(data.message || 'Gagal memproses bulk biaya'); }
-                })
-                .catch(err => {
-                    clearInterval(progressTimer);
+                    updateProcessingProgress(100, 'Data tersimpan!');
+                    localStorage.removeItem('intel_pro_cache_v3');
+                    closeBiayaUploadModal();
                     unlockBtn(document.getElementById('btnSubmitBiayaUpload'));
-                    console.error(err);
-                    showErrorOverlay('Gagal Mengimpor Biaya', 'Data biaya belum terkirim. Periksa koneksi lalu coba lagi; bila masih gagal, hubungi admin.');
-                });
+                    // Konfirmasi sukses LANGSUNG: data sudah tersimpan di DB.
+                    const msg = `<b>Import Biaya Berhasil!</b><br>• Baris Baru: <b>${acc.added}</b><br>• Baris Skip (Duplikat): <b>${acc.skipped}</b>`;
+                    showSuccessOverlay('Import Biaya Selesai', msg, 4000);
+                    // Dynamic Sync di latar belakang; gagal hanya tampilkan toast kecil.
+                    syncDashboardData().then(ok => { if (!ok) showRefreshToast(); });
+                    return;
+                }
+                postChunk(chunks[i])
+                    .then(data => {
+                        if (data.status !== 'success') throw new Error(data.message || 'Gagal memproses bulk biaya');
+                        acc.added += data.added || 0;
+                        acc.skipped += data.skipped || 0;
+                        doneChunks++;
+                        kirimChunk(i + 1);
+                    })
+                    .catch(err => {
+                        clearInterval(progressTimer);
+                        unlockBtn(document.getElementById('btnSubmitBiayaUpload'));
+                        console.error(err);
+                        showErrorOverlay('Gagal Mengimpor Biaya', `Gagal di bagian ${i + 1}/${chunks.length} (${err.message || err}). Bagian yang sudah terkirim tetap tersimpan — coba lagi, baris sama akan otomatis di-skip.`);
+                    });
+            };
+            kirimChunk(0);
         }
 
         function showTab(name) {
