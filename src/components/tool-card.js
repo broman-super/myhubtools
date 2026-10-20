@@ -44,6 +44,13 @@ var ToolCard = {
       desc: 'Kelola perjalanan dinas (SPPD): budget, transport, produk, penjualan, checklist, dan laporan.',
       search: 'sppd perjalanan dinas budget transport produk laporan arsip'
     },
+    {
+      group: 'productive',
+      hash: '#productive/meta-insight',
+      title: 'Meta Insight Dashboard',
+      desc: 'Analisis insight konten Meta (Facebook/Instagram): unggah CSV, dapatkan KPI, grafik, dan temuan otomatis.',
+      search: 'meta insight dashboard facebook instagram csv konten analisis engagement reach views likes'
+    },
     // Universal
     {
       group: 'universal',
@@ -124,7 +131,7 @@ var ToolCard = {
       card.appendChild(badge);
     }
     // Badge penanda webtool baru
-    if (config.hash === '#productive/sppd') {
+    if (config.hash === '#productive/meta-insight') {
       var newBadge = document.createElement('span');
       newBadge.className = 'card-badge card-badge-new';
       newBadge.textContent = 'BARU';
