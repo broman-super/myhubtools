@@ -165,12 +165,27 @@ const utils = (() => {
     if (e) console.error(context, e);
     const msg = String((e && e.message) || "");
     if (/failed to fetch|networkerror|load failed|timeout|timed out|fetch/i.test(msg)) {
-      return context + " — koneksi bermasalah. Periksa jaringan lalu coba lagi.";
+      return context + " - koneksi bermasalah. Periksa jaringan lalu coba lagi.";
     }
     return context + ". Coba lagi sebentar lagi.";
   }
 
-  return { debounce, esc, copy, relTime, hostname, favIcon, uid, csvParse, csvBuild, downloadFile, lockBtn, unlockBtn, friendlyErr };
+  // Status unlock link terkunci: per-link, bertahan sampai tab ditutup (sessionStorage).
+  const UNLOCK_KEY = "latch_unlocked";
+  function isUnlocked(id) {
+    try { return JSON.parse(sessionStorage.getItem(UNLOCK_KEY) || "[]").includes(id); }
+    catch (e) { return false; }
+  }
+  function markUnlocked(id) {
+    try {
+      const list = JSON.parse(sessionStorage.getItem(UNLOCK_KEY) || "[]");
+      if (!list.includes(id)) list.push(id);
+      sessionStorage.setItem(UNLOCK_KEY, JSON.stringify(list));
+    } catch (e) {}
+  }
+  function clearUnlocked() { try { sessionStorage.removeItem(UNLOCK_KEY); } catch (e) {} }
+
+  return { debounce, esc, copy, relTime, hostname, favIcon, uid, csvParse, csvBuild, downloadFile, lockBtn, unlockBtn, friendlyErr, isUnlocked, markUnlocked, clearUnlocked };
 })();
 
 /* ---------------------------------------------------------------------- *
@@ -292,6 +307,7 @@ const db = (() => {
         const normLinks = (links || []).map(l => ({
           id: l.id, title: l.title, url: l.url, category: l.category_id,
           badge: l.badge || "", description: l.description || "",
+          lockPin: l.lock_pin || "",
           clickCount: l.click_count || 0, order: l.sort_order || 0,
           createdAt: l.created_at || ""
         }));
@@ -343,6 +359,7 @@ const db = (() => {
       category_id: link.category || null,
       badge: link.badge || "",
       description: link.description || "",
+      lock_pin: link.lockPin || "",
       click_count: link.clickCount || 0,
       sort_order: link.order ?? 0
     };
@@ -372,6 +389,7 @@ const db = (() => {
     return {
       id: l.id, title: l.title, url: l.url, category: l.category_id,
       badge: l.badge || "", description: l.description || "",
+      lockPin: l.lock_pin || "",
       clickCount: l.click_count || 0, order: l.sort_order || 0,
       createdAt: l.created_at || ""
     };
@@ -734,10 +752,50 @@ const components = (() => {
     if (ov) { ov.classList.add("hide"); setTimeout(() => ov.remove(), 350); }
   }
 
+  // Modal PIN untuk link terkunci (Q1b: link tampil, klik dibuka PIN).
+  let lockPending = null; /* { id, action: "open"|"copy" } */
+  function openLock(id, action) {
+    lockPending = { id, action };
+    captureFocus();
+    closeAllModals();
+    const modal = document.getElementById("lockModal");
+    if (!modal) return;
+    const err = document.getElementById("lockError");
+    if (err) err.textContent = "";
+    const input = document.getElementById("lockPinInput");
+    if (input) input.value = "";
+    modal.classList.add("open");
+    if (input) setTimeout(() => input.focus(), 50);
+    trapFocus(modal);
+  }
+  function tryUnlock() {
+    if (!lockPending) return;
+    const { id, action } = lockPending;
+    const link = state.get("links").find(l => l.id === id);
+    const input = document.getElementById("lockPinInput");
+    const errEl = document.getElementById("lockError");
+    if (!link || !input) return;
+    if (String(input.value) === String(link.lockPin || "")) {
+      if (errEl) errEl.textContent = "";
+      utils.markUnlocked(id);
+      lockPending = null;
+      closeModal("lockModal");
+      window.open(link.url, "_blank", "noopener");
+      db.incrementClick(id).catch(() => {});
+      state.set("links", state.get("links").map(l => l.id === id ? { ...l, clickCount: (l.clickCount || 0) + 1 } : l));
+      if (action === "copy") {
+        utils.copy(link.url).then(ok => toast(ok ? "Link disalin" : "Gagal menyalin link", { variant: ok ? "success" : "error" }));
+      }
+    } else {
+      if (errEl) errEl.textContent = "PIN salah, coba lagi.";
+      input.select();
+    }
+  }
+
   return {
     toast, hideToast, openModal, closeModal, closeAllModals,
     openDrawer, closeDrawer, openSheet, closeSheet, closePanels,
-    renderSkeletonGrid, hideLoadingOverlay
+    renderSkeletonGrid, hideLoadingOverlay, openLock, tryUnlock
   };
 })();
 
@@ -843,23 +901,30 @@ const view = (() => {
       return;
     }
 
-    grid.innerHTML = visible.map((l, i) => `
-      <div class="link-card raised" data-url="${utils.esc(l.url)}" style="animation-delay:${(i % 12) * 50}ms">
-        <div class="link-icon"><img src="${iconUrl(l.url)}" alt="" loading="lazy" onerror="this.style.display='none'"></div>
+    grid.innerHTML = visible.map((l, i) => {
+      const locked = !!l.lockPin;
+      const showUrl = !locked || utils.isUnlocked(l.id);
+      return `
+      <div class="link-card raised"${showUrl ? ` data-url="${utils.esc(l.url)}"` : ""}${locked ? ` data-locked="${utils.esc(l.id)}"` : ""} style="animation-delay:${(i % 12) * 50}ms">
+        <div class="link-icon"><img src="${iconUrl(l.url)}" alt="" loading="lazy" onload="this.parentElement.classList.add('has-fav')" onerror="this.style.display='none'"></div>
         <a class="link-body" href="${utils.esc(l.url)}" target="_blank" rel="noopener noreferrer" data-click="${utils.esc(l.id)}">
           <div class="link-title">${utils.esc(l.title)}</div>
           ${l.description ? `<div class="link-desc">${utils.esc(l.description)}</div>` : ""}
-          <div class="link-meta">${utils.esc(utils.hostname(l.url))} · ${utils.relTime(l.createdAt)}${(l.clickCount || 0) > 0 ? ` · <span class="link-clicks"><i data-feather="mouse-pointer" style="width:10px;height:10px"></i> ${l.clickCount}</span>` : ""}</div>
+          <div class="link-meta">${locked ? `<i data-feather="lock" title="Link terkunci" aria-label="Link terkunci" style="width:10px;height:10px;vertical-align:-1px"></i> ` : ""}${utils.esc(utils.hostname(l.url))} · ${utils.relTime(l.createdAt)}${(l.clickCount || 0) > 0 ? ` · <span class="link-clicks"><i data-feather="mouse-pointer" style="width:10px;height:10px"></i> ${l.clickCount}</span>` : ""}</div>
           ${badgePill(l.badge)}
         </a>
         <button class="copy-btn pressable" data-copy="${utils.esc(l.url)}" title="Salin link" aria-label="Salin link"><i data-feather="copy"></i></button>
-      </div>`).join("");
+      </div>`;
+    }).join("");
 
     if (typeof feather !== "undefined") feather.replace();
 
     grid.querySelectorAll(".copy-btn").forEach(btn => {
       btn.addEventListener("click", async (e) => {
         e.preventDefault(); e.stopPropagation();
+        const card = btn.closest(".link-card");
+        const id = card && card.dataset.locked;
+        if (id && !utils.isUnlocked(id) && !state.get("isAdmin")) { components.openLock(id, "copy"); return; }
         const ok = await utils.copy(btn.dataset.copy);
         components.toast(ok ? "Link disalin" : "Gagal menyalin link", { variant: ok ? "success" : "error" });
       });
@@ -867,8 +932,14 @@ const view = (() => {
 
     // Increment click counter ketika link diklik.
     grid.querySelectorAll(".link-body[data-click]").forEach(a => {
-      a.addEventListener("click", () => {
+      a.addEventListener("click", (e) => {
         const id = a.dataset.click;
+        const card = a.closest(".link-card");
+        if (card && card.dataset.locked && !utils.isUnlocked(id) && !state.get("isAdmin")) {
+          e.preventDefault();
+          components.openLock(id, "open");
+          return;
+        }
         db.incrementClick(id).catch(() => {});
         // Update state lokal supaya counter tampil tanpa refresh penuh.
         const links = state.get("links").map(l => l.id === id ? { ...l, clickCount: (l.clickCount || 0) + 1 } : l);
@@ -1003,7 +1074,13 @@ const dashboard = (() => {
     return `
       <div class="dash-row raised" data-id="${utils.esc(link.id)}" draggable="true">
         <div class="dash-grip"><span class="drag-handle" title="Seret untuk urutkan"><i data-feather="more-vertical"></i></span><input type="checkbox" class="checkbox row-check" aria-label="Pilih link" ${selected ? "checked" : ""}></div>
-        <div><label>Judul</label><input type="text" class="row-title" value="${utils.esc(link.title)}"></div>
+        <div>
+          <label>Judul</label>
+          <div class="row-title-wrap">
+            <input type="text" class="row-title" value="${utils.esc(link.title)}">
+            ${link.lockPin ? `<i data-feather="lock" class="row-lock" title="Terkunci" aria-label="Terkunci"></i>` : ""}
+          </div>
+        </div>
         <div><label>URL</label><input type="text" class="row-url" value="${utils.esc(link.url)}"></div>
         <div>
           <label>Kategori</label>
@@ -1229,6 +1306,7 @@ const dashboard = (() => {
     document.getElementById("fieldUrl").value = "";
     document.getElementById("fieldDescription").value = "";
     document.getElementById("fieldBadge").value = "";
+    document.getElementById("fieldLockPin").value = "";
     document.getElementById("fieldCategory").innerHTML = categoryOptionsHtml(null);
     components.openDrawer("linkDrawer");
   }
@@ -1239,6 +1317,7 @@ const dashboard = (() => {
     document.getElementById("fieldUrl").value = link.url;
     document.getElementById("fieldDescription").value = link.description || "";
     document.getElementById("fieldBadge").value = link.badge || "";
+    document.getElementById("fieldLockPin").value = link.lockPin || "";
     document.getElementById("fieldCategory").innerHTML = categoryOptionsHtml(link.category);
     components.openDrawer("linkDrawer");
   }
@@ -1250,6 +1329,7 @@ const dashboard = (() => {
     const category = document.getElementById("fieldCategory").value;
     const description = document.getElementById("fieldDescription").value.trim();
     const badge = document.getElementById("fieldBadge").value;
+    const lockPin = document.getElementById("fieldLockPin").value.trim();
     if (!title || !url) {
       components.toast("Judul dan URL wajib diisi", { variant: "error" });
       return;
@@ -1257,14 +1337,19 @@ const dashboard = (() => {
     utils.lockBtn(document.getElementById("drawerSave"), "Menyimpan…");
     try {
       if (id) {
-        const link = { ...state.get("links").find(l => l.id === id), title, url, category, badge, description };
+        const prev = state.get("links").find(l => l.id === id);
+        const link = { ...prev, title, url, category, badge, description, lockPin };
         await db.updateLink(link, state.get("adminPin"));
         state.set("links", state.get("links").map(l => l.id === id ? link : l));
-        components.toast("Link diperbarui", { variant: "success" });
+        if ((prev.lockPin || "") !== lockPin) {
+          components.toast(lockPin ? "Link dikunci" : "Kunci dilepas", { variant: "success" });
+        } else {
+          components.toast("Link diperbarui", { variant: "success" });
+        }
       } else {
-        const newLink = await db.addLink({ title, url, category, badge, description }, state.get("adminPin"));
+        const newLink = await db.addLink({ title, url, category, badge, description, lockPin }, state.get("adminPin"));
         state.set("links", [...state.get("links"), newLink]);
-        components.toast("Link ditambahkan", { variant: "success" });
+        components.toast(lockPin ? "Link dikunci" : "Link ditambahkan", { variant: "success" });
       }
       components.closeDrawer("linkDrawer");
       renderMain(); renderNav();
@@ -1467,7 +1552,7 @@ const theme = (() => {
  * 10. APP — init orchestrator
  * ---------------------------------------------------------------------- */
 const app = (() => {
-  const IS_ADMIN_PAGE = /admin_latch\.html/.test(location.pathname);
+  const IS_ADMIN_PAGE = /admin_latch\.html/.test(location.pathname) || location.hash === "#admin";
   function bindPublicEvents() {
     document.getElementById("btnAdminSwitch")?.addEventListener("click", () => {
       if (state.get("isAdmin")) switchMode("admin");
@@ -1480,11 +1565,12 @@ const app = (() => {
   function bindAdminEvents() {
     document.getElementById("btnPublicSwitch")?.addEventListener("click", () => switchMode("public"));
     document.getElementById("themeToggleDash")?.addEventListener("click", theme.toggle);
-    document.getElementById("btnHelp")?.addEventListener("click", () => components.openModal("helpModal"));
+    document.getElementById("btnHelpDash")?.addEventListener("click", () => components.openModal("helpModal"));
     document.getElementById("btnLogout")?.addEventListener("click", () => {
       state.set("isAdmin", false);
       state.set("adminPin", "");
       storage.remove("adminSession");
+      utils.clearUnlocked();
       switchMode("public");
       components.toast("Berhasil keluar", { variant: "info" });
     });
@@ -1520,6 +1606,10 @@ const app = (() => {
     document.getElementById("loginCancel")?.addEventListener("click", () => components.closeModal("loginModal"));
     document.getElementById("loginSubmit")?.addEventListener("click", doLogin);
     document.getElementById("pinInput")?.addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
+
+    document.getElementById("lockCancel")?.addEventListener("click", () => components.closeModal("lockModal"));
+    document.getElementById("lockSubmit")?.addEventListener("click", () => components.tryUnlock());
+    document.getElementById("lockPinInput")?.addEventListener("keydown", (e) => { if (e.key === "Enter") components.tryUnlock(); });
 
     document.getElementById("deleteCancel")?.addEventListener("click", () => components.closeModal("deleteModal"));
     document.getElementById("deleteConfirm")?.addEventListener("click", dashboard.performDelete);
@@ -1611,7 +1701,11 @@ const app = (() => {
       }
       if (e.altKey && e.key.toLowerCase() === "l") {
         e.preventDefault();
-        const first = document.querySelector(".link-card .link-body");
+        // Q12a: Alt+L melewati link terkunci yang belum unlock (admin tetap lewat, Q8).
+        const first = [...document.querySelectorAll(".link-card .link-body")].find(a => {
+          const card = a.closest(".link-card");
+          return !card || !card.dataset.locked || utils.isUnlocked(a.dataset.click) || state.get("isAdmin");
+        });
         if (first) window.open(first.getAttribute("href"), "_blank", "noopener");
         return;
       }
@@ -1637,7 +1731,7 @@ const app = (() => {
 
   async function loadData() {
     const timeoutId = setTimeout(() => {
-      components.toast("Koneksi lambat — masih memuat…", { variant: "info" });
+      components.toast("Koneksi lambat - masih memuat…", { variant: "info" });
     }, CONFIG.LOAD_TIMEOUT_MS);
     try {
       const data = await db.getData();

@@ -11,6 +11,9 @@ build/
 !Productive/Project_develop/dist/
 !Productive/Project_develop/dist/**
 
+# Kecuali: vendor ikon Feather (self-host LATCH, bukan build output)
+!Productive/latch/js/feather.min.js
+
 # Environment files
 .env
 .env.local

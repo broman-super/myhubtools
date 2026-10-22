@@ -5,8 +5,8 @@
     <link rel="stylesheet" href="../../src/styles/tools.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>LATCH — Link Attach</title>
-<meta name="description" content="Gudang kumpulan link — LATCH by Supersub">
+<title>LATCH - Link Attach</title>
+<meta name="description" content="Gudang kumpulan link - LATCH by Supersub">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231a1a1e'/%3E%3Ctext x='16' y='22' font-family='Helvetica,Arial,sans-serif' font-size='16' font-weight='700' fill='white' text-anchor='middle'%3EL%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -58,7 +58,7 @@
   <div class="topbar">
     <div class="brand"><span class="brand-dot" aria-hidden="true"></span>LATCH</div>
     <div class="topbar-actions">
-      <button class="icon-btn raised pressable" id="btnHelp" title="Bantuan" aria-label="Buka bantuan"><i data-feather="help-circle"></i></button>
+      <button class="icon-btn raised pressable" id="btnHelpDash" title="Bantuan" aria-label="Buka bantuan"><i data-feather="help-circle"></i></button>
       <button class="icon-btn raised pressable" id="btnPublicSwitch" title="Lihat Publik" aria-label="Lihat tampilan publik"><i data-feather="eye"></i></button>
       <button class="icon-btn raised pressable" id="themeToggleDash" title="Tema" aria-label="Ubah tema"><i data-feather="moon"></i></button>
       <button class="icon-btn raised pressable" id="btnLogout" title="Keluar" aria-label="Keluar dari admin"><i data-feather="log-out"></i></button>
@@ -123,6 +123,10 @@
           <option value="archive">Archive</option>
         </select>
       </div>
+      <div class="field">
+        <label for="fieldLockPin">PIN Buka (opsional)</label>
+        <input type="password" id="fieldLockPin" placeholder="Kosongkan = tanpa kunci" autocomplete="new-password">
+      </div>
       <input type="hidden" id="fieldId">
     </div>
     <div class="drawer-footer">
@@ -151,6 +155,23 @@
       <div class="modal-actions">
         <button class="btn btn-ghost raised pressable" id="loginCancel">Batal</button>
         <button class="btn btn-primary pressable" id="loginSubmit">Masuk</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Unlock locked link -->
+  <div class="modal" id="lockModal" role="dialog" aria-modal="true" aria-labelledby="lockModalTitle">
+    <div class="modal-backdrop"></div>
+    <div class="modal-box">
+      <div class="modal-title" id="lockModalTitle">Link Terkunci</div>
+      <div class="field">
+        <label for="lockPinInput">PIN</label>
+        <input type="password" id="lockPinInput" inputmode="numeric" placeholder="••••" autocomplete="off">
+      </div>
+      <div class="modal-error" id="lockError"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost raised pressable" id="lockCancel">Batal</button>
+        <button class="btn btn-primary pressable" id="lockSubmit">Buka</button>
       </div>
     </div>
   </div>
@@ -246,18 +267,18 @@
 <div id="fragment-footer" style="display:none">
   <div class="offline-banner hidden" id="offlineBanner" role="status">
     <i data-feather="wifi-off" aria-hidden="true"></i>
-    <span>Mode luring — menampilkan data tersimpan terakhir. Perubahan tidak tersimpan.</span>
+    <span>Mode luring - menampilkan data tersimpan terakhir. Perubahan tidak tersimpan.</span>
   </div>
   <div class="toast-wrap" id="toastWrap" role="status" aria-live="polite"></div>
   <button class="back-to-top raised pressable hidden" id="backToTop" aria-label="Kembali ke atas"><i data-feather="arrow-up"></i></button>
   <footer class="app-footer">
-    LATCH — Link Attach · gudang link pribadi
+    LATCH - Link Attach · gudang link pribadi
   </footer>
 </div>
 
 <div class="container" id="app"></div>
 
-<script src="https://unpkg.com/feather-icons@4.29.2/dist/feather.min.js"></script>
+<script src="js/feather.min.js"></script>
 <script src="js/app.js"></script>
     <script>
         // Aturan 1: embedded = navbar milik hub, brand lokal disembunyikan.
