@@ -20,10 +20,14 @@ create table if not exists latch_links (
   category_id text references latch_categories(id) on delete set null,
   badge text default '',
   description text default '',
+  lock_pin text default '',
   click_count int default 0,
   sort_order int default 0,
   created_at timestamptz default now()
 );
+
+-- Fitur lock per-link: kolom PIN. Re-run aman (buat DB lama yang sudah ada).
+alter table latch_links add column if not exists lock_pin text default '';
 
 create table if not exists latch_config (
   key text primary key,

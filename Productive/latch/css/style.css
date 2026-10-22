@@ -39,8 +39,6 @@
   --radius-sm:8px;
   --radius-md:12px;
   --radius-lg:18px;
-  --radius-xl:18px;
-  --radius-2xl:18px;
 
   --space-1:4px;  --space-2:8px;  --space-3:12px; --space-4:16px;
   --space-5:20px; --space-6:24px; --space-7:28px; --space-8:32px;
@@ -150,7 +148,7 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
   position:relative;
   overflow:hidden;
   min-height:168px;
-  border-radius:var(--radius-2xl);
+  border-radius:var(--radius-lg);
   background:var(--card-bg);
   color:#fff;
   padding:var(--space-6);
@@ -217,7 +215,7 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
 .search-bar{
   display:flex; align-items:center; gap:var(--space-3);
   padding:var(--space-4) var(--space-5);
-  border-radius:var(--radius-xl);
+  border-radius:var(--radius-lg);
   margin-bottom:var(--space-5);
 }
 .search-bar input{
@@ -234,7 +232,7 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
 @media (max-width:479px){ .search-hint{ display:none; } }
 .search-bar:focus-within{
   box-shadow:inset 4px 4px 10px var(--shadow-dark), inset -4px -4px 10px var(--highlight-light),
-    0 0 0 3px rgba(255,59,48,0.15);
+    0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
 /* ---------- 5. TAB CHIPS ---------- */
@@ -265,7 +263,7 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
   border:1px solid var(--accent);
   box-shadow:0 1px 3px var(--shadow-dark);
 }
-.chip.active .chip-count{ background:rgba(255,59,48,0.12); color:var(--accent); }
+.chip.active .chip-count{ background:color-mix(in srgb, var(--accent) 12%, transparent); color:var(--accent); }
 
 /* sort toggle (Terbaru / Populer) — baris ramping, tombol ikon kanan-atas */
 .sort-row{
@@ -343,6 +341,8 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
   display:flex; align-items:center; justify-content:center; overflow:hidden;
 }
 .link-card .link-icon img{ width:20px; height:20px; }
+/* Rantai = fallback icon kosong; sirna saat favicon berhasil dimuat (hindari tumpuk-tumpuk). */
+.link-card .link-icon.has-fav{ background-image:none; }
 .link-card .link-body{ flex:1; min-width:0; text-decoration:none; color:inherit; }
 .link-card .link-title{
   font-size:14px; font-weight:500; color:var(--text-primary);
@@ -454,7 +454,7 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
   width:48px; height:48px; border-radius:50%;
   background:var(--accent); color:#fff;
   align-items:center; justify-content:center;
-  box-shadow:0 6px 18px rgba(255,59,48,0.4);
+  box-shadow:0 6px 18px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 @media (max-width:899px){ .dash-nav-toggle{ display:flex; } }
 .dash-nav-toggle svg{ width:20px; height:20px; }
@@ -562,6 +562,10 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
 .dash-row .row-actions svg{ width:14px; height:14px; }
 .mobile-only{ display:none !important; }
 .dash-row.dirty{ box-shadow:inset 3px 0 0 var(--warning); }
+/* Judul + penanda kunci (fitur lock per-link) */
+.row-title-wrap{ display:flex; align-items:center; gap:6px; }
+.row-title-wrap input{ flex:1; min-width:0; width:auto; }
+.row-lock{ width:14px; height:14px; flex-shrink:0; color:var(--accent); }
 .dash-row:not(.dash-head) > :nth-child(5) span{ white-space:nowrap; }
 .dash-row .save-hint{ display:none; }
 .dash-row.dirty .save-hint{ display:flex; }
@@ -586,6 +590,8 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
   z-index:50; opacity:0; pointer-events:none; transition:opacity .25s var(--ease-smooth);
 }
 .overlay-bg.show{ opacity:1; pointer-events:auto; }
+/* Scroll-lock: panel modal/sheet terbuka mengunci scroll halaman di belakangnya */
+body:has(.modal.open), body:has(.drawer.open), body:has(.bottom-sheet.open){ overflow:hidden; }
 
 .drawer{
   position:fixed; top:0; right:0; bottom:0;
@@ -622,7 +628,7 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
 /* ---------- 10. BOTTOM SHEET ---------- */
 .bottom-sheet{
   position:fixed; left:0; right:0; bottom:0; z-index:51;
-  background:var(--bg-alt); border-radius:var(--radius-2xl) var(--radius-2xl) 0 0;
+  background:var(--bg-alt); border-radius:var(--radius-lg) var(--radius-lg) 0 0;
   max-height:60vh; overflow-y:auto; padding:var(--space-3) var(--space-5) var(--space-6);
   transform:translateY(100%); visibility:hidden; transition:transform .3s var(--ease-smooth), visibility .3s var(--ease-smooth);
 }
@@ -649,7 +655,7 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
   backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
 }
 .modal-box{
-  position:relative; background:var(--bg-alt); border-radius:var(--radius-xl);
+  position:relative; background:var(--bg-alt); border-radius:var(--radius-lg);
   border:1px solid var(--border);
   box-shadow:var(--shadow-md);
   padding:var(--space-6); width:100%; max-width:340px;
