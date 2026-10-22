@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<script>(function(){var s;if(window.parent!==window){s=localStorage.getItem('reynahub-theme')||'system';}else{s=localStorage.getItem('reynahub-theme')||'system';}var d=s==='dark'?'dark':s==='light'?'light':(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../src/styles/tools.css">
+    <link rel="stylesheet" href="assets/css/suite.css">
+    <title>Crop PDF - Suite PDF</title>
+
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <style>
+        #crop-wrap, #result-wrap {
+            border: 1px solid var(--border); border-radius: var(--radius);
+            background: #e8eaf0; padding: 1rem; margin-bottom: 1rem;
+            display: flex; justify-content: center; overflow: auto;
+        }
+        #crop-box, #result-box { position: relative; display: inline-block; line-height: 0; max-width: 100%; }
+        #crop-box canvas, #result-box canvas { max-width: 100%; height: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.2); background: #fff; touch-action: none; cursor: crosshair; }
+        #crop-rect {
+            position: absolute; display: none;
+            border: 2px dashed var(--primary);
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);
+            pointer-events: none;
+        }
+        .hint { font-size: 0.8rem; color: #94a3b8; margin-top: 0.35rem; }
+        .box-label { font-size: 0.8rem; color: #64748b; margin-bottom: 0.4rem; }
+        [data-theme="dark"] #crop-wrap, [data-theme="dark"] #result-wrap { background: #06090f; }
+        [data-theme="dark"] .hint, [data-theme="dark"] .box-label { color: #94a3b8; }
+        #sel-info { font-size: 0.85rem; margin-bottom: 0.75rem; }
+        #sel-info strong { color: var(--primary); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <nav class="suite-nav">
+        <a href="PDFM_V2.html">Merger</a>
+        <a href="SPLIT.html">Split</a>
+        <a href="OPERASI.html">Operasi</a>
+        <a href="COMPRESS.html">Kompres</a>
+        <a href="KONVERTER.html">Konverter</a>
+        <a href="STAMP.html">Stamp</a>
+        <a class="active" href="CROP.html" aria-current="page">Crop</a>
+        <a href="NUP.html">N-Up</a>
+        <a href="OFFICE.html">Office</a>
+        <a href="ANNOTATE.html">Anotasi</a>
+        <a href="WORKFLOW.html">Workflow</a>
+        <!-- tautan fitur baru ditambah saat selesai -->
+    </nav>
+
+    <h1>Crop Halaman PDF</h1>
+    <p class="subtitle">Seret kotak di atas halaman untuk memilih area. Berlaku untuk semua halaman. 100% client-side.</p>
+
+    <div id="dropzone">
+        <strong>Seret & letakkan file PDF di sini</strong><br>
+        <small>atau klik untuk memilih file</small>
+    </div>
+    <input type="file" id="file-input" class="file-input" accept=".pdf,application/pdf">
+
+    <div id="file-info" class="file-info hidden">
+        <span><strong id="file-name">-</strong></span>
+        <span id="page-count">-</span>
+        <button class="btn-outline btn" id="clear-btn" style="padding:0.3rem 0.8rem; font-size:0.8rem;">Ganti File</button>
+    </div>
+
+    <div id="crop-wrap" class="hidden">
+        <div id="crop-box">
+            <div id="crop-rect"></div>
+        </div>
+    </div>
+    <div class="hint" id="crop-hint" style="display:none;">Seret di atas gambar untuk memilih area crop (area di luar kotak akan dipotong).</div>
+
+    <div class="field-row hidden" id="preset-row">
+        <div class="field">
+            <label for="preset">Preset ukuran (dikecilkan otomatis bila melebihi halaman)</label>
+            <select id="preset">
+                <option value="">— Manual (seret sendiri) —</option>
+                <option value="595.28,841.89">A4</option>
+                <option value="419.53,595.28">A5</option>
+                <option value="297.64,419.53">A6</option>
+                <option value="612,792">Letter</option>
+                <option value="595.28,935.43">F4 (21x33 cm)</option>
+                <option value="595.28,420.94">Separuh A4</option>
+            </select>
+        </div>
+        <div class="field">
+            <label>&nbsp;</label>
+            <button class="btn btn-outline" id="reset-sel" style="padding:0.5rem 1rem;">Reset Seleksi</button>
+        </div>
+    </div>
+
+    <div id="sel-info" class="hidden">Ukuran area: <strong id="sel-dim">-</strong></div>
+
+    <div class="hint box-label" id="result-label" style="display:none;">Preview hasil crop (halaman 1):</div>
+    <div id="result-wrap" class="hidden">
+        <div id="result-box"></div>
+    </div>
+
+    <div class="actions">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            Theme
+        </button>
+        <button class="btn btn-primary" id="apply-btn" disabled>Terapkan Crop &amp; Download</button>
+    </div>
+
+    <div id="status"></div>
+</div>
+
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/features/page-ops/thumbnails.js"></script>
+<script src="assets/js/features/page-ops/crop.js"></script>
+<script>
+(function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var dropzone = $('dropzone'), fileInput = $('file-input'), fileInfo = $('file-info'),
+        fileNameEl = $('file-name'), pageCountEl = $('page-count'),
+        cropWrap = $('crop-wrap'), cropBox = $('crop-box'), cropRect = $('crop-rect'),
+        cropHint = $('crop-hint'), presetRow = $('preset-row'), selInfo = $('sel-info'), selDim = $('sel-dim'),
+        resultLabel = $('result-label'), resultWrap = $('result-wrap'), resultBox = $('result-box'),
+        applyBtn = $('apply-btn'), clearBtn = $('clear-btn');
+    var current = null; // { bytes, name, total }
+    var viewW = 0, viewH = 0;       // pt halaman 1 (rotasi 0)
+    var sel = null;                 // { x, yTop, w, h } dalam pt (yTop dari atas)
+    var dragging = false, dragStart = null;
+    var areaCanvas = null;
+    var PT_MM = 0.352778;
+
+    // ---- load ----
+    function resetFile() {
+        current = null; sel = null; areaCanvas = null;
+        fileInfo.classList.add('hidden');
+        cropWrap.classList.add('hidden');
+        cropHint.style.display = 'none';
+        presetRow.classList.add('hidden');
+        selInfo.classList.add('hidden');
+        resultWrap.classList.add('hidden');
+        resultLabel.style.display = 'none';
+        resultBox.innerHTML = '';
+        cropBox.querySelectorAll('canvas').forEach(function (c) { c.remove(); });
+        cropRect.style.display = 'none';
+        applyBtn.disabled = true;
+        fileInput.value = '';
+    }
+    async function loadFile(file) {
+        if (!file) return;
+        if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') { setStatus('File harus PDF.', 'error'); return; }
+        try {
+            resetFile();
+            setStatus('Membuka file...');
+            var bytes = new Uint8Array(await file.arrayBuffer());
+            var pdfDoc = await openPdfDoc(bytes);
+            current = { bytes: bytes, name: file.name.replace(/\.pdf$/i, ''), total: pdfDoc.numPages };
+            fileNameEl.textContent = file.name;
+            pageCountEl.textContent = pdfDoc.numPages + ' halaman';
+            fileInfo.classList.remove('hidden');
+            // render halaman 1 TANPA rotasi — koordinat crop = koordinat tampilan
+            var page = await pdfDoc.getPage(1);
+            var vp1 = page.getViewport({ scale: 1, rotation: 0 });
+            viewW = vp1.width; viewH = vp1.height;
+            var targetW = Math.min(640, cropWrap.clientWidth - 40);
+            if (targetW < 200) targetW = 320;
+            var canvas = await renderThumb(pdfDoc, 0, targetW, 0, 0);
+            areaCanvas = canvas;
+            cropBox.insertBefore(canvas, cropRect);
+            cropWrap.classList.remove('hidden');
+            cropHint.style.display = 'block';
+            presetRow.classList.remove('hidden');
+            bindCanvas(canvas);
+            setStatus('File dimuat: ' + pdfDoc.numPages + ' halaman.', 'success');
+        } catch (e) {
+            resetFile();
+            setStatus('Gagal membuka PDF: ' + (e && e.message ? e.message : e), 'error');
+        }
+    }
+    dropzone.addEventListener('click', function () { fileInput.click(); });
+    fileInput.addEventListener('change', function () { loadFile(fileInput.files[0]); });
+    clearBtn.addEventListener('click', resetFile);
+    ['dragover', 'dragenter'].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.remove('dragover'); });
+    });
+    dropzone.addEventListener('drop', function (e) {
+        if (e.dataTransfer && e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+    });
+
+    // ---- seleksi drag ----
+    function ptFromEvent(e) {
+        var r = areaCanvas.getBoundingClientRect();
+        var x = (e.clientX - r.left) * viewW / r.width;
+        var y = (e.clientY - r.top) * viewH / r.height;
+        return { x: Math.max(0, Math.min(viewW, x)), y: Math.max(0, Math.min(viewH, y)) };
+    }
+    function bindCanvas(canvas) {
+        canvas.addEventListener('pointerdown', function (e) {
+            if (!current) return;
+            e.preventDefault();
+            canvas.setPointerCapture(e.pointerId);
+            dragging = true;
+            dragStart = ptFromEvent(e);
+            sel = { x: dragStart.x, yTop: dragStart.y, w: 0, h: 0 };
+            drawRect();
+        });
+        canvas.addEventListener('pointermove', function (e) {
+            if (!dragging) return;
+            var p = ptFromEvent(e);
+            sel = {
+                x: Math.min(dragStart.x, p.x),
+                yTop: Math.min(dragStart.y, p.y),
+                w: Math.abs(p.x - dragStart.x),
+                h: Math.abs(p.y - dragStart.y)
+            };
+            drawRect();
+        });
+        function endDrag(e) {
+            if (!dragging) return;
+            dragging = false;
+            try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
+            if (!sel || sel.w < 2 || sel.h < 2) { sel = null; drawRect(); refreshResult(); return; }
+            drawRect();
+            refreshResult();
+        }
+        canvas.addEventListener('pointerup', endDrag);
+        canvas.addEventListener('pointercancel', endDrag);
+    }
+    function drawRect() {
+        if (!sel || !areaCanvas) { cropRect.style.display = 'none'; selInfo.classList.add('hidden'); return; }
+        var r = areaCanvas.getBoundingClientRect();
+        var kx = r.width / viewW, ky = r.height / viewH;
+        cropRect.style.display = 'block';
+        cropRect.style.left = (sel.x * kx) + 'px';
+        cropRect.style.top = (sel.yTop * ky) + 'px';
+        cropRect.style.width = (sel.w * kx) + 'px';
+        cropRect.style.height = (sel.h * ky) + 'px';
+        selInfo.classList.remove('hidden');
+        selDim.textContent = sel.w.toFixed(1) + ' x ' + sel.h.toFixed(1) + ' pt (' +
+            (sel.w * PT_MM).toFixed(1) + ' x ' + (sel.h * PT_MM).toFixed(1) + ' mm)';
+    }
+
+    // ---- preset ----
+    $('preset').addEventListener('change', function () {
+        var v = $('preset').value;
+        if (!v || !current) return;
+        var parts = v.split(',');
+        var pw = parseFloat(parts[0]), ph = parseFloat(parts[1]);
+        if (viewW > viewH) { var t = pw; pw = ph; ph = t; } // ikuti orientasi halaman
+        pw = Math.min(pw, viewW);
+        ph = Math.min(ph, viewH);
+        sel = { x: (viewW - pw) / 2, yTop: (viewH - ph) / 2, w: pw, h: ph };
+        drawRect();
+        refreshResult();
+    });
+    $('reset-sel').addEventListener('click', function () {
+        sel = null;
+        $('preset').value = '';
+        drawRect();
+        refreshResult();
+    });
+
+    // ---- preview hasil ----
+    var resultSeq = 0;
+    async function refreshResult() {
+        if (!current || !sel) {
+            resultWrap.classList.add('hidden');
+            resultLabel.style.display = 'none';
+            applyBtn.disabled = true;
+            return;
+        }
+        var mySeq = ++resultSeq;
+        try {
+            applyBtn.disabled = true;
+            resultLabel.style.display = 'block';
+            resultWrap.classList.remove('hidden'); // tampilkan dulu agar clientWidth terukur
+            var rect = { x: sel.x, y: viewH - sel.yTop - sel.h, w: sel.w, h: sel.h };
+            var out = await applyCrop(current.bytes, rect);
+            if (mySeq !== resultSeq) return; // hasil basi — buang
+            var doc = await openPdfDoc(out);
+            if (mySeq !== resultSeq) return;
+            var targetW = Math.min(480, resultWrap.clientWidth - 40);
+            if (targetW < 160) targetW = 280;
+            var canvas = await renderThumb(doc, 0, targetW, 0, 0);
+            if (mySeq !== resultSeq) return;
+            resultBox.innerHTML = '';
+            resultBox.appendChild(canvas);
+            applyBtn.disabled = false;
+        } catch (e) {
+            if (mySeq === resultSeq) setStatus('Gagal membangun preview: ' + (e && e.message ? e.message : e), 'error');
+        }
+    }
+
+    // ---- apply ----
+    applyBtn.addEventListener('click', async function () {
+        if (!current || !sel) return;
+        try {
+            applyBtn.disabled = true;
+            setStatus('Memotong semua halaman...');
+            var rect = { x: sel.x, y: viewH - sel.yTop - sel.h, w: sel.w, h: sel.h };
+            var out = await applyCrop(current.bytes, rect);
+            downloadBlob(new Blob([out], { type: 'application/pdf' }), current.name + ' - crop.pdf');
+            setStatus('Berhasil: ' + current.total + ' halaman dipotong (' +
+                (sel.w * PT_MM).toFixed(1) + ' x ' + (sel.h * PT_MM).toFixed(1) + ' mm).', 'success');
+        } catch (e) {
+            setStatus(e && e.message ? e.message : 'Gagal memotong.', 'error');
+        } finally {
+            applyBtn.disabled = !current || !sel;
+        }
+    });
+})();
+</script>
+    <script>
+        function toggleTheme() {
+            var html = document.documentElement;
+            var current = html.getAttribute('data-theme') || 'light';
+            var next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            if (window.parent !== window) { try { window.parent.postMessage({ type: 'THEME_CHANGED', theme: next }, '*'); } catch (e) {} }
+        }
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'SET_THEME' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
+                document.documentElement.setAttribute('data-theme', e.data.theme);
+            }
+        });
+    </script>
+</body>
+</html>

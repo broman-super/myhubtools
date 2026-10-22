@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<script>(function(){var s;if(window.parent!==window){s=localStorage.getItem('reynahub-theme')||'system';}else{s=localStorage.getItem('reynahub-theme')||'system';}var d=s==='dark'?'dark':s==='light'?'light':(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../src/styles/tools.css">
+    <link rel="stylesheet" href="assets/css/suite.css">
+    <title>Operasi Halaman - Suite PDF</title>
+
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+    <style>
+        .op-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+        .op-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--bg);
+            overflow: hidden;
+            user-select: none;
+            cursor: grab;
+        }
+        .op-card:active { cursor: grabbing; }
+        .op-card.sortable-ghost { opacity: 0.4; }
+        .op-thumb {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 150px;
+            padding: 0.5rem;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+        }
+        .op-thumb canvas { max-width: 100%; height: auto; display: block; box-shadow: 0 1px 4px rgba(0,0,0,0.15); }
+        .op-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.15rem;
+            padding: 0.3rem 0.4rem;
+            font-size: 0.75rem;
+        }
+        .op-num {
+            flex: 1;
+            font-weight: 700;
+            color: var(--primary);
+            padding-left: 0.2rem;
+        }
+        .op-bar button {
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text, #1e293b);
+            border-radius: 5px;
+            min-width: 26px;
+            height: 24px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 0 0.25rem;
+            transition: 0.15s;
+        }
+        .op-bar button:hover { border-color: var(--primary); color: var(--primary); }
+        .op-bar button.op-del:hover { border-color: var(--danger); color: var(--danger); }
+        .op-empty { color: #94a3b8; font-size: 0.85rem; text-align: center; grid-column: 1 / -1; }
+        [data-theme="dark"] .op-thumb { background: #f8fafc; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <nav class="suite-nav">
+        <a href="PDFM_V2.html">Merger</a>
+        <a href="SPLIT.html">Split</a>
+        <a class="active" href="OPERASI.html" aria-current="page">Operasi</a>
+        <a href="COMPRESS.html">Kompres</a>
+        <a href="KONVERTER.html">Konverter</a>
+        <a href="STAMP.html">Stamp</a>
+        <a href="CROP.html">Crop</a>
+        <a href="NUP.html">N-Up</a>
+        <a href="OFFICE.html">Office</a>
+        <a href="ANNOTATE.html">Anotasi</a>
+        <a href="WORKFLOW.html">Workflow</a>
+        <!-- tautan fitur baru ditambah saat selesai -->
+    </nav>
+
+    <h1>Operasi Halaman — Hapus, Urutkan, Rotasi</h1>
+    <p class="subtitle">Seret kartu untuk mengubah urutan, tombol per kartu untuk memutar, × untuk menghapus. 100% client-side.</p>
+
+    <div id="dropzone">
+        <strong>Seret & letakkan file PDF di sini</strong><br>
+        <small>atau klik untuk memilih file</small>
+    </div>
+    <input type="file" id="file-input" class="file-input" accept=".pdf,application/pdf">
+
+    <div id="file-info" class="file-info hidden">
+        <span><strong id="file-name">-</strong></span>
+        <span id="page-count">-</span>
+        <span id="remain-count">-</span>
+        <button class="btn-outline btn" id="clear-btn" style="padding:0.3rem 0.8rem; font-size:0.8rem;">Ganti File</button>
+    </div>
+
+    <div id="op-grid" class="op-grid hidden"></div>
+
+    <div class="actions">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            Theme
+        </button>
+        <button class="btn btn-primary" id="save-btn" disabled>Simpan &amp; Download</button>
+    </div>
+
+    <div id="status"></div>
+</div>
+
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/features/page-ops/thumbnails.js"></script>
+<script src="assets/js/features/page-ops/pageOps.js"></script>
+<script>
+(function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var dropzone = $('dropzone'), fileInput = $('file-input'), fileInfo = $('file-info'),
+        fileNameEl = $('file-name'), pageCountEl = $('page-count'), remainCountEl = $('remain-count'),
+        grid = $('op-grid'), saveBtn = $('save-btn'), clearBtn = $('clear-btn');
+    var current = null; // { bytes, name, pdfDoc }
+
+    function updateRemain() {
+        var n = grid.classList.contains('hidden') ? 0 : grid.children.length;
+        remainCountEl.textContent = n + ' halaman tersisa';
+        saveBtn.disabled = !current || n < 1;
+    }
+
+    function makeCard(orig) {
+        var card = document.createElement('div');
+        card.className = 'op-card';
+        card.dataset.orig = String(orig);
+        card.dataset.rot = '0';
+        card.title = 'Halaman asli #' + (orig + 1) + ' — seret untuk mengubah urutan';
+        card.innerHTML =
+            '<div class="op-thumb"></div>' +
+            '<div class="op-bar">' +
+            '<span class="op-num">#' + (orig + 1) + '</span>' +
+            '<button data-act="ccw" title="Putar kiri 90&deg;">&#8634;</button>' +
+            '<button data-act="180" title="Putar 180&deg;">180&deg;</button>' +
+            '<button data-act="cw" title="Putar kanan 90&deg;">&#8635;</button>' +
+            '<button data-act="del" class="op-del" title="Hapus halaman">&times;</button>' +
+            '</div>';
+        return card;
+    }
+
+    async function paintThumb(card) {
+        var orig = +card.dataset.orig, rot = +card.dataset.rot;
+        var box = card.querySelector('.op-thumb');
+        try {
+            var canvas = await renderThumb(current.pdfDoc, orig, 150, rot);
+            box.innerHTML = '';
+            box.appendChild(canvas);
+        } catch (e) {
+            box.textContent = 'Gagal render';
+        }
+    }
+
+    async function buildGrid() {
+        grid.innerHTML = '';
+        grid.classList.remove('hidden');
+        var n = current.pdfDoc.numPages;
+        for (var i = 0; i < n; i++) {
+            var card = makeCard(i);
+            grid.appendChild(card);
+            await paintThumb(card);
+            if (i % 5 === 4 || i === n - 1) setStatus('Merender thumbnail ' + (i + 1) + '/' + n + '...');
+        }
+        setStatus('Selesai. ' + n + ' halaman siap diatur.', 'success');
+        updateRemain();
+    }
+
+    function resetFile() {
+        current = null;
+        grid.innerHTML = '';
+        grid.classList.add('hidden');
+        fileInfo.classList.add('hidden');
+        fileInput.value = '';
+        saveBtn.disabled = true;
+    }
+
+    async function loadFile(file) {
+        if (!file) return;
+        if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+            setStatus('File harus PDF.', 'error');
+            return;
+        }
+        try {
+            resetFile();
+            setStatus('Membuka file...');
+            var bytes = new Uint8Array(await file.arrayBuffer());
+            var pdfDoc = await openPdfDoc(bytes);
+            current = { bytes: bytes, name: file.name.replace(/\.pdf$/i, ''), pdfDoc: pdfDoc };
+            fileNameEl.textContent = file.name;
+            pageCountEl.textContent = pdfDoc.numPages + ' halaman';
+            fileInfo.classList.remove('hidden');
+            await buildGrid();
+        } catch (e) {
+            resetFile();
+            setStatus('Gagal membuka PDF: ' + (e && e.message ? e.message : e), 'error');
+        }
+    }
+
+    dropzone.addEventListener('click', function () { fileInput.click(); });
+    fileInput.addEventListener('change', function () { loadFile(fileInput.files[0]); });
+    clearBtn.addEventListener('click', resetFile);
+    ['dragover', 'dragenter'].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.remove('dragover'); });
+    });
+    dropzone.addEventListener('drop', function (e) {
+        if (e.dataTransfer && e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+    });
+
+    grid.addEventListener('click', async function (e) {
+        var btn = e.target.closest('button[data-act]');
+        if (!btn || !current) return;
+        var card = btn.closest('.op-card');
+        var act = btn.dataset.act;
+        if (act === 'del') {
+            card.remove();
+            updateRemain();
+            setStatus('Halaman dihapus dari hasil.', 'info');
+            return;
+        }
+        var rot = +card.dataset.rot;
+        if (act === 'cw') rot = (rot + 90) % 360;
+        else if (act === 'ccw') rot = (rot + 270) % 360;
+        else if (act === '180') rot = (rot + 180) % 360;
+        card.dataset.rot = String(rot);
+        await paintThumb(card);
+    });
+
+    saveBtn.addEventListener('click', async function () {
+        if (!current) return;
+        try {
+            saveBtn.disabled = true;
+            setStatus('Menyusun PDF...');
+            var cards = Array.prototype.slice.call(grid.children).filter(function (c) { return c.classList.contains('op-card'); });
+            if (!cards.length) throw new Error('Tidak ada halaman tersisa.');
+            var order = cards.map(function (c) { return +c.dataset.orig; });
+            var rots = cards.map(function (c) { return +c.dataset.rot; });
+            var bytes = await assemblePages(current.bytes, order, rots);
+            downloadBlob(new Blob([bytes], { type: 'application/pdf' }), current.name + ' - diatur.pdf');
+            setStatus('Berhasil: ' + order.length + ' halaman disusun ulang.', 'success');
+        } catch (e) {
+            setStatus(e && e.message ? e.message : 'Gagal menyimpan.', 'error');
+        } finally {
+            updateRemain();
+        }
+    });
+
+    new Sortable(grid, {
+        animation: 150,
+        filter: 'button',
+        preventOnFilter: false
+    });
+})();
+</script>
+    <script>
+        function toggleTheme() {
+            var html = document.documentElement;
+            var current = html.getAttribute('data-theme') || 'light';
+            var next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            if (window.parent !== window) { try { window.parent.postMessage({ type: 'THEME_CHANGED', theme: next }, '*'); } catch (e) {} }
+        }
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'SET_THEME' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
+                document.documentElement.setAttribute('data-theme', e.data.theme);
+            }
+        });
+    </script>
+</body>
+</html>

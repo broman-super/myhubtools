@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<script>(function(){var s;if(window.parent!==window){s=localStorage.getItem('reynahub-theme')||'system';}else{s=localStorage.getItem('reynahub-theme')||'system';}var d=s==='dark'?'dark':s==='light'?'light':(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../src/styles/tools.css">
+    <link rel="stylesheet" href="assets/css/suite.css">
+    <title>Nomor Halaman &amp; Watermark - Suite PDF</title>
+
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <style>
+        .mode-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .mode-pill {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            border: 1px solid var(--border); background: var(--bg);
+            border-radius: 999px; padding: 0.45rem 0.9rem;
+            font-size: 0.85rem; cursor: pointer; transition: 0.2s;
+        }
+        .mode-pill:has(input:checked) { border-color: var(--primary); color: var(--primary); background: var(--primary-light, rgba(255,0,0,0.08)); }
+        .mode-pill input { accent-color: var(--primary); margin: 0; }
+        #preview-wrap {
+            border: 1px solid var(--border); border-radius: var(--radius);
+            background: #e8eaf0; padding: 1rem; margin-bottom: 1rem;
+            display: flex; justify-content: center; overflow: auto;
+        }
+        #preview-box { position: relative; display: inline-block; line-height: 0; max-width: 100%; }
+        #preview-box canvas { max-width: 100%; height: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.2); background: #fff; }
+        .ov {
+            position: absolute; left: 0; top: 0;
+            white-space: nowrap; pointer-events: none;
+            transform: translate(-50%, -50%);
+            transform-origin: center center;
+            line-height: 1;
+            font-family: Helvetica, Arial, sans-serif;
+            font-weight: bold;
+        }
+        .hint { font-size: 0.8rem; color: #94a3b8; margin-top: 0.35rem; }
+        [data-theme="dark"] .hint { color: #94a3b8; }
+        [data-theme="dark"] #preview-wrap { background: #06090f; }
+        .range-val { font-size: 0.75rem; color: #64748b; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <nav class="suite-nav">
+        <a href="PDFM_V2.html">Merger</a>
+        <a href="SPLIT.html">Split</a>
+        <a href="OPERASI.html">Operasi</a>
+        <a href="COMPRESS.html">Kompres</a>
+        <a href="KONVERTER.html">Konverter</a>
+        <a class="active" href="STAMP.html" aria-current="page">Stamp</a>
+        <a href="CROP.html">Crop</a>
+        <a href="NUP.html">N-Up</a>
+        <a href="OFFICE.html">Office</a>
+        <a href="ANNOTATE.html">Anotasi</a>
+        <a href="WORKFLOW.html">Workflow</a>
+        <!-- tautan fitur baru ditambah saat selesai -->
+    </nav>
+
+    <h1>Nomor Halaman &amp; Watermark</h1>
+    <p class="subtitle">Beri nomor otomatis atau stempel teks/gambar dengan preview langsung. 100% client-side.</p>
+
+    <div id="dropzone">
+        <strong>Seret & letakkan file PDF di sini</strong><br>
+        <small>atau klik untuk memilih file</small>
+    </div>
+    <input type="file" id="file-input" class="file-input" accept=".pdf,application/pdf">
+
+    <div id="file-info" class="file-info hidden">
+        <span><strong id="file-name">-</strong></span>
+        <span id="page-count">-</span>
+        <label for="pv-page" style="font-size:0.8rem;color:#64748b;">Preview halaman</label>
+        <select id="pv-page" style="padding:0.3rem 0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:inherit;font-family:inherit;"></select>
+        <button class="btn-outline btn" id="clear-btn" style="padding:0.3rem 0.8rem; font-size:0.8rem;">Ganti File</button>
+    </div>
+
+    <div id="preview-wrap" class="hidden">
+        <div id="preview-box"></div>
+    </div>
+
+    <div class="mode-row">
+        <label class="mode-pill"><input type="radio" name="mode" value="number" checked> Nomor Halaman</label>
+        <label class="mode-pill"><input type="radio" name="mode" value="wm"> Watermark</label>
+    </div>
+
+    <!-- MODE: Nomor -->
+    <section id="sec-number">
+        <div class="field-row">
+            <div class="field">
+                <label for="num-pos">Posisi</label>
+                <select id="num-pos">
+                    <option value="bottom|center" selected>Bawah tengah</option>
+                    <option value="bottom|left">Bawah kiri</option>
+                    <option value="bottom|right">Bawah kanan</option>
+                    <option value="top|left">Atas kiri</option>
+                    <option value="top|center">Atas tengah</option>
+                    <option value="top|right">Atas kanan</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="num-fmt">Format</label>
+                <select id="num-fmt">
+                    <option value="xsl" selected>1 / 10</option>
+                    <option value="xy">Halaman 1 dari 10</option>
+                    <option value="x">1</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="num-start">Mulai dari</label>
+                <input type="number" id="num-start" value="1" min="0" step="1">
+            </div>
+            <div class="field">
+                <label for="num-size">Ukuran (pt)</label>
+                <input type="number" id="num-size" value="10" min="4" max="40" step="1">
+            </div>
+        </div>
+    </section>
+
+    <!-- MODE: Watermark -->
+    <section id="sec-wm" class="hidden">
+        <div class="mode-row">
+            <label class="mode-pill"><input type="radio" name="wmkind" value="text" checked> Teks</label>
+            <label class="mode-pill"><input type="radio" name="wmkind" value="image"> Gambar</label>
+        </div>
+
+        <div id="wm-text-box">
+            <div class="field-row">
+                <div class="field" style="flex:1;">
+                    <label for="wm-text">Teks watermark</label>
+                    <input type="text" id="wm-text" value="CONFIDENTIAL" autocomplete="off">
+                </div>
+                <div class="field">
+                    <label for="wm-color">Warna</label>
+                    <select id="wm-color">
+                        <option value="red" selected>Merah</option>
+                        <option value="black">Hitam</option>
+                        <option value="blue">Biru</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="wm-size">Ukuran (pt)</label>
+                    <input type="number" id="wm-size" value="60" min="8" max="200" step="1">
+                </div>
+            </div>
+        </div>
+
+        <div id="wm-img-box" class="hidden">
+            <div class="field-row">
+                <div class="field" style="flex:1;">
+                    <label for="wm-image">Gambar watermark (PNG/JPG)</label>
+                    <input type="file" id="wm-image" accept=".png,.jpg,.jpeg,image/png,image/jpeg" style="font-size:0.85rem;">
+                </div>
+                <div class="field" id="wm-scale-field">
+                    <label for="wm-scale">Lebar relatif halaman: <span id="wm-scale-val">50</span>%</label>
+                    <input type="range" id="wm-scale" min="10" max="100" value="50" step="5">
+                </div>
+            </div>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="wm-opacity">Opasitas: <span id="wm-opacity-val">30</span>%</label>
+                <input type="range" id="wm-opacity" min="5" max="100" value="30" step="5">
+            </div>
+            <div class="field">
+                <label for="wm-rot">Rotasi: <span id="wm-rot-val">45</span>&deg;</label>
+                <input type="range" id="wm-rot" min="0" max="359" value="45" step="1">
+            </div>
+            <div class="field">
+                <label for="wm-pos">Posisi</label>
+                <select id="wm-pos">
+                    <option value="center" selected>Tengah</option>
+                    <option value="top-left">Kiri atas</option>
+                    <option value="top-right">Kanan atas</option>
+                    <option value="bottom-left">Kiri bawah</option>
+                    <option value="bottom-right">Kanan bawah</option>
+                </select>
+            </div>
+        </div>
+        <div class="hint">Preview bersifat kira-kira (font sistem vs font PDF); hasil akhir dihitung presisi oleh pdf-lib.</div>
+    </section>
+
+    <div class="actions">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            Theme
+        </button>
+        <button class="btn btn-primary" id="apply-btn" disabled>Terapkan &amp; Download</button>
+    </div>
+
+    <div id="status"></div>
+</div>
+
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/features/page-ops/split.js"></script>
+<script src="assets/js/features/page-ops/thumbnails.js"></script>
+<script src="assets/js/features/page-ops/pageNumbers.js"></script>
+<script src="assets/js/features/page-ops/watermark.js"></script>
+<script>
+(function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var dropzone = $('dropzone'), fileInput = $('file-input'), fileInfo = $('file-info'),
+        fileNameEl = $('file-name'), pageCountEl = $('page-count'), pvPage = $('pv-page'),
+        previewWrap = $('preview-wrap'), previewBox = $('preview-box'),
+        applyBtn = $('apply-btn'), clearBtn = $('clear-btn');
+    var current = null;   // { bytes, name, pdfDoc, total }
+    var meta = null;      // { w, h, s } — pt halaman preview + skala px/pt
+    var wmFile = null;    // File gambar watermark
+    var wmDims = null;    // { w, h } — dimensi natural gambar watermark
+
+    function mode() { return document.querySelector('input[name="mode"]:checked').value; }
+    function wmKind() { return document.querySelector('input[name="wmkind"]:checked').value; }
+
+    // ---- mode toggle ----
+    document.querySelectorAll('input[name="mode"]').forEach(function (r) {
+        r.addEventListener('change', function () {
+            $('sec-number').classList.toggle('hidden', mode() !== 'number');
+            $('sec-wm').classList.toggle('hidden', mode() !== 'wm');
+            updateOverlay();
+        });
+    });
+    document.querySelectorAll('input[name="wmkind"]').forEach(function (r) {
+        r.addEventListener('change', function () {
+            $('wm-text-box').classList.toggle('hidden', wmKind() !== 'text');
+            $('wm-img-box').classList.toggle('hidden', wmKind() !== 'image');
+            updateOverlay();
+        });
+    });
+
+    // ---- input listeners -> overlay ----
+    ['num-pos', 'num-fmt', 'num-start', 'num-size', 'wm-text', 'wm-color', 'wm-size',
+        'wm-scale', 'wm-opacity', 'wm-rot', 'wm-pos'].forEach(function (id) {
+        $(id).addEventListener('input', function () { syncVals(); updateOverlay(); });
+        $(id).addEventListener('change', function () { syncVals(); updateOverlay(); });
+    });
+    $('wm-image').addEventListener('change', function () {
+        wmFile = $('wm-image').files[0] || null;
+        wmDims = null;
+        if (wmFile) {
+            var u = URL.createObjectURL(wmFile);
+            var im = new Image();
+            im.onload = function () { wmDims = { w: im.naturalWidth, h: im.naturalHeight }; URL.revokeObjectURL(u); updateOverlay(); };
+            im.src = u;
+        }
+        updateOverlay();
+    });
+    function syncVals() {
+        $('wm-opacity-val').textContent = $('wm-opacity').value;
+        $('wm-rot-val').textContent = $('wm-rot').value;
+        $('wm-scale-val').textContent = $('wm-scale').value;
+    }
+
+    // ---- load file ----
+    function resetFile() {
+        current = null; meta = null;
+        fileInfo.classList.add('hidden');
+        previewWrap.classList.add('hidden');
+        previewBox.innerHTML = '';
+        applyBtn.disabled = true;
+        pvPage.innerHTML = '';
+        fileInput.value = '';
+    }
+    async function loadFile(file) {
+        if (!file) return;
+        if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') { setStatus('File harus PDF.', 'error'); return; }
+        try {
+            resetFile();
+            setStatus('Membuka file...');
+            var bytes = new Uint8Array(await file.arrayBuffer());
+            var pdfDoc = await openPdfDoc(bytes);
+            current = { bytes: bytes, name: file.name.replace(/\.pdf$/i, ''), pdfDoc: pdfDoc, total: pdfDoc.numPages };
+            fileNameEl.textContent = file.name;
+            pageCountEl.textContent = pdfDoc.numPages + ' halaman';
+            for (var i = 1; i <= pdfDoc.numPages; i++) {
+                var o = document.createElement('option');
+                o.value = String(i - 1); o.textContent = 'Hal. ' + i;
+                pvPage.appendChild(o);
+            }
+            fileInfo.classList.remove('hidden');
+            previewWrap.classList.remove('hidden');
+            applyBtn.disabled = false;
+            await paintPreview();
+            setStatus('File dimuat: ' + pdfDoc.numPages + ' halaman.', 'success');
+        } catch (e) {
+            resetFile();
+            setStatus('Gagal membuka PDF: ' + (e && e.message ? e.message : e), 'error');
+        }
+    }
+    pvPage.addEventListener('change', paintPreview);
+    dropzone.addEventListener('click', function () { fileInput.click(); });
+    fileInput.addEventListener('change', function () { loadFile(fileInput.files[0]); });
+    clearBtn.addEventListener('click', resetFile);
+    ['dragover', 'dragenter'].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.remove('dragover'); });
+    });
+    dropzone.addEventListener('drop', function (e) {
+        if (e.dataTransfer && e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+    });
+
+    async function paintPreview() {
+        if (!current) return;
+        var idx = parseInt(pvPage.value || '0', 10);
+        try {
+            var page = await current.pdfDoc.getPage(idx + 1);
+            var vp1 = page.getViewport({ scale: 1 });
+            var targetW = Math.min(640, previewWrap.clientWidth - 40);
+            if (targetW < 200) targetW = 320;
+            var canvas = await renderThumb(current.pdfDoc, idx, targetW, 0);
+            previewBox.innerHTML = '';
+            previewBox.appendChild(canvas);
+            meta = { w: vp1.width, h: vp1.height, s: canvas.clientWidth / vp1.width, page: idx };
+            updateOverlay();
+        } catch (e) {
+            setStatus('Gagal render preview.', 'error');
+        }
+    }
+
+    // ---- overlay ----
+    function clearOverlay() {
+        var old = previewBox.querySelector('.ov');
+        if (old) old.remove();
+    }
+    function makeOv() {
+        clearOverlay();
+        var d = document.createElement('div');
+        d.className = 'ov';
+        previewBox.appendChild(d);
+        return d;
+    }
+    function posCenter(cxPt, cyPt) {
+        return { left: cxPt * meta.s, top: (meta.h - cyPt) * meta.s };
+    }
+    function updateOverlay() {
+        if (!current || !meta) return;
+        if (mode() === 'number') {
+            var pos = $('num-pos').value.split('|');
+            var fmt = $('num-fmt').value;
+            var start = parseInt($('num-start').value || '1', 10);
+            var size = parseFloat($('num-size').value || '10');
+            var label = buildNumberLabel(start + meta.page, current.total, fmt);
+            var twEst = label.length * size * 0.55;      // perkiraan lebar Helvetica (preview saja)
+            var mx = 24, my = 20;
+            var cx = pos[1] === 'left' ? mx + twEst / 2 : pos[1] === 'right' ? meta.w - mx - twEst / 2 : meta.w / 2;
+            var cy = pos[0] === 'top' ? meta.h - my - size * 0.65 : my + size * 0.35;
+            var o = makeOv();
+            var c = posCenter(cx, cy);
+            o.style.left = c.left + 'px';
+            o.style.top = c.top + 'px';
+            o.style.fontSize = (size * meta.s) + 'px';
+            o.style.color = '#000';
+            o.textContent = label;
+        } else {
+            if (wmKind() === 'text') {
+                var text = $('wm-text').value;
+                if (!text) { clearOverlay(); return; }
+                var sizeW = parseFloat($('wm-size').value || '60');
+                var col = $('wm-color').value;
+                var bw = text.length * sizeW * 0.62;      // HelveticaBold perkiraan
+                var bh = sizeW * 0.72;
+                var p = stampPosPts(bw, bh);
+                var o2 = makeOv();
+                var c2 = posCenter(p.cx, p.cy);
+                o2.style.left = c2.left + 'px';
+                o2.style.top = c2.top + 'px';
+                o2.style.fontSize = (sizeW * meta.s) + 'px';
+                o2.style.color = col === 'red' ? 'rgb(219,20,20)' : col === 'blue' ? 'rgb(31,89,191)' : '#000';
+                o2.style.opacity = ($('wm-opacity').value / 100);
+                o2.style.transform = 'translate(-50%,-50%) rotate(' + (-$('wm-rot').value) + 'deg)';
+                o2.textContent = text;
+            } else {
+                clearOverlay();
+                if (!wmFile || !wmDims) return;
+                var scalePct = parseFloat($('wm-scale').value);
+                var bwPt = scalePct / 100 * meta.w;
+                var bhPt = bwPt * wmDims.h / wmDims.w;
+                var wpx = bwPt * meta.s;
+                var p2 = stampPosPts(bwPt, bhPt);
+                var img = document.createElement('img');
+                img.className = 'ov';
+                img.src = URL.createObjectURL(wmFile);
+                img.onload = function () { URL.revokeObjectURL(img.src); };
+                var c3 = posCenter(p2.cx, p2.cy);
+                img.style.left = c3.left + 'px';
+                img.style.top = c3.top + 'px';
+                img.style.width = wpx + 'px';
+                img.style.opacity = ($('wm-opacity').value / 100);
+                img.style.transform = 'translate(-50%,-50%) rotate(' + (-$('wm-rot').value) + 'deg)';
+                previewBox.appendChild(img);
+            }
+        }
+    }
+    // pusat box watermark (pt) sesuai pilihan posisi — inset 24pt, sama dengan watermark.js
+    function stampPosPts(bw, bh) {
+        var w = meta.w, h = meta.h, inset = 24;
+        var pos = $('wm-pos').value;
+        if (pos === 'top-left') return { cx: inset + bw / 2, cy: h - inset - bh / 2 };
+        if (pos === 'top-right') return { cx: w - inset - bw / 2, cy: h - inset - bh / 2 };
+        if (pos === 'bottom-left') return { cx: inset + bw / 2, cy: inset + bh / 2 };
+        if (pos === 'bottom-right') return { cx: w - inset - bw / 2, cy: inset + bh / 2 };
+        return { cx: w / 2, cy: h / 2 };
+    }
+
+    // ---- apply ----
+    applyBtn.addEventListener('click', async function () {
+        if (!current) return;
+        try {
+            applyBtn.disabled = true;
+            if (mode() === 'number') {
+                setStatus('Menerapkan nomor halaman...');
+                var pos = $('num-pos').value.split('|');
+                var out = await addPageNumbers(current.bytes, {
+                    pos: pos[0], align: pos[1],
+                    format: $('num-fmt').value,
+                    start: parseInt($('num-start').value || '1', 10),
+                    size: parseFloat($('num-size').value || '10')
+                });
+                downloadBlob(new Blob([out], { type: 'application/pdf' }), current.name + ' - bernomor.pdf');
+                setStatus('Berhasil: nomor halaman diterapkan ke ' + current.total + ' halaman.', 'success');
+            } else {
+                setStatus('Menerapkan watermark...');
+                var opts = {
+                    kind: wmKind(),
+                    opacity: parseFloat($('wm-opacity').value) / 100,
+                    rotation: parseInt($('wm-rot').value, 10),
+                    pos: $('wm-pos').value
+                };
+                if (wmKind() === 'text') {
+                    opts.text = $('wm-text').value;
+                    opts.size = parseFloat($('wm-size').value || '60');
+                    opts.color = $('wm-color').value;
+                } else {
+                    if (!wmFile) throw new Error('Pilih file gambar watermark dulu.');
+                    if (wmFile.type === 'image/png' || /\.png$/i.test(wmFile.name)) opts.imageMime = 'image/png';
+                    else opts.imageMime = 'image/jpeg';
+                    opts.imageBytes = new Uint8Array(await wmFile.arrayBuffer());
+                    opts.scale = parseFloat($('wm-scale').value);
+                }
+                var outW = await addWatermark(current.bytes, opts);
+                downloadBlob(new Blob([outW], { type: 'application/pdf' }), current.name + ' - watermark.pdf');
+                setStatus('Berhasil: watermark diterapkan ke ' + current.total + ' halaman.', 'success');
+            }
+        } catch (e) {
+            setStatus(e && e.message ? e.message : 'Gagal menerapkan.', 'error');
+        } finally {
+            applyBtn.disabled = !current;
+        }
+    });
+})();
+</script>
+    <script>
+        function toggleTheme() {
+            var html = document.documentElement;
+            var current = html.getAttribute('data-theme') || 'light';
+            var next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            if (window.parent !== window) { try { window.parent.postMessage({ type: 'THEME_CHANGED', theme: next }, '*'); } catch (e) {} }
+        }
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'SET_THEME' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
+                document.documentElement.setAttribute('data-theme', e.data.theme);
+            }
+        });
+    </script>
+</body>
+</html>

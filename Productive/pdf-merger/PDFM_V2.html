@@ -198,11 +198,49 @@
         [data-theme="dark"] .empty-message { color: #64748b; }
         [data-theme="dark"] #file-list li .name { color: #f1f5f9; }
         [data-theme="dark"] #file-list li .handle { color: #64748b; }
+
+        /* Strip nav suite — penambahan murni; tautan fitur ditambah saat selesai. */
+        .suite-nav {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.25rem;
+        }
+        .suite-nav a {
+            font-size: 0.85rem;
+            padding: 0.35rem 0.8rem;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text, #1e293b);
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .suite-nav a:hover { border-color: var(--primary); color: var(--primary); }
+        .suite-nav a.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .suite-nav a.active:hover { background: var(--primary-hover); color: #fff; }
+        [data-theme="dark"] .suite-nav a { color: #f1f5f9; }
+        [data-theme="dark"] .suite-nav a:hover { color: var(--primary); }
+        [data-theme="dark"] .suite-nav a.active { color: #fff; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <nav class="suite-nav">
+        <a class="active" href="PDFM_V2.html" aria-current="page">Merger</a>
+        <a href="SPLIT.html">Split</a>
+        <a href="OPERASI.html">Operasi</a>
+        <a href="COMPRESS.html">Kompres</a>
+        <a href="KONVERTER.html">Konverter</a>
+        <a href="STAMP.html">Stamp</a>
+        <a href="CROP.html">Crop</a>
+        <a href="NUP.html">N-Up</a>
+        <a href="OFFICE.html">Office</a>
+        <a href="ANNOTATE.html">Anotasi</a>
+        <a href="WORKFLOW.html">Workflow</a>
+        <!-- tautan fitur baru ditambah saat selesai -->
+    </nav>
     <h1><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Label Merger V2</h1>
     <p class="subtitle">Gabung, Analisis & Ekspor Data Label Resi A6</p>
 

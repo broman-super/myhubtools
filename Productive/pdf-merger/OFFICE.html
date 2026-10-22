@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<script>(function(){var s;if(window.parent!==window){s=localStorage.getItem('reynahub-theme')||'system';}else{s=localStorage.getItem('reynahub-theme')||'system';}var d=s==='dark'?'dark':s==='light'?'light':(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="coi-serviceworker.js"></script>
+    <link rel="stylesheet" href="../../src/styles/tools.css">
+    <link rel="stylesheet" href="assets/css/suite.css">
+    <title>Office &harr; PDF - Suite PDF</title>
+
+    <style>
+        #fmt-row { display: none; }
+        #fmt-row.show { display: flex; }
+        .coi-box {
+            border: 1px dashed var(--border); border-radius: 8px;
+            padding: 0.7rem 0.9rem; font-size: 0.85rem; color: #64748b;
+            margin-bottom: 1rem; line-height: 1.5;
+        }
+        [data-theme="dark"] .coi-box { color: #94a3b8; }
+        .coi-badge {
+            display: inline-block; border-radius: 999px; padding: 0.2rem 0.7rem;
+            font-size: 0.78rem; border: 1px solid var(--border); background: var(--bg);
+        }
+        .coi-badge.ok { border-color: #16a34a; color: #16a34a; }
+        .coi-badge.bad { border-color: #dc2626; color: #dc2626; }
+        #coi-open { display: none; margin-left: 0.6rem; padding: 0.3rem 0.8rem; font-size: 0.8rem; }
+        #coi-open.show { display: inline-block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <nav class="suite-nav">
+        <a href="PDFM_V2.html">Merger</a>
+        <a href="SPLIT.html">Split</a>
+        <a href="OPERASI.html">Operasi</a>
+        <a href="COMPRESS.html">Kompres</a>
+        <a href="KONVERTER.html">Konverter</a>
+        <a href="STAMP.html">Stamp</a>
+        <a href="CROP.html">Crop</a>
+        <a href="NUP.html">N-Up</a>
+        <a class="active" href="OFFICE.html" aria-current="page">Office</a>
+        <a href="ANNOTATE.html">Anotasi</a>
+        <a href="WORKFLOW.html">Workflow</a>
+        <!-- tautan fitur baru ditambah saat selesai -->
+    </nav>
+
+    <h1>Office &harr; PDF</h1>
+    <p class="subtitle">DOCX/XLSX/PPTX/ODT/RTF/HTML/CSV/EPUB &rarr; PDF, dan PDF &rarr; DOCX/XLSX/PPTX/ODT/TXT/HTML. Ditenagai LibreOffice yang di-compile ke WebAssembly, jalan sepenuhnya di browser Anda.</p>
+
+    <div class="coi-box">
+        Konversi pertama mengunduh runtime LibreOffice WASM <strong>&plusmn;240MB</strong> (wasm 147MB + data 99MB) lalu disimpan di cache browser; berikutnya cepat. File tidak pernah meninggalkan perangkat Anda.
+        Halaman ini dimuat ulang sekali otomatis saat kunjungan pertama untuk mengaktifkan <em>cross-origin isolation</em> (SharedArrayBuffer).
+    </div>
+
+    <div id="dropzone">
+        <strong>Seret &amp; letakkan file Office atau PDF di sini</strong><br>
+        <small>doc, docx, xls, xlsx, ppt, pptx, odt, ods, odp, rtf, txt, html, csv, epub, pdf</small>
+    </div>
+    <input type="file" id="file-input" class="file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.html,.htm,.csv,.epub,application/pdf">
+
+    <div id="file-info" class="file-info hidden">
+        <span><strong id="file-name">-</strong></span>
+        <span class="coi-badge" id="mode-badge">-</span>
+        <button class="btn-outline btn" id="clear-btn" style="padding:0.3rem 0.8rem; font-size:0.8rem;">Ganti File</button>
+    </div>
+
+    <div class="field-row">
+        <div class="field" id="fmt-row">
+            <label for="fmt-select">Format keluaran (PDF &rarr; Office)</label>
+            <select id="fmt-select">
+                <option value="docx" selected>Word (.docx)</option>
+                <option value="xlsx">Excel (.xlsx)</option>
+                <option value="pptx">PowerPoint (.pptx)</option>
+                <option value="odt">ODT (.odt)</option>
+                <option value="txt">Teks polos (.txt)</option>
+                <option value="html">HTML (.html)</option>
+            </select>
+            <div class="range-hint">Catatan: LibreOffice membuka PDF sebagai objek gambar/teks per halaman (import Draw), jadi DOCX hasil konversi berisi teks+gambar per halaman, bukan struktur paragraf/tabel asli dokumen sumber.</div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <span class="coi-badge" id="coi-badge">Isolasi: -</span>
+        <a href="#" id="coi-open" class="btn-outline btn" target="_blank" rel="noopener">Buka di tab baru</a>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            Theme
+        </button>
+        <button class="btn btn-primary" id="process-btn" disabled>Konversi &amp; Download</button>
+    </div>
+
+    <div id="status"></div>
+</div>
+
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/features/office/office.js"></script>
+<script>
+(function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var dropzone = $('dropzone'), fileInput = $('file-input'), fileInfo = $('file-info'),
+        fileNameEl = $('file-name'), modeBadge = $('mode-badge'), fmtRow = $('fmt-row'),
+        fmtSelect = $('fmt-select'), processBtn = $('process-btn'), clearBtn = $('clear-btn'),
+        coiBadge = $('coi-badge'), coiOpen = $('coi-open');
+    var current = null; // { bytes, base, full, mode: 'office2pdf'|'pdf2office' }
+
+    var OFFICE_RE = /\.(doc|docx|xls|xlsx|ppt|pptx|odt|ods|odp|rtf|txt|html|htm|csv|epub)$/i;
+
+    function sanitize(s) { return String(s).replace(/[\\/:*?"<>|]/g, '-').trim(); }
+
+    function checkCoi() {
+        var ok = (typeof crossOriginIsolated !== 'undefined' && crossOriginIsolated);
+        coiBadge.textContent = 'Isolasi: ' + (ok ? 'aktif' : 'nonaktif');
+        coiBadge.className = 'coi-badge ' + (ok ? 'ok' : 'bad');
+        if (ok) {
+            coiOpen.classList.remove('show');
+        } else {
+            coiOpen.href = location.href;
+            coiOpen.classList.add('show');
+            setStatus('Cross-origin isolation belum aktif (butuh SharedArrayBuffer). Kalau reload otomatis coi-serviceworker tidak jalan di iframe, buka halaman ini lewat tombol "Buka di tab baru".', 'info');
+        }
+        return ok;
+    }
+
+    function resetFile() {
+        current = null;
+        fileInfo.classList.add('hidden');
+        fmtRow.classList.remove('show');
+        processBtn.disabled = true;
+        fileInput.value = '';
+    }
+
+    function loadFile(file) {
+        if (!file) return;
+        var isPdf = /\.pdf$/i.test(file.name) || file.type === 'application/pdf';
+        var isOffice = OFFICE_RE.test(file.name);
+        if (!isPdf && !isOffice) {
+            setStatus('Format tidak didukung. Pilih file Office (docx/xlsx/pptx/...) atau PDF.', 'error');
+            return;
+        }
+        file.arrayBuffer().then(function (ab) {
+            current = {
+                bytes: new Uint8Array(ab),
+                base: file.name.replace(/\.[^.]+$/, ''),
+                full: file.name,
+                mode: isPdf ? 'pdf2office' : 'office2pdf'
+            };
+            fileNameEl.textContent = file.name;
+            if (isPdf) {
+                modeBadge.textContent = 'PDF \u2192 Office';
+                fmtRow.classList.add('show');
+            } else {
+                modeBadge.textContent = 'Office \u2192 PDF';
+                fmtRow.classList.remove('show');
+            }
+            fileInfo.classList.remove('hidden');
+            processBtn.disabled = false;
+            setStatus('File dimuat. Arah konversi terdeteksi otomatis.', 'success');
+        }).catch(function (e) {
+            resetFile();
+            setStatus('Gagal membaca file: ' + (e && e.message ? e.message : e), 'error');
+        });
+    }
+
+    dropzone.addEventListener('click', function () { fileInput.click(); });
+    fileInput.addEventListener('change', function () { loadFile(fileInput.files[0]); });
+    clearBtn.addEventListener('click', resetFile);
+    ['dragover', 'dragenter'].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.remove('dragover'); });
+    });
+    dropzone.addEventListener('drop', function (e) {
+        if (e.dataTransfer && e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+    });
+
+    processBtn.addEventListener('click', async function () {
+        if (!current) return;
+        var isPdf = current.mode === 'pdf2office';
+        var fmt = isPdf ? fmtSelect.value : 'pdf';
+        try {
+            processBtn.disabled = true;
+            setStatus('Memulai konversi... runtime pertama kali bisa mengunduh &plusmn;240MB.', 'info');
+            var res = await runLoConvert(current.bytes, current.full, fmt, function (msg, pct) {
+                var head = pct !== null && pct !== undefined ? pct + '% \u2014 ' : '';
+                setStatus('Mengonversi... ' + head + (msg || ''), 'info');
+            });
+            var outName = res.filename || (sanitize(current.base) + '.' + fmt);
+            downloadBlob(new Blob([res.data], { type: res.mimeType || 'application/octet-stream' }), outName);
+            var sec = res.duration ? ' dalam ' + (Math.round(res.duration / 100) / 10) + ' dtk' : '';
+            setStatus('Selesai' + sec + ': ' + outName, 'success');
+        } catch (e) {
+            if (e && e.code === 'NOT_ISOLATED') {
+                checkCoi();
+                setStatus(e.message, 'error');
+            } else {
+                setStatus('Gagal mengonversi: ' + (e && e.message ? e.message : e), 'error');
+            }
+        } finally {
+            processBtn.disabled = !current;
+        }
+    });
+
+    checkCoi();
+})();
+</script>
+    <script>
+        function toggleTheme() {
+            var html = document.documentElement;
+            var current = html.getAttribute('data-theme') || 'light';
+            var next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            if (window.parent !== window) { try { window.parent.postMessage({ type: 'THEME_CHANGED', theme: next }, '*'); } catch (e) {} }
+        }
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'SET_THEME' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
+                document.documentElement.setAttribute('data-theme', e.data.theme);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<script>(function(){var s;if(window.parent!==window){s=localStorage.getItem('reynahub-theme')||'system';}else{s=localStorage.getItem('reynahub-theme')||'system';}var d=s==='dark'?'dark':s==='light'?'light':(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../src/styles/tools.css">
+    <link rel="stylesheet" href="assets/css/suite.css">
+    <title>Konverter PDF &lt;&gt; Gambar - Suite PDF</title>
+
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <style>
+        .mode-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+        .mode-pill {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            border: 1px solid var(--border); background: var(--bg);
+            border-radius: 999px; padding: 0.45rem 0.9rem;
+            font-size: 0.85rem; cursor: pointer; transition: 0.2s;
+        }
+        .mode-pill:has(input:checked) { border-color: var(--primary); color: var(--primary); background: var(--primary-light, rgba(255,0,0,0.08)); }
+        .mode-pill input { accent-color: var(--primary); margin: 0; }
+        .hint { font-size: 0.8rem; color: #94a3b8; margin-top: 0.35rem; }
+        [data-theme="dark"] .hint { color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <nav class="suite-nav">
+        <a href="PDFM_V2.html">Merger</a>
+        <a href="SPLIT.html">Split</a>
+        <a href="OPERASI.html">Operasi</a>
+        <a href="COMPRESS.html">Kompres</a>
+        <a class="active" href="KONVERTER.html" aria-current="page">Konverter</a>
+        <a href="STAMP.html">Stamp</a>
+        <a href="CROP.html">Crop</a>
+        <a href="NUP.html">N-Up</a>
+        <a href="OFFICE.html">Office</a>
+        <a href="ANNOTATE.html">Anotasi</a>
+        <a href="WORKFLOW.html">Workflow</a>
+        <!-- tautan fitur baru ditambah saat selesai -->
+    </nav>
+
+    <h1>Konverter PDF &lt;&gt; Gambar</h1>
+    <p class="subtitle">Ekspor halaman PDF ke JPG/PNG (per halaman atau semua), atau gabungkan gambar menjadi satu PDF. 100% client-side.</p>
+
+    <div class="mode-row">
+        <label class="mode-pill"><input type="radio" name="mode" value="pdf2img" checked> PDF &rarr; Gambar</label>
+        <label class="mode-pill"><input type="radio" name="mode" value="img2pdf"> Gambar &rarr; PDF</label>
+    </div>
+
+    <!-- MODE: PDF -> Gambar -->
+    <section id="sec-pdf2img">
+        <div id="dropzone-pdf" class="dropzone">
+            <strong>Seret & letakkan file PDF di sini</strong><br>
+            <small>atau klik untuk memilih file</small>
+        </div>
+        <input type="file" id="file-pdf" class="file-input" accept=".pdf,application/pdf">
+
+        <div id="file-info" class="file-info hidden">
+            <span><strong id="file-name">-</strong></span>
+            <span id="page-count">-</span>
+            <button class="btn-outline btn" id="clear-pdf" style="padding:0.3rem 0.8rem; font-size:0.8rem;">Ganti File</button>
+        </div>
+
+        <div class="field-row">
+            <div class="field">
+                <label>Format gambar</label>
+                <label class="mode-pill" style="justify-content:center;"><input type="radio" name="fmt" value="image/jpeg" checked> JPG</label>
+            </div>
+            <div class="field">
+                <label>&nbsp;</label>
+                <label class="mode-pill" style="justify-content:center;"><input type="radio" name="fmt" value="image/png"> PNG</label>
+            </div>
+            <div class="field">
+                <label for="dpi">Resolusi (DPI)</label>
+                <select id="dpi">
+                    <option value="72">72 — layar</option>
+                    <option value="150" selected>150 — sedang</option>
+                    <option value="300">300 — cetak</option>
+                </select>
+            </div>
+            <div class="field" id="quality-field">
+                <label for="quality">Kualitas JPG</label>
+                <select id="quality">
+                    <option value="0.9" selected>Tinggi (90%)</option>
+                    <option value="0.75">Sedang (75%)</option>
+                    <option value="0.6">Ekonomis (60%)</option>
+                </select>
+            </div>
+            <div class="field" style="flex:1;">
+                <label for="range-input">Halaman (kosong = semua)</label>
+                <input type="text" id="range-input" placeholder="1-3, 5" autocomplete="off" spellcheck="false">
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" id="extract-btn" disabled>Ekstrak Gambar &amp; Download</button>
+        </div>
+        <div class="hint">1 halaman → file langsung; banyak halaman → ZIP otomatis.</div>
+    </section>
+
+    <!-- MODE: Gambar -> PDF -->
+    <section id="sec-img2pdf" class="hidden">
+        <div id="dropzone-img" class="dropzone">
+            <strong>Seret & letakkan gambar PNG/JPG di sini</strong><br>
+            <small>atau klik untuk memilih banyak file (urutan = urutan halaman)</small>
+        </div>
+        <input type="file" id="file-img" class="file-input" accept=".png,.jpg,.jpeg,image/png,image/jpeg" multiple>
+
+        <div class="file-list-header">
+            <span><strong>Gambar terpilih</strong> (<span id="img-count">0</span>)</span>
+            <button class="btn-outline btn" id="clear-img" style="padding:0.3rem 0.8rem; font-size:0.8rem;">Kosongkan</button>
+        </div>
+        <ul id="file-list"><li class="empty-message">Belum ada gambar</li></ul>
+
+        <div class="field-row">
+            <div class="field">
+                <label for="pgsize">Ukuran halaman</label>
+                <select id="pgsize">
+                    <option value="fit" selected>Sesuai gambar</option>
+                    <option value="a4">A4</option>
+                    <option value="letter">Letter</option>
+                </select>
+            </div>
+            <div class="field" id="orient-field">
+                <label for="orient">Orientasi</label>
+                <select id="orient">
+                    <option value="portrait" selected>Portrait</option>
+                    <option value="landscape">Landscape</option>
+                </select>
+            </div>
+            <div class="field" id="margin-field">
+                <label for="margin">Margin (mm)</label>
+                <input type="number" id="margin" value="10" min="0" max="100" step="1">
+            </div>
+        </div>
+        <div class="hint" id="fit-hint">Mode "Sesuai gambar": ukuran &amp; margin diabaikan — halaman persis seukuran gambar.</div>
+
+        <div class="actions">
+            <button class="btn btn-primary" id="build-btn" disabled>Buat PDF &amp; Download</button>
+        </div>
+    </section>
+
+    <div class="actions" style="margin-top:1rem;">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            Theme
+        </button>
+    </div>
+
+    <div id="status"></div>
+</div>
+
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/features/page-ops/split.js"></script>
+<script src="assets/js/features/page-ops/rangeParser.js"></script>
+<script src="assets/js/features/page-ops/thumbnails.js"></script>
+<script src="assets/js/features/convert/convert.js"></script>
+<script>
+(function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var statusEl = $('status');
+    var pdfDrop = $('dropzone-pdf'), pdfInput = $('file-pdf'), fileInfo = $('file-info'),
+        fileNameEl = $('file-name'), pageCountEl = $('page-count'), clearPdf = $('clear-pdf'),
+        extractBtn = $('extract-btn'), rangeInput = $('range-input');
+    var imgDrop = $('dropzone-img'), imgInput = $('file-img'), imgList = $('file-list'),
+        imgCount = $('img-count'), clearImg = $('clear-img'), buildBtn = $('build-btn');
+    var currentPdf = null; // { bytes, name, pageCount }
+    var imgFiles = [];
+
+    function sanitize(s) { return String(s).replace(/[\\/:*?"<>|]/g, '-').trim(); }
+
+    // ---- mode toggle ----
+    document.querySelectorAll('input[name="mode"]').forEach(function (r) {
+        r.addEventListener('change', function () {
+            var m = document.querySelector('input[name="mode"]:checked').value;
+            $('sec-pdf2img').classList.toggle('hidden', m !== 'pdf2img');
+            $('sec-img2pdf').classList.toggle('hidden', m !== 'img2pdf');
+        });
+    });
+    document.querySelectorAll('input[name="fmt"]').forEach(function (r) {
+        r.addEventListener('change', function () {
+            var jpg = document.querySelector('input[name="fmt"]:checked').value === 'image/jpeg';
+            $('quality-field').classList.toggle('hidden', !jpg);
+        });
+    });
+    function updateSizeFields() {
+        var fit = $('pgsize').value === 'fit';
+        $('orient-field').classList.toggle('hidden', fit);
+        $('margin-field').classList.toggle('hidden', fit);
+        $('fit-hint').classList.toggle('hidden', !fit);
+    }
+    $('pgsize').addEventListener('change', updateSizeFields);
+    updateSizeFields();
+
+    // ---- MODE A: PDF -> Gambar ----
+    function resetPdf() {
+        currentPdf = null;
+        fileInfo.classList.add('hidden');
+        extractBtn.disabled = true;
+        pdfInput.value = '';
+    }
+    async function loadPdf(file) {
+        if (!file) return;
+        if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') { setStatus('File harus PDF.', 'error'); return; }
+        try {
+            resetPdf();
+            var bytes = new Uint8Array(await file.arrayBuffer());
+            var n = await pageCountOf(bytes);
+            currentPdf = { bytes: bytes, name: file.name.replace(/\.pdf$/i, ''), pageCount: n };
+            fileNameEl.textContent = file.name;
+            pageCountEl.textContent = n + ' halaman';
+            fileInfo.classList.remove('hidden');
+            extractBtn.disabled = false;
+            setStatus('File dimuat: ' + n + ' halaman.', 'success');
+        } catch (e) {
+            resetPdf();
+            setStatus('Gagal membuka PDF: ' + (e && e.message ? e.message : e), 'error');
+        }
+    }
+    function bindDrop(dropEl, inputEl, onFiles) {
+        dropEl.addEventListener('click', function () { inputEl.click(); });
+        ['dragover', 'dragenter'].forEach(function (ev) {
+            dropEl.addEventListener(ev, function (e) { e.preventDefault(); dropEl.classList.add('dragover'); });
+        });
+        ['dragleave', 'drop'].forEach(function (ev) {
+            dropEl.addEventListener(ev, function (e) { e.preventDefault(); dropEl.classList.remove('dragover'); });
+        });
+        dropEl.addEventListener('drop', function (e) {
+            if (e.dataTransfer && e.dataTransfer.files.length) onFiles(e.dataTransfer.files);
+        });
+    }
+    bindDrop(pdfDrop, pdfInput, function (fl) { loadPdf(fl[0]); });
+    pdfInput.addEventListener('change', function () { loadPdf(pdfInput.files[0]); });
+    clearPdf.addEventListener('click', resetPdf);
+
+    extractBtn.addEventListener('click', async function () {
+        if (!currentPdf) return;
+        try {
+            extractBtn.disabled = true;
+            setStatus('Merender halaman...');
+            var raw = rangeInput.value.trim();
+            var idx = raw ? parsePageRange(raw) : Array.from({ length: currentPdf.pageCount }, function (_, i) { return i; });
+            var v = validateIndices(idx, currentPdf.pageCount);
+            if (v) throw new Error(v);
+            var mime = document.querySelector('input[name="fmt"]:checked').value;
+            var quality = parseFloat($('quality').value);
+            var dpi = parseInt($('dpi').value, 10);
+            var images = await pdfToImages(currentPdf.bytes, idx, dpi, mime, quality);
+            var ext = mime === 'image/png' ? 'png' : 'jpg';
+            if (images.length === 1) {
+                downloadBlob(images[0].blob, currentPdf.name + ' - hal' + (images[0].index + 1) + '.' + ext);
+                setStatus('Berhasil: 1 gambar (' + dpi + ' DPI).', 'success');
+            } else {
+                var JSZip = await loadJszip();
+                var zip = new JSZip();
+                images.forEach(function (im) {
+                    var pad = String(im.index + 1);
+                    while (pad.length < 3) pad = '0' + pad;
+                    zip.file(currentPdf.name + ' - hal' + pad + '.' + ext, im.blob);
+                });
+                var blob = await zip.generateAsync({ type: 'blob' });
+                downloadBlob(blob, currentPdf.name + ' - ' + dpi + 'dpi.zip');
+                setStatus('Berhasil: ' + images.length + ' gambar dalam ZIP (' + dpi + ' DPI).', 'success');
+            }
+        } catch (e) {
+            setStatus(e && e.message ? e.message : 'Gagal mengekstrak.', 'error');
+        } finally {
+            extractBtn.disabled = !currentPdf;
+        }
+    });
+
+    // ---- MODE B: Gambar -> PDF ----
+    function renderImgList() {
+        imgCount.textContent = String(imgFiles.length);
+        if (!imgFiles.length) {
+            imgList.innerHTML = '<li class="empty-message">Belum ada gambar</li>';
+            buildBtn.disabled = true;
+            return;
+        }
+        imgList.innerHTML = '';
+        imgFiles.forEach(function (f, i) {
+            var li = document.createElement('li');
+            li.innerHTML = '<span class="name">' + (i + 1) + '. ' + f.name.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</span>' +
+                '<button class="remove-btn" data-i="' + i + '" title="Hapus">&times;</button>';
+            imgList.appendChild(li);
+        });
+        buildBtn.disabled = false;
+    }
+    imgList.addEventListener('click', function (e) {
+        var btn = e.target.closest('.remove-btn');
+        if (!btn) return;
+        imgFiles.splice(+btn.dataset.i, 1);
+        renderImgList();
+    });
+    clearImg.addEventListener('click', function () { imgFiles = []; imgInput.value = ''; renderImgList(); });
+    function addImages(fl) {
+        var bad = [];
+        Array.prototype.forEach.call(fl, function (f) {
+            if (f.type === 'image/png' || f.type === 'image/jpeg' || /\.(png|jpe?g)$/i.test(f.name)) imgFiles.push(f);
+            else bad.push(f.name);
+        });
+        renderImgList();
+        if (bad.length) setStatus('Dilewati (bukan PNG/JPG): ' + bad.join(', '), 'error');
+    }
+    bindDrop(imgDrop, imgInput, addImages);
+    imgInput.addEventListener('change', function () { addImages(imgInput.files); imgInput.value = ''; });
+
+    buildBtn.addEventListener('click', async function () {
+        if (!imgFiles.length) return;
+        try {
+            buildBtn.disabled = true;
+            setStatus('Menyusun PDF...');
+            var size = $('pgsize').value;
+            var out = await imagesToPdf(imgFiles, {
+                size: size,
+                orientation: $('orient').value,
+                margin: parseFloat($('margin').value || '0') * 2.83465 // mm -> pt
+            });
+            downloadBlob(new Blob([out], { type: 'application/pdf' }), 'gabungan-gambar.pdf');
+            setStatus('Berhasil: ' + imgFiles.length + ' gambar → 1 PDF (' + formatSize(out.byteLength) + ').', 'success');
+        } catch (e) {
+            setStatus(e && e.message ? e.message : 'Gagal membuat PDF.', 'error');
+        } finally {
+            buildBtn.disabled = !imgFiles.length;
+        }
+    });
+})();
+</script>
+    <script>
+        function toggleTheme() {
+            var html = document.documentElement;
+            var current = html.getAttribute('data-theme') || 'light';
+            var next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            if (window.parent !== window) { try { window.parent.postMessage({ type: 'THEME_CHANGED', theme: next }, '*'); } catch (e) {} }
+        }
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'SET_THEME' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
+                document.documentElement.setAttribute('data-theme', e.data.theme);
+            }
+        });
+    </script>
+</body>
+</html>
