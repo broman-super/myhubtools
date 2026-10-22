@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<script>(function(){var s;if(window.parent!==window){s=localStorage.getItem('reynahub-theme')||'system';}else{s=localStorage.getItem('reynahub-theme')||'system';}var d=s==='dark'?'dark':s==='light'?'light':(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../src/styles/tools.css">
+    <link rel="stylesheet" href="assets/css/suite.css">
+    <title>Split & Ekstrak Halaman - Suite PDF</title>
+
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+    <style>
+        .mode-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .mode-pill {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            border: 1px solid var(--border); background: var(--bg);
+            border-radius: 999px; padding: 0.45rem 0.9rem;
+            font-size: 0.85rem; cursor: pointer; transition: 0.2s;
+        }
+        .mode-pill:has(input:checked) { border-color: var(--primary); color: var(--primary); background: var(--primary-light, rgba(255,0,0,0.08)); }
+        .mode-pill input { accent-color: var(--primary); margin: 0; }
+        #range-input { width: 100%; font-size: 1.05rem; padding: 0.7rem 0.9rem; letter-spacing: 0.02em; }
+        .range-hint { font-size: 0.8rem; color: #94a3b8; margin-top: 0.35rem; }
+        [data-theme="dark"] .range-hint { color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <nav class="suite-nav">
+        <a href="PDFM_V2.html">Merger</a>
+        <a class="active" href="SPLIT.html" aria-current="page">Split</a>
+        <a href="OPERASI.html">Operasi</a>
+        <a href="COMPRESS.html">Kompres</a>
+        <a href="KONVERTER.html">Konverter</a>
+        <a href="STAMP.html">Stamp</a>
+        <a href="CROP.html">Crop</a>
+        <a href="NUP.html">N-Up</a>
+        <a href="OFFICE.html">Office</a>
+        <a href="ANNOTATE.html">Anotasi</a>
+        <a href="WORKFLOW.html">Workflow</a>
+        <!-- tautan fitur baru ditambah saat selesai -->
+    </nav>
+
+    <h1>Split & Ekstrak Halaman</h1>
+    <p class="subtitle">Ambil halaman tertentu jadi satu PDF, atau pecah PDF menjadi banyak file per rentang. 100% client-side.</p>
+
+    <div id="dropzone">
+        <strong>Seret & letakkan file PDF di sini</strong><br>
+        <small>atau klik untuk memilih file</small>
+    </div>
+    <input type="file" id="file-input" class="file-input" accept=".pdf,application/pdf">
+
+    <div id="file-info" class="file-info hidden">
+        <span><strong id="file-name">-</strong></span>
+        <span id="page-count">-</span>
+        <button class="btn-outline btn" id="clear-btn" style="padding:0.3rem 0.8rem; font-size:0.8rem;">Ganti File</button>
+    </div>
+
+    <div class="mode-row">
+        <label class="mode-pill"><input type="radio" name="mode" value="extract" checked> Ekstrak ke 1 PDF</label>
+        <label class="mode-pill"><input type="radio" name="mode" value="split"> Split per bagian (ZIP bila &gt;1)</label>
+    </div>
+
+    <div class="field-row">
+        <div class="field" style="flex:1;">
+            <label for="range-input">Rentang halaman</label>
+            <input type="text" id="range-input" placeholder="1-3, 5, 7-9" autocomplete="off" spellcheck="false">
+            <div class="range-hint">Pisahkan dengan koma. Rentang terbalik otomatis dibalik, nomor ganda otomatis dihapus duplikatnya.</div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            Theme
+        </button>
+        <button class="btn btn-primary" id="process-btn" disabled>Proses &amp; Download</button>
+    </div>
+
+    <div id="status"></div>
+</div>
+
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/features/page-ops/rangeParser.js"></script>
+<script src="assets/js/features/page-ops/split.js"></script>
+<script>
+(function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var dropzone = $('dropzone'), fileInput = $('file-input'), fileInfo = $('file-info'),
+        fileNameEl = $('file-name'), pageCountEl = $('page-count'), rangeInput = $('range-input'),
+        processBtn = $('process-btn'), clearBtn = $('clear-btn');
+    var current = null; // { bytes, name, pageCount }
+
+    function sanitize(s) { return String(s).replace(/[\\/:*?"<>|]/g, '-').trim(); }
+
+    // loadJszip() tersedia dari utils.js (lazy).
+
+    function resetFile() {
+        current = null;
+        fileInfo.classList.add('hidden');
+        processBtn.disabled = true;
+        fileInput.value = '';
+    }
+
+    async function loadFile(file) {
+        if (!file) return;
+        if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+            setStatus('File harus PDF.', 'error');
+            return;
+        }
+        try {
+            setStatus('Membuka file...');
+            var bytes = new Uint8Array(await file.arrayBuffer());
+            var n = await pageCountOf(bytes);
+            if (n < 1) throw new Error('PDF tanpa halaman.');
+            current = { bytes: bytes, name: file.name.replace(/\.pdf$/i, ''), pageCount: n };
+            fileNameEl.textContent = file.name;
+            pageCountEl.textContent = n + ' halaman';
+            fileInfo.classList.remove('hidden');
+            processBtn.disabled = false;
+            rangeInput.placeholder = '1-' + n;
+            setStatus('File dimuat: ' + n + ' halaman.', 'success');
+        } catch (e) {
+            resetFile();
+            setStatus('Gagal membuka PDF: ' + (e && e.message ? e.message : e), 'error');
+        }
+    }
+
+    dropzone.addEventListener('click', function () { fileInput.click(); });
+    fileInput.addEventListener('change', function () { loadFile(fileInput.files[0]); });
+    clearBtn.addEventListener('click', resetFile);
+    ['dragover', 'dragenter'].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.remove('dragover'); });
+    });
+    dropzone.addEventListener('drop', function (e) {
+        if (e.dataTransfer && e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+    });
+
+    processBtn.addEventListener('click', async function () {
+        if (!current) return;
+        var mode = document.querySelector('input[name="mode"]:checked').value;
+        try {
+            processBtn.disabled = true;
+            setStatus('Memproses...');
+            var raw = rangeInput.value.trim();
+            if (!raw) throw new Error('Isi rentang halaman dulu. Contoh: 1-3, 5');
+
+            if (mode === 'extract') {
+                var idx = parsePageRange(raw);
+                var v = validateIndices(idx, current.pageCount);
+                if (v) throw new Error(v);
+                var bytes = await extractPages(current.bytes, idx);
+                downloadBlob(new Blob([bytes], { type: 'application/pdf' }),
+                    current.name + ' - ' + sanitize(raw) + '.pdf');
+                setStatus('Berhasil: ' + idx.length + ' halaman diekstrak.', 'success');
+            } else {
+                var parts = raw.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+                if (!parts.length) throw new Error('Isi rentang halaman dulu. Contoh: 1-3, 5');
+                var segs = parts.map(function (p) {
+                    var i = parsePageRange(p);
+                    var err = validateIndices(i, current.pageCount);
+                    if (err) throw new Error(err);
+                    return { label: p, idx: i };
+                });
+                if (segs.length === 1) {
+                    var b1 = await extractPages(current.bytes, segs[0].idx);
+                    downloadBlob(new Blob([b1], { type: 'application/pdf' }),
+                        current.name + ' - ' + sanitize(segs[0].label) + '.pdf');
+                    setStatus('Berhasil: 1 bagian (' + segs[0].idx.length + ' halaman).', 'success');
+                } else {
+                    var JSZip = await loadJszip();
+                    var zip = new JSZip();
+                    for (var i = 0; i < segs.length; i++) {
+                        var partBytes = await extractPages(current.bytes, segs[i].idx);
+                        zip.file(current.name + ' - ' + sanitize(segs[i].label) + '.pdf', partBytes);
+                    }
+                    var blob = await zip.generateAsync({ type: 'blob' });
+                    downloadBlob(blob, current.name + ' - split.zip');
+                    setStatus('Berhasil: ' + segs.length + ' bagian dikemas dalam ZIP.', 'success');
+                }
+            }
+        } catch (e) {
+            setStatus(e && e.message ? e.message : 'Gagal memproses.', 'error');
+        } finally {
+            processBtn.disabled = !current;
+        }
+    });
+})();
+</script>
+    <script>
+        function toggleTheme() {
+            var html = document.documentElement;
+            var current = html.getAttribute('data-theme') || 'light';
+            var next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            if (window.parent !== window) { try { window.parent.postMessage({ type: 'THEME_CHANGED', theme: next }, '*'); } catch (e) {} }
+        }
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'SET_THEME' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
+                document.documentElement.setAttribute('data-theme', e.data.theme);
+            }
+        });
+    </script>
+</body>
+</html>

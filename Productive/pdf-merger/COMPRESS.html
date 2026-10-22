@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<script>(function(){var s;if(window.parent!==window){s=localStorage.getItem('reynahub-theme')||'system';}else{s=localStorage.getItem('reynahub-theme')||'system';}var d=s==='dark'?'dark':s==='light'?'light':(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../src/styles/tools.css">
+    <link rel="stylesheet" href="assets/css/suite.css">
+    <title>Kompres &amp; Perbaiki PDF - Suite PDF</title>
+
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+    <style>
+        .mode-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .mode-pill {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            border: 1px solid var(--border); background: var(--bg);
+            border-radius: 999px; padding: 0.45rem 0.9rem;
+            font-size: 0.85rem; cursor: pointer; transition: 0.2s;
+        }
+        .mode-pill:has(input:checked) { border-color: var(--primary); color: var(--primary); background: var(--primary-light, rgba(255,0,0,0.08)); }
+        .mode-pill input { accent-color: var(--primary); margin: 0; }
+        .level-desc { font-size: 0.8rem; color: #94a3b8; margin-bottom: 1rem; }
+        [data-theme="dark"] .level-desc { color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <nav class="suite-nav">
+        <a href="PDFM_V2.html">Merger</a>
+        <a href="SPLIT.html">Split</a>
+        <a href="OPERASI.html">Operasi</a>
+        <a class="active" href="COMPRESS.html" aria-current="page">Kompres</a>
+        <a href="KONVERTER.html">Konverter</a>
+        <a href="STAMP.html">Stamp</a>
+        <a href="CROP.html">Crop</a>
+        <a href="NUP.html">N-Up</a>
+        <a href="OFFICE.html">Office</a>
+        <a href="ANNOTATE.html">Anotasi</a>
+        <a href="WORKFLOW.html">Workflow</a>
+        <!-- tautan fitur baru ditambah saat selesai -->
+    </nav>
+
+    <h1>Kompres &amp; Perbaiki PDF</h1>
+    <p class="subtitle">Kompresi dua lapis (struktur + gambar JPEG) atau perbaiki PDF rusak. Teks &amp; link tetap utuh. 100% client-side.</p>
+
+    <div id="dropzone">
+        <strong>Seret & letakkan file PDF di sini</strong><br>
+        <small>atau klik untuk memilih file</small>
+    </div>
+    <input type="file" id="file-input" class="file-input" accept=".pdf,application/pdf">
+
+    <div id="file-info" class="file-info hidden">
+        <span><strong id="file-name">-</strong></span>
+        <span id="file-size">-</span>
+        <button class="btn-outline btn" id="clear-btn" style="padding:0.3rem 0.8rem; font-size:0.8rem;">Ganti File</button>
+    </div>
+
+    <div class="mode-row">
+        <label class="mode-pill"><input type="radio" name="level" value="ringan" checked> Ringan (struktur)</label>
+        <label class="mode-pill"><input type="radio" name="level" value="sedang"> Sedang (JPEG 75%)</label>
+        <label class="mode-pill"><input type="radio" name="level" value="tinggi"> Tinggi (JPEG 50% + turunkan resolusi)</label>
+    </div>
+    <div class="level-desc">Ringan selalu aman. Sedang/Tinggi me-re-encode gambar JPEG di dalam PDF — gambar PNG/vektor tidak disentuh (aman), teks &amp; link tetap bisa diseleksi.</div>
+
+    <div class="actions">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            Theme
+        </button>
+        <button class="btn btn-primary" id="compress-btn" disabled>Kompres &amp; Download</button>
+        <button class="btn btn-outline" id="repair-btn" disabled>Perbaiki (Repair) &amp; Download</button>
+    </div>
+
+    <div id="status"></div>
+
+    <div id="result" class="summary hidden">
+        <h2>Hasil Kompresi</h2>
+        <div class="summary-stats">
+            <div class="stat-card"><div class="label">Sebelum</div><div class="value" id="size-before">-</div></div>
+            <div class="stat-card"><div class="label">Sesudah</div><div class="value" id="size-after">-</div></div>
+            <div class="stat-card"><div class="label">Hemat</div><div class="value" id="size-saving">-</div></div>
+        </div>
+    </div>
+</div>
+
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/features/optimize/repair.js"></script>
+<script src="assets/js/features/optimize/compress.js"></script>
+<script>
+(function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var dropzone = $('dropzone'), fileInput = $('file-input'), fileInfo = $('file-info'),
+        fileNameEl = $('file-name'), fileSizeEl = $('file-size'),
+        compressBtn = $('compress-btn'), repairBtn = $('repair-btn'), clearBtn = $('clear-btn'),
+        result = $('result');
+    var current = null; // { bytes, name }
+
+    function resetFile() {
+        current = null;
+        fileInfo.classList.add('hidden');
+        result.classList.add('hidden');
+        compressBtn.disabled = true;
+        repairBtn.disabled = true;
+        fileInput.value = '';
+    }
+
+    async function loadFile(file) {
+        if (!file) return;
+        if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+            setStatus('File harus PDF.', 'error');
+            return;
+        }
+        try {
+            resetFile();
+            var bytes = new Uint8Array(await file.arrayBuffer());
+            current = { bytes: bytes, name: file.name.replace(/\.pdf$/i, '') };
+            fileNameEl.textContent = file.name;
+            fileSizeEl.textContent = formatSize(bytes.byteLength);
+            fileInfo.classList.remove('hidden');
+            compressBtn.disabled = false;
+            repairBtn.disabled = false;
+            setStatus('File dimuat.', 'success');
+        } catch (e) {
+            resetFile();
+            setStatus('Gagal membaca file: ' + (e && e.message ? e.message : e), 'error');
+        }
+    }
+
+    dropzone.addEventListener('click', function () { fileInput.click(); });
+    fileInput.addEventListener('change', function () { loadFile(fileInput.files[0]); });
+    clearBtn.addEventListener('click', resetFile);
+    ['dragover', 'dragenter'].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.remove('dragover'); });
+    });
+    dropzone.addEventListener('drop', function (e) {
+        if (e.dataTransfer && e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+    });
+
+    function setBusy(busy) {
+        compressBtn.disabled = busy || !current;
+        repairBtn.disabled = busy || !current;
+        clearBtn.disabled = busy;
+    }
+
+    compressBtn.addEventListener('click', async function () {
+        if (!current) return;
+        try {
+            setBusy(true);
+            var level = document.querySelector('input[name="level"]:checked').value;
+            setStatus('Mengompres (level ' + level + ')...');
+            var out = await compressPdf(current.bytes, level);
+            var before = current.bytes.byteLength, after = out.byteLength;
+            var saving = Math.round((1 - after / before) * 100);
+            $('size-before').textContent = formatSize(before);
+            $('size-after').textContent = formatSize(after);
+            $('size-saving').textContent = saving + '%';
+            result.classList.remove('hidden');
+            downloadBlob(new Blob([out], { type: 'application/pdf' }), current.name + ' - kompresi.pdf');
+            if (after < before) {
+                setStatus('Berhasil: hemat ' + saving + '% (' + formatSize(before) + ' → ' + formatSize(after) + ').', 'success');
+            } else {
+                setStatus('Ukuran tidak berkurang — file asli sepertinya sudah optimal. Hasil tetap diunduh.', 'info');
+            }
+        } catch (e) {
+            setStatus(e && e.message ? e.message : 'Gagal mengompres.', 'error');
+        } finally {
+            setBusy(false);
+        }
+    });
+
+    repairBtn.addEventListener('click', async function () {
+        if (!current) return;
+        try {
+            setBusy(true);
+            setStatus('Memperbaiki PDF...');
+            var out = await repairPdf(current.bytes);
+            downloadBlob(new Blob([out], { type: 'application/pdf' }), current.name + ' - diperbaiki.pdf');
+            setStatus('Selesai: PDF dibangun ulang (' + formatSize(out.byteLength) + ').', 'success');
+        } catch (e) {
+            setStatus(e && e.message ? e.message : 'Gagal memperbaiki.', 'error');
+        } finally {
+            setBusy(false);
+        }
+    });
+})();
+</script>
+    <script>
+        function toggleTheme() {
+            var html = document.documentElement;
+            var current = html.getAttribute('data-theme') || 'light';
+            var next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            if (window.parent !== window) { try { window.parent.postMessage({ type: 'THEME_CHANGED', theme: next }, '*'); } catch (e) {} }
+        }
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'SET_THEME' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
+                document.documentElement.setAttribute('data-theme', e.data.theme);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<script>(function(){var s;if(window.parent!==window){s=localStorage.getItem('reynahub-theme')||'system';}else{s=localStorage.getItem('reynahub-theme')||'system';}var d=s==='dark'?'dark':s==='light'?'light':(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../src/styles/tools.css">
+    <link rel="stylesheet" href="assets/css/suite.css">
+    <title>Anotasi, Form &amp; E-Sign - Suite PDF</title>
+
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <style>
+        .mode-row { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.8rem; align-items: center; }
+        .mode-row .lbl { font-size: 0.8rem; color: #64748b; margin-right: 0.2rem; }
+        .mode-pill {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            border: 1px solid var(--border); background: var(--bg);
+            border-radius: 999px; padding: 0.4rem 0.85rem;
+            font-size: 0.85rem; cursor: pointer; transition: 0.2s;
+        }
+        .mode-pill:has(input:checked) { border-color: var(--primary); color: var(--primary); background: var(--primary-light, rgba(255,0,0,0.08)); }
+        .mode-pill input { accent-color: var(--primary); margin: 0; }
+        .swatch input { position: absolute; opacity: 0; pointer-events: none; }
+        .swatch i {
+            display: inline-block; width: 20px; height: 20px; border-radius: 50%;
+            border: 1px solid rgba(0,0,0,.25); cursor: pointer; vertical-align: middle;
+        }
+        .swatch:has(input:checked) i { outline: 2px solid var(--primary); outline-offset: 2px; }
+        .viewer-bar {
+            display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;
+            margin-bottom: 0.7rem;
+        }
+        .viewer-bar .pagebox { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; }
+        #page-input { width: 56px; padding: 0.3rem 0.4rem; text-align: center; }
+        #zoom { padding: 0.3rem 0.4rem; }
+        #preview-wrap {
+            border: 1px solid var(--border); border-radius: var(--radius);
+            background: #e8eaf0; padding: 1rem; margin-bottom: 1rem;
+            display: flex; justify-content: center; overflow: auto; max-height: 78vh;
+        }
+        [data-theme="dark"] #preview-wrap { background: #06090f; }
+        #stage { position: relative; display: inline-block; line-height: 0; touch-action: none; }
+        #stage canvas { display: block; box-shadow: 0 2px 12px rgba(0,0,0,.25); background: #fff; }
+        .hint { font-size: 0.8rem; color: #94a3b8; margin-top: 0.35rem; }
+        .panel-box {
+            border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 0.7rem 0.9rem; margin-bottom: 1rem; background: var(--bg);
+        }
+        .panel-box h3 { margin: 0 0 0.5rem; font-size: 0.9rem; }
+        .panel-box h3 + .form-row { margin-top: 0; }
+        .note-row {
+            border: 1px solid var(--border); border-radius: 6px;
+            padding: 0.5rem; margin-bottom: 0.5rem; background: var(--bg);
+        }
+        .note-row.selected { outline: 2px solid #2563eb; }
+        .note-head { display: flex; justify-content: space-between; margin-bottom: 0.3rem; }
+        .note-row textarea { width: 100%; box-sizing: border-box; font-size: 0.85rem; }
+        .link-btn {
+            background: none; border: none; color: var(--primary);
+            font-size: 0.78rem; cursor: pointer; padding: 0;
+        }
+        .link-btn.danger { color: #dc2626; }
+        .form-row {
+            display: flex; gap: 0.5rem; align-items: center;
+            margin-bottom: 0.45rem; font-size: 0.85rem;
+        }
+        .form-row.selected { outline: 2px solid #2563eb; border-radius: 4px; }
+        .form-row label { min-width: 130px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .form-row input[type="text"] { flex: 1; min-width: 80px; padding: 0.3rem 0.5rem; }
+        .form-row .name-in { flex: 0 0 150px; }
+        .form-row select { max-width: 220px; }
+        .static-row {
+            display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;
+            font-size: 0.85rem; margin-top: 0.6rem;
+        }
+        .flat-row {
+            display: flex; gap: 0.5rem; align-items: flex-start;
+            font-size: 0.8rem; color: #64748b; margin-top: 0.6rem; line-height: 1.45;
+        }
+        [data-theme="dark"] .flat-row { color: #94a3b8; }
+        .sign-grid { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
+        #sign-pad {
+            border: 1px dashed var(--border); background: #fff;
+            cursor: crosshair; touch-action: none; border-radius: 6px;
+        }
+        .sign-side { flex: 1; min-width: 200px; font-size: 0.85rem; }
+        #sign-size { width: 100%; }
+        #sign-status { font-size: 0.8rem; color: #64748b; margin-top: 0.4rem; }
+        .sep { border: 0; border-top: 1px solid var(--border); margin: 0.8rem 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <nav class="suite-nav">
+        <a href="PDFM_V2.html">Merger</a>
+        <a href="SPLIT.html">Split</a>
+        <a href="OPERASI.html">Operasi</a>
+        <a href="COMPRESS.html">Kompres</a>
+        <a href="KONVERTER.html">Konverter</a>
+        <a href="STAMP.html">Stamp</a>
+        <a href="CROP.html">Crop</a>
+        <a href="NUP.html">N-Up</a>
+        <a href="OFFICE.html">Office</a>
+        <a class="active" href="ANNOTATE.html" aria-current="page">Anotasi</a>
+        <a href="WORKFLOW.html">Workflow</a>
+        <!-- tautan fitur baru ditambah saat selesai -->
+    </nav>
+
+    <h1>Anotasi, Form &amp; E-Sign</h1>
+    <p class="subtitle">Sorot, catatan, coret-coret, tanda tangan, isi form AcroForm, field baru, dan redact permanen. Semua anotasi dirender ke PDF standar — terlihat di Adobe Reader. 100% client-side.</p>
+
+    <div id="dropzone">
+        <strong>Seret &amp; letakkan file PDF di sini</strong><br>
+        <small>atau klik untuk memilih file</small>
+    </div>
+    <input type="file" id="file-input" class="file-input" accept=".pdf,application/pdf">
+
+    <div id="file-info" class="file-info hidden">
+        <span><strong id="file-name">-</strong></span>
+        <span id="page-count">-</span>
+        <button class="btn-outline btn" id="clear-btn" style="padding:0.3rem 0.8rem; font-size:0.8rem;">Ganti File</button>
+    </div>
+
+    <div id="preview-wrap" class="hidden">
+        <div style="min-width:0;">
+            <div class="viewer-bar">
+                <button class="btn btn-outline" id="btn-prev" title="Halaman sebelumnya">&larr;</button>
+                <span class="pagebox"><input type="number" id="page-input" min="1" value="1"> <span id="page-of">-</span></span>
+                <button class="btn btn-outline" id="btn-next" title="Halaman berikutnya">&rarr;</button>
+                <label class="pagebox">Zoom
+                    <select id="zoom">
+                        <option value="0.5">50%</option>
+                        <option value="0.75">75%</option>
+                        <option value="1" selected>100%</option>
+                        <option value="1.25">125%</option>
+                        <option value="1.5">150%</option>
+                        <option value="2">200%</option>
+                    </select>
+                </label>
+                <button class="btn btn-outline" id="del-btn" title="Hapus anotasi terpilih (Del)">Hapus Terpilih</button>
+            </div>
+
+            <div class="mode-row" role="toolbar" aria-label="Alat anotasi">
+                <label class="mode-pill"><input type="radio" name="tool" value="none" checked> Arahkan</label>
+                <label class="mode-pill"><input type="radio" name="tool" value="hl"> Sorot</label>
+                <label class="mode-pill"><input type="radio" name="tool" value="note"> Catatan</label>
+                <label class="mode-pill"><input type="radio" name="tool" value="draw"> Gambar</label>
+                <label class="mode-pill"><input type="radio" name="tool" value="sign"> Tanda Tangan</label>
+                <label class="mode-pill"><input type="radio" name="tool" value="field"> Field</label>
+                <label class="mode-pill"><input type="radio" name="tool" value="redact"> Redact</label>
+            </div>
+
+            <div class="mode-row">
+                <span class="lbl">Warna (sorot/gambar):</span>
+                <label class="swatch" title="Kuning"><input type="radio" name="col" value="#fde047" checked><i style="background:#fde047"></i></label>
+                <label class="swatch" title="Hijau"><input type="radio" name="col" value="#86efac"><i style="background:#86efac"></i></label>
+                <label class="swatch" title="Merah muda"><input type="radio" name="col" value="#f9a8d4"><i style="background:#f9a8d4"></i></label>
+                <label class="swatch" title="Biru muda"><input type="radio" name="col" value="#93c5fd"><i style="background:#93c5fd"></i></label>
+            </div>
+
+            <div id="sign-box" class="panel-box hidden">
+                <h3>Tanda Tangan</h3>
+                <div class="sign-grid">
+                    <canvas id="sign-pad" width="320" height="140"></canvas>
+                    <div class="sign-side">
+                        <div class="mode-row" style="margin-bottom:0.5rem;">
+                            <button class="btn btn-outline" id="sign-clear" type="button">Bersihkan</button>
+                            <label class="btn btn-outline" style="cursor:pointer;"> Upload gambar
+                                <input type="file" id="sign-upload" accept="image/png,image/jpeg,image/webp" style="display:none;">
+                            </label>
+                        </div>
+                        <label for="sign-size">Ukuran pasang: <span id="sign-size-val"></span></label>
+                        <input type="range" id="sign-size" min="60" max="300" step="5" value="150">
+                        <div id="sign-status"></div>
+                        <p class="hint">Gambar di pad (pakai mouse/jari), atau upload PNG/JPG — lalu klik halaman untuk memasang. Seret tanda tangan yang sudah terpasang untuk memindah; geser slider saat terpilih untuk mengubah ukuran.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="stage" aria-label="Halaman PDF"></div>
+
+            <div id="notes-box" class="panel-box hidden" style="margin-top:1rem;">
+                <h3>Catatan</h3>
+                <div id="notes-list"></div>
+            </div>
+
+            <div id="form-box" class="panel-box hidden" style="margin-top:1rem;">
+                <div id="form-list"></div>
+                <div class="static-row">
+                    <span>Jenis field saat diklik di halaman:</span>
+                    <label class="mode-pill"><input type="radio" name="fieldft" value="text" checked> Teks</label>
+                    <label class="mode-pill"><input type="radio" name="fieldft" value="checkbox"> Checkbox</label>
+                </div>
+                <label class="flat-row">
+                    <input type="checkbox" id="flatten-chk" checked>
+                    <span>Rapikan permanen (flatten): isi form dirender jadi bagian halaman — hasil terlihat di pembaca mana pun, tapi tidak bisa diedit lagi. Centang hanya bila sudah selesai mengisi.</span>
+                </label>
+            </div>
+
+            <div class="actions">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    Theme
+                </button>
+                <button class="btn btn-outline" id="json-export" type="button">Ekspor JSON</button>
+                <label class="btn btn-outline" style="cursor:pointer;"> Impor JSON
+                    <input type="file" id="json-input" accept=".json,application/json" style="display:none;">
+                </label>
+                <button class="btn btn-primary" id="save-btn" disabled>Simpan PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="status"></div>
+</div>
+
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/features/page-ops/thumbnails.js"></script>
+<script src="assets/js/features/annotate/annotDraw.js"></script>
+<script src="assets/js/features/annotate/formFiller.js"></script>
+<script src="assets/js/features/annotate/eSign.js"></script>
+<script src="assets/js/features/annotate/redact.js"></script>
+<script src="assets/js/features/annotate/viewer.js"></script>
+<script>
+(function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var dropzone = $('dropzone'), fileInput = $('file-input'), fileInfo = $('file-info'),
+        fileNameEl = $('file-name'), pageCountEl = $('page-count'),
+        previewWrap = $('preview-wrap'), clearBtn = $('clear-btn'),
+        saveBtn = $('save-btn');
+
+    avInit();
+    avRefreshPanels();
+
+    function resetFile() {
+        AV.ready = false;
+        AV.docBytes = null;
+        AV.pdfJs = null;
+        AV.anns = []; AV.sel = null;
+        AV.formFields = []; AV.formValues = {};
+        previewWrap.classList.add('hidden');
+        fileInfo.classList.add('hidden');
+        saveBtn.disabled = true;
+        fileInput.value = '';
+    }
+
+    async function loadFile(file) {
+        if (!file) return;
+        if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+            setStatus('File harus PDF.', 'error');
+            return;
+        }
+        try {
+            setStatus('Membuka PDF...');
+            var bytes = new Uint8Array(await file.arrayBuffer());
+            var base = file.name.replace(/\.pdf$/i, '');
+            previewWrap.classList.remove('hidden');
+            await avLoad(bytes, base);
+            fileNameEl.textContent = file.name;
+            pageCountEl.textContent = AV.pageCount + ' halaman';
+            fileInfo.classList.remove('hidden');
+            saveBtn.disabled = false;
+        } catch (e) {
+            resetFile();
+            setStatus('Gagal membuka PDF: ' + (e && e.message ? e.message : e), 'error');
+        }
+    }
+
+    dropzone.addEventListener('click', function () { fileInput.click(); });
+    fileInput.addEventListener('change', function () { loadFile(fileInput.files[0]); });
+    clearBtn.addEventListener('click', resetFile);
+    ['dragover', 'dragenter'].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.remove('dragover'); });
+    });
+    dropzone.addEventListener('drop', function (e) {
+        if (e.dataTransfer && e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+    });
+
+    $('json-export').addEventListener('click', avExportJson);
+    $('json-input').addEventListener('change', function () {
+        avImportJson($('json-input').files[0]);
+        $('json-input').value = '';
+    });
+})();
+</script>
+    <script>
+        function toggleTheme() {
+            var html = document.documentElement;
+            var current = html.getAttribute('data-theme') || 'light';
+            var next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            if (window.parent !== window) { try { window.parent.postMessage({ type: 'THEME_CHANGED', theme: next }, '*'); } catch (e) {} }
+        }
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'SET_THEME' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
+                document.documentElement.setAttribute('data-theme', e.data.theme);
+            }
+        });
+    </script>
+</body>
+</html>

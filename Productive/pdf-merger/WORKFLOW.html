@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<script>(function(){var s;if(window.parent!==window){s=localStorage.getItem('reynahub-theme')||'system';}else{s=localStorage.getItem('reynahub-theme')||'system';}var d=s==='dark'?'dark':s==='light'?'light':(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',d);})();</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../src/styles/tools.css">
+    <link rel="stylesheet" href="assets/css/suite.css">
+    <title>Workflow Builder - Suite PDF</title>
+
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+    <style>
+        .palette { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.9rem; align-items: center; }
+        .palette .lbl { font-size: 0.8rem; color: #64748b; }
+        .chain-box {
+            border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 0.8rem; background: var(--bg); min-height: 70px; margin-bottom: 1rem;
+        }
+        .chain-empty { font-size: 0.85rem; color: #94a3b8; text-align: center; padding: 1rem 0; }
+        .wf-row {
+            display: flex; gap: 0.7rem; align-items: center; flex-wrap: wrap;
+            border: 1px solid var(--border); border-radius: 8px;
+            padding: 0.55rem 0.7rem; margin-bottom: 0.55rem; background: var(--bg);
+        }
+        .wf-row:last-child { margin-bottom: 0; }
+        .wf-row .grip {
+            cursor: grab; color: #94a3b8; font-size: 1rem;
+            user-select: none; letter-spacing: -2px;
+        }
+        .wf-row .grip:active { cursor: grabbing; }
+        .wf-label { font-size: 0.85rem; min-width: 120px; }
+        .wf-params { display: flex; gap: 0.55rem; flex-wrap: wrap; align-items: center; flex: 1; font-size: 0.82rem; }
+        .wf-params label { display: inline-flex; gap: 0.3rem; align-items: center; }
+        .wf-params select, .wf-params input { padding: 0.25rem 0.4rem; font-size: 0.82rem; }
+        .wf-row.sortable-ghost { opacity: 0.4; }
+        .link-btn { background: none; border: none; color: var(--primary); font-size: 0.78rem; cursor: pointer; padding: 0; }
+        .link-btn.danger { color: #dc2626; }
+        .hint { font-size: 0.8rem; color: #94a3b8; margin-top: 0.35rem; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <nav class="suite-nav">
+        <a href="PDFM_V2.html">Merger</a>
+        <a href="SPLIT.html">Split</a>
+        <a href="OPERASI.html">Operasi</a>
+        <a href="COMPRESS.html">Kompres</a>
+        <a href="KONVERTER.html">Konverter</a>
+        <a href="STAMP.html">Stamp</a>
+        <a href="CROP.html">Crop</a>
+        <a href="NUP.html">N-Up</a>
+        <a href="OFFICE.html">Office</a>
+        <a href="ANNOTATE.html">Anotasi</a>
+        <a class="active" href="WORKFLOW.html" aria-current="page">Workflow</a>
+        <!-- tautan fitur baru ditambah saat selesai -->
+    </nav>
+
+    <h1>Workflow Builder</h1>
+    <p class="subtitle">Rangkai beberapa operasi jadi satu rantai — misal Kompres &rarr; Watermark &rarr; Split &rarr; ZIP — lalu jalankan semuanya dalam satu klik. Seret langkah untuk mengurutkan.</p>
+
+    <div id="dropzone">
+        <strong>Seret &amp; letakkan file PDF di sini</strong><br>
+        <small>atau klik untuk memilih file</small>
+    </div>
+    <input type="file" id="file-input" class="file-input" accept=".pdf,application/pdf">
+
+    <div id="file-info" class="file-info hidden">
+        <span><strong id="file-name">-</strong></span>
+        <span id="page-count">-</span>
+        <button class="btn-outline btn" id="clear-btn" style="padding:0.3rem 0.8rem; font-size:0.8rem;">Ganti File</button>
+    </div>
+
+    <div class="palette">
+        <span class="lbl">Tambah langkah:</span>
+        <button type="button" class="btn btn-outline" data-add="compress">+ Kompres</button>
+        <button type="button" class="btn btn-outline" data-add="watermark">+ Watermark</button>
+        <button type="button" class="btn btn-outline" data-add="numbers">+ Nomor Halaman</button>
+        <button type="button" class="btn btn-outline" data-add="nup">+ N-Up / Booklet</button>
+        <button type="button" class="btn btn-outline" data-add="split">+ Split (akhir)</button>
+    </div>
+
+    <div class="chain-box">
+        <div id="chain-list"></div>
+        <div class="chain-empty" id="chain-empty">Belum ada langkah. Tambah lewat tombol di atas — urutan bisa diseret.</div>
+    </div>
+
+    <div class="actions">
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            Theme
+        </button>
+        <button class="btn btn-outline" id="wf-reset" type="button">Kosongkan Rantai</button>
+        <button class="btn btn-primary" id="wf-run" type="button" disabled>Jalankan Workflow</button>
+    </div>
+
+    <div id="status"></div>
+</div>
+
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/features/page-ops/rangeParser.js"></script>
+<script src="assets/js/features/page-ops/split.js"></script>
+<script src="assets/js/features/optimize/repair.js"></script>
+<script src="assets/js/features/optimize/compress.js"></script>
+<script src="assets/js/features/page-ops/pageNumbers.js"></script>
+<script src="assets/js/features/page-ops/watermark.js"></script>
+<script src="assets/js/features/page-ops/nup.js"></script>
+<script src="assets/js/features/workflow/workflow.js"></script>
+<script>
+(function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var dropzone = $('dropzone'), fileInput = $('file-input'), fileInfo = $('file-info'),
+        fileNameEl = $('file-name'), pageCountEl = $('page-count'),
+        runBtn = $('wf-run'), chainList = $('chain-list'), chainEmpty = $('chain-empty');
+
+    wfInit();
+
+    function refreshChainEmpty() {
+        chainEmpty.style.display = chainList.children.length ? 'none' : 'block';
+        runBtn.disabled = !WF.bytes || !chainList.children.length;
+    }
+    // pantau perubahan rantai (tambah/hapus) lewat MutationObserver — sekali pasang
+    new MutationObserver(refreshChainEmpty).observe(chainList, { childList: true });
+    refreshChainEmpty();
+
+    Array.prototype.forEach.call(document.querySelectorAll('[data-add]'), function (btn) {
+        btn.addEventListener('click', function () { wfAdd(btn.getAttribute('data-add')); });
+    });
+    $('wf-reset').addEventListener('click', function () { wfReset(); });
+    runBtn.addEventListener('click', function () { wfRun(runBtn); });
+
+    function resetFile() {
+        WF.bytes = null;
+        WF.base = '';
+        fileInfo.classList.add('hidden');
+        runBtn.disabled = true;
+        fileInput.value = '';
+    }
+
+    async function loadFile(file) {
+        if (!file) return;
+        if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+            setStatus('File harus PDF.', 'error');
+            return;
+        }
+        try {
+            setStatus('Membuka PDF...');
+            var bytes = new Uint8Array(await file.arrayBuffer());
+            var n = await pageCountOf(bytes);
+            if (n < 1) throw new Error('PDF tanpa halaman.');
+            WF.bytes = bytes;
+            WF.base = file.name.replace(/\.pdf$/i, '');
+            fileNameEl.textContent = file.name;
+            pageCountEl.textContent = n + ' halaman';
+            fileInfo.classList.remove('hidden');
+            refreshChainEmpty();
+            setStatus('File dimuat: ' + n + ' halaman. Susun lalu jalankan workflow.', 'success');
+        } catch (e) {
+            resetFile();
+            setStatus('Gagal membuka PDF: ' + (e && e.message ? e.message : e), 'error');
+        }
+    }
+
+    dropzone.addEventListener('click', function () { fileInput.click(); });
+    fileInput.addEventListener('change', function () { loadFile(fileInput.files[0]); });
+    $('clear-btn').addEventListener('click', resetFile);
+    ['dragover', 'dragenter'].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+        dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.remove('dragover'); });
+    });
+    dropzone.addEventListener('drop', function (e) {
+        if (e.dataTransfer && e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+    });
+})();
+</script>
+    <script>
+        function toggleTheme() {
+            var html = document.documentElement;
+            var current = html.getAttribute('data-theme') || 'light';
+            var next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            if (window.parent !== window) { try { window.parent.postMessage({ type: 'THEME_CHANGED', theme: next }, '*'); } catch (e) {} }
+        }
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.type === 'SET_THEME' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
+                document.documentElement.setAttribute('data-theme', e.data.theme);
+            }
+        });
+    </script>
+</body>
+</html>
