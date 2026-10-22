@@ -244,6 +244,15 @@ function saveCalendarItem_(data) {
     idCol = lower.indexOf('id');
   }
 
+  // Subtask persist: auto-buat kolom Subtasks bila payload membawa subtasks (JSON string)
+  if (data.subtasks !== undefined && lower.indexOf('subtasks') < 0) {
+    sheet.insertColumnAfter(headers.length);
+    sheet.getRange(1, headers.length + 1).setValue('Subtasks');
+    headers.push('Subtasks');
+    lower.push('subtasks');
+    idCol = lower.indexOf('id');
+  }
+
   var rows = sheet.getDataRange().getValues();
 
   if (data.id) {
