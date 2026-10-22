@@ -12,7 +12,7 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
-.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+.wrap{max-width:1400px;margin:0 auto;padding:20px 16px 60px}
 h1{font-size:26px;margin:0 0 4px;letter-spacing:-.02em}
 h2{font-size:15px;margin:0 0 12px}
 .sub{color:var(--mut);margin:0 0 18px}
@@ -23,8 +23,11 @@ h2{font-size:15px;margin:0 0 12px}
 button,select{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 12px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
 .row label{color:var(--mut);font-size:13px}
+.accs{display:inline-flex;gap:8px;flex-wrap:wrap;align-items:center}
+.accs label{display:inline-flex;align-items:center;gap:5px;color:var(--ink);font-size:13px;cursor:pointer;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px 10px}
+.accs input{margin:0;accent-color:var(--acc)}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
-.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:help}
 .kpi small{color:var(--mut);display:block;font-size:12px}
 .kpi strong{font-size:24px;letter-spacing:-.02em}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -72,7 +75,7 @@ a{color:var(--acc2)}
 
   <div id="app" class="hide">
     <div class="row">
-      <label>Akun</label><select id="fAcc"></select>
+      <label>Akun</label><span id="fAcc" class="accs"></span>
       <label>Tipe</label><select id="fType"></select>
       <span id="range" class="sub" style="margin:0 0 0 auto"></span>
     </div>
@@ -124,7 +127,7 @@ function parseCSV(t){
 
 // Judul kolom Meta bisa bahasa Inggris atau Indonesia (ikut setelan bahasa UI saat export)
 const AEN={"views":"views","reach":"reach","likes":"likes","comments":"comments","shares":"shares","saves":"saves","follows":"follows","publish time":"publish time","duration (sec)":"duration (sec)","post type":"post type","account username":"account username","account name":"account name","description":"description","permalink":"permalink"};
-const AID={"tayangan":"views","jangkauan":"reach","suka":"likes","komentar":"comments","bagikan":"shares","dibagikan":"shares","simpan":"saves","ikuti":"follows","waktu publikasi":"publish time","waktu terbit":"publish time","tanggal publikasi":"publish time","durasi (detik)":"duration (sec)","jenis konten":"post type","tipe konten":"post type","jenis unggasan":"post type","nama pengguna akun":"account username","nama pengguna":"account username","nama akun":"account name","deskripsi":"description","tautan permanen":"permalink"};
+const AID={"tayangan":"views","jangkauan":"reach","suka":"likes","komentar":"comments","bagikan":"shares","dibagikan":"shares","simpan":"saves","ikuti":"follows","waktu publikasi":"publish time","waktu terbit":"publish time","waktu penerbitan":"publish time","tanggal publikasi":"publish time","durasi (detik)":"duration (sec)","jenis konten":"post type","tipe konten":"post type","jenis unggasan":"post type","jenis postingan":"post type","nama pengguna akun":"account username","nama pengguna":"account username","nama akun":"account name","deskripsi":"description","tautan permanen":"permalink","frekuensi dibagikan":"shares","frekuensi disimpan":"saves","mengikuti":"follows"};
 const ALIAS=Object.assign({},AEN,AID),IDHDR=new Set(Object.keys(AID));
 function canonHdr(s){s=String(s).toLowerCase().replace(/\s+/g," ").trim();return ALIAS[s]||s}
 // Tanggal export: M/D/Y (Inggris) atau D/M/Y (Indonesia), jam bisa AM/PM — deteksi dari isi baris + bahasa judul
@@ -156,25 +159,41 @@ function load(text){
       shares:num(r,"shares"),follows:num(r,"follows"),comments:num(r,"comments"),saves:num(r,"saves")};
     o.inter=o.likes+o.comments+o.shares+o.saves;o.er=o.reach?o.inter/o.reach:0;return o}).filter(o=>o.date);
   if(!ALL.length)throw new Error("Tidak ada baris data.");
-  fill("#fAcc",ALL.map(x=>x.acc),"Semua akun");fill("#fType",ALL.map(x=>x.type),"Semua tipe");
+  fillAcc(ALL.map(x=>x.acc));fill("#fType",ALL.map(x=>x.type),"Semua tipe");
   $("#app").classList.remove("hide");render()}
 
 function fill(sel,arr,all){const u=[...new Set(arr)].sort();$(sel).innerHTML='<option value="">'+all+'</option>'+u.map(x=>'<option>'+esc(x)+'</option>').join("")}
+// Filter akun pakai checkbox (boleh pilih banyak akun sekaligus)
+function fillAcc(arr){
+  const u=[...new Set(arr)].sort();
+  $("#fAcc").innerHTML='<label><input type="checkbox" id="accAll" checked>Semua</label>'+u.map(x=>'<label><input type="checkbox" class="acc" value="'+esc(x)+'" checked>'+esc(x)+'</label>').join("")
+}
+function accFilter(e){
+  const all=document.querySelectorAll("#fAcc .acc");
+  if(e.target.id==="accAll"){all.forEach(c=>{c.checked=e.target.checked})}
+  else{document.getElementById("accAll").checked=all.length===document.querySelectorAll("#fAcc .acc:checked").length}
+  render()
+}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 const sum=(a,k)=>a.reduce((s,x)=>s+x[k],0);
 const avg=(a,k)=>a.length?sum(a,k)/a.length:0;
 const fd=d=>d?d.toLocaleDateString("id-ID",{day:"numeric",month:"short"}):"-";
 
 function render(){
-  const a=$("#fAcc").value,t=$("#fType").value;
-  const D=ALL.filter(x=>(!a||x.acc===a)&&(!t||x.type===t));
+  const accs=[...document.querySelectorAll("#fAcc .acc:checked")].map(x=>x.value);
+  const t=$("#fType").value;
+  const D=ALL.filter(x=>accs.indexOf(x.acc)>-1&&(!t||x.type===t));
   if(!D.length){$("#kpis").innerHTML='<div class="kpi">Tidak ada data untuk filter ini.</div>';return}
   const S=[...D].sort((x,y)=>x.date-y.date);
   $("#range").textContent=fd(S[0].date)+" – "+fd(S[S.length-1].date)+" · "+D.length+" postingan";
   const reach=sum(D,"reach"),inter=sum(D,"inter");
-  const K=[["Postingan",D.length],["Total Views",nf(sum(D,"views"))],["Total Reach",nf(reach)],
-    ["Total Interaksi",nf(inter)],["Engagement Rate",pf(reach?inter/reach:0)],["Follow dari konten",nf(sum(D,"follows"))]];
-  $("#kpis").innerHTML=K.map(k=>'<div class="kpi"><small>'+k[0]+'</small><strong>'+k[1]+'</strong></div>').join("");
+  const K=[["Postingan",D.length,"Jumlah unggasan yang cocok dengan filter saat ini"],
+    ["Total Views",nf(sum(D,"views")),"Tayangan: berapa kali konten ditonton/diputar (bisa berulang orang yang sama)"],
+    ["Total Reach",nf(sum(D,"reach")),"Jangkauan: jumlah akun unik yang melihat konten"],
+    ["Total Interaksi",nf(inter),"Jumlah Like + Komentar + Share + Save"],
+    ["Engagement Rate",pf(reach?inter/reach:0),"ER = Interaksi / Jangkauan x 100% - persentase seberapa aktif audiens merespons konten"],
+    ["Follow dari konten",nf(sum(D,"follows")),"Pengikut baru yang datang dari konten ini"]];
+  $("#kpis").innerHTML=K.map(k=>'<div class="kpi" title="'+esc(k[2])+'"><small>'+k[0]+'</small><strong>'+k[1]+'</strong></div>').join("");
 
   // insights
   const top=[...D].sort((x,y)=>y.views-x.views)[0];
@@ -217,10 +236,10 @@ function render(){
 
   table(D)}
 
-const COLS=[["date","Tanggal"],["acc","Akun"],["type","Tipe"],["cap","Caption"],["views","Views"],["reach","Reach"],["likes","Like"],["comments","Komen"],["shares","Share"],["saves","Save"],["follows","Follow"],["er","ER"]];
+const COLS=[["date","Tanggal"],["acc","Akun"],["type","Tipe"],["cap","Caption"],["views","Views"],["reach","Reach"],["likes","Like"],["comments","Komen"],["shares","Share"],["saves","Save"],["follows","Follow"],["er","ER","ER (Engagement Rate) = Interaksi / Jangkauan x 100% - rasio seberapa aktif audiens merespons konten"]];
 function table(D){
   const R=[...D].sort((x,y)=>{const a=x[sortKey],b=y[sortKey];return (a>b?1:a<b?-1:0)*sortDir});
-  $("#tbl").innerHTML="<thead><tr>"+COLS.map(c=>'<th data-k="'+c[0]+'">'+c[1]+(sortKey===c[0]?(sortDir<0?" ▼":" ▲"):"")+"</th>").join("")+"</tr></thead><tbody>"+
+  $("#tbl").innerHTML="<thead><tr>"+COLS.map(c=>'<th data-k="'+c[0]+'"'+(c[2]?' title="'+esc(c[2])+'"':'')+'>'+c[1]+(sortKey===c[0]?(sortDir<0?" ▼":" ▲"):"")+"</th>").join("")+"</tr></thead><tbody>"+
     R.map(x=>"<tr><td>"+fd(x.date)+"</td><td>"+esc(x.acc)+'</td><td><span class="tag">'+esc(x.type)+'</span></td><td class="cap"><a href="'+esc(x.link)+'" target="_blank" rel="noopener">'+esc(x.cap.slice(0,70)||"(tanpa caption)")+"</a></td><td>"+nf(x.views)+"</td><td>"+nf(x.reach)+"</td><td>"+nf(x.likes)+"</td><td>"+nf(x.comments)+"</td><td>"+nf(x.shares)+"</td><td>"+nf(x.saves)+"</td><td>"+nf(x.follows)+"</td><td>"+pf(x.er)+"</td></tr>").join("")+"</tbody>";
   document.querySelectorAll("#tbl th").forEach(th=>th.onclick=()=>{const k=th.dataset.k;sortDir=sortKey===k?-sortDir:-1;sortKey=k;render()})}
 
@@ -235,7 +254,7 @@ inp.onchange=()=>inp.files[0]&&handle(inp.files[0]);
 drop.ondragover=e=>{e.preventDefault();drop.classList.add("over")};
 drop.ondragleave=()=>drop.classList.remove("over");
 drop.ondrop=e=>{e.preventDefault();drop.classList.remove("over");e.dataTransfer.files[0]&&handle(e.dataTransfer.files[0])};
-$("#fAcc").onchange=render;$("#fType").onchange=render;
+$("#fAcc").onchange=accFilter;$("#fType").onchange=render;
 })();
 </script>
 </body>
