@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F8F9FB" />
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#161B24" />
-  <title>TaskSpace — Team Planner</title>
+  <title>TaskSpace - Team Planner</title>
   <style>
     :root {
       color: var(--text);
@@ -46,7 +46,7 @@
       --success-light: rgba(22,163,74,0.12);
       --teal: #0F766E;
       --teal-light: rgba(15,118,110,0.1);
-      /* Platform colors — centralized, shared across tools */
+      /* Platform colors - centralized, shared across tools */
       --platform-ig:   #a855f7;
       --platform-wa:   #22c55e;
       --platform-tt:   #ec4899;
@@ -131,6 +131,11 @@
     .sk-line.wide { width: 90%; }
     .sk-line.med { width: 60%; }
     .sk-line.short { width: 30%; }
+    .skeleton-card:nth-child(2) .skeleton-box { animation-delay: .08s; }
+    .skeleton-card:nth-child(3) .skeleton-box { animation-delay: .16s; }
+    .skeleton-card:nth-child(4) .skeleton-box { animation-delay: .24s; }
+    .skeleton-card:nth-child(5) .skeleton-box { animation-delay: .32s; }
+    .skeleton-card:nth-child(6) .skeleton-box { animation-delay: .4s; }
 
     body {
       margin: 0;
@@ -140,7 +145,7 @@
     }
 
     /* ═══════════════════════════════════════
-       LAYOUT — Full Responsive
+       LAYOUT - Full Responsive
     ═══════════════════════════════════════ */
     .app {
       display: flex;
@@ -441,6 +446,25 @@ color: var(--accent-ink);
       font-weight: 900;
     }
 
+    /* Sub task */
+    .sub-add-row { display: flex; gap: 8px; }
+    .sub-add-row input { flex: 1; min-width: 0; }
+    .sub-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 188px; overflow-y: auto; }
+    .sub-list li { display: flex; align-items: center; gap: 8px; background: var(--surface-alt); border: 1px solid var(--border); border-radius: 8px; padding: 5px 8px; font-size: 12.5px; color: var(--text); }
+    .sub-list li.sub-empty { background: none; border-style: dashed; color: var(--text-soft); }
+    .sub-list li.done .sub-text { text-decoration: line-through; opacity: 0.55; }
+    .sub-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    .sub-x { background: none; border: none; color: var(--text-soft); cursor: pointer; font-size: 13px; line-height: 1; padding: 4px; border-radius: 4px; }
+    .sub-x:hover { color: var(--danger); }
+    .subs-inline { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+    .subs-inline .sub-i { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-soft); text-align: left; background: none; border: none; padding: 2px 4px; border-radius: 6px; cursor: pointer; font-family: inherit; }
+    .subs-inline .sub-i:hover { background: var(--surface-alt); }
+    .subs-inline .sub-i .task-check { width: 15px; height: 15px; border-radius: 5px; }
+    .subs-inline .sub-i .task-check.checked::after { font-size: 10px; }
+    .subs-inline .sub-i.done { text-decoration: line-through; opacity: 0.55; }
+    .subs-inline .sub-i:focus-visible, .sub-x:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .subs-badge { font-size: 10px; padding: 1px 6px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-soft); font-weight: 700; white-space: nowrap; }
+
     .task-name {
       font-size: 14px;
       font-weight: 700;
@@ -704,6 +728,11 @@ margin-bottom: 8px;
       transform: translateY(30px);
       transition: 0.4s;
       position: relative;
+      /* modal baru tinggi (sub task dsb) - scroll internal, jangan terpotong di layar pendek */
+      max-height: calc(100vh - 48px);
+      max-height: calc(100dvh - 48px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
     }
 
     .modal-bg.open .modal {
@@ -717,6 +746,50 @@ margin-bottom: 8px;
       border-left: 4px solid var(--accent);
       padding-left: 12px;
     }
+
+    /* Label seksi form - pemeta saat modal panjang (Waktu / Detail / Opsi) */
+    .modal-sec {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-soft);
+      margin: 4px 0 12px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .modal-sec::before { content: ''; width: 7px; height: 7px; border-radius: 2px; background: var(--accent); opacity: 0.5; transform: rotate(45deg); }
+
+    /* ── Task modal (id=task-modal): header, segmented Jenis, fokus, motion ── */
+    #task-modal .modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    #task-modal .modal-title { border-left: none; padding-left: 0; margin-bottom: 0; font-size: 19px; letter-spacing: -0.01em; }
+    .modal-x { flex-shrink: 0; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--text-soft); cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+    .modal-x:hover { background: var(--danger-light); border-color: var(--danger); color: var(--danger); }
+
+    /* Jenis = segmented control, seleksi warna mengikuti bahasa tipe di app (task/campaign=accent, event=teal, reminder=warning) */
+    #task-modal .row-8-wrap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    #task-modal .row-8-wrap .tgl4 { display: flex; align-items: center; justify-content: center; text-transform: none; letter-spacing: normal; margin-bottom: 0; font-weight: 600; position: relative; min-height: 36px; padding: 6px 4px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text-soft); font-size: 12px; transition: border-color .15s, background .15s, box-shadow .15s, color .15s; }
+    #task-modal .row-8-wrap .tgl4:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); color: var(--text); }
+    #task-modal .row-8-wrap .tgl4 input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+    #task-modal .row-8-wrap .tgl4:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+    #task-modal .row-8-wrap .tgl4:has(input:checked) { background: color-mix(in srgb, var(--accent) 10%, var(--surface)); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); color: var(--accent); font-weight: 800; }
+    #task-modal .row-8-wrap .tgl4.c-teal:has(input:checked) { background: color-mix(in srgb, var(--teal) 12%, var(--surface)); border-color: var(--teal); box-shadow: inset 0 0 0 1px var(--teal); color: var(--teal); }
+    #task-modal .row-8-wrap .tgl4.c-warn:has(input:checked) { background: color-mix(in srgb, var(--warning) 14%, var(--surface)); border-color: var(--warning); box-shadow: inset 0 0 0 1px var(--warning); color: var(--warning); }
+
+    /* Fokus input: border ikut accent (outline global tetap berlaku) */
+    #task-modal .field input:focus-visible, #task-modal .field select:focus-visible, #task-modal .field textarea:focus-visible { border-color: var(--accent); }
+
+    /* Satu kurva authored - expo-out, bukan default ease */
+    #task-modal .modal { transition: transform .5s cubic-bezier(.16, 1, .3, 1); }
+
+    /* Validasi inline: pesan hidup di atas footer, field bermasalah ditandai aria-invalid */
+    #task-modal [aria-invalid="true"] { border-color: var(--danger); }
+    .form-err { margin: 4px 0 12px; padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--danger) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent); color: var(--danger); font-size: 13px; font-weight: 600; }
+    #task-modal .repeat-hint { font-size: 11px; color: var(--text-soft); margin-top: 6px; }
+    #task-modal .modal-footer .btn-primary { min-width: 168px; }
 
     .field {
       margin-bottom: 20px;
@@ -775,8 +848,25 @@ margin-bottom: 8px;
 
     .field-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      /* auto-fit: field tersembunyi (jenis lain) → kolom kosong collapses, tak ada lubang setengah kosong; layar sempit → turun 1 kolom */
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 16px;
+    }
+
+    /* Rhythm task-modal: 8 (label→input) → 12 (dalam baris / heading→konten) → 16 (antar field) → pita seksi ~36 */
+    #task-modal > .field { margin-bottom: 16px; }
+    #task-modal .field-row { gap: 12px; margin-bottom: 16px; }
+
+    @media (max-width: 520px) {
+      .modal { padding: 20px; }
+      .modal-title { font-size: 18px; margin-bottom: 18px; }
+      /* task-modal → bottom sheet (native pattern: jempol di bawah, konten penuh lebar) */
+      #task-modal { place-items: end stretch; }
+      #task-modal .modal { width: 100%; max-width: none; border-radius: 16px 16px 0 0; max-height: 92dvh; transform: translateY(64px); padding-bottom: 26px; }
+      #task-modal.open .modal { transform: translateY(0); }
+      #task-modal .row-8-wrap { grid-template-columns: repeat(2, 1fr); }
+      #task-modal .row-8-wrap .tgl4 { min-height: 44px; }
+      #task-modal .modal-x { width: 40px; height: 40px; }
     }
 
     /* Detail Panel */
@@ -786,7 +876,7 @@ margin-bottom: 8px;
       border-radius: var(--radius);
       padding: 24px;
       border: 1px solid var(--border);
-      /* height is DYNAMIC — grows with content */
+      /* height is DYNAMIC - grows with content */
       transition: 0.3s;
     }
 
@@ -939,7 +1029,7 @@ margin-bottom: 8px;
           border-radius: 8px !important; display: flex !important;
         }
         #view-weekly, #view-month { margin-left: 0; margin-right: 0; }
-        .holiday-label { font-size: 9px; margin-top: 0; margin-bottom: 0; text-align: right; }
+        .holiday-label { font-size: 10px; margin-top: 0; margin-bottom: 0; text-align: right; }
         .week-col.is-holiday .holiday-label { text-align: right; margin-left: 8px; margin-top: 0; margin-bottom: 0; }
       }
     }
@@ -1291,7 +1381,7 @@ background: var(--danger-light);
       border-color: var(--accent);
     }
 
-    /* Tooltip on timeline bars — JS-powered fixed-position, see timeline-scroll handlers */
+    /* Tooltip on timeline bars - JS-powered fixed-position, see timeline-scroll handlers */
     #tl-tooltip {
       position: fixed; display: none; pointer-events: none; z-index: 99999;
       background: var(--text); color: var(--bg); padding: 8px 12px; border-radius: 8px;
@@ -1411,7 +1501,7 @@ border-color: var(--accent);
     }
     [data-theme="dark"] body { background: var(--bg); }
     [data-theme="dark"] .topbar { background: var(--surface); border-color: var(--border); }
-    [data-theme="dark"] .banner-off { background: #D70000; /* ponytail: var(--danger) mode gelap + teks putih cuma 3.4:1 gagal AA — pakai merah gelap */ }
+    [data-theme="dark"] .banner-off { background: #D70000; /* ponytail: var(--danger) mode gelap + teks putih cuma 3.4:1 gagal AA - pakai merah gelap */ }
 
     /* ═══ A11Y: focus, reduced motion, button resets ═══ */
     .nav-item, .tab { background: none; border: none; font-family: inherit; }
@@ -1423,6 +1513,16 @@ border-color: var(--accent);
     ::-webkit-scrollbar { width: 10px; height: 10px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+    ::selection { background: color-mix(in srgb, var(--accent) 24%, var(--bg)); color: var(--text); }
+
+    /* ═══ Motion: feedback aksi (bounce halus, hormati prefers-reduced-motion global) ═══ */
+    @keyframes rowIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    @keyframes checkPop { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }
+    @keyframes navIn { from { opacity: .35; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .task-row.just-in { animation: rowIn .35s cubic-bezier(.16, 1, .3, 1); }
+    .task-check.just-checked { animation: checkPop .3s ease; }
+    .cal-grid.nav-in, .week-grid.nav-in, .timeline-body.nav-in { animation: navIn .28s ease; }
+    .btn:active, .tab:active, .filter-chip:active, .quick-toggle:active, .nav-item:active { transform: scale(.97); }
 
     /* ═══ Feedback: selection, done, empty, hit targets ═══ */
     .task-row.selected {
@@ -1462,7 +1562,7 @@ border-color: var(--accent);
       .detail-panel.empty { display: none; }
     }
 
-    /* D5: kelas hasil konversi style="..." inline (codemod — jangan diubah manual tanpa sadar) */
+    /* D5: kelas hasil konversi style="..." inline (codemod - jangan diubah manual tanpa sadar) */
     .m0 { margin: 0; }
     .mb-8 { margin-bottom: 8px; }
     .mb-12 { margin-bottom: 12px; }
@@ -1689,7 +1789,7 @@ border-color: var(--accent);
             </div>
           </div>
         </div>
-        <div class="stat-pill">Pending <b class="c-warn" id="stat-pending-val">0</b></div>
+        <div class="stat-pill">Tertunda <b class="c-warn" id="stat-pending-val">0</b></div>
         <div class="stat-pill">Campaign <b class="c-accent" id="stat-campaign-val">0</b></div>
       </div>
 
@@ -1703,7 +1803,7 @@ border-color: var(--accent);
         <div id="view-list" class="view active">
           <div class="toolbar">
             <div class="tab-group" role="tablist" aria-label="Filter status task">
-              <button type="button" class="tab active" role="tab" aria-selected="true" onclick="setFilter('pending',this)">Pending</button>
+              <button type="button" class="tab active" role="tab" aria-selected="true" onclick="setFilter('pending',this)">Tertunda</button>
               <button type="button" class="tab" role="tab" aria-selected="false" onclick="setFilter('done',this)">Selesai</button>
               <button type="button" class="tab" role="tab" aria-selected="false" onclick="setFilter('all',this)">Semua</button>
             </div>
@@ -1807,8 +1907,8 @@ border-color: var(--accent);
         <div id="view-event" class="view">
           <div class="toolbar">
             <div class="tab-group" role="tablist" aria-label="Filter event">
-              <button type="button" class="tab active" role="tab" aria-selected="true" onclick="setEventFilter('all',this)">Semua</button>
-              <button type="button" class="tab" role="tab" aria-selected="false" onclick="setEventFilter('upcoming',this)">Akan Datang</button>
+              <button type="button" class="tab" role="tab" aria-selected="false" onclick="setEventFilter('all',this)">Semua</button>
+              <button type="button" class="tab active" role="tab" aria-selected="true" onclick="setEventFilter('upcoming',this)">Akan Datang</button>
               <button type="button" class="tab" role="tab" aria-selected="false" onclick="setEventFilter('past',this)">Terlewat</button>
             </div>
             <button class="btn btn-primary ml-auto" onclick="openTaskModal(null,'','event')">
@@ -1823,8 +1923,8 @@ border-color: var(--accent);
         <div id="view-reminder" class="view">
           <div class="toolbar">
             <div class="tab-group" role="tablist" aria-label="Filter reminder">
-              <button type="button" class="tab active" role="tab" aria-selected="true" onclick="setReminderFilter('all',this)">Semua</button>
-              <button type="button" class="tab" role="tab" aria-selected="false" onclick="setReminderFilter('pending',this)">Pending</button>
+              <button type="button" class="tab" role="tab" aria-selected="false" onclick="setReminderFilter('all',this)">Semua</button>
+              <button type="button" class="tab active" role="tab" aria-selected="true" onclick="setReminderFilter('pending',this)">Tertunda</button>
               <button type="button" class="tab" role="tab" aria-selected="false" onclick="setReminderFilter('done',this)">Selesai</button>
             </div>
             <button class="btn btn-primary ml-auto" onclick="openTaskModal(null,'','reminder')">
@@ -1848,12 +1948,15 @@ border-color: var(--accent);
   <!-- Modal -->
   <div class="modal-bg" id="task-modal">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-el">
-      <div class="modal-title" id="modal-title-el">Agenda Baru</div>
+      <div class="modal-head">
+        <div class="modal-title" id="modal-title-el">Agenda Baru</div>
+        <button type="button" class="modal-x" aria-label="Tutup" onclick="closeModal()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </div>
       <input type="hidden" id="edit-id">
 
       <div class="field mb-12">
         <label for="f-title">Judul *</label>
-        <input type="text" id="f-title" placeholder="cth: Launching Produk Baru">
+        <input type="text" id="f-title" placeholder="cth: Launching Produk Baru" oninput="clearFormErr_()">
       </div>
 
       <div class="field mb-12">
@@ -1875,60 +1978,74 @@ border-color: var(--accent);
         <input type="hidden" id="f-type" value="task">
       </div>
 
-      <div class="field-row mb-12">
-        <div class="field mb0" id="wrap-priority">
-          <label for="f-priority">Prioritas</label>
-          <select id="f-priority">
-            <option value="high"><svg class="va-m2" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V3l16 6-16 6"/></svg> Tinggi</option>
-            <option value="medium" selected><svg class="va-m2" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6"/></svg> Sedang</option>
-            <option value="low"><svg class="va-m2" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg> Rendah</option>
-          </select>
-        </div>
-        <div class="field mb0"></div>
-      </div>
-
+      <div class="modal-sec">Waktu</div>
       <div class="field-row mb-12">
         <div class="field custom-date-container mb0">
           <label for="f-date">Mulai *</label>
-          <input type="text" id="f-date" readonly onclick="openDatePicker('f-date')" placeholder="Pilih...">
+          <input type="text" id="f-date" readonly onclick="clearFormErr_();openDatePicker('f-date')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" placeholder="Pilih...">
           <label class="lbl-sm-mt" for="modal-time">Jam (opsional)</label>
           <input class="time-input" type="time" id="modal-time">
         </div>
         <div class="field custom-date-container mb0">
           <label for="f-enddate">Berakhir</label>
-          <input type="text" id="f-enddate" readonly onclick="openDatePicker('f-enddate')" placeholder="Pilih...">
+          <input type="text" id="f-enddate" readonly onclick="clearFormErr_();openDatePicker('f-enddate')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}" placeholder="Pilih...">
         </div>
       </div>
 
-      <div class="field-row" style="margin-bottom:12px;display:none;" id="wrap-org">
-        <div class="field mb0">
-          <label for="f-org">Penyelenggara</label>
-          <input type="text" id="f-org" placeholder="Nama pihak / sponsor">
+      <div class="modal-sec">Detail</div>
+      <div id="sec-detail">
+        <div class="field-row mb-12" id="row-pt">
+          <div class="field mb0" id="wrap-priority">
+            <label for="f-priority">Prioritas</label>
+            <select id="f-priority">
+              <option value="high"><svg class="va-m2" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21V3l16 6-16 6"/></svg> Tinggi</option>
+              <option value="medium" selected><svg class="va-m2" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6"/></svg> Sedang</option>
+              <option value="low"><svg class="va-m2" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/></svg> Rendah</option>
+            </select>
+          </div>
+          <div class="field mb0" id="wrap-tag">
+            <label for="f-tag" id="lbl-tag">Tag</label>
+            <input type="text" id="f-tag" placeholder="cth: Marketing">
+            <select class="display-none" id="f-channel" onchange="onChannelChange()">
+              <!-- ponytail: <option> elements only support plain text, SVG doesn't render -->
+              <option value="">- Pilih Channel -</option>
+              <option value="Instagram">📸 Instagram</option>
+              <option value="Whatsapp">💬 Whatsapp</option>
+              <option value="Tiktok">🎵 Tiktok</option>
+              <option value="Shopee">🛒 Shopee</option>
+              <option value="Web">🌐 Web</option>
+              <option value="Event"><svg class="va-m2" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/></svg> Event</option>
+            </select>
+          </div>
         </div>
-        <div class="field mb0"></div>
+        <div class="field-row mb-12" id="row-oc">
+          <div class="field mb0" id="wrap-org" style="display:none;">
+            <label for="f-org">Penyelenggara</label>
+            <input type="text" id="f-org" placeholder="Nama pihak / sponsor">
+          </div>
+          <div class="field mb0" id="wrap-color">
+            <div class="flabel">Warna</div>
+            <div class="color-row row-8-mt4" id="color-swatches" role="radiogroup" aria-label="Warna agenda"></div>
+          </div>
+        </div>
       </div>
 
-      <div class="field-row mb-12">
-        <div class="field mb0" id="wrap-tag">
-          <label for="f-tag" id="lbl-tag">Tag</label>
-          <input type="text" id="f-tag" placeholder="cth: Marketing">
-          <select class="display-none" id="f-channel" onchange="onChannelChange()">
-            <!-- ponytail: <option> elements only support plain text, SVG doesn't render -->
-            <option value="">— Pilih Channel —</option>
-            <option value="Instagram">📸 Instagram</option>
-            <option value="Whatsapp">💬 Whatsapp</option>
-            <option value="Tiktok">🎵 Tiktok</option>
-            <option value="Shopee">🛒 Shopee</option>
-            <option value="Web">🌐 Web</option>
-            <option value="Event"><svg class="va-m2" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/></svg> Event</option>
-          </select>
-        </div>
-        <div class="field mb0" id="wrap-color">
-          <div class="flabel">Warna</div>
-          <div class="color-row row-8-mt4" id="color-swatches" role="radiogroup" aria-label="Warna agenda"></div>
-        </div>
+      <div class="field mb-8">
+        <label for="f-desc">Deskripsi <span class="lbl-opt">(opsional)</span></label>
+        <textarea class="ta-desc" id="f-desc" placeholder="Keterangan tambahan..."
+          oninput="this.style.height='60px';this.style.height=Math.min(this.scrollHeight,200)+'px'"></textarea>
       </div>
 
+      <div class="modal-sec">Sub Task</div>
+      <div class="field mb-8">
+        <div class="sub-add-row">
+          <input type="text" id="f-sub-input" aria-label="Isi sub task baru" placeholder="cth: Riset kompetitor" onkeydown="if(event.key==='Enter'){event.preventDefault();addSubtask();}">
+          <button type="button" class="btn btn-ghost btn-sm115" onclick="addSubtask()">+ Tambah</button>
+        </div>
+        <ul class="sub-list" id="sub-list"></ul>
+      </div>
+
+      <div class="modal-sec">Opsi</div>
       <div class="mb-8">
         <label class="tgl8">
           <input class="m0" type="checkbox" id="f-repeat" onchange="toggleRepeatFields()"> <svg class="va-mid" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg> Ulangi
@@ -1948,16 +2065,11 @@ border-color: var(--accent);
               </select>
             </div>
           </div>
+          <div class="repeat-hint">Diulangi hanya sampai akhir bulan tanggal mulai - tidak lebih.</div>
         </div>
       </div>
 
-      <div class="field mb-8">
-        <label for="f-desc">Deskripsi <span
- class="lbl-opt"           >(opsional)</span></label>
-        <textarea class="ta-desc" id="f-desc" placeholder="Keterangan tambahan..."
-         
-          oninput="this.style.height='60px';this.style.height=Math.min(this.scrollHeight,200)+'px'"></textarea>
-      </div>
+      <div class="form-err display-none" id="form-err" role="alert"></div>
 
       <div class="modal-footer">
         <button class="btn btn-danger display-none" id="btn-delete" onclick="deleteTask()">Hapus</button>
@@ -2047,9 +2159,9 @@ border-color: var(--accent);
   </div>
 
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbygk3Z11Ju4XwnhFUwkDBbgkktZsKTb-AsKRcxSLp8J30LNhthpMDLK1boBPnbbXATk/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzyC8EnUaEiBIv1CZ8lxzt6e_p6Ph1Xpm_-aqVd2mFmI22XYX9obvfL90bjOMmCW4yc/exec";
 
-    // Share mode: link publik #ss-<slug> — baca hash parent (di dalam iframe hub) atau hash sendiri (buka langsung)
+    // Share mode: link publik #ss-<slug> - baca hash parent (di dalam iframe hub) atau hash sendiri (buka langsung)
     function shareSlugFromHash(h) {
       var m = String(h || '').match(/^#(ss-[a-z0-9-]{1,57})$/);
       return m ? m[1] : '';
@@ -2130,12 +2242,12 @@ border-color: var(--accent);
 
     // Utils
     function esc(t) { return (t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-    // ponytail: escape untuk data user di onclick="f('${x}')" — esc() tidak menutup kutip satuan; escape utk konteks string JS
+    // ponytail: escape untuk data user di onclick="f('${x}')" - esc() tidak menutup kutip satuan; escape utk konteks string JS
     function jsq(t) { return esc(t).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
     function isCampaignLike(t) {
       if (String(t.type || t.tipe || '').toLowerCase().trim() === 'campaign') return true;
       if (Object.keys(CHANNELS).indexOf(String(t.tag || '')) > -1) return true;
-      // prefix baru (WEB|/EVT|) + legacy (WB|/EV|) — data sheet lama masih pakai legacy
+      // prefix baru (WEB|/EVT|) + legacy (WB|/EV|) - data sheet lama masih pakai legacy
       return /^(IG|WA|TT|SP|WB|WEB|EV|EVT)\s*\|/.test(String(t.title || t.nama || ''));
     }
     function pad(n) { return n < 10 ? '0' + n : n; }
@@ -2160,13 +2272,38 @@ border-color: var(--accent);
       var L = 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
       return L <= 0.183 ? '#ffffff' : '#111111';
     }
-    // ponytail: data lama di sheet bisa berisi 'var(--platform-ig)' / non-hex — normalkan sekali saat load
+    // ponytail: data lama di sheet bisa berisi 'var(--platform-ig)' / non-hex - normalkan sekali saat load
     const VAR_COLOR_MAP = { 'var(--platform-ig)': '#a855f7', 'var(--platform-wa)': '#22c55e', 'var(--platform-tt)': '#ec4899', 'var(--platform-sp)': '#f97316', 'var(--platform-wb)': '#3b82f6', 'var(--platform-evt)': '#06b6d4', 'var(--platform-other)': '#64748b' };
     function normColor(c, fb) {
       if (!c) return fb;
       c = String(c).trim();
       if (VAR_COLOR_MAP[c]) return VAR_COLOR_MAP[c];
       return /^#[0-9a-fA-F]{6}$/.test(c) ? c : fb;
+    }
+    // Subtask: array di memori, JSON string di sheet (kolom "Subtasks" auto-dibuat backend)
+    function parseSubs_(v) {
+      if (Array.isArray(v)) return v;
+      if (typeof v === 'string' && v) { try { var a = JSON.parse(v); if (Array.isArray(a)) return a; } catch (e) {} }
+      return [];
+    }
+    function subsBadge_(o) {
+      var s = o && o.subtasks;
+      if (!s || !s.length) return '';
+      var d = 0;
+      for (var i = 0; i < s.length; i++) if (s[i] && s[i].done) d++;
+      return '☑ ' + d + '/' + s.length;
+    }
+    // Auto-complete: event/campaign/reminder lewat tanggal akhir → dianggap selesai.
+    // Derived saat load saja (tidak menulis sheet) - idempoten, tanpa traffic tulis.
+    function isOverdue3_(o) {
+      var ty = o && o.type;
+      if (ty !== 'event' && ty !== 'campaign' && ty !== 'reminder') return false;
+      var e = String(o.enddate || o.date || '').slice(0, 10);
+      return !!e && e < todayStr();
+    }
+    function applyAuto_(o) {
+      if (o && !o.done && isOverdue3_(o)) { o.done = true; o.status = 'Selesai'; }
+      return o;
     }
     // Reorder persist: urutan dari kolom sheet "Urutan" (kosong = 1e9 → stabil di belakang)
     function sortByUrutan(arr) {
@@ -2178,12 +2315,13 @@ border-color: var(--accent);
       return arr;
     }
 
-    // Mapping result {tasks,campaigns,events,reminders} → state S — dipakai jalur getCalendarData & share mode
+    // Mapping result {tasks,campaigns,events,reminders} → state S - dipakai jalur getCalendarData & share mode
     function applyCalendarResult_(result) {
       var plainTasks_ = (result.tasks || []).map(function(t) { return {
           ...t, title: t.title || t.nama || '', enddate: normDate(t.enddate || t.endDate || t.selesai || ''),
           date: normDate(t.date || t.mulai || ''), description: String(t.deskripsi || t.description || ''),
           type: 'task',
+          subtasks: parseSubs_(t.subtasks),
           color: normColor(t.color || t.warna, '#6366f1')
         }; });
       sortByUrutan(plainTasks_);
@@ -2193,6 +2331,7 @@ border-color: var(--accent);
             ...c, title: c.title || c.nama || '', enddate: normDate(c.enddate || c.endDate || c.selesai || ''),
             date: normDate(c.date || c.mulai || c.tanggal || ''), description: String(c.deskripsi || c.description || ''),
             type: 'campaign',
+            subtasks: parseSubs_(c.subtasks),
             color: normColor(c.color || c.warna, '#6366f1')
          }; })
       );
@@ -2200,18 +2339,33 @@ border-color: var(--accent);
         id: e.id, title: e.nama || '', date: normDate(e.mulai || ''),
         enddate: normDate(e.selesai || ''), description: String(e.deskripsi || ''),
         penyelenggara: e.penyelenggara || '', color: normColor(e.warna || e.color, '#14b8a6'),
+        subtasks: parseSubs_(e.subtasks),
         status: e.status || '', done: e.status === 'Selesai', type: 'event'
       }; });
       S.reminders = (result.reminders || []).map(function(r) { return {
         id: r.id, title: r.nama || '', date: normDate(r.mulai || ''),
         enddate: normDate(r.selesai || ''), description: String(r.deskripsi || ''),
-        color: normColor(r.warna || r.color, '#f59e0b'), status: r.status || '',
+        color: normColor(r.warna || r.color, '#f59e0b'), subtasks: parseSubs_(r.subtasks),
+        status: r.status || '',
         done: r.status === 'Selesai', type: 'reminder'
       }; });
+      // Auto-complete E/C/R lewat tanggal - diterapkan di sini = semua jalur (getCalendarData & share) ikut
+      S.tasks.forEach(applyAuto_);
+      S.events.forEach(applyAuto_);
+      S.reminders.forEach(applyAuto_);
       return result;
     }
 
     async function api(action, data = null) {
+      // subtasks: array di memori → string JSON untuk sheet (kolom auto dibuat backend)
+      if (data && typeof data === 'object' && !Array.isArray(data) && Array.isArray(data.subtasks)) {
+        data = Object.assign({}, data, { subtasks: JSON.stringify(data.subtasks) });
+      }
+      if (data && Array.isArray(data.items)) {
+        data = Object.assign({}, data, { items: data.items.map(function(it) {
+          return it && Array.isArray(it.subtasks) ? Object.assign({}, it, { subtasks: JSON.stringify(it.subtasks) }) : it;
+        }) });
+      }
       const loader = document.getElementById('top-loader');
       if (loader) loader.style.display = 'block';
       try {
@@ -2224,12 +2378,14 @@ border-color: var(--accent);
             enddate: normDate(t.enddate || t.endDate || ''),
             date: normDate(t.date),
             type: isCampaignLike(t) ? 'campaign' : 'task',
+            subtasks: parseSubs_(t.subtasks),
             color: normColor(t.color || t.warna, '#6366f1')
           }));
           // urutan tampil konsisten dengan jalur getCalendarData: plain tasks sesuai kolom Urutan, campaigns di belakang
           var pt_ = S.tasks.filter(function(t) { return t.type !== 'campaign'; });
           var cp_ = S.tasks.filter(function(t) { return t.type === 'campaign'; });
           S.tasks = sortByUrutan(pt_).concat(cp_);
+          S.tasks.forEach(applyAuto_);
           try { localStorage.setItem('ts_cache_data_v2', JSON.stringify({ timestamp: Date.now(), data: S.tasks })); } catch(e){}
           return S.tasks;
         }
@@ -2242,7 +2398,7 @@ border-color: var(--accent);
           const json = await r.json();
           if (!json.success) throw new Error(json.message || 'Gagal memuat kalender');
           applyCalendarResult_(json.result);
-          // ponytail: cache juga di jalur utama — kalau tidak, offline-reload selalu kosong
+          // ponytail: cache juga di jalur utama - kalau tidak, offline-reload selalu kosong
           try { localStorage.setItem('ts_cache_data_v2', JSON.stringify({ timestamp: Date.now(), data: S.tasks })); } catch(e){}
           console.info('[Planner] getCalendarData OK:', S.tasks.length, 'tasks +', (json.result.campaigns || []).length, 'campaigns,', S.events.length, 'events,', S.reminders.length, 'reminders');
           console.info('[Planner] sample keys:', json.result.tasks[0] ? Object.keys(json.result.tasks[0]).join(', ') : '(kosong)');
@@ -2257,7 +2413,7 @@ border-color: var(--accent);
         });
         if (!resp.ok) throw new Error("HTTP " + resp.status);
         const json = await resp.json();
-        // root-cause: GAS balas success:false dengan HTTP 200 — wajib lempar, kalau tidak semua caller salah kira sukses
+        // root-cause: GAS balas success:false dengan HTTP 200 - wajib lempar, kalau tidak semua caller salah kira sukses
         if (json && json.success === false) throw new Error(json.message || 'Gagal menyimpan');
         return json;
       } catch (e) {
@@ -2284,7 +2440,7 @@ border-color: var(--accent);
         markUpdated();
         if (!silent) toast('✓ Data diperbarui');
       } catch (e) {
-        if (!silent) toast('Gagal memperbarui data — klik Refresh untuk mencoba lagi', true);
+        if (!silent) toast('Gagal memperbarui data - klik Refresh untuk mencoba lagi', true);
       } finally {
         if (btn) btn.classList.remove('spinning');
         if (btn) btn.disabled = false;
@@ -2369,7 +2525,7 @@ border-color: var(--accent);
     }
 
     // ═══════════════════════════════════════
-    // SHARE MODE — link publik #ss-<slug>, read-only per bulan
+    // SHARE MODE - link publik #ss-<slug>, read-only per bulan
     // ═══════════════════════════════════════
     async function shareSync() {
       const r = await fetch(GAS_URL + '?action=getShare&slug=' + encodeURIComponent(SHARE), { mode: 'cors', redirect: 'follow' });
@@ -2391,7 +2547,7 @@ border-color: var(--accent);
     }
 
     function startSharePoll() {
-      // ponytail: polling 30s (GAS tak bisa SSE/WS) — pause saat tab tersembunyi, langsung sinkron saat balik
+      // ponytail: polling 30s (GAS tak bisa SSE/WS) - pause saat tab tersembunyi, langsung sinkron saat balik
       var busy = false;
       function sync() {
         if (busy || document.hidden) return;
@@ -2419,7 +2575,7 @@ border-color: var(--accent);
         .catch(function(err) {
           console.warn('share load gagal', err);
           var b = document.getElementById('share-banner');
-          if (b) b.textContent = '⚠️ Share tidak bisa dimuat — ' + (err.message || 'koneksi bermasalah');
+          if (b) b.textContent = '⚠️ Share tidak bisa dimuat - ' + (err.message || 'koneksi bermasalah');
         })
         .finally(function() {
           clearTimeout(safetyTimer);
@@ -2477,15 +2633,15 @@ border-color: var(--accent);
       var slug = document.getElementById('sh-slug').value.trim();
       var month = document.getElementById('sh-month').value;
       var label = document.getElementById('sh-label').value.trim();
-      if (!/^ss-[a-z0-9-]{1,57}$/.test(slug)) { toast('Slug tidak valid — huruf kecil, angka, tanda -', true); return; }
+      if (!/^ss-[a-z0-9-]{1,57}$/.test(slug)) { toast('Slug tidak valid - huruf kecil, angka, tanda -', true); return; }
       if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) { toast('Pilih bulan dulu', true); return; }
       if (!(await showConfirm('Bagikan agenda bulan ' + month + ' lewat link "' + slug + '"? Siapa pun dengan link bisa melihatnya.', 'Ya, Bagikan'))) return;
       try {
         var res = await api('createShare', { slug: slug, month: month, label: label });
-        toast('✓ Link dibagikan — ' + (res.result && res.result.created ? 'slug baru' : 'diperbarui'));
+        toast('✓ Link dibagikan - ' + (res.result && res.result.created ? 'slug baru' : 'diperbarui'));
         loadShareList();
       } catch (e) {
-        toast('Gagal menyimpan share — ' + (e.message || 'koneksi bermasalah'), true);
+        toast('Gagal menyimpan share - ' + (e.message || 'koneksi bermasalah'), true);
       }
     }
     function copyShareLink() { copyTextShare_(document.getElementById('sh-link').value); }
@@ -2508,7 +2664,7 @@ border-color: var(--accent);
       i.select();
       var ok = false;
       try { ok = document.execCommand('copy'); } catch (e) {}
-      toast(ok ? '✓ Link disalin' : 'Gagal menyalin otomatis — tekan Ctrl+C', !ok);
+      toast(ok ? '✓ Link disalin' : 'Gagal menyalin otomatis - tekan Ctrl+C', !ok);
     }
     async function revokeShareRow(slug) {
       if (!(await showConfirm('Cabut share "' + slug + '"? Link publik tidak akan bisa dibuka lagi.', 'Ya, Cabut'))) return;
@@ -2564,6 +2720,7 @@ border-color: var(--accent);
           // TTL 5 menit
           if (parsed && parsed.timestamp && Date.now() - parsed.timestamp < 5 * 60 * 1000) {
             S.tasks = parsed.data || [];
+            S.tasks.forEach(applyAuto_);
             renderAll();
             hideLoading();
           }
@@ -2727,9 +2884,16 @@ border-color: var(--accent);
       const tlScroll = document.getElementById('timeline-scroll');
       if (tlScroll) tlScroll.classList.toggle('zoom-active', v === 'timeline');
       const titleEl = document.getElementById('page-title');
-      if (titleEl) titleEl.textContent = v === 'list' ? 'Daftar Task' : (v === 'weekly' ? 'Mingguan' : v === 'month' ? 'Bulanan' : v === 'timeline' ? 'Timeline' : v === 'event' ? 'Event' : 'Reminder');
+      if (titleEl) titleEl.textContent = v === 'list' ? 'Daftar Task' : (v === 'weekly' ? 'Mingguan' : (v === 'month' ? 'Bulanan' : (v === 'timeline' ? 'Timeline' : (v === 'event' ? 'Event' : 'Reminder'))));
+      // Event/Reminder selalu mendarat di tab Akan Datang / Tertunda
+      if (v === 'event') { var evBtn = document.querySelector('#view-event .tab[onclick*="upcoming"]'); if (evBtn) setEventFilter('upcoming', evBtn); }
+      if (v === 'reminder') { var rmBtn = document.querySelector('#view-reminder .tab[onclick*="pending"]'); if (rmBtn) setReminderFilter('pending', rmBtn); }
       renderAll();
     }
+
+    // Motion helpers: re-trigger animasi CSS & bounce checkbox setelah re-render
+    function flashClass_(el, cls) { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+    function bounceCheck_(id) { flashClass_(document.querySelector('.task-check[data-id="' + id + '"]'), 'just-checked'); }
 
     // List View
     function setFilter(f, el) {
@@ -2775,8 +2939,8 @@ border-color: var(--accent);
       const hasMore = batch.length < total;
 
       el.innerHTML = batch.map(t => `
-        <div class="task-row ${t.done ? 'done' : ''} ${S.selectedId === t.id ? 'selected' : ''}" role="button" tabindex="0" onclick="selectTask('${t.id}')" style="border-left:3px solid ${t.color || 'var(--item-fallback)'}">
-          <div class="task-check ${t.done ? 'checked' : ''}" role="checkbox" aria-checked="${t.done}" aria-label="Tandai selesai: ${esc(t.title)}" onclick="event.stopPropagation();toggleDone('${t.id}')"></div>
+        <div class="task-row ${t.done ? 'done' : ''} ${S.selectedId === t.id ? 'selected' : ''} ${S._flashId === t.id ? 'just-in' : ''}" role="button" tabindex="0" onclick="selectTask('${t.id}')" style="border-left:3px solid ${t.color || 'var(--item-fallback)'}">
+          <div class="task-check ${t.done ? 'checked' : ''}" data-id="${t.id}" role="checkbox" aria-checked="${t.done}" aria-label="Tandai selesai: ${esc(t.title)}" onclick="event.stopPropagation();toggleDone('${t.id}')"></div>
           <div class="task-main">
             <div class="task-name">${esc(t.title)}</div>
             <div class="task-sub">
@@ -2784,6 +2948,7 @@ border-color: var(--accent);
               ${t.tag ? `<span># ${esc(t.tag)}</span>` : ''}
               <span class="badge" style="background:${t.priority === 'high' ? 'var(--danger-light)' : 'var(--secondary-light)'};color:${t.priority === 'high' ? 'var(--danger)' : 'var(--secondary)'};">${t.priority === 'high' ? ICONS.high + ' Tinggi' : t.priority === 'low' ? ICONS.low + ' Rendah' : ICONS.medium + ' Sedang'}</span>
             </div>
+            ${t.subtasks && t.subtasks.length ? `<div class="subs-inline">${t.subtasks.map((s, si) => `<button type="button" class="sub-i ${s.done ? 'done' : ''}" aria-label="${s.done ? 'Tandai belum selesai' : 'Tandai selesai'}: ${esc(s.text)}" onclick="event.stopPropagation();toggleSubItem_('${t.id}',${si})"><span class="task-check ${s.done ? 'checked' : ''}" aria-hidden="true"></span><span>${esc(s.text)}</span></button>`).join('')}</div>` : ''}
           </div>
         </div>
       `).join('');
@@ -2838,8 +3003,8 @@ border-color: var(--accent);
     }
 
     // Weekly View (STRETCH MATRIX)
-    function changeWeek(d) { S.weekOffset += d; renderWeekly(); }
-    function goThisWeek() { S.weekOffset = 0; renderWeekly(); }
+    function changeWeek(d) { S.weekOffset += d; renderWeekly(); flashClass_(document.getElementById('week-grid'), 'nav-in'); }
+    function goThisWeek() { S.weekOffset = 0; renderWeekly(); flashClass_(document.getElementById('week-grid'), 'nav-in'); }
 
     function renderWeekly() {
       const d = new Date();
@@ -2868,7 +3033,7 @@ border-color: var(--accent);
         const s = t.date, e = t.enddate || t.date;
         return s <= days[6] && e >= days[0];
       });
-      // ponytail: selaras month view — weekly juga menampilkan event & reminder
+      // ponytail: selaras month view - weekly juga menampilkan event & reminder
       (S.events || []).forEach(ev => {
         if (!ev.date) return;
         const s = ev.date, e = ev.enddate || ev.date;
@@ -2946,10 +3111,10 @@ border-color: var(--accent);
     function toggleMonthEvents(el) { S.showMonthEvents = el.checked; renderMonth(); }
     function toggleMonthReminders(el) { S.showMonthReminders = el.checked; renderMonth(); }
     function toggleMonthTasks(el) { S.showMonthTasks = el.checked; renderMonth(); }
-    function changeMonth(d) { S.calMonth += d; if (S.calMonth > 11) { S.calMonth = 0; S.calYear++; } if (S.calMonth < 0) { S.calMonth = 11; S.calYear--; } renderMonth(); }
-    function goThisMonth() { S.calYear = new Date().getFullYear(); S.calMonth = new Date().getMonth(); renderMonth(); }
+    function changeMonth(d) { S.calMonth += d; if (S.calMonth > 11) { S.calMonth = 0; S.calYear++; } if (S.calMonth < 0) { S.calMonth = 11; S.calYear--; } renderMonth(); flashClass_(document.getElementById('cal-grid'), 'nav-in'); }
+    function goThisMonth() { S.calYear = new Date().getFullYear(); S.calMonth = new Date().getMonth(); renderMonth(); flashClass_(document.getElementById('cal-grid'), 'nav-in'); }
 
-    // C3: normalisasi row lama sheet — satu sumber, dipakai renderMonth/showDayDetail/printMonthView
+    // C3: normalisasi row lama sheet - satu sumber, dipakai renderMonth/showDayDetail/printMonthView
     function normalizeAll_() {
       if (!S.tasks) S.tasks = [];
       if (!S.events) S.events = [];
@@ -3070,14 +3235,14 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       if (S.timelineMonth > 11) { S.timelineMonth = 0; S.timelineYear++; }
       if (S.timelineMonth < 0) { S.timelineMonth = 11; S.timelineYear--; }
       S.timelineSelectedDate = null;
-      renderTimeline();
+      renderTimeline(); flashClass_(document.getElementById('timeline-body'), 'nav-in');
     }
     function goThisTimelineMonth() {
       if (SHARE) return;
       S.timelineYear = new Date().getFullYear();
       S.timelineMonth = new Date().getMonth();
       S.timelineSelectedDate = null;
-      renderTimeline();
+      renderTimeline(); flashClass_(document.getElementById('timeline-body'), 'nav-in');
     }
 
     function getTimelineItems() {
@@ -3299,7 +3464,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
     // ═══════════════════════════════════════
     // PRINT TIMELINE VIEW
     // ═══════════════════════════════════════
-    // C5: satu jalur buka window cetak — dipakai printTimelineView & printMonthView
+    // C5: satu jalur buka window cetak - dipakai printTimelineView & printMonthView
     function printDoc_(html) {
       const win = window.open('', '_blank');
       win.document.write(html);
@@ -3357,7 +3522,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         rows += '<div class="p-label">' + esc(item.title) + '</div><div class="p-track">' + sunMarkers + bar + '</div>';
       });
 
-      // Legend — group campaigns by title+description
+      // Legend - group campaigns by title+description
       const campGroups = {};
       const nonCamps = [];
        items.forEach(item => {
@@ -3376,14 +3541,14 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
           const dr = d.start !== d.end ? formatShortDate(d.start) + ' → ' + formatShortDate(d.end) : formatShortDate(d.start);
           return '<span style="background:#f1f5f9;padding:2px 4px;border-radius:3px;margin-right:4px;display:inline-block;margin-bottom:2px;border:1px solid #e2e8f0;color:#475569;">' + ICONS.calendar + ' ' + dr + '</span>';
         }).join('');
-        leg += '<div class="tpi" style="border-left:4px solid ' + g.color + ';"><div class="tpit">' + ICONS.calendar + ' ' + esc(g.title) + '</div><div class="tpid">' + datesHtml + '</div><div class="tpidesc">' + esc(g.description || '—') + '</div></div>';
+        leg += '<div class="tpi" style="border-left:4px solid ' + g.color + ';"><div class="tpit">' + ICONS.calendar + ' ' + esc(g.title) + '</div><div class="tpid">' + datesHtml + '</div><div class="tpidesc">' + esc(g.description || '-') + '</div></div>';
       });
        nonCamps.forEach(item => {
          const dr = item.enddate && item.enddate !== item.date ? formatShortDate(item.date) + ' → ' + formatShortDate(item.enddate) : formatShortDate(item.date);
          const tags = item.tag ? ' &nbsp;#' + esc(item.tag).replace(/,/g, ' #') : '';
          const prio = item.priority ? ' · ' + (item.priority === 'high' ? 'Tinggi' : item.priority === 'low' ? 'Rendah' : 'Sedang') : '';
-         const st = item.done ? ' ✓ Selesai' : '';
-         leg += '<div class="tpi" style="border-left:4px solid ' + (item.color || '#6366f1') + ';"><div class="tpit">' + ICONS.task + ' ' + esc(item.title || item.nama || 'Tanpa Judul') + '</div><div class="tpid"><strong>' + dr + '</strong>' + tags + prio + st + '</div><div class="tpidesc">' + esc(item.description || '—') + '</div></div>';
+          const st = (item.done ? ' ✓ Selesai' : '') + (subsBadge_(item) ? ' · ' + subsBadge_(item) : '');
+         leg += '<div class="tpi" style="border-left:4px solid ' + (item.color || '#6366f1') + ';"><div class="tpit">' + ICONS.task + ' ' + esc(item.title || item.nama || 'Tanpa Judul') + '</div><div class="tpid"><strong>' + dr + '</strong>' + tags + prio + st + '</div><div class="tpidesc">' + esc(item.description || '-') + '</div></div>';
        });
 
       const html = '<!DOCTYPE html><html><head><title>Cetak Timeline - ' + monthName + '</title><style>@page{size:landscape;margin:8mm;}*{box-sizing:border-box;}body{font-family:\'Plus Jakarta Sans\',sans-serif;margin:0;padding:0;font-size:12px;color:#1e293b;background:#fff;}.p-grid{display:grid;grid-template-columns:130px repeat(' + daysIn + ',1fr);gap:0;}.p-corner{padding:4px 8px;font-weight:800;font-size:11px;border-bottom:1px solid #e5e7eb;grid-column:1;color:#1e293b;}.p-label{grid-column:1;padding:3px 8px;font-size:9px;font-weight:600;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1e293b;background:#fff;}.p-track{grid-column:2/-1;display:grid;grid-template-columns:repeat(' + daysIn + ',1fr);border-bottom:1px solid rgba(0,0,0,0.05);min-height:22px;align-items:center;position:relative;}.pdh{padding:3px 3px;text-align:center;font-size:8px;font-weight:700;border-bottom:1px solid rgba(0,0,0,0.07);border-right:1px solid rgba(0,0,0,0.04);color:#475569;}.pdh.today{background:#3b82f6;color:#fff;}.pdh.weekend{background:rgba(239,68,68,0.08);}.pdh.holiday{color:#ef4444;}.pdn{display:block;font-size:6px;font-weight:400;opacity:0.5;text-transform:uppercase;letter-spacing:0.5px;}.phn{font-size:6px;display:block;font-weight:400;}.tpb{height:16px;border-radius:3px;font-size:7px;display:flex;align-items:center;padding:0 5px;white-space:nowrap;overflow:visible;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,0.08);-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:1px 0;min-width:0;}.tpb.camp{color:#1e293b;-webkit-print-color-adjust:exact;print-color-adjust:exact;}.tpb.task{border-left:2px solid;color:#1e293b;}.tpb-text{white-space:nowrap;overflow:visible;}.p-dot{width:10px;height:10px;border-radius:50%;display:inline-block;-webkit-print-color-adjust:exact;print-color-adjust:exact;}.p-dots{display:flex;flex-wrap:wrap;gap:2px;}.p-sun{position:absolute;top:0;bottom:0;z-index:3;background:rgba(239,68,68,0.08);}.p-leg{margin-top:16px;padding-top:12px;border-top:1.5px solid #cbd5e1;page-break-before:always;}.p-leg h2{margin:0 0 10px;font-size:14px;color:#1e293b;}.p-lst{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}.tpi{break-inside:avoid;margin-bottom:0;padding:8px 12px;background:#f8fafc;border-bottom:1px solid #e5e7eb;border-radius:6px;}.tpit{font-weight:700;font-size:10px;color:#1e293b;margin-bottom:2px;}.tpid{font-size:9px;color:#475569;line-height:1.6;}.tpidesc{font-size:9px;color:#334155;margin-top:3px;line-height:1.5;white-space:pre-wrap;}@media print{.no-print{display:none!important;}}</style></head><body><div class="p-grid">' + hd + rows + '</div><div class="p-leg"><h2>Daftar Campaign & Tugas - ' + monthName + '</h2><div class="p-lst">' + leg + '</div></div></body></html>';
@@ -3419,7 +3584,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       S.tasks = prev;
       renderAll();
       renderDetail();
-      // ponytail: persist item yang balik/berubah — undo lokal tanpa save = ilusi (server sudah dihapus/dipindah)
+      // ponytail: persist item yang balik/berubah - undo lokal tanpa save = ilusi (server sudah dihapus/dipindah)
       var dirty = prev.filter(function(t) {
         var c = cur.find(function(x) { return x.id === t.id; });
         return !c || c.date !== t.date || c.enddate !== t.enddate || c.done !== t.done;
@@ -3504,7 +3669,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         showUndoSnackbar(ICONS.trash + ' Agenda dihapus', 'undo()');
         await refreshData(true);
       } catch (e) {
-        // rollback lokal — item masih ada di server
+        // rollback lokal - item masih ada di server
         if (deleted) { S.tasks.splice(Math.max(0, delIdx), 0, deleted); renderAll(); }
         toast('Gagal menghapus!', true);
       }
@@ -3535,10 +3700,10 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
           e.target.click();
         }
       }
-      // Tab trap inside open modals
+      // Tab trap inside open modals - urutan sama dengan Escape: confirm menumpuk di atas task-modal harus menang
       if (e.key === 'Tab') {
-        var openModal = document.getElementById('task-modal').classList.contains('open') ? document.querySelector('#task-modal .modal')
-          : (document.getElementById('confirm-modal').style.display === 'flex' ? document.querySelector('#confirm-modal .modal-box') : null);
+        var openModal = document.getElementById('confirm-modal').style.display === 'flex' ? document.querySelector('#confirm-modal .modal-box')
+          : (document.getElementById('task-modal').classList.contains('open') ? document.querySelector('#task-modal .modal') : null);
         if (openModal) {
           var f = openModal.querySelectorAll('button, [href], input:not([type=hidden]), select, textarea, [tabindex]:not([tabindex="-1"])');
           var vis = Array.prototype.filter.call(f, function(x) { return x.offsetParent !== null && !x.disabled; });
@@ -3549,7 +3714,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
           else if (!openModal.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
         }
       }
-      // Ctrl+... — blokir saat mengetik di form / dialog terbuka (Ctrl+Z = POST undo, jangan rebut dgn input)
+      // Ctrl+... - blokir saat mengetik di form / dialog terbuka (Ctrl+Z = POST undo, jangan rebut dgn input)
       var _tgt = e.target;
       var _typing = _tgt && (_tgt.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(_tgt.tagName || ''));
       var _sm = document.getElementById('share-modal');
@@ -3630,7 +3795,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       });
     }
 
-    // Reorder persist — 1 batch POST ke kolom Urutan (backend auto-buat kolom saat payload bawa urutan)
+    // Reorder persist - 1 batch POST ke kolom Urutan (backend auto-buat kolom saat payload bawa urutan)
     function persistOrder_() {
       var items = [];
       var n = 0;
@@ -3682,14 +3847,14 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       task.mulai = task.date; task.selesai = task.enddate;
       dragTaskId = null;
       renderAll();
-      // ponytail: persist — tanpa ini pindah tanggal hilang saat refresh
+      // ponytail: persist - tanpa ini pindah tanggal hilang saat refresh
       api('saveTask', task).then(function() {
         toast('✓ ' + task.title + ' dipindahkan ke ' + targetDate);
       }).catch(function() {
         task.date = oldDate; task.enddate = oldEnd;
         task.mulai = oldDate; task.selesai = oldEnd;
         renderAll();
-        toast('Gagal memindahkan agenda — dikembalikan ke posisi semula', true);
+        toast('Gagal memindahkan agenda - dikembalikan ke posisi semula', true);
       });
     }
 
@@ -3718,7 +3883,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       pop.classList.add('open');
       renderDP();
     }
-    // C7: addEventListener — window.onclick menimpa handler lain yang menempel setelahnya
+    // C7: addEventListener - window.onclick menimpa handler lain yang menempel setelahnya
     document.addEventListener('click', function(e) {
       if (e.target && e.target.closest && !e.target.closest('.custom-date-container') && !e.target.closest('.datepicker-popover'))
         document.getElementById('datepicker').classList.remove('open');
@@ -3761,7 +3926,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
 
     // CRUD & Modals
     function openTaskModal(id, pre, forcedType) {
-      if (SHARE) return; // share mode read-only — modal edit tak boleh terbuka
+      if (SHARE) return; // share mode read-only - modal edit tak boleh terbuka
       var t = id ? S.tasks.find(function(x) { return x.id === id; }) : null;
       if (!t) t = id ? S.events.find(function(x) { return x.id === id; }) : null;
       if (!t) t = id ? S.reminders.find(function(x) { return x.id === id; }) : null;
@@ -3776,6 +3941,8 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       });
       document.getElementById('f-type').value = type;
       document.getElementById('f-desc').value = t ? (t.description || '') : '';
+      S.editSubs = t && t.subtasks ? JSON.parse(JSON.stringify(t.subtasks)) : [];
+      renderSubs_();
       document.getElementById('f-date').value = t ? t.date : (pre || '');
       document.getElementById('f-enddate').value = t ? t.enddate : (pre || '');
       var dt = t ? t.date : '';
@@ -3801,11 +3968,13 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       document.getElementById('wrap-repeat').style.display = 'none';
       document.getElementById('f-repeat-every').value = '1';
       document.getElementById('f-repeat-unit').value = 'week';
+      document.body.style.overflow = 'hidden';
       document.getElementById('task-modal').classList.add('open');
       setTimeout(function() { document.getElementById('f-title').focus(); }, 50);
     }
 
     function duplicateTask(id) {
+      S._lastFocus = document.activeElement;
       let t = S.tasks.find(x => x.id === id);
       if (!t) t = S.events.find(x => x.id === id);
       if (!t) t = S.reminders.find(x => x.id === id);
@@ -3816,6 +3985,8 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       document.getElementById('f-title').value = t.title + ' (Copy)';
       document.getElementById('f-type').value = t.type || 'task';
       document.getElementById('f-desc').value = t.description || '';
+      S.editSubs = t.subtasks ? JSON.parse(JSON.stringify(t.subtasks)) : [];
+      renderSubs_();
       document.getElementById('f-date').value = t.date || '';
       document.getElementById('f-enddate').value = t.enddate || '';
       document.getElementById('f-priority').value = t.priority || 'medium';
@@ -3831,6 +4002,10 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         channelEl.value = '';
         tagEl.value = t.tag || '';
       }
+      // sinkronkan radio dulu - toggleTypeFields membaca :checked; tanpa ini tipe asal (Event/Reminder/Campaign) balik jadi Task
+      document.querySelectorAll('input[name="f-type-radio"]').forEach(function(el) {
+        el.checked = el.value === (t.type || 'task');
+      });
       selectSwatch(t.color || COLORS[0]);
       toggleTypeFields();
       document.getElementById('btn-delete').style.display = 'none';
@@ -3838,12 +4013,96 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       document.getElementById('wrap-repeat').style.display = 'none';
       document.getElementById('f-repeat-every').value = '1';
       document.getElementById('f-repeat-unit').value = 'week';
+      document.body.style.overflow = 'hidden';
       document.getElementById('task-modal').classList.add('open');
       setTimeout(function() { document.getElementById('f-title').focus(); }, 50);
     }
     function closeModal() {
       document.getElementById('task-modal').classList.remove('open');
+      document.body.style.overflow = '';
+      clearFormErr_();
       if (S._lastFocus && S._lastFocus.focus) { try { S._lastFocus.focus(); } catch (e) {} S._lastFocus = null; }
+    }
+
+    // Validasi inline - toast 3 detik tak cukup: pesan hidup di atas footer, fokus pindah ke field bermasalah
+    function showFormErr_(msg, focusId) {
+      var e = document.getElementById('form-err');
+      e.textContent = msg;
+      e.classList.remove('display-none');
+      ['f-title', 'f-date'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (id === focusId) { el.setAttribute('aria-invalid', 'true'); el.setAttribute('aria-describedby', 'form-err'); }
+        else { el.removeAttribute('aria-invalid'); el.removeAttribute('aria-describedby'); }
+      });
+      var fe = focusId ? document.getElementById(focusId) : null;
+      if (fe) fe.focus();
+    }
+    function clearFormErr_() {
+      var e = document.getElementById('form-err');
+      if (e) e.classList.add('display-none');
+      ['f-title', 'f-date'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) { el.removeAttribute('aria-invalid'); el.removeAttribute('aria-describedby'); }
+      });
+    }
+
+    // ── Sub task ──
+    function renderSubs_() {
+      var el = document.getElementById('sub-list');
+      if (!el) return;
+      var subs = S.editSubs || [];
+      el.innerHTML = subs.length ? subs.map(function(s, i) {
+        return '<li class="' + (s.done ? 'done' : '') + '"><div class="task-check ' + (s.done ? 'checked' : '') + '" role="checkbox" aria-checked="' + !!s.done + '" aria-label="Sub task selesai" onclick="toggleSubtask(' + i + ')"></div><span class="sub-text">' + esc(s.text) + '</span><button type="button" class="sub-x" aria-label="Hapus sub task" onclick="removeSubtask(' + i + ')"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></li>';
+      }).join('') : '<li class="sub-empty">Belum ada sub task</li>';
+    }
+    function addSubtask() {
+      var inp = document.getElementById('f-sub-input');
+      if (!inp) return;
+      var v = (inp.value || '').trim();
+      if (!v) return;
+      if (!S.editSubs) S.editSubs = [];
+      S.editSubs.push({ id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: v, done: false });
+      inp.value = '';
+      renderSubs_();
+      inp.focus();
+    }
+    function toggleSubtask(i) {
+      var s = (S.editSubs || [])[i];
+      if (!s) return;
+      s.done = !s.done;
+      renderSubs_();
+    }
+    function removeSubtask(i) {
+      (S.editSubs || []).splice(i, 1);
+      renderSubs_();
+    }
+    // Checklist sub task di list/detail - simpan minimal {id,type,subtasks}; backend mempertahankan kolom lain
+    function toggleSubItem_(id, i) {
+      if (SHARE) return;
+      var t = S.tasks.find(function(x) { return x.id === id; });
+      if (!t) t = S.events.find(function(x) { return x.id === id; });
+      if (!t) t = S.reminders.find(function(x) { return x.id === id; });
+      if (!t || !t.subtasks || !t.subtasks[i]) return;
+      var was = t.subtasks[i].done;
+      t.subtasks[i].done = !was;
+      renderAll();
+      if (S.selectedId === id) renderDetail(); // day-detail (selectedId null) tidak boleh ditimpa
+      api('saveTask', { id: t.id, type: t.type || 'task', subtasks: t.subtasks })
+        .catch(function() {
+          t.subtasks[i].done = was;
+          renderAll();
+          if (S.selectedId === id) renderDetail();
+          toast('Gagal menyimpan sub task', true);
+        });
+    }
+    // Checklist sub task untuk detail panel (share = baca-saja, tanpa tombol)
+    function subsListHtml_(id, subs) {
+      if (!subs || !subs.length) return '';
+      return '<div class="subs-inline">' + subs.map(function(s, si) {
+        var inner = '<span class="task-check' + (s.done ? ' checked' : '') + '" aria-hidden="true"></span><span>' + esc(s.text) + '</span>';
+        if (SHARE) return '<div class="sub-i' + (s.done ? ' done' : '') + '">' + inner + '</div>';
+        return '<button type="button" class="sub-i' + (s.done ? ' done' : '') + '" aria-label="' + (s.done ? 'Tandai belum selesai' : 'Tandai selesai') + ': ' + esc(s.text) + '" onclick="toggleSubItem_(\'' + (id || '') + '\',' + si + ')">' + inner + '</button>';
+      }).join('') + '</div>';
     }
     function toggleTypeFields() {
       var radio = document.querySelector('input[name="f-type-radio"]:checked');
@@ -3872,8 +4131,20 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       }
       if (isE || isR) S.tempColor = '';
 
+      // Grid per jenis: baris/seksi kosong disembunyikan (auto-fit tak punya item = tinggi 0, tapi label seksi bohong)
+      var secD = document.getElementById('sec-detail');
+      if (secD) secD.style.display = isR ? 'none' : '';
+      var rowPT = document.getElementById('row-pt');
+      if (rowPT) rowPT.style.display = (isC || val === 'task') ? '' : 'none';
+      var rowOC = document.getElementById('row-oc');
+      if (rowOC) rowOC.style.display = (val === 'task' || isE) ? '' : 'none';
       document.getElementById('wrap-org').style.display = isE ? '' : 'none';
       document.getElementById('wrap-color').style.display = (isC || isE || isR) ? 'none' : 'block';
+      // jam hanya dipakai event/reminder - task/campaign menyimpan date polos, tampil = janji yang dibuang
+      var _time = document.getElementById('modal-time');
+      var _lblTime = document.querySelector('label[for="modal-time"]');
+      if (_time) _time.style.display = (isE || isR) ? '' : 'none';
+      if (_lblTime) _lblTime.style.display = (isE || isR) ? '' : 'none';
       document.getElementById('modal-title-el').textContent = isE ? (document.getElementById('edit-id').value ? 'Ubah Event' : 'Event Baru')
         : isR ? (document.getElementById('edit-id').value ? 'Ubah Reminder' : 'Reminder Baru')
         : isC ? (document.getElementById('edit-id').value ? 'Ubah Campaign' : 'Campaign Baru')
@@ -3924,7 +4195,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       S.selectedId = id;
       renderAll();
       renderDetail();
-      // ponytail: feedback — row.selected baru terasa kalau panel detail terlihat
+      // ponytail: feedback - row.selected baru terasa kalau panel detail terlihat
       var dp = document.getElementById('detail-panel');
       if (dp && dp.scrollIntoView) dp.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
@@ -3969,7 +4240,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
           '<button class="btn btn-ghost btn-mini" onclick="event.stopPropagation();' + "openTaskModal('" + t.id + "')" + '">Ubah</button>' +
           '</div>' +
           '<div class="dd-meta">' +
-          formatShortDate(t.date) + span + (t.tag ? ' · ' + esc(t.tag) : '') +
+          formatShortDate(t.date) + span + (t.tag ? ' · ' + esc(t.tag) : '') + (subsBadge_(t) ? ' · ' + subsBadge_(t) : '') +
           '</div>' + orgHtml +
           '<div class="dd-desc">' + desc + '</div>' +
           '</div>';
@@ -4011,9 +4282,9 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
          '<div style="width:4px;border-radius:4px;background:' + (t.color || 'var(--item-fallback)') + ';align-self:stretch;flex-shrink:0;"></div>' +
          '<div><div class="detail-title fs15-lh12">' + esc(t.title || t.nama || 'Tanpa Judul') + '</div>' +
          '<div class="badges-row">' +
-         '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + badgeBg + ';color:' + badgeColor + '">' + typeIcon + ' ' + typeLabel + '</span>' +
-         (t.tag ? '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + hexAlpha(t.color || '#6366f1', 0.1) + ';color:' + (t.color || 'var(--item-fallback)') + ';border:1px solid ' + (t.color || 'var(--item-fallback)') + '">' + esc(t.tag) + '</span>' : '') +
-          '<span class="badge" style="padding:2px 6px;font-size:9.5px;background:' + (t.done ? 'var(--success-light)' : 'var(--surface-alt)') + ';color:' + (t.done ? 'var(--success)' : 'var(--text-soft)') + '">' + (t.done ? '✓ Selesai' : ICONS.clock + ' Pending') + '</span>' +
+         '<span class="badge" style="padding:2px 6px;font-size:10px;background:' + badgeBg + ';color:' + badgeColor + '">' + typeIcon + ' ' + typeLabel + '</span>' +
+         (t.tag ? '<span class="badge" style="padding:2px 6px;font-size:10px;background:' + hexAlpha(t.color || '#6366f1', 0.1) + ';color:' + (t.color || 'var(--item-fallback)') + ';border:1px solid ' + (t.color || 'var(--item-fallback)') + '">' + esc(t.tag) + '</span>' : '') +
+          '<span class="badge" style="padding:2px 6px;font-size:10px;background:' + (t.done ? 'var(--success-light)' : 'var(--surface-alt)') + ';color:' + (t.done ? 'var(--success)' : 'var(--text-soft)') + '">' + (t.done ? '✓ Selesai' : ICONS.clock + ' Tertunda') + '</span>' +
           '</div></div></div>' +
           '<div class="row-4f0">' +
           '<button class="btn btn-ghost btn-detail" onclick="toggleDone(\'' + (t.id || '') + '\')">' + (t.done ? '↩ Buka' : '✓ Selesai') + '</button>' +
@@ -4021,7 +4292,8 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
          '<button class="btn btn-ghost btn-detail" onclick="duplicateTask(\'' + (t.id || '') + '\')">Duplikat</button>' +
          '</div></div>' + orgHtml +
          '<div class="dd-date">' + ICONS.calendar + ' ' + formatShortDate(t.date) + (t.enddate && t.enddate !== t.date ? ' → ' + formatShortDate(t.enddate) : '') + '</div>' +
-         '<div class="detail-desc dd-body">' + (esc(t.description) || '<span class="empty-em">Tanpa deskripsi.</span>') + '</div>';
+         '<div class="detail-desc dd-body">' + (esc(t.description) || '<span class="empty-em">Tanpa deskripsi.</span>') + '</div>' +
+         subsListHtml_(t.id, t.subtasks);
     }
 
     async function submitTask() {
@@ -4046,9 +4318,10 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
           warna: S.tempColor || '#14b8a6',
           type: 'event',
           tipe: 'event',
+          subtasks: S.editSubs || [],
           status: ''
         };
-        if (!ed.nama || !ed.mulai) { toast('Isi nama & tanggal!', true); S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return; }
+        if (!ed.nama || !document.getElementById('f-date').value) { S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return showFormErr_(!ed.nama ? 'Judul wajib diisi.' : 'Tanggal Mulai wajib dipilih.', !ed.nama ? 'f-title' : 'f-date'); }
         try {
           await api('saveCalendarItem', ed);
         } catch (e) { toast('Gagal menyimpan Event', true); S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return; }
@@ -4060,7 +4333,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
           await api('getCalendarData');
           renderAll();
           toast('✓ Event tersimpan');
-        } catch (e) { toast('Tersimpan — data terbaru gagal dimuat, klik Refresh', true); }
+        } catch (e) { toast('Tersimpan - data terbaru gagal dimuat, klik Refresh', true); }
         S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText;
         return;
       }
@@ -4075,9 +4348,10 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
           warna: S.tempColor || '#FFC300',
           type: 'reminder',
           tipe: 'reminder',
+          subtasks: S.editSubs || [],
           status: ''
         };
-        if (!rd.nama || !rd.mulai) { toast('Isi nama & tanggal!', true); S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return; }
+        if (!rd.nama || !document.getElementById('f-date').value) { S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return showFormErr_(!rd.nama ? 'Judul wajib diisi.' : 'Tanggal Mulai wajib dipilih.', !rd.nama ? 'f-title' : 'f-date'); }
         try {
           await api('saveCalendarItem', rd);
         } catch (e) { toast('Gagal menyimpan Reminder', true); S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return; }
@@ -4089,7 +4363,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
           await api('getCalendarData');
           renderAll();
           toast('✓ Reminder tersimpan');
-        } catch (e) { toast('Tersimpan — data terbaru gagal dimuat, klik Refresh', true); }
+        } catch (e) { toast('Tersimpan - data terbaru gagal dimuat, klik Refresh', true); }
         S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText;
         return;
       }
@@ -4124,30 +4398,35 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         deskripsi: document.getElementById('f-desc').value,
         warna: isC && chData ? chData.color : (S.tempColor || COLORS[0]),
         tipe: type,
-        // task baru selalu nomor 1 (urutan -1) — key hilang saat edit (JSON drop undefined) → urutan lama utuh
+        subtasks: S.editSubs || [],
+        // task baru selalu nomor 1 (urutan -1) - key hilang saat edit (JSON drop undefined) → urutan lama utuh
         urutan: editId ? undefined : -1
       };
-      if (!task.title || !task.date) { S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return toast('Isi judul & tanggal!', true); }
+      if (!task.title || !task.date) { S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return showFormErr_(!task.title ? 'Judul wajib diisi.' : 'Tanggal Mulai wajib dipilih.', !task.title ? 'f-title' : 'f-date'); }
+      applyAuto_(task);
 
       const exIdx = S.tasks.findIndex(x => x.id === task.id);
       var oldBackup = exIdx > -1 ? S.tasks[exIdx] : null;
       if (exIdx > -1) S.tasks[exIdx] = task; else S.tasks.unshift(task);
 
-      // ponytail: jangan tutup modal sebelum server menjawab — gagal save = ketikan user harus selamat
-      renderAll();
+      // ponytail: jangan tutup modal sebelum server menjawab - gagal save = ketikan user harus selamat
+      S._flashId = task.id; renderAll(); S._flashId = null;
 
       try {
         await api('saveTask', task);
-        // Handle repeat — W7: kumpulkan dulu, simpan 1 batch POST (bukan N POST)
+        // Handle repeat - W7: kumpulkan dulu, simpan 1 batch POST (bukan N POST)
         var warnMsg = null, note = null;
         if (document.getElementById('f-repeat').checked && !editId) {
           var repEvery = parseInt(document.getElementById('f-repeat-every').value) || 1;
           var repUnit = document.getElementById('f-repeat-unit').value;
-          var repUntil = document.getElementById('f-enddate').value || (new Date().getFullYear() + '-12-31');
+          // Ulangi = salinan hanya sampai akhir bulan tanggal mulai (tidak lebih); field Berakhir tetap jadi durasi tiap salinan lewat diffDays
+          var _p = task.date.slice(0, 10).split('-');
+          var repUntil = _p[0] + '-' + _p[1] + '-' + pad(new Date(+_p[0], +_p[1], 0).getDate());
           var cur = new Date(task.date);
           var origEnd = task.enddate ? new Date(task.enddate) : null;
           var diffDays = origEnd ? Math.round((origEnd - cur) / 86400000) : 0;
           var endD = new Date(repUntil);
+          endD.setHours(23, 59, 59, 999); // hari terakhir dalam bulan ikut terhitung
           var reps = [];
           while (cur < endD) {
             if (repUnit === 'day') cur.setDate(cur.getDate() + repEvery);
@@ -4162,10 +4441,13 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
               var ed = new Date(cur); ed.setDate(ed.getDate() + diffDays);
               rep.enddate = ed.getFullYear() + '-' + pad(ed.getMonth() + 1) + '-' + pad(ed.getDate());
             }
+            // salinan mendatang tidak mewarisi status auto-complete dari induk lewat tanggal
+            if (!isOverdue3_(rep)) { rep.done = false; rep.status = ''; }
             reps.push(rep);
           }
+          if (!reps.length) toast('Ulangi: tidak ada tanggal tersisa dalam bulan ini', false);
           if (reps.length && !(await showConfirm('Agenda ini disalin ' + reps.length + '× sampai ' + formatShortDate(repUntil) + '. Lanjutkan?', 'Ya, Ulangi'))) {
-            note = '✓ Tersimpan — ulangan dibatalkan';
+            note = '✓ Tersimpan - ulangan dibatalkan';
             reps = [];
             renderAll();
           }
@@ -4176,7 +4458,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
               var br = await api('saveTasksBatch', { items: reps });
               var okIds = (br.result && br.result.saved) || [];
               if (okIds.length < reps.length) {
-                // server menyebut id tersimpan — buang hanya yang gagal (yg tersimpan tetap, id cocok)
+                // server menyebut id tersimpan - buang hanya yang gagal (yg tersimpan tetap, id cocok)
                 var failedIds = reps.filter(function(x) { return okIds.indexOf(x.id) < 0; }).map(function(x) { return x.id; });
                 S.tasks = S.tasks.filter(function(x) { return failedIds.indexOf(x.id) < 0; });
                 renderAll();
@@ -4184,15 +4466,15 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
               }
             } catch (batchErr) {
               // lokal dipertahankan (input selamat); refresh berikutnya rekonsiliasi
-              warnMsg = 'Sebagian ulangan gagal disimpan — klik Refresh untuk memeriksa';
+              warnMsg = 'Sebagian ulangan gagal disimpan - klik Refresh untuk memeriksa';
             }
           }
         }
         closeModal();
-        // W8: tanpa refreshData() — state lokal sudah sinkron, refetch penuh per save tidak perlu
+        // W8: tanpa refreshData() - state lokal sudah sinkron, refetch penuh per save tidak perlu
         toast(warnMsg || note || '✓ Berhasil disimpan', !!warnMsg);
       } catch (err) {
-        // Rollback optimistic update — modal tetap buka, isi form selamat
+        // Rollback optimistic update - modal tetap buka, isi form selamat
         if (oldBackup) { var ri = S.tasks.findIndex(x => x.id === task.id); if (ri > -1) S.tasks[ri] = oldBackup; }
         else { var ri2 = S.tasks.indexOf(task); if (ri2 > -1) S.tasks.splice(ri2, 1); }
         renderAll();
@@ -4208,11 +4490,14 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
     async function repeatCalendarItem_(tmpl) {
       var repEvery = parseInt(document.getElementById('f-repeat-every').value) || 1;
       var repUnit = document.getElementById('f-repeat-unit').value;
-      var repUntil = document.getElementById('f-enddate').value || (new Date().getFullYear() + '-12-31');
+      // Ulangi = salinan hanya sampai akhir bulan tanggal mulai (tidak lebih)
+      var _p = tmpl.mulai.slice(0, 10).split('-');
+      var repUntil = _p[0] + '-' + _p[1] + '-' + pad(new Date(+_p[0], +_p[1], 0).getDate());
       var cur = new Date(tmpl.mulai);
       var origEnd = tmpl.selesai ? new Date(tmpl.selesai) : null;
       var diffDays = origEnd ? Math.round((origEnd - cur) / 86400000) : 0;
       var endD = new Date(repUntil);
+      endD.setHours(23, 59, 59, 999); // hari terakhir dalam bulan ikut terhitung
       var reps = [];
       while (cur < endD) {
         if (repUnit === 'day') cur.setDate(cur.getDate() + repEvery);
@@ -4229,9 +4514,9 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         }
         reps.push(rep);
       }
-      if (!reps.length) return;
+      if (!reps.length) { toast('Ulangi: tidak ada tanggal tersisa dalam bulan ini', false); return; }
       if (!(await showConfirm('Agenda ini disalin ' + reps.length + '× sampai ' + formatShortDate(repUntil) + '. Lanjutkan?', 'Ya, Ulangi'))) return;
-      // W7: 1 batch POST — id baru dari server diambil saat caller refetch getCalendarData
+      // W7: 1 batch POST - id baru dari server diambil saat caller refetch getCalendarData
       await api('saveTasksBatch', { items: reps });
       toast('✓ + ' + reps.length + ' ulangan tersimpan');
     }
@@ -4246,14 +4531,15 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         if (!t) { t = S.events.find(function(x) { return x.id === id; }); source = 'event'; }
         if (!t) { t = S.reminders.find(function(x) { return x.id === id; }); source = 'reminder'; }
         if (!t) return;
+        if (isOverdue3_(t)) { toast('Tanggal sudah lewat - otomatis dianggap selesai'); return; }
         if (source === 'task') {
-          t.done = !t.done; renderAll();
-          // W8: tanpa refreshData() — lokal sudah sinkron, saveTask hanya menulis field yang sama
+          t.done = !t.done; renderAll(); bounceCheck_(id);
+          // W8: tanpa refreshData() - lokal sudah sinkron, saveTask hanya menulis field yang sama
           try { await api('saveTask', t); } catch (e) { t.done = !t.done; renderAll(); toast('Gagal mengubah status', true); }
         } else {
-          t.done = !t.done; t.status = t.done ? 'Selesai' : ''; renderAll();
+          t.done = !t.done; t.status = t.done ? 'Selesai' : ''; renderAll(); bounceCheck_(id);
           try {
-            // ponytail: kirim hanya status — backend update mempertahankan kolom lain (jam mulai ikut aman)
+            // ponytail: kirim hanya status - backend update mempertahankan kolom lain (jam mulai ikut aman)
             await api('saveCalendarItem', { id: t.id, status: t.status, type: source });
           } catch (e) { t.done = !t.done; t.status = t.done ? 'Selesai' : ''; renderAll(); toast('Gagal mengubah status', true); }
         }
@@ -4267,19 +4553,19 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
     function showConfirm(msg, okText) {
       return new Promise(function(resolve) {
         var el = document.getElementById('confirm-modal');
-        S._lastFocus = document.activeElement;
+        var ret = document.activeElement; // slot lokal - jangan timpa S._lastFocus milik task-modal (fokus pengembali opener)
         document.getElementById('confirm-title').textContent = 'Konfirmasi';
         document.getElementById('confirm-msg').textContent = msg;
         document.getElementById('confirm-ok').textContent = okText || 'Ya';
         document.getElementById('confirm-ok').className = 'btn btn-danger';
         el.style.display = 'flex';
-        el.classList.add('open'); // .modal-bg default opacity:0 — tanpa .open dialog tak terlihat (P0)
+        el.classList.add('open'); // .modal-bg default opacity:0 - tanpa .open dialog tak terlihat (P0)
         setTimeout(function() { document.getElementById('confirm-cancel').focus(); }, 30);
         function cleanup(ans) {
           S._confirmCleanup = null;
           el.style.display = 'none';
           el.classList.remove('open');
-          if (S._lastFocus && S._lastFocus.focus) { try { S._lastFocus.focus(); } catch (e) {} S._lastFocus = null; }
+          if (ret && ret.focus) { try { ret.focus(); } catch (e) {} }
           resolve(ans);
         }
         S._confirmCleanup = cleanup;
@@ -4288,7 +4574,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       });
     }
 
-    // Esc / backdrop harus me-RESOLVE promise — dulu cuma sembunyikan → await caller nyangkut selamanya
+    // Esc / backdrop harus me-RESOLVE promise - dulu cuma sembunyikan → await caller nyangkut selamanya
     function closeConfirm() {
       if (S._confirmCleanup) { S._confirmCleanup(false); return; }
       var el = document.getElementById('confirm-modal');
@@ -4417,7 +4703,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
                '<div style="font-size:11px;font-weight:800;color:#0f172a;line-height:1.2;">' + esc(g.title) + '</div>' +
              '</div>' +
            '<div style="margin-bottom:2px;">' + datesHtml + '</div>' +
-                                '<div style="font-size:9px;color:#475569;line-height:1.4;margin-top:6px;margin-bottom:6px;padding:4px 8px;background:#f1f5f9;border-radius:4px;white-space:pre-wrap;">' + (esc(g.description || '') || '\u2014') + '</div>' +
+                                '<div style="font-size:9px;color:#475569;line-height:1.4;margin-top:6px;margin-bottom:6px;padding:4px 8px;background:#f1f5f9;border-radius:4px;white-space:pre-wrap;">' + (esc(g.description || '') || '-') + '</div>' +
          '</div>';
        }).join('');
 
@@ -4497,7 +4783,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
     }
 
     // ── Event & Reminder ──
-    var S_eventFilter = 'all', S_reminderFilter = 'all';
+    var S_eventFilter = 'upcoming', S_reminderFilter = 'pending';
 
     function setEventFilter(f, el) {
       S_eventFilter = f;
@@ -4527,12 +4813,13 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         return;
       }
       el.innerHTML = list.map(function(e) {
-        return '<div class="task-row" role="button" tabindex="0" onclick="selectTask(\'' + e.id + '\')" style="border-left:3px solid ' + (e.color || 'var(--teal)') + '">' +
+        return '<div class="task-row' + (S._flashId === e.id ? ' just-in' : '') + '" role="button" tabindex="0" onclick="selectTask(\'' + e.id + '\')" style="border-left:3px solid ' + (e.color || 'var(--teal)') + '">' +
           '<div class="task-main"><div class="task-name">' + esc(e.title || 'Event') + '</div>' +
-          '<div class="task-sub"><span>' + ICONS.calendar + ' ' + (e.date || '—') + '</span>' +
+          '<div class="task-sub"><span>' + ICONS.calendar + ' ' + (e.date || '-') + '</span>' +
           (e.enddate && e.enddate !== e.date ? ' → ' + e.enddate : '') +
           (e.penyelenggara ? '<span class="op-50"> · ' + esc(e.penyelenggara) + '</span>' : '') +
           '<span class="badge badge-teal">' + ICONS.calendar + ' Event</span>' +
+          (subsBadge_(e) ? '<span class="subs-badge">' + subsBadge_(e) + '</span>' : '') +
           '</div></div></div>';
       }).join('');
     }
@@ -4551,12 +4838,13 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       }
       el.innerHTML = list.map(function(r) {
         var done = r.status === 'Selesai' || r.done;
-        return '<div class="task-row ' + (done ? 'done' : '') + '" role="button" tabindex="0" onclick="selectTask(\'' + r.id + '\')" style="border-left:3px solid ' + (r.color || 'var(--warning)') + '">' +
-          '<div class="task-check ' + (done ? 'checked' : '') + '" role="checkbox" aria-checked="' + !!done + '" aria-label="Tandai selesai: ' + esc(r.title || 'Reminder') + '" onclick="event.stopPropagation();toggleDone(\'' + r.id + '\')"></div>' +
+        return '<div class="task-row ' + (done ? 'done' : '') + (S._flashId === r.id ? ' just-in' : '') + '" role="button" tabindex="0" onclick="selectTask(\'' + r.id + '\')" style="border-left:3px solid ' + (r.color || 'var(--warning)') + '">' +
+          '<div class="task-check ' + (done ? 'checked' : '') + '" data-id="' + r.id + '" role="checkbox" aria-checked="' + !!done + '" aria-label="Tandai selesai: ' + esc(r.title || 'Reminder') + '" onclick="event.stopPropagation();toggleDone(\'' + r.id + '\')"></div>' +
           '<div class="task-main"><div class="task-name">' + esc(r.title || 'Reminder') + '</div>' +
-          '<div class="task-sub"><span>' + ICONS.calendar + ' ' + (r.date || '—') + '</span>' +
+          '<div class="task-sub"><span>' + ICONS.calendar + ' ' + (r.date || '-') + '</span>' +
           (r.enddate && r.enddate !== r.date ? ' → ' + r.enddate : '') +
-          '<span class="badge" style="background:' + (done ? 'var(--success-light)' : 'var(--surface-alt)') + ';color:' + (done ? 'var(--success)' : 'var(--text-soft)') + ';">' + (done ? '✓ Selesai' : ICONS.clock + ' Pending') + '</span>' +
+          '<span class="badge" style="background:' + (done ? 'var(--success-light)' : 'var(--surface-alt)') + ';color:' + (done ? 'var(--success)' : 'var(--text-soft)') + ';">' + (done ? '✓ Selesai' : ICONS.clock + ' Tertunda') + '</span>' +
+          (subsBadge_(r) ? '<span class="subs-badge">' + subsBadge_(r) + '</span>' : '') +
           '</div></div></div>';
       }).join('');
     }
