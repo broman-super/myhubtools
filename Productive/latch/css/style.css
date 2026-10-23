@@ -373,7 +373,8 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
 .link-card .copy-btn svg{ width:15px; height:15px; }
 .row-actions button.row-copy,
 .row-actions button.row-delete,
-.row-actions button.row-save{
+.row-actions button.row-save,
+.row-actions button.row-edit{
   position:relative;
   flex-shrink:0; width:32px; height:32px; border-radius:var(--radius-sm);
   display:flex; align-items:center; justify-content:center;
@@ -385,16 +386,20 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
 }
 .row-actions button.row-copy::before,
 .row-actions button.row-delete::before,
-.row-actions button.row-save::before{ content:""; position:absolute; inset:-6px; }
+.row-actions button.row-save::before,
+.row-actions button.row-edit::before{ content:""; position:absolute; inset:-6px; }
 .row-actions button.row-copy:hover,
 .row-actions button.row-delete:hover,
-.row-actions button.row-save:hover{ color:var(--accent); border-color:var(--border); }
+.row-actions button.row-save:hover,
+.row-actions button.row-edit:hover{ color:var(--accent); border-color:var(--border); }
 .row-actions button.row-copy:active,
 .row-actions button.row-delete:active,
-.row-actions button.row-save:active{ transform:scale(0.92); }
+.row-actions button.row-save:active,
+.row-actions button.row-edit:active{ transform:scale(0.92); }
 .row-actions button.row-copy svg,
 .row-actions button.row-delete svg,
-.row-actions button.row-save svg{ width:15px; height:15px; }
+.row-actions button.row-save svg,
+.row-actions button.row-edit svg{ width:15px; height:15px; }
 
 @media (hover:hover){
   .link-card[data-url]::after{
@@ -501,7 +506,7 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
 .dash-table{ border-radius:var(--radius-lg); overflow:hidden; }
 .dash-row{
   display:grid;
-  grid-template-columns:56px 1.8fr 2.2fr 1.3fr 92px 110px;
+  grid-template-columns:64px 1.8fr 2.2fr 1.3fr 92px 150px;
   grid-template-areas:"grip judul url kata waktu aksi";
   align-items:center; gap:var(--space-2);
   padding:10px var(--space-4);
@@ -518,8 +523,12 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
 .dash-row:not(.dash-head) > :nth-child(4){ grid-area:kata; }
 .dash-row:not(.dash-head) > :nth-child(5){ grid-area:waktu; }
 .dash-row:not(.dash-head) > :nth-child(6){ grid-area:aksi; }
+/* Matikan min-width otomatis (min-content) tiap sel — kalau tidak, input/select
+   memaksa track melebar & header kolom di atasnya ikut bergeser (salah sejajar).
+   Berlaku juga untuk sel header (teks "KATEGORI" dsb). */
+.dash-row > *{ min-width:0; }
 .dash-row.dash-head{
-  grid-template-columns:56px 1.8fr 2.2fr 1.3fr 92px 110px;
+  grid-template-columns:64px 1.8fr 2.2fr 1.3fr 92px 150px;
   grid-template-areas:none; align-items:center;
   background:transparent; border:none; border-radius:0;
   margin-bottom:8px; padding:6px var(--space-4);
@@ -543,13 +552,16 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
 .dash-grip .drag-handle svg{ width:18px; height:18px; }
 .dash-row label{ display:none; }
 .dash-row input, .dash-row select{
-  width:100%; background:var(--bg-base); border:1px solid var(--border); border-radius:8px;
+  width:100%; min-width:0; /* biar kolom fr ikut menyusut, tidak menabrak header kolom */
+  background:var(--bg-base); border:1px solid var(--border); border-radius:8px;
   padding:8px 10px; font-size:13px; box-sizing:border-box;
   color:var(--text-primary);
   transition:border-color .2s var(--ease-smooth);
 }
 .dash-row input::placeholder, .dash-row select::placeholder{ color:var(--text-quaternary); }
 .dash-row input:focus, .dash-row select:focus{ border-color:var(--accent); }
+/* Checkbox baris wajib kecil — tanpa ini aturan input di atas melebarkannya jadi 100% (52px). */
+.dash-row input.checkbox{ width:16px; height:16px; padding:0; }
 .dash-row select{
   appearance:none;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%2394a3b8'/></svg>");
@@ -572,6 +584,11 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
 
 @media (max-width:899px){
   .dash-row{ display:grid; grid-template-columns:1fr; grid-template-areas:none; gap:8px; padding:var(--space-4); }
+  /* Anak baris bawa grid-area dari layout desktop; tanpa reset ini mereka
+     menumpuk tumpang tindih di satu sel (layout berantakan).
+     Pakai :nth-child(n) supaya spesifisitasnya menang dari aturan grid-area
+     desktop yang juga memakai :nth-child. */
+  .dash-row:not(.dash-head) > :nth-child(n){ grid-area:auto; }
   .dash-row.dash-head{ display:none; }
   .dash-grip{ display:flex; cursor:default; justify-content:flex-start; }
   .dash-grip .drag-handle{ display:none; }
@@ -582,6 +599,7 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
 }
 
 .checkbox{ width:16px; height:16px; flex-shrink:0; accent-color:var(--accent); cursor:pointer; }
+.dash-grip .checkbox{ margin:0; } /* hilangkan margin bawaan browser yang bikin grip meluap */
 
 /* ---------- 9. DRAWER ---------- */
 .overlay-bg{

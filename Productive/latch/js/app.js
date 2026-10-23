@@ -1089,6 +1089,7 @@ const dashboard = (() => {
         <div><label>Waktu</label><span style="font-size:12px;color:var(--text-tertiary)">${utils.relTime(link.createdAt)}</span></div>
         <div class="row-actions">
           <span class="save-hint"><button class="row-save" title="Simpan" aria-label="Simpan perubahan"><i data-feather="save"></i></button></span>
+          <button class="row-edit" title="Edit lengkap (badge, deskripsi, kunci)" aria-label="Edit link"><i data-feather="edit-3"></i></button>
           <button class="row-move row-up mobile-only" title="Naik" aria-label="Naikkan urutan"><i data-feather="chevron-up"></i></button>
           <button class="row-move row-down mobile-only" title="Turun" aria-label="Turunkan urutan"><i data-feather="chevron-down"></i></button>
           <button class="row-copy" title="Salin" aria-label="Salin URL"><i data-feather="copy"></i></button>
@@ -1164,6 +1165,12 @@ const dashboard = (() => {
 
       row.querySelector(".row-delete").addEventListener("click", () => {
         confirmDelete(id);
+      });
+
+      // Edit lengkap via drawer (badge, deskripsi, PIN kunci — tidak ada di edit inline).
+      row.querySelector(".row-edit").addEventListener("click", () => {
+        const link = state.get("links").find(l => l.id === id);
+        if (link) openDrawerForEdit(link);
       });
 
       // Mobile reorder buttons (up/down)
