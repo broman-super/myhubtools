@@ -11,6 +11,18 @@ function geminiKey_() {
   return k ? String(k).trim() : '';
 }
 
+// Kunci tulis tim: Script Property BRIDGE_TOKEN (repo publik, jangan tulis nilainya di sini).
+function bridgeToken_() {
+  var t = PropertiesService.getScriptProperties().getProperty('BRIDGE_TOKEN');
+  if (!t) throw new Error('BRIDGE_TOKEN belum diset di Script Properties project ini');
+  return String(t).trim();
+}
+
+// Cek kunci tulis. String(t || '') = token kosong bila klien tidak mengirim; jangan diisi.
+function tokenOk_(t) {
+  return String(t || '') === bridgeToken_();
+}
+
 // ==========================================
 // TIMEZONE CONFIGURATION - FORCE GMT+7
 // ==========================================
@@ -49,6 +61,11 @@ function fetchWithRetry(url, options, maxRetries) {
 
 function doGet(e) {
   var action = e.parameter.action;
+
+  if (action && !tokenOk_(e.parameter.token)) {
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: 'Kunci tulis tidak valid' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 
   // 1. Ambil Semua Data — BACA DARI SUPABASE (bukan sheet). dengan cache
   if (action === 'getSalesData') {
@@ -276,6 +293,16 @@ function doPost(e) {
   try {
     var requestData = JSON.parse(e.postData.contents);
     var action = requestData.action;
+
+    if (!tokenOk_(requestData.token)) {
+      return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: 'Kunci tulis tidak valid' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Mutasi lewat POST (bukan GET) — logika tetap di doGet agar tidak duplikat.
+    if (action === 'saveTarget' || action === 'addBiaya' || action === 'updateBiaya' || action === 'deleteBiaya') {
+      return doGet({ parameter: requestData });
+    }
 
     if (action === 'getAnalysis') {
       var context = requestData.context || "";

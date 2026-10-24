@@ -11,8 +11,33 @@ window.SPT = window.SPT || {};
 (function (A) {
 
   var KEY = 'sppd_toolbox_db_v2';
+  var KEY_WRITE = 'reynahub-write-key';
   var LEGACY_KEYS = ['sppd_toolbox_db_v1'];
   var DB = null;
+  /* Kunci tulis tim (BRIDGE_TOKEN di GAS). Diketik sekali per browser. */
+  function writeKey(ask) {
+    var k = '';
+    try { k = localStorage.getItem(KEY_WRITE) || ''; } catch (e) {}
+    if (!k && ask) {
+      k = String(window.prompt('Masukkan kunci tulis tim (sekali per browser):') || '').trim();
+      if (k) { try { localStorage.setItem(KEY_WRITE, k); } catch (e) {} }
+    }
+    return k;
+  }
+  /* Id yang ada saat load terakhir. Server hanya boleh menghapus id di daftar
+     ini — mencegah tab basi mengosongkan tabel yang belum pernah ia lihat. */
+  var _loadedIds = null;
+  var SYNC_KEYS = ['events', 'sppd', 'transports', 'products', 'eventProducts', 'sales',
+    'expenses', 'milestones', 'kasAdj', 'danaCair', 'prepItems', 'checklistTemplates',
+    'checklistItems', 'itemCats', 'itemTemplates'];
+  function idsOf(db) {
+    var out = {};
+    SYNC_KEYS.forEach(function (k) {
+      out[k] = (db[k] || []).map(function (r) { return r.id; })
+        .filter(function (x) { return x !== null && x !== undefined && x !== ''; });
+    });
+    return out;
+  }
   /* Cache ringkasan keuangan per event; dikosongkan setiap save() supaya
      hasil selalu segar (semua mutasi melewati save()). */
   var _finCache = {};
@@ -62,7 +87,7 @@ window.SPT = window.SPT || {};
       fetch(GAS_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ action: action, payload: payload || {} }),
+        body: JSON.stringify({ action: action, payload: payload || {}, token: writeKey(true) }),
         signal: ctrl ? ctrl.signal : undefined
       }).then(function (r) { return r.json(); }).then(function (j) {
         if (!j || !j.ok) throw new Error((j && j.error) || 'Respons GAS tidak dikenal');
@@ -103,6 +128,7 @@ window.SPT = window.SPT || {};
       } else {
         var legacy = hasLegacyDemo(data);
         normalizeDb(data);
+        _loadedIds = idsOf(DB);
         try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) {}
         if (legacy) { save(); }   // DB sudah direset kosong �+' bersihkan cloud juga
       }
@@ -116,7 +142,12 @@ window.SPT = window.SPT || {};
     /* push senyap: loader fullscreen hanya untuk muat awal (remoteLoad);
        status koneksi cukup lewat badge onConn — jangan ganggu user saat mengetik */
     _pushTimer = setTimeout(function () {
-      gasCall('save', load()).then(function () { setConn('online'); }).catch(function () { setConn('error'); });
+      var payload = Object.assign({}, load());
+      payload.__loadedIds = _loadedIds;
+      gasCall('save', payload).then(function () {
+        _loadedIds = idsOf(payload);
+        setConn('online');
+      }).catch(function () { setConn('error'); });
     }, 800);
   }
 

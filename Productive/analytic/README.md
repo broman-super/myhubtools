@@ -30,7 +30,7 @@ Dashboard analitik penjualan real-time berbasis **Google Sheets + Google Apps Sc
 ## 2. Keterkaitan (yang wajib tahu sebelum menyentuh kode)
 
 ### 2.1 Backend GAS
-- `API_URL = https://script.google.com/macros/s/AKfycbwNzZ8oL9LUjedZyIQJFW05PD0akrvJFM5JKAtMewxpWou66KRlJqy1rSUPfcVkSb2HLA/exec`
+- `API_URL = https://script.google.com/macros/s/AKfycbyIEtC_S0q7ObAsHxxfP9UsVe2l1CAknAQWT4EdzJex17vBoy6sX9ano42XKEx2jTfLpw/exec`
 - Action: `getSalesData`, `saveTarget`, `addBiaya`
 - Backend disimpan di `gas/code-analytic.gs` — **bukan** lagi di `Productive/planner/`.
 - Data mentah lag ±7 hari dari hari ini (sheet update manual). Konsekuensi penting di §3.4.
@@ -120,12 +120,14 @@ Jangan "perbaiki" preset jadi anchor `refEnd` semua — itu keputusan user (defa
 - Uji di lebar sempit setelah mengubah struktur; jangan hapus breakpoint karena "tidak kelihatan masalah" di layar lebar.
 
 ### 3.6 🟡 DataTables `dtProduk`
-- `initDtProdukTable()`: `pageLength:5`, `lengthMenu:[5,10,25]`, di-`destroy` + buat ulang tiap `prosesData()`.
-- **Konsekuensi:** pilihan "length" user di-reset ke 5 setiap render. Ini perilaku saat ini — kalau ingin persist, simpan & restore `page.len()` secara eksplisit.
+- `initDtProdukTable()`: `pageLength:10`, `lengthMenu:[5,10,25]`, di-`destroy` + buat ulang tiap `prosesData()`.
+- **Konsekuensi:** pilihan "length" user di-reset ke 10 setiap render. Ini perilaku saat ini — kalau ingin persist, simpan & restore `page.len()` secara eksplisit.
 - Nomor Rank di-tulis ulang di `drawCallback` — jangan geser kolom tanpa menyesuaikan `columnDefs` dan `order:[[4,'desc']]`.
 
 ### 3.7 🟡 Hati-hati mengubah struktur kartu
 JS merujuk elemen **via id** (`chartTren`, `chartHari`, `chartMargin`, `chartKategori`, `dtProduk`, `tableKategori`, `marginAnalysis`, `rfmList`, `vipInsight`, dst). **Memindah kartu = aman. Mengubah/rename id = putus kabel diam-diam.** Jika menukar posisi kartu, pastikan keduanya `col-span-4` (atau sesuaikan grid 12 kolom).
+
+**Setiap kartu (`.bento-item`) punya id sendiri** — dipakai untuk menunjuk kartu dari CSS/JS, mis. `document.getElementById('cardTopProduk').scrollIntoView()`. Pola: `cardKpiOmzet/Biaya…`, `cardTren|PetaWaktu|Rasio|MarketShare|TopProduk|Keranjang|Vip|Diagnosa`, dan versi tab biaya `cardBiayaTotal|Ratio|PerNota|KategoriTop|Omzet|Iklan|RoasTotal|RoiIklan|Shopee|Tiktok|Laba|Tren|Komposisi|Ranking|Detail`. Id ini **dekoratif** (tidak dibaca JS) — rename aman selama tidak dipakai kode luar. Catatan: jangan mengandalkan `#cardX` di URL dari hub, karena hash dipakai router (`#productive/analytic`) dan tool ini jalan di iframe.
 
 ### 3.8 🟡 Verifikasi layout pakai ukuran, bukan mata
 Bug layout di file ini mustahil dideteksi sekilas (lihat §3.1). Setelah mengubah layout, ukur tinggi kartu vs konten di beberapa kondisi (mis. length 5 → 25 → 5) — bisa dengan Chrome headless.

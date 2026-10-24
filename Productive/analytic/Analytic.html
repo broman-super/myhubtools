@@ -217,7 +217,7 @@
             border-radius: 6px;
         }
 
-        .compare-pill button:hover:not(.active) {
+        .compare-pill button:hover:not(.active):not(:disabled) {
             background: var(--border);
         }
 
@@ -1145,6 +1145,25 @@
         .btn-busy { opacity: .6; cursor: progress; }
         .btn-busy .btn-spin { display: inline-block; width: .9em; height: .9em; margin-right: .45em; vertical-align: -2px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: btn-spin .6s linear infinite; }
         @keyframes btn-spin { to { transform: rotate(360deg); } }
+
+        /* Loader overlay proses: track tipis + satu busur gradien berputar (pengganti spinner border 4px) */
+        .proc-loader {
+            position: relative;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--border);
+            -webkit-mask: radial-gradient(farthest-side, #0000 calc(100% - 4px), #000 calc(100% - 3.5px));
+                    mask: radial-gradient(farthest-side, #0000 calc(100% - 4px), #000 calc(100% - 3.5px));
+        }
+        .proc-loader::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: conic-gradient(from 90deg, #0000 0%, var(--primary) 95%);
+            animation: spin .85s linear infinite;
+        }
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.01ms !important;
@@ -1194,9 +1213,6 @@
             style="background:var(--surface); padding:40px; border-radius:28px; border:1px solid var(--border); box-shadow:var(--shadow-lg); text-align:center; max-width:420px; width:90%; animation:scaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); position:relative;">
             <div id="processingVisual"
                 style="margin-bottom:24px; display:flex; justify-content:center; align-items:center; min-height:60px;">
-                <div id="processingSpinner"
-                    style="border:4px solid var(--surface2); border-top:4px solid var(--primary); border-radius:50%; width:50px; height:50px; animation:spin 1s linear infinite;">
-                </div>
             </div>
             <h3 id="processingTitle"
                 style="font-family:'Geomini', 'Plus Jakarta Sans', sans-serif; color:var(--text); margin-bottom:12px; font-size:18px; font-weight:800;">
@@ -1562,7 +1578,7 @@
                 </div>
             </div>
         <!-- ROW 1 -->
-        <div class="bento-item col-span-3">
+        <div id="cardKpiOmzet" class="bento-item col-span-3">
             <div class="bento-header">
                 <div class="bento-title">OMZET VS TARGET <span class="help-icon"
                         data-tooltip="Logika: Omzet Bersih = (Total Penjualan) - (Total Retur). AVG & Proyeksi Akhir mengunci pada data Bulan Berjalan: AVG = (Omzet Bulan Ini) ÷ (Hari yg Lewat). Proyeksi = AVG × (Total Hari sebulan).">?</span>
@@ -1597,7 +1613,7 @@
                 Target: 820JT</div>
         </div>
 
-        <div class="bento-item col-span-3" style="border-color:var(--danger-light);">
+        <div id="cardKpiRetur" class="bento-item col-span-3" style="border-color:var(--danger-light);">
             <div class="bento-header">
                 <div class="bento-title" style="color:var(--danger)">TOTAL RETUR <span class="help-icon"
                         data-tooltip="Logika: Nominal Retur = Total nilai (Rp) transaksi berstatus 'Retur'. Loss Rate = (Total Unit QTY Diretur) ÷ (Total Unit QTY Terjual) × 100%.">?</span>
@@ -1623,7 +1639,7 @@
             </div>
         </div>
 
-        <div class="bento-item col-span-3" style="border-color:var(--success-light);">
+        <div id="cardKpiLaba" class="bento-item col-span-3" style="border-color:var(--success-light);">
             <div class="bento-header">
                 <div class="bento-title" style="color:var(--success)">LABA BERSIH <span class="help-icon"
                         data-tooltip="Logika: Laba Bersih = (Omzet Bersih) - (Total HPP Produk Terjual) - (Total Semua Pengeluaran / Biaya Opex).">?</span>
@@ -1647,7 +1663,7 @@
             </div>
         </div>
 
-        <div class="bento-item col-span-3">
+        <div id="cardKpiPiutang" class="bento-item col-span-3">
             <div class="bento-header">
                 <div class="bento-title">PIUTANG <span class="help-icon" data-static-tooltip="Piutang = Omzet Bersih di 7 hari terakhir (proxy payout marketplace). Lunas = Omzet Bersih − Piutang. Retur Faktur tersendiri.">?</span></div>
                 <div class="badge primary">PIUTANG</div>
@@ -1664,7 +1680,7 @@
             </div>
         </div>
 
-        <div class="bento-item col-span-3">
+        <div id="cardInsights" class="bento-item col-span-3">
             <div class="bento-header">
                 <div class="bento-title">INSIGHTS</div>
                 <div class="badge warning"><svg class="icon" width="10" height="10" viewBox="0 0 24 24" fill="none"
@@ -1701,7 +1717,7 @@
         </div>
 
         <!-- ROW 2 -->
-        <div class="bento-item col-span-12">
+        <div id="cardTren" class="bento-item col-span-12">
             <div class="bento-header">
                 <div class="bento-title">TREN SALES VS RETUR <span class="help-icon"
                         data-tooltip="Logika: Sumbu X = Timeline Hari. Garis Solid = Penjualan Aktual. Garis Putus-putus = Penjualan di titik waktu yang sama pada Periode Pembanding (sebagai benchmark). Toggle Harian/Mingguan/Bulanan = kerincian sumbu waktu.">?</span>
@@ -1717,7 +1733,7 @@
         </div>
 
         <!-- ROW 3: MARKET SHARE (4) + TOP PRODUK (8) -->
-        <div class="bento-item col-span-4">
+        <div id="cardMarketShare" class="bento-item col-span-4">
             <div class="bento-header">
                 <div class="bento-title">MARKET SHARE <span class="help-icon"
                         data-tooltip="Cara Baca: KANAN = Omzet Bersih & Porsi saat ini. KIRI (Merah/Hijau) = Persentase & Selisih Pertumbuhan vs Periode Lalu. Logika: Porsi (%) = (Omzet Bersih Kategori) ÷ (Total Omzet Bersih) × 100%. (Sudah dipotong Retur).">?</span>
@@ -1728,7 +1744,7 @@
             <div id="tableKategori" style="display:flex; flex-direction:column; gap:8px; flex:1;"></div>
         </div>
 
-        <div class="bento-item col-span-8">
+        <div id="cardTopProduk" class="bento-item col-span-8">
             <div class="bento-header">
                 <div class="bento-title">TOP PRODUK & MOMENTUM</div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end;">
@@ -1760,7 +1776,7 @@
         </div>
 
         <!-- ROW 4: RASIO (4) + PETA WAKTU (4) + KERANJANG (4) -->
-        <div class="bento-item col-span-4">
+        <div id="cardRasio" class="bento-item col-span-4">
             <div class="bento-header">
                 <div class="bento-title">RASIO KESEHATAN KEUANGAN</div>
             </div>
@@ -1768,14 +1784,14 @@
             <div id="marginAnalysis" style="margin-top:16px; flex:1;"></div>
         </div>
 
-        <div class="bento-item col-span-4">
+        <div id="cardPetaWaktu" class="bento-item col-span-4">
             <div class="bento-header">
                 <div class="bento-title">PETA WAKTU TERLARIS</div>
             </div>
             <div class="chart-box large"><canvas id="chartHari"></canvas></div>
         </div>
 
-        <div class="bento-item col-span-4">
+        <div id="cardKeranjang" class="bento-item col-span-4">
             <div class="bento-header">
                 <div class="bento-title">INTELIJEN KERANJANG & CAC <span class="help-icon"
                         data-tooltip="Logika: AOV = Omzet Bersih ÷ Total Nota Trx. UPT = Total Unit QTY ÷ Total Nota Trx. CAC = (Total Biaya Opex) ÷ (Jumlah Pelanggan Baru / Transaksi Perdana).">?</span>
@@ -1790,7 +1806,7 @@
         </div>
 
         <!-- ROW 5: VIP (4) + DIAGNOSTICS (8) -->
-        <div class="bento-item col-span-4">
+        <div id="cardVip" class="bento-item col-span-4">
             <div class="bento-header">
                 <div class="bento-title">VIP SEGMENTATION & CHURN <span class="help-icon"
                         data-tooltip="Melacak Status Loyalitas Pelanggan: SETIA (Sering Belanja), AKTIF, dan BERISIKO CHURN (Tidak transaksi >14 Hari). Dibagi ke kelompok Reseller (B2B) dan Marketplace/Umum (B2C).">?</span>
@@ -1802,7 +1818,7 @@
             <div id="vipInsight" style="margin-top:auto; padding-top:15px;"></div>
         </div>
 
-        <div class="bento-item col-span-8" style="border-color:var(--primary); background:var(--surface2);">
+        <div id="cardDiagnosa" class="bento-item col-span-8" style="border-color:var(--primary); background:var(--surface2);">
             <div class="bento-header">
                 <div class="bento-title" style="color:var(--primary)">DIAGNOSA OTOMATIS</div>
             </div>
@@ -1911,7 +1927,7 @@
         </div>
 
         <!-- ROW 1: KPI BIAYA -->
-        <div class="bento-item col-span-3">
+        <div id="cardBiayaTotal" class="bento-item col-span-3">
             <div class="bento-header">
                 <div class="bento-title">TOTAL BIAYA <span class="help-icon" data-static-tooltip="Rumus: Jumlah seluruh Nominal biaya pada rentang tanggal aktif.">?</span></div>
                 <div class="badge primary">OPEX</div>
@@ -1920,7 +1936,7 @@
             <div id="biayaKpiTotalDelta" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">±0% vs periode lalu</div>
         </div>
 
-        <div class="bento-item col-span-3">
+        <div id="cardBiayaRatio" class="bento-item col-span-3">
             <div class="bento-header">
                 <div class="bento-title">OPEX RATIO <span class="help-icon" data-static-tooltip="Rumus: Total Biaya ÷ Omzet Bersih (Penjualan − Retur). Semakin tinggi, semakin besar bagian omzet yang dimakan biaya operasional.">?</span></div>
                 <div class="badge primary">EFISIENSI</div>
@@ -1929,7 +1945,7 @@
             <div id="biayaKpiRatioDelta" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">dari omzet bersih</div>
         </div>
 
-        <div class="bento-item col-span-3">
+        <div id="cardBiayaPerNota" class="bento-item col-span-3">
             <div class="bento-header">
                 <div class="bento-title">BIAYA / NOTA <span class="help-icon" data-static-tooltip="Rumus: Total Biaya ÷ Jumlah Nota (1 pembeli × 1 hari = 1 nota). Rata-rata beban biaya per transaksi.">?</span></div>
                 <div class="badge primary">RATA-RATA</div>
@@ -1938,7 +1954,7 @@
             <div id="biayaKpiPerNotaInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">0 nota</div>
         </div>
 
-        <div class="bento-item col-span-3">
+        <div id="cardBiayaKategoriTop" class="bento-item col-span-3">
             <div class="bento-header">
                 <div class="bento-title">KATEGORI TERBESAR <span class="help-icon" data-static-tooltip="Kategori biaya dengan total tertinggi pada rentang aktif, beserta persentase dari seluruh biaya.">?</span></div>
                 <div class="badge primary">TOP 1</div>
@@ -1948,7 +1964,7 @@
         </div>
 
         <!-- ROW 1B: OMZET + BIAYA IKLAN + ROAS/ROI (L1) -->
-        <div class="bento-item col-span-3">
+        <div id="cardBiayaOmzet" class="bento-item col-span-3">
             <div class="bento-header">
                 <div class="bento-title">OMZET <span id="biayaKpiOmzetLabel">BERSIH</span> <span class="help-icon" data-static-tooltip="Omzet Bersih = Penjualan − Retur. Omzet Kotor = Penjualan saja. Pilih via dropdown di header.">?</span></div>
                 <div class="badge primary">OMZET</div>
@@ -1956,7 +1972,7 @@
             <div class="bento-value" id="biayaKpiOmzet">Rp 0</div>
             <div id="biayaKpiOmzetInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">-</div>
         </div>
-        <div class="bento-item col-span-3">
+        <div id="cardBiayaIklan" class="bento-item col-span-3">
             <div class="bento-header">
                 <div class="bento-title">BIAYA IKLAN <span class="help-icon" data-static-tooltip="Total Biaya Iklan = IKLAN SHOPEE SUPERSUB + IKLAN TIKTOK SUPERSUB + TOPUP (hanya Supersub, KYX tidak masuk).">?</span></div>
                 <div class="badge primary">IKLAN</div>
@@ -1964,7 +1980,7 @@
             <div class="bento-value" id="biayaKpiIklan">Rp 0</div>
             <div id="biayaKpiIklanInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">-</div>
         </div>
-        <div class="bento-item col-span-3">
+        <div id="cardBiayaRoasTotal" class="bento-item col-span-3">
             <div class="bento-header">
                 <div class="bento-title">ROAS TOTAL <span class="help-icon" data-static-tooltip="ROAS = Omzet (sesuai dropdown) ÷ Biaya Iklan">?</span></div>
                 <div class="badge primary">ROAS</div>
@@ -1972,7 +1988,7 @@
             <div class="bento-value" id="biayaKpiRoasTotal">0.0x</div>
             <div id="biayaKpiRoasTotalInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">-</div>
         </div>
-        <div class="bento-item col-span-3">
+        <div id="cardBiayaRoiIklan" class="bento-item col-span-3">
             <div class="bento-header">
                 <div class="bento-title">ROI IKLAN <span class="help-icon" data-static-tooltip="ROI Iklan = Laba Bersih ÷ Biaya Iklan ×100%">?</span></div>
                 <div class="badge primary">ROI</div>
@@ -1980,7 +1996,7 @@
             <div class="bento-value" id="biayaKpiRoiIklan">0%</div>
             <div id="biayaKpiRoiIklanInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">-</div>
         </div>
-        <div class="bento-item col-span-3">
+        <div id="cardBiayaShopee" class="bento-item col-span-3">
             <div class="bento-header">
                 <div class="bento-title">SHOPEE <span class="help-icon" data-static-tooltip="ROAS = Omzet ÷ Biaya Iklan | ROI = Laba ÷ Biaya Iklan">?</span></div>
                 <div class="badge primary">SHOPEE</div>
@@ -1998,7 +2014,7 @@
                 </div>
             </div>
         </div>
-        <div class="bento-item col-span-3">
+        <div id="cardBiayaTiktok" class="bento-item col-span-3">
             <div class="bento-header">
                 <div class="bento-title">TIKTOK <span class="help-icon" data-static-tooltip="ROAS = Omzet ÷ Biaya Iklan | ROI = Laba ÷ Biaya Iklan">?</span></div>
                 <div class="badge primary">TIKTOK</div>
@@ -2016,7 +2032,7 @@
                 </div>
             </div>
         </div>
-        <div class="bento-item col-span-3">
+        <div id="cardBiayaLaba" class="bento-item col-span-3">
             <div class="bento-header">
                 <div class="bento-title"><span id="biayaKpiLabaLabel">LABA BERSIH</span> <span class="help-icon" data-static-tooltip="Bersih = Omzet Bersih (Penjualan − Retur) − HPP − Biaya | Kotor = Omzet Kotor (Penjualan) − HPP − Biaya. Bersih identik dengan Dashboard Penjualan.">?</span></div>
                 <div class="badge primary">LABA</div>
@@ -2026,7 +2042,7 @@
         </div>
 
         <!-- ROW 2: TREN BIAYA + OMSET -->
-        <div class="bento-item col-span-12">
+        <div id="cardBiayaTren" class="bento-item col-span-12">
             <div class="bento-header">
                 <div class="bento-title">TREN BIAYA & OMZET <span class="help-icon" data-static-tooltip="Garis biaya vs omzet bersih per hari/minggu/bulan. Bila biaya naik tajam saat omzet turun = indikasi kebocoran biaya.">?</span></div>
                 <div class="compare-pill" title="Kerincian sumbu waktu chart biaya">
@@ -2039,14 +2055,14 @@
         </div>
 
         <!-- ROW 3: KOMPOSISI + RANKING -->
-        <div class="bento-item col-span-4">
+        <div id="cardBiayaKomposisi" class="bento-item col-span-4">
             <div class="bento-header">
                 <div class="bento-title">KOMPOSISI KATEGORI <span class="help-icon" data-static-tooltip="Proporsi nominal tiap kategori biaya pada rentang aktif.">?</span></div>
             </div>
             <div style="height:250px;"><canvas id="biayaChartKomposisi"></canvas></div>
         </div>
 
-        <div class="bento-item col-span-8">
+        <div id="cardBiayaRanking" class="bento-item col-span-8">
             <div class="bento-header">
                 <div class="bento-title">RANKING KATEGORI <span class="help-icon" data-static-tooltip="Urutan kategori berdasarkan total biaya, dengan selisih terhadap periode sebelumnya.">?</span></div>
             </div>
@@ -2055,7 +2071,7 @@
         </div>
 
         <!-- ROW 4: TABEL PER-ENTRI -->
-        <div class="bento-item col-span-12">
+        <div id="cardBiayaDetail" class="bento-item col-span-12">
             <div class="bento-header">
                 <div class="bento-title">DETAIL PER-ENTRI BIAYA <span class="help-icon" data-static-tooltip="Semua baris biaya pada rentang aktif. Edit membuka kembali form Catat Biaya; Hapus menghapus baris.">?</span></div>
             </div>
@@ -2106,7 +2122,27 @@
           circle: '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6"/></svg>',
           question: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
         };
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwNzZ8oL9LUjedZyIQJFW05PD0akrvJFM5JKAtMewxpWou66KRlJqy1rSUPfcVkSb2HLA/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyIEtC_S0q7ObAsHxxfP9UsVe2l1CAknAQWT4EdzJex17vBoy6sX9ano42XKEx2jTfLpw/exec';
+
+        // Kunci tulis tim (BRIDGE_TOKEN di GAS). Diketik sekali per browser.
+        const KEY_WRITE = 'reynahub-write-key';
+        function writeKey() {
+            let k = '';
+            try { k = localStorage.getItem(KEY_WRITE) || ''; } catch (e) { /* storage diblokir */ }
+            if (!k) {
+                k = String(window.prompt('Masukkan kunci tulis tim (sekali per browser):') || '').trim();
+                if (k) { try { localStorage.setItem(KEY_WRITE, k); } catch (e) { /* abaikan */ } }
+            }
+            return k;
+        }
+        // Mutasi GAS lewat POST (GET hanya untuk baca).
+        function postAction(action, params) {
+            return fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(Object.assign({ action: action, token: writeKey() }, params || {}))
+            });
+        }
 
         // State pengaman proses GAS & refresh otomatis
         window.isProcessingGAS = false;
@@ -2136,6 +2172,10 @@
         });
 
         // Pengendali Overlay Proses Visual
+        // Satu-satunya markup loader proses: container #processingVisual di-reset oleh state sukses/error,
+        // jadi loader disuntik ulang tiap show (dulu id processingSpinner dobel: statis + inject).
+        const PROC_LOADER_HTML = '<div class="proc-loader" aria-hidden="true"></div>';
+
         function showProcessingOverlay(title, desc) {
             const overlay = document.getElementById('processingOverlay');
             const visual = document.getElementById('processingVisual');
@@ -2147,8 +2187,8 @@
 
             window.isProcessingGAS = true;
 
-            // Set state loading spin
-            visual.innerHTML = '<div id="processingSpinner" style="border:4px solid var(--surface2); border-top:4px solid var(--primary); border-radius:50%; width:50px; height:50px; animation:spin 1s linear infinite;"></div>';
+            // Set state loading
+            if (visual) visual.innerHTML = PROC_LOADER_HTML;
             if (titleEl) {
                 titleEl.innerText = title || 'Memproses Data...';
                 titleEl.style.color = 'var(--text)';
@@ -2346,7 +2386,7 @@
                     return true;
                 }
                 // Tarik data keuangan terupdate
-                const res = await fetch(API_URL + "?action=getSalesData", { mode: 'cors', redirect: 'follow' });
+                const res = await fetch(API_URL + "?action=getSalesData&token=" + encodeURIComponent(writeKey()), { mode: 'cors', redirect: 'follow' });
                 if (!res.ok) throw new Error('Server ' + res.status);
                 const dataMentah = await res.json();
 
@@ -2599,7 +2639,7 @@
                 $('#dtProduk').DataTable().destroy();
             }
             return $('#dtProduk').DataTable({
-                pageLength: 5,
+                pageLength: 10,
                 lengthMenu: [5, 10, 25],
                 responsive: true,
                 language: { search: 'Cari:', lengthMenu: '_MENU_ / hal', info: 'Hal _PAGE_ dari _PAGES_' },
@@ -3131,7 +3171,7 @@
                     setStage(0, 'active', 'Menghubungkan ke Google Apps Script...');
                     const controller = new AbortController();
                     const syncTimeout = setTimeout(() => controller.abort(), 90000);
-                    const res = await fetch(API_URL + "?action=getSalesData", { mode: 'cors', redirect: 'follow', signal: controller.signal });
+                    const res = await fetch(API_URL + "?action=getSalesData&token=" + encodeURIComponent(writeKey()), { mode: 'cors', redirect: 'follow', signal: controller.signal });
                     clearTimeout(syncTimeout);
                     if (!res.ok) throw new Error('Server ' + res.status);
                     setStage(0, 'done');
@@ -3972,14 +4012,30 @@
             return out;
         }
 
+        function trendGranAvailability() {
+            let s = document.getElementById('startDate')?.value;
+            let e = document.getElementById('endDate')?.value;
+            let days = Math.round((Date.parse(e) - Date.parse(s)) / 86400000) + 1; // inklusif
+            if (!isFinite(days) || days <= 0) return { weekly: true, monthly: true };
+            return { weekly: days >= 14, monthly: days >= 60 };
+        }
+
         function updateGranPills() {
+            let avail = trendGranAvailability();
+            if (avail[_trendGran] === false) _trendGran = 'auto';
             let active = currentTrendGran();
             document.querySelectorAll('#mainContainer [data-gran]').forEach(b => {
-                b.classList.toggle('active', b.getAttribute('data-gran') === active);
+                let g = b.getAttribute('data-gran');
+                let ok = avail[g] !== false;
+                b.disabled = !ok;
+                b.setAttribute('aria-disabled', String(!ok));
+                b.title = ok ? '' : 'Tidak tersedia untuk rentang tanggal ini';
+                b.classList.toggle('active', g === active);
             });
         }
 
         function setTrendGranularity(g) {
+            if (trendGranAvailability()[g] === false) return;
             _trendGran = g;
             updateGranPills();
             if (_trendDaily.length) renderTrendChart(bucketTrend(_trendDaily, currentTrendGran()));
@@ -4362,7 +4418,7 @@
             showProcessingOverlay('Menyimpan Target...', 'Target omzet sedang dikirim ke server.');
 
             try {
-                const res = await fetch(API_URL + "?action=saveTarget&value=" + targetVal);
+                const res = await postAction('saveTarget', { value: targetVal });
                 const data = await res.json();
                 if (data.status === 'success') {
                     // Bersihkan cache agar sync menarik data terbaru
@@ -4405,10 +4461,9 @@
 
             try {
                 const isEdit = _editBiayaId !== null;
-                let url = API_URL + '?action=' + (isEdit ? 'updateBiaya' : 'addBiaya');
-                if (isEdit) url += '&id=' + encodeURIComponent(_editBiayaId);
-                url += '&tanggal=' + encodeURIComponent(dateValDb) + '&kategori=' + encodeURIComponent(categoryVal) + '&nominal=' + encodeURIComponent(amountVal);
-                const res = await fetch(url);
+                const params = { tanggal: dateValDb, kategori: categoryVal, nominal: amountVal };
+                if (isEdit) params.id = _editBiayaId;
+                const res = await postAction(isEdit ? 'updateBiaya' : 'addBiaya', params);
                 const data = await res.json();
                 if (data.status === 'success') {
                     // Kosongkan form field
@@ -4456,7 +4511,7 @@
                     headers: {
                         'Content-Type': 'text/plain;charset=utf-8'
                     },
-                    body: JSON.stringify({ action: 'getAnalysis', context: contextForAI })
+                    body: JSON.stringify({ action: 'getAnalysis', context: contextForAI, token: writeKey() })
                 });
                 const json = await res.json();
                 let hasilAkhir = json.analysis;
@@ -5178,21 +5233,21 @@
             try {
 
             // Mode supabase: rawDataTransaksi kosong → ambil snapshot transaksi langsung dari
-            // Supabase sekali per buka modal (RPC get_all_transaksi, grant anon) supaya payload
-            // membawa kolom penuh (Tipe/Kategori/Penjualan) & preview BARU/UPDATE/SKIP akurat.
+            // Supabase sekali per buka modal (RPC get_all_transaksi_secure, wajib kunci tulis)
+            // supaya payload membawa kolom penuh (Tipe/Kategori/Penjualan) & preview akurat.
             if (DATA_SOURCE === 'supabase' && uploadSheetData === null) {
                 // Pakai cache 60 dtk bila ada; kalau basi baru fetch penuh.
                 uploadSheetData = loadUploadSnapshot();
                 if (uploadSheetData === null) {
                     try {
-                        const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_all_transaksi', {
+                        const res = await fetch(SUPABASE_URL + '/rest/v1/rpc/get_all_transaksi_secure', {
                             method: 'POST',
                             headers: {
                                 'apikey': SUPABASE_ANON_KEY,
                                 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify({})
+                            body: JSON.stringify({ p_key: writeKey() })
                         });
                         if (!res.ok) throw new Error('Supabase ' + res.status);
                         const rows = await res.json();
@@ -5524,7 +5579,7 @@
                 headers: {
                     'Content-Type': 'text/plain;charset=utf-8'
                 },
-                body: JSON.stringify({ action: 'bulkUpsertTransactions', rows })
+                body: JSON.stringify({ action: 'bulkUpsertTransactions', rows, token: writeKey() })
             })
                 .then(response => {
                     if (!response.ok) {
@@ -5913,7 +5968,7 @@
                 mode: 'cors',
                 redirect: 'follow',
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify({ action: 'bulkUpsertBiaya', rows })
+                body: JSON.stringify({ action: 'bulkUpsertBiaya', rows, token: writeKey() })
             })
                 .then(r => { if (!r.ok) throw new Error('Status server ' + r.status); return r.json(); });
             const kirimChunk = (i) => {
@@ -6073,12 +6128,20 @@
         }
 
         function updateBiayaGranPills() {
+            let avail = trendGranAvailability();
+            if (avail[_biayaGran] === false) _biayaGran = 'daily';
             document.querySelectorAll('#biayaContainer [data-gran]').forEach(b => {
-                b.classList.toggle('active', b.getAttribute('data-gran') === _biayaGran);
+                let g = b.getAttribute('data-gran');
+                let ok = avail[g] !== false;
+                b.disabled = !ok;
+                b.setAttribute('aria-disabled', String(!ok));
+                b.title = ok ? '' : 'Tidak tersedia untuk rentang tanggal ini';
+                b.classList.toggle('active', g === _biayaGran);
             });
         }
 
         function setBiayaGranularity(g) {
+            if (trendGranAvailability()[g] === false) return;
             _biayaGran = g;
             updateBiayaGranPills();
             if (_biayaDaily) renderBiayaTren();
@@ -6398,7 +6461,7 @@
             if (!(await confirmDialog('Hapus baris biaya ini? Tindakan tidak bisa dibatalkan.'))) return;
             lockBtn(btn, 'Menghapus...');
             try {
-                const res = await fetch(API_URL + '?action=deleteBiaya&id=' + encodeURIComponent(id));
+                const res = await postAction('deleteBiaya', { id: id });
                 const data = await res.json();
                 if (data.status !== 'success') throw new Error(data.message || 'Gagal menghapus biaya');
                 _biayaRangeKey = null; // paksa refetch pada render berikutnya

@@ -3,6 +3,18 @@
 // "Reminders" — ID | Nama | Mulai | Selesai | Deskripsi | Warna | Status | Tipe
 // "Tasks" — existing sheet reused (query via doGet/?action=getTasks)
 
+// Kunci tulis tim: Script Property BRIDGE_TOKEN (repo publik, jangan tulis nilainya di sini).
+function bridgeToken_() {
+  var t = PropertiesService.getScriptProperties().getProperty('BRIDGE_TOKEN');
+  if (!t) throw new Error('BRIDGE_TOKEN belum diset di Script Properties project ini');
+  return String(t).trim();
+}
+
+// Cek kunci tulis. String(t || '') = token kosong bila klien tidak mengirim; jangan diisi.
+function requireToken_(body) {
+  if (String((body && body.token) || '') !== bridgeToken_()) throw new Error('Kunci tulis tidak valid');
+}
+
 // ponytail: shared doPost router — add new actions alongside existing ones
 function doPost(e) {
   var res = { success: false, message: '' };
@@ -11,6 +23,7 @@ function doPost(e) {
     if (!e.postData || !e.postData.contents) throw new Error('Request body kosong');
     var params = JSON.parse(e.postData.contents);
     var action = params.action;
+    if (action !== 'getCalendarData') requireToken_(params);
     if (action === 'getCalendarData') {
       res.result = getCalendarData_();
     } else if (action === 'saveCalendarItem' || action === 'saveTask' || action === 'saveTasksBatch') {

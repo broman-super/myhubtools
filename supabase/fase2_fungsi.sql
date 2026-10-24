@@ -450,7 +450,9 @@ LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
 $$;
 
 REVOKE ALL ON FUNCTION get_all_transaksi() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_all_transaksi() TO anon, service_role;
+-- anon TIDAK boleh dump semua transaksi. Klien memakai
+-- get_all_transaksi_secure(p_key) (lihat security_hardening_analytic.sql).
+GRANT EXECUTE ON FUNCTION get_all_transaksi() TO service_role;
 
 -- ============================================================
 -- VERIFIKASI (jalankan di SQL Editor setelah CREATE sukses)

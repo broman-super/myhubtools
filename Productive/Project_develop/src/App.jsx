@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import {
   Plus, Calendar, ChevronDown, ChevronRight, Pencil, Trash2, Camera, CheckCircle2,
   Circle, AlertTriangle, ArrowLeft, Archive, FolderKanban, RotateCcw,
-  ClipboardList, LayoutGrid, Download, Printer, Copy, Bell, X
+  ClipboardList, LayoutGrid, Download, Printer, Copy, Bell, X, Star
 } from "lucide-react";
 import { loadProjects, syncToSupabase, uploadToStorage, deleteFromStorage } from "./supabase.js";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";

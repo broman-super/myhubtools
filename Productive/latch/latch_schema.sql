@@ -34,26 +34,38 @@ create table if not exists latch_config (
   value text
 );
 
--- Seed config awal (pin admin + announcement).
+-- Seed config awal (announcement saja). PIN admin TIDAK disimpan di sini:
+-- lihat app_private.latch_pin di supabase/security_hardening.sql.
 insert into latch_config (key, value) values
-  ('pin', '1234'),
   ('announcement', 'Selamat datang di LATCH.')
 on conflict (key) do nothing;
 
 -- ============================================================
 -- Row Level Security
--- Model sama dengan backend GAS lama: siapa pun (anon) bisa
--- baca semua, dan bisa tulis. PIN adalah penyaring akses di
--- frontend, bukan security nyata — konsisten dengan perilaku lama.
--- Sesuaikan/rapatkan di sini bila nanti butuh autentikasi asli.
+-- Baca publik; tulis hanya dengan PIN admin yang sudah login
+-- (header x-write-token → public.latch_can_write()).
+-- Prasyarat: jalankan supabase/security_hardening.sql lebih dulu.
 -- ============================================================
 alter table latch_links      enable row level security;
 alter table latch_categories enable row level security;
 alter table latch_config     enable row level security;
 
-create policy "latch links read"  on latch_links      for select using (true);
-create policy "latch links write" on latch_links      for all    using (true) with check (true);
-create policy "latch cat read"    on latch_categories for select using (true);
-create policy "latch cat write"   on latch_categories for all    using (true) with check (true);
-create policy "latch cfg read"    on latch_config     for select using (true);
-create policy "latch cfg write"   on latch_config     for all    using (true) with check (true);
+drop policy if exists "latch links write" on latch_links;
+drop policy if exists "latch cat write"   on latch_categories;
+drop policy if exists "latch cfg write"   on latch_config;
+
+create policy "latch links read"   on latch_links      for select using (true);
+create policy "latch links insert" on latch_links      for insert to anon, authenticated
+  with check (public.latch_can_write());
+create policy "latch links update" on latch_links      for update to anon, authenticated
+  using (public.latch_can_write()) with check (public.latch_can_write());
+create policy "latch links delete" on latch_links      for delete to anon, authenticated
+  using (public.latch_can_write());
+create policy "latch cat read"     on latch_categories for select using (true);
+create policy "latch cat insert"   on latch_categories for insert to anon, authenticated
+  with check (public.latch_can_write());
+create policy "latch cat update"   on latch_categories for update to anon, authenticated
+  using (public.latch_can_write()) with check (public.latch_can_write());
+create policy "latch cat delete"   on latch_categories for delete to anon, authenticated
+  using (public.latch_can_write());
+create policy "latch cfg read"     on latch_config     for select using (true);
