@@ -1,6 +1,18 @@
 import { SUPABASE_URL, SUPABASE_ANON_KEY, GAS_SCRIPT_URL } from './config.js';
 
 const TABLE = 'rnd_roadmap';
+const KEY_WRITE = 'reynahub-write-key';
+
+// Kunci tulis tim (BRIDGE_TOKEN di GAS). Diketik sekali per browser.
+function writeKey() {
+  let k = '';
+  try { k = localStorage.getItem(KEY_WRITE) || ''; } catch { /* storage diblokir */ }
+  if (!k) {
+    k = String(window.prompt('Masukkan kunci tulis tim (sekali per browser):') || '').trim();
+    if (k) { try { localStorage.setItem(KEY_WRITE, k); } catch { /* abaikan */ } }
+  }
+  return k;
+}
 
 // --- READ: langsung ke Supabase REST pakai anon key (RLS select-only) ---
 export async function loadProjects() {
@@ -31,7 +43,7 @@ export async function syncToSupabase(rows, deletes) {
     // text/plain (bukan application/json) agar tidak memicu CORS preflight OPTIONS
     // yang tidak dijawab GAS. e.postData.contents tetap berisi JSON mentah.
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'sync', payload: { rows, deletes: deletes || [] } }),
+    body: JSON.stringify({ action: 'sync', token: writeKey(), payload: { rows, deletes: deletes || [] } }),
   });
   if (!res.ok) throw new Error('Gagal menyimpan roadmap (' + res.status + ')');
   try {
@@ -48,7 +60,7 @@ export async function uploadToStorage(base64, name, mime) {
   const res = await fetch(GAS_SCRIPT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'uploadStorage', payload: { base64, name, mime } }),
+    body: JSON.stringify({ action: 'uploadStorage', token: writeKey(), payload: { base64, name, mime } }),
   });
   if (!res.ok) throw new Error('Gagal upload foto (' + res.status + ')');
   const r = await res.json().catch(() => ({}));
@@ -63,7 +75,7 @@ export async function deleteFromStorage(url) {
     await fetch(GAS_SCRIPT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'deleteStorage', payload: { url } }),
+      body: JSON.stringify({ action: 'deleteStorage', token: writeKey(), payload: { url } }),
     });
   } catch {
     /* abaikan: cleanup terbaik */

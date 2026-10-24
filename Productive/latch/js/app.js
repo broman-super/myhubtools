@@ -267,8 +267,9 @@ const db = (() => {
 
   function sb(path, options = {}) {
     const url = CONFIG.SUPABASE_URL + "/rest/v1/" + path;
+    const method = options.method || "GET";
     const opts = {
-      method: options.method || "GET",
+      method: method,
       headers: {
         "apikey": CONFIG.SUPABASE_ANON_KEY,
         "Authorization": "Bearer " + CONFIG.SUPABASE_ANON_KEY,
@@ -276,6 +277,8 @@ const db = (() => {
         "Content-Type": "application/json"
       }
     };
+    // RLS tulis memeriksa header ini (latch_can_write): PIN admin yang sudah login.
+    if (method !== "GET") opts.headers["x-write-token"] = state.get("adminPin") || "";
     if (options.headers) Object.assign(opts.headers, options.headers);
     if (options.body) opts.body = JSON.stringify(options.body);
     return fetch(url, opts).then(async res => {
@@ -283,14 +286,10 @@ const db = (() => {
         const text = await res.text();
         throw new Error("Supabase " + res.status + " " + path + ": " + text);
       }
-      return res.status === 204 ? null : res.json();
+      if (res.status === 204) return null;
+      const text = await res.text();
+      return text ? JSON.parse(text) : null;
     });
-  }
-
-  // PostgREST increment via arithmetic string (supported natively):
-  // PATCH {"click_count": "click_count + 1"} increments the column server-side.
-  function intIncrement(column) {
-    return column + " + 1";
   }
 
   async function getData() {
@@ -343,9 +342,8 @@ const db = (() => {
 
   async function login(pin) {
     if (useRemote && !skipRemote()) {
-      const rows = await sb("latch_config?key=eq.pin&select=value");
-      const stored = rows && rows[0] ? rows[0].value : "";
-      return String(pin) === String(stored);
+      // PIN tidak lagi terbaca anon; verifikasi di server lewat RPC.
+      return (await sb("rpc/latch_login", { method: "POST", body: { p_pin: pin } })) === true;
     }
     const cfg = storage.get("config", { pin: "1234" });
     return String(pin) === String(cfg.pin);
@@ -550,15 +548,8 @@ const db = (() => {
     if (clickThrottleMs[id] && now - clickThrottleMs[id] < 1000) return;
     clickThrottleMs[id] = now;
     if (useRemote && !skipRemote()) {
-      // click_count = click_count + 1 via header Prefer=return=minimal tidak
-      // memberi body; pakai header count trick: set via JSON {"click_count":1}.
-      // PostgREST mendukung increment lewat operator array.
-      const path = "latch_links?id=eq." + encodeURIComponent(id);
-      await sb(path, {
-        method: "PATCH",
-        headers: { "Prefer": "return=minimal" },
-        body: { click_count: intIncrement("click_count") }
-      });
+      // Klik publik tidak boleh menulis kolom lain → RPC khusus (+1 saja).
+      await sb("rpc/latch_click", { method: "POST", body: { p_id: id } });
       return;
     }
     const links = storage.get("links", []);

@@ -27,13 +27,23 @@ create table if not exists retur_expeditions (
 
 -- ============================================================
 -- Row Level Security
--- Model sama dengan LATCH / backend GAS lama: siapa pun (anon)
--- bisa baca semua dan bisa tulis. Konsisten dengan perilaku lama.
+-- Baca publik; tulis hanya dengan header x-write-token yang cocok.
+-- Prasyarat: jalankan supabase/security_hardening.sql lebih dulu
+-- (membuat public.has_write_key()).
 -- ============================================================
 alter table retur_tracking     enable row level security;
 alter table retur_expeditions  enable row level security;
 
-create policy "retur tracking read"  on retur_tracking    for select using (true);
-create policy "retur tracking write" on retur_tracking    for all    using (true) with check (true);
-create policy "retur exp read"       on retur_expeditions for select using (true);
-create policy "retur exp write"      on retur_expeditions for all    using (true) with check (true);
+drop policy if exists "retur tracking write" on retur_tracking;
+drop policy if exists "retur exp write"      on retur_expeditions;
+
+create policy "retur tracking read"   on retur_tracking    for select using (true);
+create policy "retur tracking insert" on retur_tracking    for insert to anon, authenticated
+  with check (public.has_write_key());
+create policy "retur tracking update" on retur_tracking    for update to anon, authenticated
+  using (public.has_write_key()) with check (public.has_write_key());
+create policy "retur exp read"        on retur_expeditions for select using (true);
+create policy "retur exp insert"      on retur_expeditions for insert to anon, authenticated
+  with check (public.has_write_key());
+create policy "retur exp update"      on retur_expeditions for update to anon, authenticated
+  using (public.has_write_key()) with check (public.has_write_key());

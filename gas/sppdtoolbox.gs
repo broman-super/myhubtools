@@ -3,9 +3,9 @@
 // ------------------------------------------------------------
 // DEPLOY (sekali):
 // 1) Buat project Apps Script baru, hapus isi default, paste seluruh file ini.
-// 2) Isi __SUPABASE_CONFIG__ di bawah (Project URL & service_role project UNITOOLS).
-// 3) Pilih fungsi `setupSupabaseProps` di toolbar > Run > izinkan akses.
-//    (nilai tersimpan di Script Properties, blok config otomatis dikosongkan)
+// 2) Isi SERVICE_ROLE_KEY di __SUPABASE_CONFIG__ di bawah, lalu Run setupSupabaseProps
+//    sekali (nilai pindah ke Script Properties, blok config dikosongkan).
+// 3) Set Script Property BRIDGE_TOKEN = kunci tulis tim (lihat docs/SECURITY.md).
 // 4) Deploy > New deployment > Web app
 //       - Execute as: Me
 //       - Who has access: Anyone
@@ -17,10 +17,14 @@
 // jadi anon key pun tidak bisa menyentuh data. Lihat sppd_schema.sql.
 // ============================================
 
+// ===== KONFIGURASI =====
+// Repo ini publik, jadi service_role key TIDAK ditulis di sini.
+// Isi sekali: paste key di bawah, Run setupSupabaseProps, lalu kosongkan lagi.
 var __SUPABASE_CONFIG__ = {
-  SUPABASE_URL: 'https://iyraamxkrygtzsqkvnqz.supabase.co',       // ← tempel Project URL project UNITOOLS di sini
-  SERVICE_ROLE_KEY: ''    // ← tempel service_role key di sini
+  SUPABASE_URL: 'https://iyraamxkrygtzsqkvnqz.supabase.co',
+  SERVICE_ROLE_KEY: ''
 };
+// Kunci tulis tim: Script Property BRIDGE_TOKEN (sama dengan yang diketik di browser).
 
 function setupSupabaseProps() {
   var props = PropertiesService.getScriptProperties();
@@ -38,10 +42,15 @@ function setupSupabaseProps() {
 }
 
 function supabaseCreds_() {
-  var props = PropertiesService.getScriptProperties();
-  var url = props.getProperty('SUPABASE_URL');
-  var key = props.getProperty('SERVICE_ROLE_KEY');
-  if (!url || !key) throw new Error('Belum set kredensial. Isi __SUPABASE_CONFIG__ lalu Run setupSupabaseProps dulu.');
+  var url = String(__SUPABASE_CONFIG__.SUPABASE_URL || '').trim().replace(/\/+$/, '');
+  var key = String(__SUPABASE_CONFIG__.SERVICE_ROLE_KEY || '').trim();
+  if (!url || !key) {
+    // cadangan: kalau setupSupabaseProps() pernah dijalankan (blok di atas dikosongkan).
+    var props = PropertiesService.getScriptProperties();
+    url = props.getProperty('SUPABASE_URL');
+    key = props.getProperty('SERVICE_ROLE_KEY');
+  }
+  if (!url || !key) throw new Error('Isi __SUPABASE_CONFIG__ (SUPABASE_URL & SERVICE_ROLE_KEY) di atas file.');
   return { baseUrl: url, apiKey: key };
 }
 
@@ -124,6 +133,7 @@ function doGet(e) {
 function doPost(e) {
   try {
     var body = JSON.parse(e.postData.contents);
+    requireToken_(body);
     var action = body.action;
     var payload = body.payload || {};
     var data;
@@ -139,6 +149,16 @@ function doPost(e) {
   }
 }
 
+// Cek kunci tulis. String(t || '') = token kosong bila klien tidak mengirim; jangan diisi.
+function bridgeToken_() {
+  var t = PropertiesService.getScriptProperties().getProperty('BRIDGE_TOKEN');
+  if (!t) throw new Error('BRIDGE_TOKEN belum diset di Script Properties project ini');
+  return String(t).trim();
+}
+function requireToken_(body) {
+  if (String((body && body.token) || '') !== bridgeToken_()) throw new Error('Kunci tulis tidak valid');
+}
+
 // Ambil seluruh DB dari Supabase, bentuk ulang jadi objek seperti store.js
 function fullLoad_() {
   var db = {};
@@ -152,8 +172,8 @@ function fullLoad_() {
   return db;
 }
 
-// Tulis seluruh DB. ponytail: full-table sync (hapus yatim via not.in + upsert).
-// Ganti ke diff per-baris kalau data sudah besar / save terasa lambat.
+// Tulis seluruh DB. ponytail: full-table sync (upsert + hapus id yang hilang
+// menurut __loadedIds). Ganti ke diff per-baris kalau data sudah besar.
 function fullSave_(db) {
   var summary = {};
   for (var key in TABLES) {
@@ -161,10 +181,18 @@ function fullSave_(db) {
     var rows = (db[key] || []).map(function (r) { return toRow_(t.cols, r); });
     var ids = rows.map(function (r) { return r[t.pk]; }).filter(function (x) { return x !== null && x !== undefined && x !== ''; });
 
-    // 1) hapus baris yang tidak ada lagi di klien
-    var delPath = '/rest/v1/' + t.table + '?' + t.pk + '=' +
-      (ids.length ? 'not.in.(' + ids.map(encodeURIComponent).join(',') + ')' : 'not.is.null');
-    supabaseRequest_('delete', delPath);
+    // 1) hapus HANYA id yang klien lihat saat load terakhir tapi sekarang sudah tidak
+    //    ada. Tanpa __loadedIds (klien lama) tidak menghapus apa pun — tab basi aman.
+    var loaded = db.__loadedIds && db.__loadedIds[key];
+    if (loaded && loaded.length) {
+      var have = {};
+      ids.forEach(function (id) { have[String(id)] = 1; });
+      var gone = loaded.filter(function (id) { return !have[String(id)]; });
+      if (gone.length) {
+        supabaseRequest_('delete', '/rest/v1/' + t.table + '?' + t.pk + '=in.(' +
+          gone.map(encodeURIComponent).join(',') + ')');
+      }
+    }
 
     // 2) upsert (insert atau update by PK)
     if (rows.length) {

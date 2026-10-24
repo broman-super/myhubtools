@@ -3,9 +3,9 @@
 // ------------------------------------------------------------
 // DEPLOY (sekali):
 // 1) Buat project Apps Script baru, hapus isi default, paste seluruh file ini.
-// 2) Isi __SUPABASE_CONFIG__ di bawah (Project URL & service_role project UNITOOLS).
-// 3) Pilih fungsi `setupSupabaseProps` di toolbar > Run > izinkan akses.
-//    (nilai tersimpan di Script Properties, blok config otomatis dikosongkan)
+// 2) Isi SERVICE_ROLE_KEY di __SUPABASE_CONFIG__ di bawah, lalu Run setupSupabaseProps
+//    sekali (nilai pindah ke Script Properties, blok config dikosongkan).
+// 3) Set Script Property BRIDGE_TOKEN = kunci tulis tim (lihat docs/SECURITY.md).
 // 4) Deploy > New deployment > Web app
 //       - Execute as: Me
 //       - Who has access: Anyone
@@ -16,12 +16,14 @@
 // (tabel rnd_roadmap hanya punya policy select untuk anon).
 // ============================================
 
-// ponytail: repo tidak menyimpan key. Isi sementara lalu Run setupSupabaseProps —
-// nilai tersimpan di Script Properties dan block ini dikosongkan (lihat DEPLOY step 2-3).
+// ===== KONFIGURASI =====
+// Repo ini publik, jadi service_role key TIDAK ditulis di sini.
+// Isi sekali: paste key di bawah, Run setupSupabaseProps, lalu kosongkan lagi.
 var __SUPABASE_CONFIG__ = {
-  SUPABASE_URL: '',       // ← tempel Project URL project UNITOOLS di sini
-  SERVICE_ROLE_KEY: ''    // ← tempel service_role key di sini
+  SUPABASE_URL: 'https://iyraamxkrygtzsqkvnqz.supabase.co',
+  SERVICE_ROLE_KEY: ''
 };
+// Kunci tulis tim: Script Property BRIDGE_TOKEN (sama dengan yang diketik di browser).
 
 var STORAGE_BUCKET = 'roadmap-photos'; // ← buat bucket ini di Supabase Storage & set Public
 
@@ -41,10 +43,15 @@ function setupSupabaseProps() {
 }
 
 function supabaseCreds_() {
-  var props = PropertiesService.getScriptProperties();
-  var url = props.getProperty('SUPABASE_URL');
-  var key = props.getProperty('SERVICE_ROLE_KEY');
-  if (!url || !key) throw new Error('Belum set kredensial. Isi __SUPABASE_CONFIG__ lalu Run setupSupabaseProps dulu.');
+  var url = String(__SUPABASE_CONFIG__.SUPABASE_URL || '').trim().replace(/\/+$/, '');
+  var key = String(__SUPABASE_CONFIG__.SERVICE_ROLE_KEY || '').trim();
+  if (!url || !key) {
+    // cadangan: kalau setupSupabaseProps() pernah dijalankan (blok di atas dikosongkan).
+    var props = PropertiesService.getScriptProperties();
+    url = props.getProperty('SUPABASE_URL');
+    key = props.getProperty('SERVICE_ROLE_KEY');
+  }
+  if (!url || !key) throw new Error('Isi __SUPABASE_CONFIG__ (SUPABASE_URL & SERVICE_ROLE_KEY) di atas file.');
   return { baseUrl: url, apiKey: key };
 }
 
@@ -71,9 +78,20 @@ function supabaseRequest_(method, path, payload, prefer) {
   return res;
 }
 
+// Cek kunci tulis. String(t || '') = token kosong bila klien tidak mengirim; jangan diisi.
+function bridgeToken_() {
+  var t = PropertiesService.getScriptProperties().getProperty('BRIDGE_TOKEN');
+  if (!t) throw new Error('BRIDGE_TOKEN belum diset di Script Properties project ini');
+  return String(t).trim();
+}
+function requireToken_(body) {
+  if (String((body && body.token) || '') !== bridgeToken_()) throw new Error('Kunci tulis tidak valid');
+}
+
 function doPost(e) {
  try {
   var body = JSON.parse(e.postData.contents);
+  requireToken_(body);
   var action = body.action;
   var payload = body.payload || {};
 

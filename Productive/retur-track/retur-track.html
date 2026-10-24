@@ -726,10 +726,29 @@
     ["GrabExpress", "GR|GRAB"]
   ];
 
+  // Kunci tulis tim (app_private.write_key.secret). Diketik sekali per browser.
+  var KEY_WRITE = "reynahub-write-key";
+  function writeKey() {
+    var k = "";
+    try { k = localStorage.getItem(KEY_WRITE) || ""; } catch (e) { /* storage diblokir */ }
+    if (!k) {
+      k = String(window.prompt("Masukkan kunci tulis tim (sekali per browser):") || "").trim();
+      if (k) { try { localStorage.setItem(KEY_WRITE, k); } catch (e) { /* abaikan */ } }
+    }
+    return k;
+  }
+  // Nama ekspedisi berasal dari DB (bisa diisi user) — jangan disisipkan mentah ke HTML.
+  function escHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
   function sb(path, options) {
     options = options || {};
+    var method = options.method || "GET";
     var opts = {
-      method: options.method || "GET",
+      method: method,
       headers: {
         "apikey": CONFIG.SUPABASE_ANON_KEY,
         "Authorization": "Bearer " + CONFIG.SUPABASE_ANON_KEY,
@@ -737,6 +756,7 @@
         "Content-Type": "application/json"
       }
     };
+    if (method !== "GET") opts.headers["x-write-token"] = writeKey();
     if (options.body) opts.body = JSON.stringify(options.body);
     var url = CONFIG.SUPABASE_URL.replace(/\/+$/, "") + "/rest/v1/" + path;
     return fetch(url, opts).then(function(res) {
@@ -1157,8 +1177,8 @@ filtered.forEach(function(d) {
         // yang jadi prefix nama lain ("JNE" vs "JNE Truck") tidak salah tandai.
         var selOpts = '<option value="UNKNOWN">-- Pilih Ekspedisi --</option>';
         configEkspedisi.forEach(function(c) {
-          selOpts += '<option value="' + c.name + '"' +
-                     (c.name === d.ekspedisi ? " selected" : "") + ">" + c.name + "</option>";
+          selOpts += '<option value="' + escHtml(c.name) + '"' +
+                     (c.name === d.ekspedisi ? " selected" : "") + ">" + escHtml(c.name) + "</option>";
         });
 
         var expCell = '<div class="exp-cell"><select onchange="updateRowExpedition(' + i + ',this.value)">' + selOpts + '</select>';

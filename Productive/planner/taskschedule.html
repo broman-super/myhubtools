@@ -2159,7 +2159,19 @@ border-color: var(--accent);
   </div>
 
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzyC8EnUaEiBIv1CZ8lxzt6e_p6Ph1Xpm_-aqVd2mFmI22XYX9obvfL90bjOMmCW4yc/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbw0o4_dsHFEg6i1--xoBhLnClOXH_r6Y2fzS75jPuL5thpjqxD36lH9CqGIS9I1TRRg/exec";
+
+    // Kunci tulis tim (BRIDGE_TOKEN di GAS). Diketik sekali per browser.
+    const KEY_WRITE = 'reynahub-write-key';
+    function writeKey() {
+      let k = '';
+      try { k = localStorage.getItem(KEY_WRITE) || ''; } catch (e) { /* storage diblokir */ }
+      if (!k) {
+        k = String(window.prompt('Masukkan kunci tulis tim (sekali per browser):') || '').trim();
+        if (k) { try { localStorage.setItem(KEY_WRITE, k); } catch (e) { /* abaikan */ } }
+      }
+      return k;
+    }
 
     // Share mode: link publik #ss-<slug> - baca hash parent (di dalam iframe hub) atau hash sendiri (buka langsung)
     function shareSlugFromHash(h) {
@@ -2409,7 +2421,7 @@ border-color: var(--accent);
           mode: 'cors',
           redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action, data })
+          body: JSON.stringify({ action, data, token: writeKey() })
         });
         if (!resp.ok) throw new Error("HTTP " + resp.status);
         const json = await resp.json();
