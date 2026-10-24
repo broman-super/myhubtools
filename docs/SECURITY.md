@@ -11,9 +11,12 @@ Semua tool yang menulis data sekarang butuh **satu kunci tulis tim**. Kunci ini:
 - diketik **sekali per browser**, lalu disimpan di `localStorage['reynahub-write-key']`;
 - dikirim sebagai header `x-write-token` (REST Supabase) atau field `token` (GAS).
 
-Repo ini **tidak** menyimpan kunci (repo publik). Kalau kunci bocor, ganti di dua
-tempat (`update app_private.write_key set secret = ...` dan Script Property),
-lalu minta user mengetik ulang (`localStorage.removeItem('reynahub-write-key')`).
+Repo ini **tidak** menyimpan kunci di file GAS (repo publik). Tapi sejak
+24 Okt 2026 kunci juga **ditanam di klien** (5 file) supaya tidak ada prompt saat
+menulis — keputusan yang diterima sadar. Konsekuensinya: RLS hanya menahan
+penulisan iseng, bukan orang yang membaca source halaman. Kalau kunci bocor/ganti,
+perbarui di tiga tempat: `app_private.write_key` (2 project), Script Property
+`BRIDGE_TOKEN` (4 GAS), dan `KEY_WRITE_VALUE` (5 klien).
 
 ## Urutan setup (sekali saja)
 

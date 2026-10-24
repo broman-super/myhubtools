@@ -726,17 +726,10 @@
     ["GrabExpress", "GR|GRAB"]
   ];
 
-  // Kunci tulis tim (app_private.write_key.secret). Diketik sekali per browser.
-  var KEY_WRITE = "reynahub-write-key";
-  function writeKey() {
-    var k = "";
-    try { k = localStorage.getItem(KEY_WRITE) || ""; } catch (e) { /* storage diblokir */ }
-    if (!k) {
-      k = String(window.prompt("Masukkan kunci tulis tim (sekali per browser):") || "").trim();
-      if (k) { try { localStorage.setItem(KEY_WRITE, k); } catch (e) { /* abaikan */ } }
-    }
-    return k;
-  }
+  // Kunci tulis tim (app_private.write_key.secret). Ditanam di halaman: tanpa prompt.
+  // Risiko diterima: siapa pun yang membuka halaman ini bisa ikut menulis data.
+  var KEY_WRITE_VALUE = "f71777528484496aa4dc15b12fdfca88";
+  function writeKey() { return KEY_WRITE_VALUE; }
   // Nama ekspedisi berasal dari DB (bisa diisi user) — jangan disisipkan mentah ke HTML.
   function escHtml(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
