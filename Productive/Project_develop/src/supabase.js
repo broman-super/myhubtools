@@ -1,18 +1,11 @@
 import { SUPABASE_URL, SUPABASE_ANON_KEY, GAS_SCRIPT_URL } from './config.js';
 
 const TABLE = 'rnd_roadmap';
-const KEY_WRITE = 'reynahub-write-key';
+const KEY_WRITE_VALUE = 'f71777528484496aa4dc15b12fdfca88';
 
-// Kunci tulis tim (BRIDGE_TOKEN di GAS). Diketik sekali per browser.
-function writeKey() {
-  let k = '';
-  try { k = localStorage.getItem(KEY_WRITE) || ''; } catch { /* storage diblokir */ }
-  if (!k) {
-    k = String(window.prompt('Masukkan kunci tulis tim (sekali per browser):') || '').trim();
-    if (k) { try { localStorage.setItem(KEY_WRITE, k); } catch { /* abaikan */ } }
-  }
-  return k;
-}
+// Kunci tulis tim (BRIDGE_TOKEN di GAS). Ditanam di halaman: tanpa prompt.
+// Risiko diterima: siapa pun yang membuka halaman ini bisa ikut menulis data.
+function writeKey() { return KEY_WRITE_VALUE; }
 
 // --- READ: langsung ke Supabase REST pakai anon key (RLS select-only) ---
 export async function loadProjects() {

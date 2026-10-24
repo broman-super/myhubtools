@@ -11,19 +11,12 @@ window.SPT = window.SPT || {};
 (function (A) {
 
   var KEY = 'sppd_toolbox_db_v2';
-  var KEY_WRITE = 'reynahub-write-key';
+  var KEY_WRITE_VALUE = 'f71777528484496aa4dc15b12fdfca88';
   var LEGACY_KEYS = ['sppd_toolbox_db_v1'];
   var DB = null;
-  /* Kunci tulis tim (BRIDGE_TOKEN di GAS). Diketik sekali per browser. */
-  function writeKey(ask) {
-    var k = '';
-    try { k = localStorage.getItem(KEY_WRITE) || ''; } catch (e) {}
-    if (!k && ask) {
-      k = String(window.prompt('Masukkan kunci tulis tim (sekali per browser):') || '').trim();
-      if (k) { try { localStorage.setItem(KEY_WRITE, k); } catch (e) {} }
-    }
-    return k;
-  }
+  /* Kunci tulis tim (BRIDGE_TOKEN di GAS). Ditanam di halaman: tanpa prompt.
+     Risiko diterima: siapa pun yang membuka halaman ini bisa ikut menulis data. */
+  function writeKey(ask) { return KEY_WRITE_VALUE; }
   /* Id yang ada saat load terakhir. Server hanya boleh menghapus id di daftar
      ini — mencegah tab basi mengosongkan tabel yang belum pernah ia lihat. */
   var _loadedIds = null;
