@@ -45,7 +45,7 @@
                 <div class="hero-copy">
                     <h1 class="hero-title">Satu meja kerja untuk semua alat harian.</h1>
                     <p class="hero-lead">Kumpulan webtools yang saya bangun untuk mempermudah aktivitas kerja sehari-hari — analitik, dokumen, logistik, dan koordinasi tim dalam satu tempat.</p>
-                    <p class="hero-meta"><span id="count-total">–</span> modul · Produktif &amp; Universal</p>
+                    <p class="hero-meta"><span id="count-total">–</span> modul · <span id="count-categories">–</span> kategori</p>
                     <div class="hero-actions">
                         <button class="hero-cta" id="enter-btn">
                             Buka Workspace
@@ -83,13 +83,21 @@
                     <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
                     <span class="nav-label">Semua</span>
                 </button>
-                <button class="nav-btn" data-group="productive" title="Productive">
-                    <svg viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></svg>
-                    <span class="nav-label">Produktif</span>
+                <button class="nav-btn" data-group="analitik" title="Analitik &amp; Insight">
+                    <svg viewBox="0 0 24 24"><path d="M4 20V10h4v10H4zm6 0V4h4v16h-4zm6 0v-7h4v7h-4z"/></svg>
+                    <span class="nav-label">Analitik</span>
                 </button>
-                <button class="nav-btn" data-group="universal" title="Universal Tools">
-                    <svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.5 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>
-                    <span class="nav-label">Universal</span>
+                <button class="nav-btn" data-group="operasional" title="Operasional &amp; Logistik">
+                    <svg viewBox="0 0 24 24"><path d="M12 2 3 6.5v11L12 22l9-4.5v-11L12 2zm0 2.2 6.6 3.3L12 10.8 5.4 7.5 12 4.2zM5 9.2l6 3v7.4l-6-3V9.2zm8 10.4v-7.4l6-3v7.4l-6 3z"/></svg>
+                    <span class="nav-label">Operasional</span>
+                </button>
+                <button class="nav-btn" data-group="dokumen" title="Dokumen &amp; Arsip">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm0 2.4L17.6 8H14V4.4zM8 13h8v2H8v-2zm0 4h8v2H8v-2z"/></svg>
+                    <span class="nav-label">Dokumen</span>
+                </button>
+                <button class="nav-btn" data-group="tim" title="Perencanaan &amp; Tim">
+                    <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zM8 11c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                    <span class="nav-label">Perencanaan</span>
                 </button>
             </div>
             <div class="nav-bottom">
@@ -107,7 +115,7 @@
                 <header class="dashboard-header">
                     <div class="header-info">
                         <h2>Workspace</h2>
-                        <p class="header-meta"><span id="count-productive">–</span> modul produktif · <span id="count-universal">–</span> modul universal</p>
+                        <p class="header-meta"><span id="count-header">–</span> modul · <span id="count-groups">–</span> kategori</p>
                     </div>
                 </header>
 
@@ -118,14 +126,24 @@
                     </div>
                 </div>
 
-                <div id="section-productive" class="group-section">
-                    <div class="section-label">Produktif</div>
-                    <div class="bento-grid" id="grid-productive"></div>
+                <div id="section-analitik" class="group-section" data-group="analitik">
+                    <div class="section-label">Analitik &amp; Insight</div>
+                    <div class="bento-grid" id="grid-analitik"></div>
                 </div>
 
-                <div id="section-universal" class="group-section">
-                    <div class="section-label">Universal</div>
-                    <div class="bento-grid" id="grid-universal"></div>
+                <div id="section-operasional" class="group-section" data-group="operasional">
+                    <div class="section-label">Operasional &amp; Logistik</div>
+                    <div class="bento-grid" id="grid-operasional"></div>
+                </div>
+
+                <div id="section-dokumen" class="group-section" data-group="dokumen">
+                    <div class="section-label">Dokumen &amp; Arsip</div>
+                    <div class="bento-grid" id="grid-dokumen"></div>
+                </div>
+
+                <div id="section-tim" class="group-section" data-group="tim">
+                    <div class="section-label">Perencanaan &amp; Tim</div>
+                    <div class="bento-grid" id="grid-tim"></div>
                 </div>
 
                 <div id="search-empty">

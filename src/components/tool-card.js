@@ -1,105 +1,101 @@
 // src/components/tool-card.js - Card generation (non-module)
+// Grup kartu = id section di index.html (`grid-<group>` + tombol sidebar `data-group`).
 var ToolCard = {
   configs: [
-    // Productive
+    // Analitik & Insight
     {
-      group: 'productive',
-      hash: '#productive/planner',
-      title: 'TaskSpace',
-      desc: 'Manajemen perencanaan tugas tim dan sinkronisasi log harian secara real-time.',
-      search: 'taskspace team planner manajemen tugas tim real-time'
-    },
-    {
-      group: 'productive',
+      group: 'analitik',
       hash: '#productive/analytic',
       title: 'Analytic Dashboard',
       desc: 'Dashboard analisis penjualan & biaya: grafik interaktif, target, impor Excel, laporan cetak/PDF.',
-      search: 'analytic dashboard sales analytic simplify sas visualisasi data'
+      search: 'analytic dashboard sales analytic simplify sas visualisasi data penjualan biaya'
     },
     {
-      group: 'productive',
-      hash: '#productive/latch',
-      title: 'LATCH Web Link',
-      desc: 'Portal pengumpul dan manajemen tautan/link berkas penting kebutuhan operasional.',
-      search: 'latch web link kumpulan link penting kegiatan'
-    },
-    {
-      group: 'productive',
-      hash: '#productive/expense',
-      title: 'Expense Tracker',
-      desc: 'Pengajuan, approval, realisasi & reimburse expense operasional tim.',
-      search: 'expense tracker pengajuan realisasi reimburse approval'
-    },
-    {
-      group: 'productive',
-      hash: '#productive/rnd-roadmap',
-      title: 'RND Roadmap Tracker',
-      desc: 'Pelacakan roadmap produk baru Divisi R&D: tahapan, checklist, dan evaluasi kelayakan.',
-      search: 'rnd roadmap tracker produk baru riset pengembangan tahapan evaluasi'
-    },
-    {
-      group: 'productive',
-      hash: '#productive/sppd',
-      title: 'SPPD Toolbox',
-      desc: 'Kelola perjalanan dinas (SPPD): budget, transport, produk, penjualan, checklist, dan laporan.',
-      search: 'sppd perjalanan dinas budget transport produk laporan arsip'
-    },
-    {
-      group: 'productive',
+      group: 'analitik',
       hash: '#productive/meta-insight',
       title: 'Meta Insight Dashboard',
       desc: 'Analisis insight konten Meta (Facebook/Instagram): unggah CSV, dapatkan KPI, grafik, dan temuan otomatis.',
       search: 'meta insight dashboard facebook instagram csv konten analisis engagement reach views likes'
     },
-    // Universal
+    // Operasional & Logistik
     {
-      group: 'universal',
+      group: 'operasional',
       hash: '#external/resi',
       title: 'Resi Generator',
       desc: 'Pembuatan resi logistik otomatis yang terintegrasi secara dinamis.',
       search: 'resi generator pembuatan resi operasional otomatis'
     },
     {
-      group: 'universal',
+      group: 'operasional',
       hash: '#utilities/outbond',
       title: 'Pendataan Paket',
       desc: 'Sistem logging dan scanning barcode untuk pencatatan paket masuk/keluar.',
       search: 'pendataan paket sistem pencatatan masuk keluar scan'
     },
     {
-      group: 'universal',
-      hash: '#utilities/activity',
-      title: 'Activity Tracker',
-      desc: 'Pencatatan dan pemantauan performa progres kerja harian seluruh anggota tim.',
-      search: 'activity tracker pencatatan aktivitas pekerjaan tim'
-    },
-    {
-      group: 'universal',
+      group: 'operasional',
       hash: '#utilities/retur',
       title: 'Retur Tracker',
       desc: 'Sistem pencatatan terpusat untuk pelacakan, status, dan riwayat barang retur.',
       search: 'retur tracker pencatatan data barang retur'
     },
+    // Dokumen & Arsip
     {
-      group: 'universal',
-      hash: '#doc/dak',
-      title: 'Form Pengajuan DAK',
-      desc: 'Pembuatan dokumen pengajuan sistematis untuk program Dana Amanah Karyawan.',
-      search: 'form pengajuan dak dana amanah karyawan pembuatan dokumen'
+      group: 'dokumen',
+      hash: '#productive/sppd',
+      title: 'SPPD Toolbox',
+      desc: 'Kelola perjalanan dinas (SPPD): budget, transport, produk, penjualan, checklist, dan laporan.',
+      search: 'sppd perjalanan dinas budget transport produk laporan arsip'
     },
     {
-      group: 'universal',
+      group: 'dokumen',
+      hash: '#utilities/faktur',
+      title: 'Faktur Penjualan',
+      desc: 'Pembuatan faktur penjualan format resmi A4, siap disimpan sebagai PDF.',
+      search: 'faktur penjualan invoice tagihan pdf harga produk'
+    },
+    {
+      group: 'dokumen',
       hash: '#utilities/merger',
       title: 'PDFM Merger',
       desc: 'Penyatuan berkas resi terpisah menjadi satu dokumen PDF tanpa memburamkan barcode/QR.',
       search: 'pdfm merger satukan semua resi pdf gabung'
     },
     {
-      group: 'universal',
-      hash: '#utilities/faktur',
-      title: 'Faktur Penjualan',
-      desc: 'Pembuatan faktur penjualan format resmi A4, siap disimpan sebagai PDF.',
-      search: 'faktur penjualan invoice tagihan pdf harga produk'
+      group: 'dokumen',
+      hash: '#doc/dak',
+      title: 'Form Pengajuan DAK',
+      desc: 'Pembuatan dokumen pengajuan sistematis untuk program Dana Amanah Karyawan.',
+      search: 'form pengajuan dak dana amanah karyawan pembuatan dokumen'
+    },
+    {
+      group: 'dokumen',
+      hash: '#productive/latch',
+      title: 'LATCH Web Link',
+      desc: 'Portal pengumpul dan manajemen tautan/link berkas penting kebutuhan operasional.',
+      search: 'latch web link kumpulan link penting kegiatan'
+    },
+    // Perencanaan & Tim
+    {
+      group: 'tim',
+      hash: '#productive/planner',
+      title: 'TaskSpace',
+      desc: 'Manajemen perencanaan tugas tim dan sinkronisasi log harian secara real-time.',
+      search: 'taskspace team planner manajemen tugas tim real-time'
+    },
+    {
+      group: 'tim',
+      hash: '#productive/rnd-roadmap',
+      title: 'RND Roadmap Tracker',
+      desc: 'Pelacakan roadmap produk baru Divisi R&D: tahapan, checklist, dan evaluasi kelayakan.',
+      search: 'rnd roadmap tracker produk baru riset pengembangan tahapan evaluasi'
+    },
+    {
+      group: 'tim',
+      hash: '#utilities/activity',
+      title: 'Activity Tracker',
+      desc: 'Pencatatan dan pemantauan performa progres kerja harian seluruh anggota tim.',
+      search: 'activity tracker pencatatan aktivitas pekerjaan tim'
     }
   ],
 
@@ -108,6 +104,7 @@ var ToolCard = {
     card.className = 'bento-card';
     card.setAttribute('data-search', config.search);
     card.setAttribute('data-hash', config.hash);
+    card.setAttribute('data-group', config.group);
     card.setAttribute('tabindex', '0');
     card.setAttribute('role', 'button');
     card.addEventListener('keydown', function(e) {
@@ -141,19 +138,11 @@ var ToolCard = {
   },
 
   renderAll: function() {
-    var groups = { productive: [], universal: [] };
     for (var i = 0; i < this.configs.length; i++) {
       var c = this.configs[i];
-      var card = this.createCard(c);
-      if (groups[c.group]) groups[c.group].push(card);
-    }
-    var prodGrid = document.getElementById('grid-productive');
-    var utilGrid = document.getElementById('grid-universal');
-    if (prodGrid) {
-      for (var j = 0; j < groups.productive.length; j++) prodGrid.appendChild(groups.productive[j]);
-    }
-    if (utilGrid) {
-      for (var k = 0; k < groups.universal.length; k++) utilGrid.appendChild(groups.universal[k]);
+      var grid = document.getElementById('grid-' + c.group);
+      if (!grid) { console.warn('[hub] grup tidak punya section:', c.group, c.hash); continue; }
+      grid.appendChild(this.createCard(c));
     }
   }
 };

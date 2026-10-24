@@ -37,7 +37,6 @@ class ReynaHubRouter {
       '#productive/planner': 'Productive/planner/taskschedule.html',
       '#productive/analytic': 'Productive/analytic/Analytic.html',
       '#productive/latch': 'Productive/latch/latch.html',
-      '#productive/expense': 'Productive/expense-tracker/index.html',
       '#productive/rnd-roadmap': 'Productive/Project_develop/dist/index.html',
       '#productive/sppd': 'Productive/ArchiveDoc/index.html',
       '#productive/meta-insight': 'Productive/meta-insight/meta-insight-dashboard.html',

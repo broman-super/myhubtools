@@ -78,8 +78,8 @@ Contoh entri (poin 2 + 3):
 ```js
 // tool-card.js
 {
-  group: 'productive',                       // 'productive' | 'universal'
-  hash: '#productive/nama-tool',             // unik; prefix = grup sidebar
+  group: 'analitik',                         // 'analitik' | 'operasional' | 'dokumen' | 'tim'
+  hash: '#productive/nama-tool',             // unik; rute file di router.js
   title: 'Nama Tool',
   desc: 'Satu kalimat deskripsi.',
   search: 'kata kunci alternatif'
@@ -90,7 +90,7 @@ Contoh entri (poin 2 + 3):
 ```
 
 **Tidak perlu disentuh:**
-- **Sidebar** — nav hanya memfilter grup (`group` di config).
+- **Sidebar** — kartu otomatis masuk section sesuai `group`; grup baru butuh section + tombol di `index.html`.
 - **`src/sw.js`** — tool di bawah `/Productive/` sudah network-first, otomatis keurus.
 
 ---
