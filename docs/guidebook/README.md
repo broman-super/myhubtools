@@ -25,7 +25,7 @@
 - **Token, bukan hex** — 0 hex/rgba di luar `:root`.
 - **Hash rute stabil** — `src/core/router.js`. Folder boleh di-rename, hash tool lama tidak berubah.
 - **Folder tool kebab-case** (`pdf-merger`, `retur-track`, `outbound-track`, …).
-- Tool baru: daftar di `src/components/tool-card.js` + `src/core/router.js`. **Sidebar `tool-card.js` cukup lewat `group`; `src/sw.js` tidak diubah.**
+- Tool baru: daftar di `src/components/tool-card.js` + `src/core/router.js`. **`group` kartu = salah satu grup yang ada (`analitik`, `operasional`, `dokumen`, `tim`); grup baru berarti menambah section `#grid-<group>` + tombol sidebar di `index.html`. `src/sw.js` tidak diubah.**
 - Saat mengedit kode lama: **jangan hapus fungsi yang sudah ada**.
 
 ## Konteks AI (opencode)

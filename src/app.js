@@ -3,6 +3,7 @@
   var ui = {};
   var router = null;
   var themeManager = null;
+  var activeGroup = 'all';
 
   function init() {
     ui = {
@@ -12,8 +13,6 @@
       frameCont: document.getElementById('frame-container'),
       frame: document.getElementById('main-frame'),
       navBtns: document.querySelectorAll('.nav-list .nav-btn'),
-      secProd: document.getElementById('section-productive'),
-      secUtil: document.getElementById('section-universal'),
       search: document.getElementById('toolSearch'),
       about: document.getElementById('aboutModal'),
       enterBtn: document.getElementById('enter-btn'),
@@ -37,9 +36,10 @@
       var el = document.getElementById(id);
       if (el) el.textContent = String(document.querySelectorAll(sel).length);
     };
-    countIn('count-productive', '#grid-productive .bento-card');
-    countIn('count-universal', '#grid-universal .bento-card');
     countIn('count-total', '.bento-card');
+    countIn('count-categories', '.group-section');
+    countIn('count-header', '.bento-card');
+    countIn('count-groups', '.group-section');
 
     // Daftar modul di modal dibangun dari konfigurasi kartu (satu sumber kebenaran)
     var aboutList = document.getElementById('about-modules');
@@ -187,14 +187,10 @@
 
     showFrame(path);
 
-    // Highlight correct sidebar nav
-    for (var i = 0; i < ui.navBtns.length; i++) ui.navBtns[i].classList.remove('active');
-    if (hash) {
-      var group = hash.split('/')[0].replace('#', '');
-      var btn = document.querySelector('.nav-btn[data-group="' + group + '"]');
-      if (btn) btn.classList.add('active');
-      else document.querySelector('.nav-btn[data-group="all"]').classList.add('active');
-    }
+    // Highlight nav grup pemilik kartu (grup tidak lagi diturunkan dari prefix hash)
+    var owner = hash ? document.querySelector('.bento-card[data-hash="' + hash + '"]') : null;
+    activeGroup = owner ? owner.getAttribute('data-group') : 'all';
+    setActiveNav(activeGroup);
   }
 
   function showFrame(toolPath) {
@@ -236,31 +232,34 @@
       ui.dbView.scrollTop = 0;
     }, 300);
 
-    for (var i = 0; i < ui.navBtns.length; i++) ui.navBtns[i].classList.remove('active');
-    document.querySelector('.nav-btn[data-group="all"]').classList.add('active');
-
-    ui.secProd.classList.remove('hidden');
-    ui.secUtil.classList.remove('hidden');
+    setActiveNav(activeGroup);
     ui.search.value = '';
     searchTools();
+  }
+
+  function setActiveNav(group) {
+    var btns = document.querySelectorAll('.nav-list .nav-btn');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].classList.toggle('active', btns[i].getAttribute('data-group') === group);
+    }
+  }
+
+  // Section tampil bila cocok grup aktif DAN masih punya kartu yang lolos pencarian
+  function applyGroupFilter() {
+    var secs = document.querySelectorAll('.group-section');
+    for (var i = 0; i < secs.length; i++) {
+      var g = secs[i].getAttribute('data-group');
+      var hasCard = secs[i].querySelector('.bento-card:not(.hidden-card)') !== null;
+      secs[i].classList.toggle('hidden', !hasCard || (activeGroup !== 'all' && g !== activeGroup));
+    }
   }
 
   function filterGroup(type, el) {
     router.navigate('#dashboard');
 
-    for (var i = 0; i < ui.navBtns.length; i++) ui.navBtns[i].classList.remove('active');
-    el.classList.add('active');
-
-    if (type === 'all') {
-      ui.secProd.classList.remove('hidden');
-      ui.secUtil.classList.remove('hidden');
-    } else if (type === 'productive') {
-      ui.secProd.classList.remove('hidden');
-      ui.secUtil.classList.add('hidden');
-    } else if (type === 'universal') {
-      ui.secProd.classList.add('hidden');
-      ui.secUtil.classList.remove('hidden');
-    }
+    activeGroup = type;
+    setActiveNav(type);
+    applyGroupFilter();
   }
 
   function searchTools() {
@@ -274,20 +273,8 @@
       cards[i].setAttribute('tabindex', hidden ? '-1' : '0');
     }
 
-    // Hide sections with no visible cards
-    var sections = [ui.secProd, ui.secUtil];
-    for (var s = 0; s < sections.length; s++) {
-      var visible = sections[s].querySelectorAll('.bento-card:not(.hidden-card)');
-      if (visible.length === 0) {
-        sections[s].classList.add('hidden');
-      } else {
-        var activeGroup = document.querySelector('.nav-btn[data-group].active');
-        var group = activeGroup ? activeGroup.dataset.group : 'all';
-        if (group === 'all') {
-          sections[s].classList.remove('hidden');
-        }
-      }
-    }
+    // Visibilitas section: gabungan filter grup + hasil pencarian
+    applyGroupFilter();
 
     var totalVisible = document.querySelectorAll('.bento-card:not(.hidden-card)').length;
     var emptyEl = document.getElementById('search-empty');

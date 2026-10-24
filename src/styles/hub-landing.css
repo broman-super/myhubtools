@@ -463,7 +463,8 @@ html[data-theme="dark"] .hero-sheen {
     width: auto;
 }
 
-#workspace aside.sidebar .nav-list { flex: 1; }
+#workspace aside.sidebar .nav-list { flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+#workspace aside.sidebar .nav-list::-webkit-scrollbar { display: none; }
 
 #workspace aside.sidebar .nav-btn {
     width: auto;

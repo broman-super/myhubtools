@@ -185,7 +185,7 @@ Setelah kembali ke repo, AI cukup menambahkan:
 
 ```js
 // src/components/tool-card.js — dalam array ToolCard.configs
-{ group: 'productive', hash: '#productive/nama-tool',
+{ group: 'analitik', hash: '#productive/nama-tool',
   title: 'Nama Tool', desc: 'Satu kalimat.', search: 'kata kunci' }
 
 // src/core/router.js — dalam map getToolPath()
@@ -193,7 +193,7 @@ Setelah kembali ke repo, AI cukup menambahkan:
 ```
 
 Lalu: baris di `README.md` root (peta folder + "Modul Tools") dan `README.md` di folder tool.
-**Tidak perlu disentuh:** sidebar (`group` cukup) dan `src/sw.js`.
+**Tidak perlu disentuh:** `src/sw.js`. Sidebar hanya perlu disentuh kalau membuat **grup baru** (`analitik` / `operasional` / `dokumen` / `tim` sudah ada).
 
 ---
 

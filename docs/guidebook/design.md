@@ -333,7 +333,7 @@ Tambah satu entri ke array `ToolCard.configs`:
 
 ```js
 {
-  group: 'productive',                    // 'productive' | 'universal'
+  group: 'analitik',                      // 'analitik' | 'operasional' | 'dokumen' | 'tim'
   hash: '#productive/nama-tool',          // rute unik (slug tools)
   title: 'Nama Tool',
   desc: 'Satu kalimat deskripsi fungsi bermanfaat.',
@@ -341,7 +341,7 @@ Tambah satu entri ke array `ToolCard.configs`:
 }
 ```
 
-- `hash` menentukan rute + grup sidebar (bagian sebelum `/`).
+- `hash` menentukan rute file (map di `router.js`), `group` menentukan section + tombol sidebar.
 - Router hub memetakan hash → path file di `src/core/router.js` — ikuti pola entri di sana.
 - Badge `BARU` di kartu: tambahkan blok `if (config.hash === '...') newBadge` di `createCard` (contoh: Faktur).
 
@@ -367,7 +367,7 @@ Tambah satu entri ke array `ToolCard.configs`:
 | Backend | `gas/*.gs` | Di-deploy ke GAS; URL `.../exec` ditempel di tool |
 | Tool | `Productive/<nama-kebab>/` | Folder sendiri, HTML self-contained (CSS+JS inline) |
 
-**Sidebar tidak perlu disentuh** — tombol nav hanya memfilter grup (`group` di config tool-card).
+**Sidebar tidak perlu disentuh untuk tool baru** — kartu masuk ke section sesuai `group` (salah satu dari 4 grup: `analitik`, `operasional`, `dokumen`, `tim`). Grup baru = section `#grid-<group>` + tombol `data-group="<group>"` di `index.html`.
 
 ### Langkah
 
