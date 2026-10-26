@@ -2475,6 +2475,22 @@
             }
         }
 
+        // Tanggal "Faktur Penjualan" terakhir di seluruh data (bukan rentang filter, bukan retur).
+        // Gagal/jaringan mati → null, label jatuh ke perhitungan lama.
+        async function tanggalFakturTerakhir() {
+            try {
+                const q = 'select=' + encodeURIComponent('"Tanggal"')
+                    + '&' + encodeURIComponent('"Tipe Transaksi"') + '=eq.' + encodeURIComponent('Faktur Penjualan')
+                    + '&order=' + encodeURIComponent('"Tanggal"') + '.desc&limit=1';
+                const res = await fetch(SUPABASE_URL + '/rest/v1/transaksi?' + q, {
+                    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+                });
+                if (!res.ok) return null;
+                const rows = await res.json();
+                return (rows && rows[0] && String(rows[0]['Tanggal'] || '').slice(0, 10)) || null;
+            } catch (e) { return null; }
+        }
+
         function updateKategoriFilterSupabase(r) {
             const sel = document.getElementById('filterProdukKategori');
             if (!sel) return;
@@ -3192,14 +3208,19 @@
                 if (syncStatus) {
                     let iso = null;
                     if (DATA_SOURCE === 'supabase') {
+                        iso = await tanggalFakturTerakhir(); // hanya 'Faktur Penjualan'
+                    }
+                    if (!iso && DATA_SOURCE === 'supabase') {
                         const lo = (__rekapSupabaseData && __rekapSupabaseData.lastOrder) || {};
                         for (const k in lo) {
                             const v = String(lo[k] || '').slice(0, 10);
                             if (v && (iso === null || v > iso)) iso = v; // ISO YYYY-MM-DD compares chronologically
                         }
-                    } else if (Array.isArray(dataMentah?.transaksi)) {
+                    } else if (!iso && Array.isArray(dataMentah?.transaksi)) {
                         for (const r of dataMentah.transaksi) {
                             const tipe = String(r['Tipe Transaksi'] || '').toLowerCase();
+                            // 'Retur Penjualan' juga mengandung 'penjualan' — buang dulu.
+                            if (tipe.includes('retur') || tipe.includes('kembali')) continue;
                             if (!(tipe.includes('penjualan') || tipe.includes('faktur') || tipe.includes('sales'))) continue;
                             const s = String(r['Tanggal'] || '').slice(0, 10);
                             if (!s) continue;

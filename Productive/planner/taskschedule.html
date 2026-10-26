@@ -463,6 +463,29 @@ color: var(--accent-ink);
     .subs-inline .sub-i .task-check.checked::after { font-size: 10px; }
     .subs-inline .sub-i.done { text-decoration: line-through; opacity: 0.55; }
     .subs-inline .sub-i:focus-visible, .sub-x:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .sub-dropdown { border: 1px solid var(--border); border-radius: 10px; background: var(--bg); overflow: hidden; }
+    .sub-dropdown-head { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; background: var(--bg); border: none; cursor: pointer; font-family: inherit; text-align: left; }
+    .sub-dropdown-head:hover { background: var(--surface-alt); }
+    .sub-dropdown-list { display: flex; flex-direction: column; gap: 4px; padding: 6px 10px 10px; border-top: 1px solid var(--border); background: var(--bg); }
+    .sub-dropdown.collapsed .sub-dropdown-list { display: none; }
+    .sub-caret { margin-left: auto; transition: transform .2s; color: var(--text-soft); }
+    .sub-dropdown.collapsed .sub-caret { transform: rotate(-90deg); }
+    .sub-text[contenteditable="true"] { outline: none; padding: 2px 4px; border-radius: 6px; cursor: text; }
+    .sub-text[contenteditable="true"]:focus { background: var(--bg); box-shadow: 0 0 0 1px var(--accent); }
+    .subtask-chip { display: inline-flex; align-items: center; gap: 8px; margin-top: 6px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); font-size: 11px; font-weight: 600; color: var(--text-soft); cursor: pointer; }
+    .subtask-chip:hover { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-light); }
+    .subtask-section { display: none; }
+    .dd-subtasks { margin-top: 6px; padding-top: 8px; border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent); display: flex; flex-direction: column; gap: 4px; }
+    .dd-subtasks-head { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--text-soft); }
+    .dd-subtasks-count { margin-left: auto; font-size: 10px; padding: 0 5px; border-radius: 999px; background: color-mix(in srgb, var(--surface-alt) 60%, transparent); border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); color: var(--text-soft); font-weight: 700; }
+    .sub-dropdown-plain { border: none; background: transparent; }
+    .sub-dropdown-plain .sub-dropdown-list { border-top: none; padding: 0; background: transparent; gap: 1px; }
+    .sub-dropdown-plain .sub-i { padding: 4px 0; font-size: 12px; gap: 8px; color: var(--text); border-radius: 0; align-items: flex-start; }
+    .sub-dropdown-plain .sub-i:hover { background: transparent; }
+    .sub-dropdown-plain .sub-i .task-check { width: 14px; height: 14px; border-radius: 3px; border-color: color-mix(in srgb, var(--border) 80%, transparent); margin-top: 1px; flex-shrink: 0; }
+    .sub-dropdown-plain .sub-i .task-check.checked { background: var(--accent); border-color: var(--accent); }
+    .sub-dropdown-plain .sub-i .task-check.checked::after { font-size: 9px; }
+    .sub-dropdown-plain .sub-i.done { opacity: 0.55; }
     .subs-badge { font-size: 10px; padding: 1px 6px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-soft); font-weight: 700; white-space: nowrap; }
 
     .task-name {
@@ -874,11 +897,18 @@ margin-bottom: 8px;
       margin: 16px 40px 32px;
       background: var(--bg);
       border-radius: var(--radius);
-      padding: 24px;
+      padding: 20px 24px 24px;
       border: 1px solid var(--border);
       /* height is DYNAMIC - grows with content */
       transition: 0.3s;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
+    .detail-panel > * { margin: 0; }
+    .detail-panel .detail-header { margin-bottom: 0; }
+    .detail-panel .dd-date { margin-top: 4px; }
+    .detail-panel .detail-desc { margin-top: 8px; }
 
     .detail-header {
       display: flex;
@@ -2009,12 +2039,12 @@ border-color: var(--accent);
             <select class="display-none" id="f-channel" onchange="onChannelChange()">
               <!-- ponytail: <option> elements only support plain text, SVG doesn't render -->
               <option value="">- Pilih Channel -</option>
-              <option value="Instagram">📸 Instagram</option>
-              <option value="Whatsapp">💬 Whatsapp</option>
-              <option value="Tiktok">🎵 Tiktok</option>
-              <option value="Shopee">🛒 Shopee</option>
-              <option value="Web">🌐 Web</option>
-              <option value="Event"><svg class="va-m2" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/></svg> Event</option>
+              <option value="Instagram">Instagram</option>
+              <option value="Whatsapp">Whatsapp</option>
+              <option value="Tiktok">Tiktok</option>
+              <option value="Shopee">Shopee</option>
+              <option value="Web">Web</option>
+              <option value="Event">Event</option>
             </select>
           </div>
         </div>
@@ -2224,9 +2254,9 @@ border-color: var(--accent);
     const CHANNELS = {
       'Instagram': { color: '#a855f7', prefix: 'IG |' },
       'Whatsapp':  { color: '#22c55e', prefix: 'WA |' },
-      'Tiktok':    { color: '#ec4899', prefix: 'TT |' },
+      'Tiktok':    { color: '#101010', prefix: 'TT |' },
       'Shopee':    { color: '#f97316', prefix: 'SP |' },
-      'Web':       { color: '#3b82f6', prefix: 'WEB |' },
+      'Web':       { color: '#14b8a6', prefix: 'WEB |' },
       'Event':     { color: '#06b6d4', prefix: 'EVT |' }
     };
 
@@ -2953,7 +2983,11 @@ border-color: var(--accent);
               ${t.tag ? `<span># ${esc(t.tag)}</span>` : ''}
               <span class="badge" style="background:${t.priority === 'high' ? 'var(--danger-light)' : 'var(--secondary-light)'};color:${t.priority === 'high' ? 'var(--danger)' : 'var(--secondary)'};">${t.priority === 'high' ? ICONS.high + ' Tinggi' : t.priority === 'low' ? ICONS.low + ' Rendah' : ICONS.medium + ' Sedang'}</span>
             </div>
-            ${t.subtasks && t.subtasks.length ? `<div class="subs-inline">${t.subtasks.map((s, si) => `<button type="button" class="sub-i ${s.done ? 'done' : ''}" aria-label="${s.done ? 'Tandai belum selesai' : 'Tandai selesai'}: ${esc(s.text)}" onclick="event.stopPropagation();toggleSubItem_('${t.id}',${si})"><span class="task-check ${s.done ? 'checked' : ''}" aria-hidden="true"></span><span>${esc(s.text)}</span></button>`).join('')}</div>` : ''}
+            ${t.subtasks && t.subtasks.length ? (() => {
+              var d = 0, list = t.subtasks || [];
+              for (var di = 0; di < list.length; di++) if (list[di] && list[di].done) d++;
+              return `<div class="subtask-chip" role="button" tabindex="0" onclick="event.stopPropagation();selectTask('${t.id}')"><span style="display:flex;align-items:center;gap:6px;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"/><path d="M5 7V5a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M12 11v6"/><path d="m9 14 3-3 3 3"/></svg><span>Subtask</span></span><span class="subs-badge">${d}/${list.length}</span></div>`;
+            })() : ''}
           </div>
         </div>
       `).join('');
@@ -3090,7 +3124,7 @@ border-color: var(--accent);
           const bg = isC ? t.color : hexAlpha(t.color || '#ccc', 0.1);
           const co = isC ? '#fff' : 'var(--text)';
           const br = isC ? 'none' : `3px solid ${t.color || '#ccc'}`;
-          return `<div class="week-chip ${cls}" role="button" tabindex="0" style="background:${bg};color:${co};border-left:${br};${t.done ? 'opacity:0.55;text-decoration:line-through;' : ''}" draggable="true" ondragstart="dragStart(event,'${t.id}')" onclick="event.stopPropagation();selectTask('${t.id}')">${showText ? esc(t.title) : '&nbsp;'}<span class="quick-toggle" role="checkbox" aria-checked="${!!t.done}" aria-label="Tandai selesai" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\')">${t.done ? '↩' : '✓'}</span></div>`;
+          return `<div class="week-chip ${cls}" role="button" tabindex="0" style="background:${bg};color:${co};border-left:${br};${t.done ? 'opacity:0.55;text-decoration:line-through;' : ''};height:auto;align-items:flex-start;flex-direction:column;" draggable="true" ondragstart="dragStart(event,'${t.id}')" onclick="event.stopPropagation();selectTask('${t.id}')"><div style="display:flex;align-items:center;gap:6px;width:100%;"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;">${showText ? esc(t.title) : '&nbsp;'}</span><span class="quick-toggle" role="checkbox" aria-checked="${!!t.done}" aria-label="Tandai selesai" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\')">${t.done ? '↩' : '✓'}</span></div>${(t.subtasks && t.subtasks.length) ? '<div style="width:100%;margin-top:4px;">' + subsListHtml_(t.id, t.subtasks) + '</div>' : ''}</div>`;
         }).join('');
 
         const holi = holidaysCache[ds];
@@ -3211,7 +3245,7 @@ if (isC) { bg = t.color || 'var(--item-fallback)'; border = 'none'; txtColor = i
 else if (isE) { bg = hexAlpha(t.color || '#14b8a6', 0.08); border = '2px dashed ' + (t.color || 'var(--teal)'); txtColor = 'var(--text)'; }
 else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.color || 'var(--item-fallback)'); txtColor = 'var(--text)'; }
            var doneStyle = (t.done || t.status === 'Selesai') ? 'opacity:0.55;text-decoration:line-through;' : '';
-           return '<div class="cal-chip ' + cls + (isR ? ' cal-chip-reminder' : '') + '" role="button" tabindex="0" style="background:' + bg + ';color:' + txtColor + ';border-left:' + border + ';' + doneStyle + '" onclick="event.stopPropagation();selectTask(\'' + (t.id || '') + '\')"><span>' + (text ? esc(t.title || t.nama || 'Tanpa Judul') : '&nbsp;') + '</span><span class="quick-toggle" role="checkbox" aria-checked="' + !!t.done + '" aria-label="Tandai selesai" onclick="event.stopPropagation();toggleDone(\'' + (t.id || '') + '\')">' + (t.done ? '↩' : '✓') + '</span></div>';
+           return '<div class="cal-chip ' + cls + (isR ? ' cal-chip-reminder' : '') + '" role="button" tabindex="0" style="background:' + bg + ';color:' + txtColor + ';border-left:' + border + ';' + doneStyle + ';height:auto;align-items:flex-start;flex-direction:column;" onclick="event.stopPropagation();selectTask(\'' + (t.id || '') + '\')"><div style="display:flex;align-items:center;gap:6px;width:100%;"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;">' + (text ? esc(t.title || t.nama || 'Tanpa Judul') : '&nbsp;') + '</span><span class="quick-toggle" role="checkbox" aria-checked="' + !!t.done + '" aria-label="Tandai selesai" onclick="event.stopPropagation();toggleDone(\'' + (t.id || '') + '\')">' + (t.done ? '↩' : '✓') + '</span></div>' + ((t.subtasks && t.subtasks.length) ? '<div style="width:100%;margin-top:4px;">' + subsListHtml_(t.id, t.subtasks) + '</div>' : '') + '</div>';
          }).join('');
 
         // Dots for Mobile View
@@ -4057,8 +4091,15 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       if (!el) return;
       var subs = S.editSubs || [];
       el.innerHTML = subs.length ? subs.map(function(s, i) {
-        return '<li class="' + (s.done ? 'done' : '') + '"><div class="task-check ' + (s.done ? 'checked' : '') + '" role="checkbox" aria-checked="' + !!s.done + '" aria-label="Sub task selesai" onclick="toggleSubtask(' + i + ')"></div><span class="sub-text">' + esc(s.text) + '</span><button type="button" class="sub-x" aria-label="Hapus sub task" onclick="removeSubtask(' + i + ')"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></li>';
+        return '<li class="' + (s.done ? 'done' : '') + '" data-idx="' + i + '"><div class="task-check ' + (s.done ? 'checked' : '') + '" role="checkbox" aria-checked="' + !!s.done + '" aria-label="Sub task selesai" onclick="toggleSubtask(' + i + ')"></div><span class="sub-text" contenteditable="true" spellcheck="false" onblur="saveSubtaskText(' + i + ', this)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();this.blur();}" aria-label="Edit sub task">' + esc(s.text) + '</span><button type="button" class="sub-x" aria-label="Hapus sub task" onclick="removeSubtask(' + i + ')"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></li>';
       }).join('') : '<li class="sub-empty">Belum ada sub task</li>';
+    }
+    function saveSubtaskText(i, el) {
+      var v = (el.textContent || '').trim();
+      if (!S.editSubs || !S.editSubs[i]) return;
+      if (!v) { removeSubtask(i); return; }
+      S.editSubs[i].text = v;
+      renderSubs_();
     }
     function addSubtask() {
       var inp = document.getElementById('f-sub-input');
@@ -4101,13 +4142,20 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         });
     }
     // Checklist sub task untuk detail panel (share = baca-saja, tanpa tombol)
+    function toggleSubDropdown_(el) {
+      var d = el.closest('.sub-dropdown');
+      if (d) d.classList.toggle('collapsed');
+    }
     function subsListHtml_(id, subs) {
       if (!subs || !subs.length) return '';
-      return '<div class="subs-inline">' + subs.map(function(s, si) {
+      var d = 0;
+      for (var di = 0; di < subs.length; di++) if (subs[di] && subs[di].done) d++;
+      var list = subs.map(function(s, si) {
         var inner = '<span class="task-check' + (s.done ? ' checked' : '') + '" aria-hidden="true"></span><span>' + esc(s.text) + '</span>';
         if (SHARE) return '<div class="sub-i' + (s.done ? ' done' : '') + '">' + inner + '</div>';
-        return '<button type="button" class="sub-i' + (s.done ? ' done' : '') + '" aria-label="' + (s.done ? 'Tandai belum selesai' : 'Tandai selesai') + ': ' + esc(s.text) + '" onclick="toggleSubItem_(\'' + (id || '') + '\',' + si + ')">' + inner + '</button>';
-      }).join('') + '</div>';
+        return '<button type="button" class="sub-i' + (s.done ? ' done' : '') + '" aria-label="' + (s.done ? 'Tandai belum selesai' : 'Tandai selesai') + ': ' + esc(s.text) + '" onclick="event.stopPropagation();toggleSubItem_(\'' + (id || '') + '\',' + si + ')">' + inner + '</button>';
+      }).join('');
+      return '<div class="sub-dropdown"><button type="button" class="sub-dropdown-head" onclick="toggleSubDropdown_(this)"><span class="subs-badge">☑ ' + d + '/' + subs.length + '</span><span class="flex1"></span><span class="sub-caret"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button><div class="sub-dropdown-list">' + list + '</div></div>';
     }
     function toggleTypeFields() {
       var radio = document.querySelector('input[name="f-type-radio"]:checked');
@@ -4134,6 +4182,28 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       } else {
         if (wrapTag) wrapTag.style.display = 'none';
       }
+      // Disable Sub Task option when type is Campaign
+      try {
+        var subSec = Array.from(document.querySelectorAll('.modal-sec')).find(function(x){ return /Sub Task/i.test(x.textContent); });
+        if (subSec) {
+          var subField = subSec.nextElementSibling;
+          while (subField && subField.nodeType === 1 && !subField.classList.contains('field')) subField = subField.nextElementSibling;
+          if (subField) {
+            if (isC) {
+              subField.style.opacity = '0.5';
+              subField.style.pointerEvents = 'none';
+              try { if (S.editSubs) S.editSubs = []; renderSubtasks(); } catch(e){}
+            } else {
+              subField.style.opacity = '1';
+              subField.style.pointerEvents = '';
+            }
+          }
+        }
+        var subInput = document.getElementById('f-sub-input');
+        if (subInput) subInput.disabled = !!isC;
+        var subAddBtn = subInput ? subInput.parentElement.querySelector('.btn') : null;
+        if (subAddBtn) { subAddBtn.disabled = !!isC; subAddBtn.style.opacity = isC ? '0.5' : ''; subAddBtn.style.pointerEvents = isC ? 'none' : ''; }
+      } catch(e){}
       if (isE || isR) S.tempColor = '';
 
       // Grid per jenis: baris/seksi kosong disembunyikan (auto-fit tak punya item = tinggi 0, tapi label seksi bohong)
@@ -4239,15 +4309,17 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         var span = (t.enddate && t.enddate !== t.date) ? ' → ' + formatShortDate(t.enddate) : '';
         var desc = esc(t.description) || '<em class="txt-dim">Tidak ada deskripsi.</em>';
         var orgHtml = t.penyelenggara ? '<div class="sub-10">Penyelenggara: ' + esc(t.penyelenggara) + '</div>' : '';
+        var subHtml = (t.subtasks && t.subtasks.length) ? ('<div style="width:100%;margin-top:6px;">' + subsListHtml_(t.id, t.subtasks) + '</div>') : '';
         return '<div class="task-row" role="button" tabindex="0" style="border-left:4px solid ' + (t.color || 'var(--text-soft)') + '; padding: 8px 10px; margin-bottom: 6px; flex-direction: column; align-items: flex-start;" onclick="selectTask(\'' + t.id + '\')">' +
           '<div class="row-sb">' +
           '<div class="fw700-fs13">' + icon + ' ' + esc(t.title) + '</div>' +
           '<button class="btn btn-ghost btn-mini" onclick="event.stopPropagation();' + "openTaskModal('" + t.id + "')" + '">Ubah</button>' +
           '</div>' +
           '<div class="dd-meta">' +
-          formatShortDate(t.date) + span + (t.tag ? ' · ' + esc(t.tag) : '') + (subsBadge_(t) ? ' · ' + subsBadge_(t) : '') +
+          formatShortDate(t.date) + span + (t.tag ? ' · ' + esc(t.tag) : '') +
           '</div>' + orgHtml +
           '<div class="dd-desc">' + desc + '</div>' +
+          subHtml +
           '</div>';
       }).join('') : '<div class="hint-24">' + ICONS.event + ' Tidak ada agenda di tanggal ini</div>';
 
@@ -4298,7 +4370,15 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
          '</div></div>' + orgHtml +
          '<div class="dd-date">' + ICONS.calendar + ' ' + formatShortDate(t.date) + (t.enddate && t.enddate !== t.date ? ' → ' + formatShortDate(t.enddate) : '') + '</div>' +
          '<div class="detail-desc dd-body">' + (esc(t.description) || '<span class="empty-em">Tanpa deskripsi.</span>') + '</div>' +
-         subsListHtml_(t.id, t.subtasks);
+         (function(){
+           var subs = t.subtasks || [];
+           if (!subs.length) return '';
+           var d=0; for(var i=0;i<subs.length;i++){ if(subs[i]&&subs[i].done) d++; }
+           var list = subsListHtml_(t.id, subs);
+           list = list.replace(/<button[^>]+class="sub-dropdown-head"[\s\S]*?<\/button>/,'');
+           list = list.replace('class="sub-dropdown"', 'class="sub-dropdown sub-dropdown-plain"');
+           return '<div class="dd-subtasks"><div class="dd-subtasks-head"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"/><path d="M5 7V5a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>Subtask<span class="dd-subtasks-count">'+d+'/'+subs.length+'</span></div>'+list+'</div>';
+         })();
     }
 
     async function submitTask() {
@@ -4443,8 +4523,8 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
             rep.id = 'T' + Date.now() + reps.length;
             rep.date = ds;
             if (diffDays > 0) {
-              var ed = new Date(cur); ed.setDate(ed.getDate() + diffDays);
-              rep.enddate = ed.getFullYear() + '-' + pad(ed.getMonth() + 1) + '-' + pad(ed.getDate());
+              var edr = new Date(cur); edr.setDate(edr.getDate() + diffDays);
+              rep.enddate = edr.getFullYear() + '-' + pad(edr.getMonth() + 1) + '-' + pad(edr.getDate());
             }
             // salinan mendatang tidak mewarisi status auto-complete dari induk lewat tanggal
             if (!isOverdue3_(rep)) { rep.done = false; rep.status = ''; }
