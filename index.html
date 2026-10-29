@@ -5,10 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>REYNAHUB — Workspace Operasional</title>
+    <meta name="description" content="Kumpulan webtools internal untuk analitik penjualan, dokumen, logistik, dan koordinasi tim.">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#090d16" media="(prefers-color-scheme: dark)">
     <link rel="stylesheet" href="src/styles/tools.css">
     <link rel="stylesheet" href="src/styles/design-system.css">
     <link rel="stylesheet" href="src/styles/components.css">
     <link rel="stylesheet" href="src/styles/hub-landing.css">
+    <!-- Preload font LCP: teks hero (Geomini 800 via pemetaan 900) + teks UI (PJS variable). -->
+    <link rel="preload" as="font" type="font/ttf" crossorigin href="assets/fonts/geomini-800.ttf">
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="assets/fonts/plus-jakarta-sans-var.woff2">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23FF0000'/%3E%3Ctext x='16' y='22' font-family='Helvetica,Arial,sans-serif' font-size='16' font-weight='700' fill='white' text-anchor='middle'%3ER%3C/text%3E%3C/svg%3E">
 </head>
 <body>
@@ -31,11 +37,11 @@
 
     <!-- LANDING -->
     <div id="landing-page">
-        <div class="gate-bar">
+        <header class="gate-bar">
             <div class="gate-logo">REYNAHUB</div>
             <span class="gate-tag">Workspace Operasional</span>
-        </div>
-        <div class="hero-banner">
+        </header>
+        <main class="hero-banner">
             <div class="hero-art" aria-hidden="true">
                 <span class="art-grid"></span>
                 <span class="art-orb art-orb-a"></span>
@@ -47,11 +53,11 @@
                     <p class="hero-lead">Kumpulan webtools yang saya bangun untuk mempermudah aktivitas kerja sehari-hari — analitik, dokumen, logistik, dan koordinasi tim dalam satu tempat.</p>
                     <p class="hero-meta"><span id="count-total">–</span> modul · <span id="count-categories">–</span> kategori</p>
                     <div class="hero-actions">
-                        <button class="hero-cta" id="enter-btn">
+                        <button type="button" class="hero-cta" id="enter-btn">
                             Buka Workspace
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                         </button>
-                        <button class="hero-secondary" id="enter-modules">
+                        <button type="button" class="hero-secondary" id="enter-modules">
                             Lihat isi workspace
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                         </button>
@@ -71,128 +77,111 @@
                 <span class="art-chip art-chip-3"><i></i><b>SPPD Toolbox</b></span>
             </div>
             <span class="hero-sheen" aria-hidden="true"></span>
-        </div>
+        </main>
     </div>
 
     <!-- WORKSPACE -->
     <div id="workspace">
+        <a class="skip-link" href="#workspace-main">Lewati ke daftar modul</a>
         <aside class="sidebar">
-            <div class="aside-logo" id="aside-logo">REYNAHUB</div>
-            <div class="nav-list">
-                <button class="nav-btn active" data-group="all" title="Semua Modul">
-                    <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+            <button type="button" class="aside-logo" id="aside-logo" aria-label="REYNAHUB, beranda workspace">REYNAHUB</button>
+            <nav class="nav-list" aria-label="Grup modul">
+                <button type="button" class="nav-btn active" data-group="all" title="Semua Modul" aria-pressed="true">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
                     <span class="nav-label">Semua</span>
                 </button>
-                <button class="nav-btn" data-group="analitik" title="Analitik &amp; Insight">
-                    <svg viewBox="0 0 24 24"><path d="M4 20V10h4v10H4zm6 0V4h4v16h-4zm6 0v-7h4v7h-4z"/></svg>
+                <button type="button" class="nav-btn" data-group="analitik" title="Analitik &amp; Insight" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 20V10h4v10H4zm6 0V4h4v16h-4zm6 0v-7h4v7h-4z"/></svg>
                     <span class="nav-label">Analitik</span>
                 </button>
-                <button class="nav-btn" data-group="operasional" title="Operasional &amp; Logistik">
-                    <svg viewBox="0 0 24 24"><path d="M12 2 3 6.5v11L12 22l9-4.5v-11L12 2zm0 2.2 6.6 3.3L12 10.8 5.4 7.5 12 4.2zM5 9.2l6 3v7.4l-6-3V9.2zm8 10.4v-7.4l6-3v7.4l-6 3z"/></svg>
+                <button type="button" class="nav-btn" data-group="operasional" title="Operasional &amp; Logistik" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2 3 6.5v11L12 22l9-4.5v-11L12 2zm0 2.2 6.6 3.3L12 10.8 5.4 7.5 12 4.2zM5 9.2l6 3v7.4l-6-3V9.2zm8 10.4v-7.4l6-3v7.4l-6 3z"/></svg>
                     <span class="nav-label">Operasional</span>
                 </button>
-                <button class="nav-btn" data-group="dokumen" title="Dokumen &amp; Arsip">
-                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm0 2.4L17.6 8H14V4.4zM8 13h8v2H8v-2zm0 4h8v2H8v-2z"/></svg>
+                <button type="button" class="nav-btn" data-group="dokumen" title="Dokumen &amp; Arsip" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm0 2.4L17.6 8H14V4.4zM8 13h8v2H8v-2zm0 4h8v2H8v-2z"/></svg>
                     <span class="nav-label">Dokumen</span>
                 </button>
-                <button class="nav-btn" data-group="tim" title="Perencanaan &amp; Tim">
-                    <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zM8 11c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                <button type="button" class="nav-btn" data-group="tim" title="Perencanaan &amp; Tim" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zM8 11c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
                     <span class="nav-label">Perencanaan</span>
                 </button>
-            </div>
+            </nav>
             <div class="nav-bottom">
-                <button class="nav-btn" id="theme-btn" title="Ubah Tema" aria-label="Ubah tema">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <button type="button" class="nav-btn" id="theme-btn" title="Ubah Tema" aria-label="Ubah ke tema gelap">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
                 </button>
-                <button class="nav-btn" id="about-btn" title="Tentang REYNAHUB" aria-label="Tentang REYNAHUB">
+                <button type="button" class="nav-btn" id="about-btn" title="Tentang REYNAHUB" aria-label="Tentang REYNAHUB">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                 </button>
             </div>
         </aside>
 
-        <main>
+        <main id="workspace-main">
             <div id="dashboard-view">
                 <header class="dashboard-header">
                     <div class="header-info">
-                        <h2>Workspace</h2>
+                        <h1>Workspace</h1>
                         <p class="header-meta"><span id="count-header">–</span> modul · <span id="count-groups">–</span> kategori</p>
                     </div>
                 </header>
 
                 <div class="search-and-filter">
                     <div class="search-box">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <label class="sr-only" for="toolSearch">Cari modul</label>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                         <input type="text" id="toolSearch" placeholder="Cari modul...">
                     </div>
+                    <p id="search-status" class="sr-only" role="status" aria-live="polite"></p>
                 </div>
 
-                <div id="section-analitik" class="group-section" data-group="analitik">
-                    <div class="section-label">Analitik &amp; Insight</div>
+                <section id="section-analitik" class="group-section" data-group="analitik">
+                    <h2 class="section-label">Analitik &amp; Insight</h2>
                     <div class="bento-grid" id="grid-analitik"></div>
-                </div>
+                </section>
 
-                <div id="section-operasional" class="group-section" data-group="operasional">
-                    <div class="section-label">Operasional &amp; Logistik</div>
+                <section id="section-operasional" class="group-section" data-group="operasional">
+                    <h2 class="section-label">Operasional &amp; Logistik</h2>
                     <div class="bento-grid" id="grid-operasional"></div>
-                </div>
+                </section>
 
-                <div id="section-dokumen" class="group-section" data-group="dokumen">
-                    <div class="section-label">Dokumen &amp; Arsip</div>
+                <section id="section-dokumen" class="group-section" data-group="dokumen">
+                    <h2 class="section-label">Dokumen &amp; Arsip</h2>
                     <div class="bento-grid" id="grid-dokumen"></div>
-                </div>
+                </section>
 
-                <div id="section-tim" class="group-section" data-group="tim">
-                    <div class="section-label">Perencanaan &amp; Tim</div>
+                <section id="section-tim" class="group-section" data-group="tim">
+                    <h2 class="section-label">Perencanaan &amp; Tim</h2>
                     <div class="bento-grid" id="grid-tim"></div>
-                </div>
+                </section>
 
                 <div id="search-empty">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <div class="empty-title">Modul tidak ditemukan</div>
-                    <div class="hint">Coba kata kunci lain</div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <p class="empty-title">Modul tidak ditemukan</p>
+                    <p class="hint">Coba kata kunci lain</p>
                 </div>
             </div>
 
             <div id="frame-container">
-                <iframe id="main-frame" src=""></iframe>
+                <button type="button" class="hub-back" id="hub-back" aria-keyshortcuts="Escape">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    Kembali ke workspace
+                </button>
+                <iframe id="main-frame" src="" title="Modul workspace"></iframe>
             </div>
         </main>
     </div>
 
     <!-- ABOUT MODAL -->
-    <div id="aboutModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="about-title">
+    <div id="aboutModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="about-title" aria-hidden="true">
         <div class="modal-card">
-            <button class="modal-close" id="modal-close-btn" aria-label="Tutup">&times;</button>
-            <div class="modal-title" id="about-title">Tentang Kami</div>
+            <button type="button" class="modal-close" id="modal-close-btn" aria-label="Tutup">×</button>
+            <h2 class="modal-title" id="about-title">Tentang REYNAHUB</h2>
             <div class="modal-body">
-                <img class="about-profile" src="assets/profile.jpg" alt="Foto profil Alfathan" width="84" height="84" onerror="this.remove()">
-                <p class="about-claim">Pusat Kedaulatan &amp; Inovasi</p>
-                <p>REYNA HUB tidak dibangun atas dasar kebetulan, melainkan atas dorongan ambisius untuk mendefinisikan ulang standar ekselensi.</p>
-                <p>Didirikan oleh <strong>Alfathan</strong> sebuah nama yang membawa filosofi kepeloporan, penaklukan batasan, dan pembuka era baru—platform ini dirancang sebagai episentrum strategi dan inovasi.</p>
-                <p>Nama <strong>Reyna</strong> merepresentasikan kedaulatan, ketegasan, dan kualitas tertinggi tanpa kompromi, sementara <strong>Hub</strong> menegaskan posisinya sebagai simpul utama tempat peluang dan eksekusi saling bertemu. Di bawah visi strategis Alfathan, REYNA HUB hadir bukan sekadar untuk menjadi bagian dari industri, melainkan untuk memimpin, mendominasi, dan membuka pintu kemenangan bagi setiap fondasi yang dibangun di dalamnya.</p>
-                <hr class="about-rule">
-                <p class="about-h2">Makna di Balik Nama</p>
-                <div class="about-names">
-                    <div class="about-name">
-                        <p><strong>ALFATHAN</strong> <span>Al-Fath</span></p>
-                        <p class="about-name-desc">Berakar dari makna “Pembuka”, “Kemenangan”, dan “Pionir”. Mewakili figur pemimpin, arsitek strategi, dan dorongan ambisius untuk membuka ranah baru.</p>
-                    </div>
-                    <div class="about-name">
-                        <p><strong>REYNA</strong> <span>Reina / Sovereign</span></p>
-                        <p class="about-name-desc">Melambangkan kedaulatan, kekuasaan tertinggi, dan standar ekselensi yang tak tergoyahkan.</p>
-                    </div>
-                    <div class="about-name">
-                        <p><strong>HUB</strong> <span>Episentrum</span></p>
-                        <p class="about-name-desc">Pusat konvergensi tempat seluruh potensi, teknologi, dan strategi menyatu.</p>
-                    </div>
-                </div>
-                <p class="about-h2">Sintesis</p>
-                <p><strong>ALFATHAN</strong> adalah kekuatan visioner yang membuka jalan, sedangkan <strong>REYNA HUB</strong> adalah ranah berdaulat yang ia bangun sebagai pusat kendali dan kemajuan.</p>
-                <p class="about-h2">Visi Kami</p>
-                <p class="about-visi">Menjadikan REYNA HUB sebagai <em>benteng ekselensi</em> tempat gagasan besar bertransformasi menjadi dampak nyata.</p>
-                <hr class="about-rule">
-                <p><strong>Modul Terpasang:</strong></p>
-                <ul id="about-modules" class="about-modules"></ul>
+                <p>REYNAHUB menampung webtools kerja harian: analitik, dokumen, logistik, dan koordinasi tim. Satu navbar, satu tema, satu bahasa desain. Setiap modul berjalan sendiri di dalam workspace.</p>
+                <p>Pilih modul di bawah untuk menutup dialog ini dan membukanya.</p>
+                <h3 class="about-h2" id="about-modules-heading">Modul terpasang</h3>
+                <ul id="about-modules" class="about-modules" aria-labelledby="about-modules-heading"></ul>
                 <p class="modal-foot">REYNAHUB · reynahub.web.id</p>
             </div>
         </div>
@@ -205,7 +194,8 @@
     <script src="src/app.js"></script>
     <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('src/sw.js');
+      // Root scope: SW harus mengontrol halaman ini, bukan hanya /src/
+      navigator.serviceWorker.register('sw.js').catch(function () {});
     }
     </script>
     <script>
@@ -216,16 +206,25 @@
       var art = banner.querySelector('.hero-art');
       var chips = banner.querySelector('.hero-chips');
       var media = banner.querySelector('.hero-media');
-      banner.addEventListener('pointermove', function (e) {
+      var raf = 0, last = null;
+      function paint() {
+        raf = 0;
+        if (!last) return;
         var r = banner.getBoundingClientRect();
-        var x = (e.clientX - r.left) / r.width - 0.5;
-        var y = (e.clientY - r.top) / r.height - 0.5;
+        var x = (last.clientX - r.left) / r.width - 0.5;
+        var y = (last.clientY - r.top) / r.height - 0.5;
         var dx = 'translate(' + (x * 12).toFixed(1) + 'px,' + (y * 9).toFixed(1) + 'px)';
         if (art) art.style.transform = dx;
         if (chips) chips.style.transform = dx;
         if (media) media.style.transform = 'translate(' + (x * -7).toFixed(1) + 'px,' + (y * -5).toFixed(1) + 'px)';
+      }
+      banner.addEventListener('pointermove', function (e) {
+        last = e;
+        if (!raf) raf = requestAnimationFrame(paint);
       });
       banner.addEventListener('pointerleave', function () {
+        if (raf) { cancelAnimationFrame(raf); raf = 0; }
+        last = null;
         if (art) art.style.transform = '';
         if (chips) chips.style.transform = '';
         if (media) media.style.transform = '';

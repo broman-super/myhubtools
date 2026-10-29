@@ -44,11 +44,8 @@ class ThemeManager {
   }
 
   toggle() {
-    if (this.currentTheme === 'system') {
-      this.currentTheme = localStorage.getItem('reynahub-theme') === 'light' ? 'dark' : 'light';
-    } else {
-      this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
-    }
+    // Selalu balik dari tampilan yang sedang aktif (dulu: dari 'system' + OS light = tidak berubah)
+    this.currentTheme = this.getEffectiveTheme() ? 'light' : 'dark';
     this.applyTheme();
   }
 }

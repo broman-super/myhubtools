@@ -7,6 +7,8 @@
     --text-muted: #64748b;
     --accent: #ff0000;
     --accent-ink: #cc0000;
+    /* Stamp Ink: tinta di atas blok merah (kontras 5.25:1 dengan #ff0000) */
+    --stamp-ink: #111111;
     --accent-glow: rgba(255, 0, 0, 0.08);
     --border: rgba(15, 23, 42, 0.06);
     --sidebar-bg: #000000;
@@ -141,6 +143,18 @@ a { color: inherit; text-decoration: none; }
 input { font-family: inherit; }
 
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+
+/* Teks untuk screen reader saja (label input, status pencarian) */
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
 
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 99px; }
