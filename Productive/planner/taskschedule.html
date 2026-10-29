@@ -330,9 +330,9 @@ color: var(--accent-ink);
     /* Filters */
     .toolbar {
       display: flex;
-      gap: 16px;
+      gap: 12px;
       align-items: center;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
       flex-wrap: wrap;
     }
 
@@ -371,9 +371,11 @@ color: var(--accent-ink);
 
     /* Views */
     .view-area {
-      padding: 0 20px;
+      padding: 0 clamp(12px, 1.5vw, 20px);
       flex: 1;
-      margin-top: 20px;
+      margin-top: 16px;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .view {
@@ -401,25 +403,26 @@ color: var(--accent-ink);
     .task-list {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
     }
 
     .task-row {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 8px 16px;
+      gap: 10px;
+      padding: 10px 14px;
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       cursor: pointer;
-      transition: 0.2s;
+      transition: 0.15s ease;
     }
 
     .task-row:hover {
-      transform: translateX(6px);
-      border-color: var(--accent);
-      box-shadow: 0 10px 25px var(--sh-soft);
+      transform: translateX(4px);
+      border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
+      box-shadow: 0 4px 12px var(--sh-soft);
+      background: color-mix(in srgb, var(--accent-light) 30%, var(--bg));
     }
 
     .task-check {
@@ -447,12 +450,16 @@ color: var(--accent-ink);
     }
 
     /* Sub task */
-    .sub-add-row { display: flex; gap: 8px; }
-    .sub-add-row input { flex: 1; min-width: 0; }
-    .sub-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 188px; overflow-y: auto; }
-    .sub-list li { display: flex; align-items: center; gap: 8px; background: var(--surface-alt); border: 1px solid var(--border); border-radius: 8px; padding: 5px 8px; font-size: 12.5px; color: var(--text); }
-    .sub-list li.sub-empty { background: none; border-style: dashed; color: var(--text-soft); }
-    .sub-list li.done .sub-text { text-decoration: line-through; opacity: 0.55; }
+    .sub-add-row { display: flex; gap: 8px; align-items: center; }
+    .sub-add-row input { flex: 1; min-width: 0; height: 34px; }
+    .sub-add-row .btn { height: 34px; white-space: nowrap; }
+    .sub-list { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+    .sub-list li { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid color-mix(in srgb, var(--border) 80%, transparent); border-radius: 10px; padding: 7px 10px; font-size: 12.5px; color: var(--text); line-height: 1.4; transition: 0.15s ease; }
+    .sub-list li:hover { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); background: color-mix(in srgb, var(--accent-light) 15%, var(--surface)); }
+    .sub-list li.sub-empty { background: none; border-style: dashed; color: var(--text-soft); justify-content: center; }
+    .sub-list li.done .sub-text { text-decoration: line-through; opacity: 0.6; }
+    .sub-list li .sub-text { flex: 1; min-width: 0; word-break: break-word; }
+    .sub-list li button { flex-shrink: 0; }
     .sub-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
     .sub-x { background: none; border: none; color: var(--text-soft); cursor: pointer; font-size: 13px; line-height: 1; padding: 4px; border-radius: 4px; }
     .sub-x:hover { color: var(--danger); }
@@ -478,14 +485,20 @@ color: var(--accent-ink);
     .dd-subtasks { margin-top: 6px; padding-top: 8px; border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent); display: flex; flex-direction: column; gap: 4px; }
     .dd-subtasks-head { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--text-soft); }
     .dd-subtasks-count { margin-left: auto; font-size: 10px; padding: 0 5px; border-radius: 999px; background: color-mix(in srgb, var(--surface-alt) 60%, transparent); border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); color: var(--text-soft); font-weight: 700; }
-    .sub-dropdown-plain { border: none; background: transparent; }
-    .sub-dropdown-plain .sub-dropdown-list { border-top: none; padding: 0; background: transparent; gap: 1px; }
-    .sub-dropdown-plain .sub-i { padding: 4px 0; font-size: 12px; gap: 8px; color: var(--text); border-radius: 0; align-items: flex-start; }
-    .sub-dropdown-plain .sub-i:hover { background: transparent; }
-    .sub-dropdown-plain .sub-i .task-check { width: 14px; height: 14px; border-radius: 3px; border-color: color-mix(in srgb, var(--border) 80%, transparent); margin-top: 1px; flex-shrink: 0; }
+    .sub-dropdown-plain { border: 1px solid color-mix(in srgb, var(--border) 75%, transparent); border-radius: 10px; background: var(--bg); overflow: hidden; }
+    .sub-dropdown-plain .sub-dropdown-list { border-top: none; padding: 6px; background: transparent; gap: 2px; }
+    .sub-dropdown-plain .sub-i { display: flex; align-items: center; padding: 3px 6px; min-height: 26px; font-size: 12.5px; gap: 8px; color: var(--text); border-radius: 6px; background: transparent; border: 1px solid transparent; transition: 0.12s ease; line-height: 1.3; text-align: left; }
+    .sub-dropdown-plain .sub-i:hover { background: color-mix(in srgb, var(--accent-light) 16%, transparent); border-color: color-mix(in srgb, var(--accent) 32%, transparent); }
+    .sub-dropdown-plain .sub-i.done { opacity: 0.5; }
+    .sub-dropdown-plain .sub-i .task-check { width: 16px; height: 16px; border-radius: 4px; border-color: var(--border); margin: 0; flex-shrink: 0; align-self: center; }
     .sub-dropdown-plain .sub-i .task-check.checked { background: var(--accent); border-color: var(--accent); }
-    .sub-dropdown-plain .sub-i .task-check.checked::after { font-size: 9px; }
-    .sub-dropdown-plain .sub-i.done { opacity: 0.55; }
+    .sub-dropdown-plain .sub-i .task-check.checked::after { font-size: 9px; line-height: 1; }
+    .sub-dropdown-plain .sub-i.done { opacity: 0.5; text-decoration: line-through; }
+    .sub-dropdown-plain .sub-i span:not(.task-check) { flex: 1; min-width: 0; align-self: center; }
+    .dd-subtasks { margin-top: 8px; padding-top: 8px; border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent); display: flex; flex-direction: column; gap: 4px; }
+    .dd-subtasks-head { display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--text-soft); line-height: 1.2; }
+    .dd-subtasks-head svg { color: var(--text-soft); flex-shrink: 0; width: 11px; height: 11px; }
+    .dd-subtasks-count { margin-left: auto; font-size: 10px; padding: 1px 6px; border-radius: 999px; background: transparent; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); color: var(--text-soft); font-weight: 600; }
     .subs-badge { font-size: 10px; padding: 1px 6px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-soft); font-weight: 700; white-space: nowrap; }
 
     .task-name {
@@ -814,6 +827,23 @@ margin-bottom: 8px;
     #task-modal .repeat-hint { font-size: 11px; color: var(--text-soft); margin-top: 6px; }
     #task-modal .modal-footer .btn-primary { min-width: 168px; }
 
+    /* ── Simpan: form dinonaktifkan (is-saving) + overlay "Memproses data" ── */
+    .save-procs { position: absolute; inset: 0; z-index: 10; display: none; align-items: center; justify-content: center; padding: 24px; pointer-events: auto; }
+    #task-modal.is-saving .save-procs { display: flex; }
+    #task-modal.is-saving .modal { opacity: 0.5; } /* form meredup di balik overlay */
+    .save-procs-box { display: flex; flex-direction: column; align-items: center; gap: 10px; min-width: 232px; padding: 20px 26px; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-lg); animation: savePop 0.22s cubic-bezier(.16, 1, .3, 1) both; }
+    @keyframes savePop { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: none; } }
+    .save-procs .spinner { width: 30px; height: 30px; border-width: 3px; margin-right: 0; color: var(--accent); }
+    .save-procs-title { font-size: 13.5px; font-weight: 800; color: var(--text); }
+    .save-procs-bar { position: relative; width: 150px; height: 4px; border-radius: 99px; overflow: hidden; background: color-mix(in srgb, var(--accent) 15%, transparent); }
+    .save-procs-bar::after { content: ''; position: absolute; top: 0; bottom: 0; width: 45%; border-radius: inherit; background: var(--accent); animation: procsSlide 1.05s ease-in-out infinite; }
+    @keyframes procsSlide { 0% { left: -45%; } 100% { left: 100%; } }
+    .save-procs-sub { font-size: 11.5px; color: var(--text-soft); }
+    @media (prefers-reduced-motion: reduce) {
+      .save-procs-box { animation: none; }
+      .save-procs-bar::after { animation: none; width: 100%; }
+    }
+
     .field {
       margin-bottom: 20px;
     }
@@ -1122,20 +1152,21 @@ margin-bottom: 8px;
     .timeline-container {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
+      gap: 10px;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 0;
     }
 
     .timeline-scroll-x {
       overflow-x: auto;
       overflow-y: auto;
       position: relative;
-      border: 1px solid var(--border);
+      border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
       border-radius: var(--radius-sm);
       background: var(--bg);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.01);
     }
 
     .timeline-scroll-x.zoom-active {
@@ -1151,18 +1182,20 @@ margin-bottom: 8px;
       position: absolute;
       top: 0;
       bottom: 0;
-      left: var(--tl-label-w, 180px);
-      width: 5px;
+      left: calc(var(--tl-label-w, 180px) - 2px);
+      width: 4px;
       cursor: col-resize;
       z-index: 30;
       background: transparent;
       transition: background 0.15s;
+      border-left: 1px solid transparent;
     }
 
     .tl-label-drag:hover,
     .tl-label-drag:active {
-background: color-mix(in srgb, var(--accent) 30%, transparent);
-}
+      background: color-mix(in srgb, var(--accent) 25%, transparent);
+      border-left-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    }
 
     #tl-zoom-info {
       font-size: 11px;
@@ -1184,16 +1217,16 @@ background: color-mix(in srgb, var(--accent) 30%, transparent);
       top: 0;
       z-index: 20;
       background: var(--bg);
-      border-bottom: 2px solid var(--border);
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
     }
 
     .tl-corner {
       width: var(--tl-label-w, 180px);
       min-width: var(--tl-label-w, 180px);
-      padding: 8px 12px;
+      padding: 6px 10px;
       font-weight: 800;
       font-size: 12px;
-      border-right: 1px solid var(--border);
+      border-right: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -1205,8 +1238,8 @@ background: color-mix(in srgb, var(--accent) 30%, transparent);
       text-align: center;
       font-size: 11px;
       font-weight: 700;
-      padding: 4px 0;
-      border-right: 1px solid var(--border);
+      padding: 6px 0 4px;
+      border-right: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
       color: var(--text-soft);
       flex-shrink: 0;
       line-height: 1.2;
@@ -1252,7 +1285,11 @@ background: var(--danger-light);
     .timeline-row {
       display: grid;
       grid-template-columns: var(--tl-label-w, 180px) 1fr;
-      min-height: 34px;
+      min-height: 32px;
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+    }
+    .timeline-row:last-child {
+      border-bottom: none;
     }
     .timeline-body-rows {
       position: relative;
@@ -1262,10 +1299,10 @@ background: var(--danger-light);
     .timeline-row-label {
       width: var(--tl-label-w, 180px);
       min-width: var(--tl-label-w, 180px);
-      padding: 6px 12px;
+      padding: 4px 10px;
       font-size: 12px;
       font-weight: 600;
-      border-right: 1px solid var(--border);
+      border-right: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
       display: flex;
       align-items: center;
       gap: 6px;
@@ -1275,6 +1312,11 @@ background: var(--danger-light);
       cursor: pointer;
       color: var(--text);
       background: var(--bg);
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .timeline-row-label:hover {
+      background: color-mix(in srgb, var(--accent-light) 18%, var(--bg));
+      color: var(--accent-ink);
     }
     .timeline-row-label svg {
       width: 14px; height: 14px;
@@ -1284,19 +1326,24 @@ background: var(--danger-light);
     .timeline-row-label .quick-toggle {
       margin-left: auto;
       flex-shrink: 0;
+      opacity: 0.4;
+      transition: opacity 0.15s ease;
+    }
+    .timeline-row-label:hover .quick-toggle {
+      opacity: 0.8;
     }
 
     .timeline-row-track {
       position: relative;
-      min-height: 32px;
+      min-height: 30px;
       display: flex;
       align-items: center;
-      padding: 2px 0;
+      padding: 3px 0;
     }
 
     .timeline-bar {
       position: absolute;
-      height: 26px;
+      height: 24px;
       border-radius: 4px;
       display: flex;
       align-items: center;
@@ -1304,17 +1351,30 @@ background: var(--danger-light);
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
-      transition: 0.15s;
+      transition: height 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease, z-index 0s;
       white-space: nowrap;
+      overflow: visible;
+      text-overflow: clip;
       z-index: 2;
-      box-shadow: 0 1px 3px var(--sh-mid);
+      box-shadow: 0 1px 2px var(--sh-mid);
+      letter-spacing: -0.01em;
     }
 
     .timeline-bar:hover {
-      height: 34px;
-      z-index: 5;
-      box-shadow: 0 4px 12px var(--sh-strong);
+      height: 28px;
+      z-index: 10;
+      box-shadow: 0 3px 10px var(--sh-strong);
+      filter: brightness(1.03);
+      overflow: visible;
     }
+
+    .timeline-bar > * {
+      min-width: 0;
+      overflow: visible;
+      text-overflow: clip;
+    }
+
+    /* Judul boleh lewat batas chip, lebar chip tetap mengikuti rentang tanggal */
 
     .timeline-bar.campaign {
       color: var(--text);
@@ -1385,6 +1445,40 @@ background: var(--danger-light);
 
     .tl-grid-line.weekend {
       background: var(--danger-light);
+    }
+
+    .tl-legend {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 2px 0;
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+    .tl-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tl-legend-swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      background: var(--surface-alt);
+      border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+    }
+    .tl-legend-swatch.c-acc {
+      background: var(--accent-light);
+      border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    }
+    .tl-legend-swatch.c-teal {
+      background: var(--teal-light);
+      border-color: color-mix(in srgb, var(--teal) 40%, transparent);
+    }
+    .tl-legend-swatch.c-warn {
+      background: var(--warning-light);
+      border-color: color-mix(in srgb, var(--warning) 40%, transparent);
     }
 
     /* Filter chips */
@@ -1930,6 +2024,12 @@ border-color: var(--accent);
               <div class="timeline-header" id="timeline-header"></div>
               <div class="timeline-body" id="timeline-body"></div>
             </div>
+            <div class="tl-legend" aria-label="Keterangan warna timeline">
+              <span class="tl-legend-item"><span class="tl-legend-swatch c-acc"></span> Campaign</span>
+              <span class="tl-legend-item"><span class="tl-legend-swatch"></span> Task</span>
+              <span class="tl-legend-item"><span class="tl-legend-swatch c-teal"></span> Event</span>
+              <span class="tl-legend-item"><span class="tl-legend-swatch c-warn"></span> Reminder</span>
+            </div>
           </div>
         </div>
 
@@ -1977,7 +2077,7 @@ border-color: var(--accent);
 
   <!-- Modal -->
   <div class="modal-bg" id="task-modal">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-el">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-el" style="position:relative;">
       <div class="modal-head">
         <div class="modal-title" id="modal-title-el">Agenda Baru</div>
         <button type="button" class="modal-x" aria-label="Tutup" onclick="closeModal()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
@@ -2066,10 +2166,9 @@ border-color: var(--accent);
           oninput="this.style.height='60px';this.style.height=Math.min(this.scrollHeight,200)+'px'"></textarea>
       </div>
 
-      <div class="modal-sec">Sub Task</div>
+      <div class="modal-sec">Sub-tugas</div>
       <div class="field mb-8">
-        <div class="sub-add-row">
-          <input type="text" id="f-sub-input" aria-label="Isi sub task baru" placeholder="cth: Riset kompetitor" onkeydown="if(event.key==='Enter'){event.preventDefault();addSubtask();}">
+        <div class="sub-add-row">           <input type="text" id="f-sub-input" aria-label="Tambahkan sub-tugas baru" placeholder="Tambahkan langkah atau sub-tugas..." onkeydown="if(event.key==='Enter'){event.preventDefault();addSubtask();}">
           <button type="button" class="btn btn-ghost btn-sm115" onclick="addSubtask()">+ Tambah</button>
         </div>
         <ul class="sub-list" id="sub-list"></ul>
@@ -2095,7 +2194,7 @@ border-color: var(--accent);
               </select>
             </div>
           </div>
-          <div class="repeat-hint">Diulangi hanya sampai akhir bulan tanggal mulai - tidak lebih.</div>
+          <div class="repeat-hint">Rentang tiap salinan sama persis dengan asal, berhenti di akhir bulan tanggal mulai. Satuan Minggu menjaga hari yang sama (Senin → Senin).</div>
         </div>
       </div>
 
@@ -2106,6 +2205,15 @@ border-color: var(--accent);
         <div class="flex1"></div>
         <button class="btn btn-ghost" onclick="closeModal()">Batal</button>
         <button class="btn btn-primary" onclick="submitTask()">Simpan Agenda</button>
+      </div>
+    </div>
+    <!-- Overlay proses: tampil selama is-saving, menutupi form sekaligus memblokir interaksi -->
+    <div class="save-procs" role="status" aria-live="polite">
+      <div class="save-procs-box">
+        <span class="spinner" aria-hidden="true"></span>
+        <div class="save-procs-title">Memproses data…</div>
+        <div class="save-procs-bar" aria-hidden="true"></div>
+        <div class="save-procs-sub">Form dikunci sampai penyimpanan selesai</div>
       </div>
     </div>
   </div>
@@ -3389,6 +3497,17 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       document.getElementById('timeline-header').innerHTML = html;
     }
 
+    /*
+      ═══════════════════════════════════════════════════════════════════
+      HUKUM MUTLAK WARNA TIMELINE - TIDAK BOLEH DIUBAH
+      ═══════════════════════════════════════════════════════════════════
+      1. CAMPAIGN -> background = item.color (warna custom), text = inkOn_(item.color), border = none
+      2. EVENT     -> background = rgba(item.color, 0.15), text = var(--text), border = 2px dashed item.color
+      3. REMINDER  -> background = var(--warning-light), text = var(--text), border = 3px solid var(--warning) [KUNCI - TIDAK MENGGUNAKAN item.color]
+      4. TASK      -> background = rgba(item.color, 0.12), text = var(--text), border = 3px solid item.color
+      Aturan ini berlaku MUTLAK untuk semua tampilan timeline. Jangan ganti logika ini.
+      ═══════════════════════════════════════════════════════════════════
+    */
     function renderTimelineBars(year, month, daysIn) {
       const items = getTimelineItems();
       const monthStart = year + '-' + pad(month + 1) + '-01';
@@ -3419,10 +3538,40 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         var leftPx = (s - 1) * z;
         var widthPx = (e - s + 1) * z;
         var bg, color, border;
-        if (isCampaign) { bg = item.color; color = inkOn_(item.color); border = 'none'; }
-        else if (isEvent) { bg = 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.15)'; color = 'var(--text)'; border = '2px dashed ' + item.color; }
-        else if (isReminder) { bg = 'var(--warning-light)'; color = 'var(--text)'; border = '3px solid var(--warning)'; }
-        else { bg = 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.12)'; color = 'var(--text)'; border = '3px solid ' + item.color; }
+        /* HUKUM MUTLAK - JANGAN DIUBAH */
+        if (isCampaign) {
+          var cBg = item.color;
+          // Jika warna terlalu gelap (L <= 0.12), cerahkan sedikit agar teks tetap terbaca seragam
+          var m2 = /^#([0-9a-f]{6})$/i.exec(String(cBg || ''));
+          if (m2) {
+            var nn = parseInt(m2[1], 16);
+            var cc = [nn >> 16 & 255, nn >> 8 & 255, nn & 255].map(function(v){ v/=255; return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4); });
+            var LL = 0.2126*cc[0]+0.7152*cc[1]+0.0722*cc[2];
+            if (LL <= 0.12) {
+              // cerahkan dengan menambah lightness via mix sederhana
+              cBg = 'color-mix(in srgb, ' + cBg + ' 70%, #ffffff 30%)';
+            }
+          }
+          bg = cBg;
+          color = inkOn_(String(cBg).startsWith('color-mix') ? '#ffffff' : item.color);
+          // pastikan warna teks tetap terbaca jika hasil mix tetap gelap
+          var m3 = /^#([0-9a-f]{6})$/i.exec(String(bg || ''));
+          if (!m3 && String(bg).startsWith('color-mix')) {
+            // fallback aman
+            color = '#111111';
+          } else if (m3) {
+            var nn2 = parseInt(m3[1], 16);
+            var cc2 = [nn2 >> 16 & 255, nn2 >> 8 & 255, nn2 & 255].map(function(v){ v/=255; return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4); });
+            var LL2 = 0.2126*cc2[0]+0.7152*cc2[1]+0.0722*cc2[2];
+            if (LL2 <= 0.18) color = '#ffffff';
+            else if (LL2 >= 0.6) color = '#111111';
+            else color = inkOn_(bg);
+          }
+          border = 'none';
+        }
+        else if (isEvent) { bg = 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.18)'; color = inkOn_(item.color); border = '2px dashed ' + item.color; }
+        else if (isReminder) { bg = 'var(--warning-light)'; color = inkOn_('#f59e0b'); border = '3px solid var(--warning)'; }
+        else { bg = 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.16)'; color = inkOn_(item.color); border = '3px solid ' + item.color; }
         var cls = 'timeline-bar';
         if (s === e) cls += ' single'; else if (s === parseInt(item.date.split('-')[2], 10) || item.date < monthStart) cls += ' start'; else if (e === daysIn || e === parseInt(endD.split('-')[2], 10)) cls += ' end'; else cls += ' mid';
         if (isCampaign) cls += ' campaign'; else if (isEvent) cls += ' event'; else if (isReminder) cls += ' reminder'; else cls += ' task';
@@ -3966,6 +4115,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
     // CRUD & Modals
     function openTaskModal(id, pre, forcedType) {
       if (SHARE) return; // share mode read-only - modal edit tak boleh terbuka
+      setFormBusy_(false); // bersihkan sisa state simpan sebelum form diisi ulang
       var t = id ? S.tasks.find(function(x) { return x.id === id; }) : null;
       if (!t) t = id ? S.events.find(function(x) { return x.id === id; }) : null;
       if (!t) t = id ? S.reminders.find(function(x) { return x.id === id; }) : null;
@@ -4057,6 +4207,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       setTimeout(function() { document.getElementById('f-title').focus(); }, 50);
     }
     function closeModal() {
+      setFormBusy_(false); // Esc bisa menutup modal di tengah simpan - kunci form harus dilepas
       document.getElementById('task-modal').classList.remove('open');
       document.body.style.overflow = '';
       clearFormErr_();
@@ -4153,9 +4304,9 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       var list = subs.map(function(s, si) {
         var inner = '<span class="task-check' + (s.done ? ' checked' : '') + '" aria-hidden="true"></span><span>' + esc(s.text) + '</span>';
         if (SHARE) return '<div class="sub-i' + (s.done ? ' done' : '') + '">' + inner + '</div>';
-        return '<button type="button" class="sub-i' + (s.done ? ' done' : '') + '" aria-label="' + (s.done ? 'Tandai belum selesai' : 'Tandai selesai') + ': ' + esc(s.text) + '" onclick="event.stopPropagation();toggleSubItem_(\'' + (id || '') + '\',' + si + ')">' + inner + '</button>';
+        return '<button type="button" class="sub-i' + (s.done ? ' done' : '') + '" aria-label="' + (s.done ? 'Tandai sub-tugas belum selesai: ' : 'Tandai sub-tugas selesai: ') + esc(s.text) + '" onclick="event.stopPropagation();toggleSubItem_(\'' + (id || '') + '\',' + si + ')">' + inner + '</button>';
       }).join('');
-      return '<div class="sub-dropdown"><button type="button" class="sub-dropdown-head" onclick="toggleSubDropdown_(this)"><span class="subs-badge">☑ ' + d + '/' + subs.length + '</span><span class="flex1"></span><span class="sub-caret"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button><div class="sub-dropdown-list">' + list + '</div></div>';
+      return '<div class="sub-dropdown"><button type="button" class="sub-dropdown-head" onclick="toggleSubDropdown_(this)" aria-label="Tampilkan/sembunyikan sub-tugas (' + d + ' dari ' + subs.length + ' selesai)"><span class="subs-badge">' + d + ' / ' + subs.length + ' selesai</span><span class="flex1"></span><span class="sub-caret"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button><div class="sub-dropdown-list">' + list + '</div></div>';
     }
     function toggleTypeFields() {
       var radio = document.querySelector('input[name="f-type-radio"]:checked');
@@ -4182,9 +4333,9 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       } else {
         if (wrapTag) wrapTag.style.display = 'none';
       }
-      // Disable Sub Task option when type is Campaign
+      // Nonaktifkan Sub-tugas saat tipe Campaign
       try {
-        var subSec = Array.from(document.querySelectorAll('.modal-sec')).find(function(x){ return /Sub Task/i.test(x.textContent); });
+        var subSec = Array.from(document.querySelectorAll('.modal-sec')).find(function(x){ return /Sub[- ]?tugas/i.test(x.textContent); });
         if (subSec) {
           var subField = subSec.nextElementSibling;
           while (subField && subField.nodeType === 1 && !subField.classList.contains('field')) subField = subField.nextElementSibling;
@@ -4377,8 +4528,90 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
            var list = subsListHtml_(t.id, subs);
            list = list.replace(/<button[^>]+class="sub-dropdown-head"[\s\S]*?<\/button>/,'');
            list = list.replace('class="sub-dropdown"', 'class="sub-dropdown sub-dropdown-plain"');
-           return '<div class="dd-subtasks"><div class="dd-subtasks-head"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"/><path d="M5 7V5a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>Subtask<span class="dd-subtasks-count">'+d+'/'+subs.length+'</span></div>'+list+'</div>';
+           return '<div class="dd-subtasks"><div class="dd-subtasks-head"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Sub-tugas<span class="dd-subtasks-count">'+d+' selesai dari '+subs.length+'</span></div>'+list+'</div>';
          })();
+    }
+
+    // ── Ulangi: perhitungan tanggal murni tanpa DOM - dipakai jalur Task/Campaign & Event/Reminder ──
+    // Kunci rentang: tiap salinan = rentang induk digeser tepat sejumlah interval.
+    // Konsekuensinya panjang rentang selalu identik (termasuk rentang 1 hari, endDate == date),
+    // dan hari terkunci otomatis pada satuan Hari/Kelipatan 7 & Minggu: Senin → Senin.
+    // Tanggal dibangun lewat konstruktor lokal (bukan new Date('YYYY-MM-DD') yang = UTC)
+    // supaya tidak bergeser sehari di zona waktu non-UTC+7.
+    function parseDateOnly_(v) {
+      var p = String(v == null ? '' : v).slice(0, 10).split('-');
+      if (p.length !== 3 || !p[0] || !p[1] || !p[2]) return null;
+      var d = new Date(+p[0], +p[1] - 1, +p[2]);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    function ymd_(d) {
+      return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    }
+    function computeRepeats_(tmpl, dateKey, endKey, every, unit) {
+      var start = parseDateOnly_(tmpl[dateKey]);
+      if (!start) return { reps: [], until: null };
+      var p = String(tmpl[dateKey]).slice(0, 10).split('-');
+      var until = p[0] + '-' + p[1] + '-' + pad(new Date(+p[0], +p[1], 0).getDate());
+      var end = parseDateOnly_(tmpl[endKey]);
+      var diffDays = end ? Math.round((end.getTime() - start.getTime()) / 86400000) : 0;
+      var limit = parseDateOnly_(until);
+      limit.setHours(23, 59, 59, 999); // hari terakhir dalam bulan ikut terhitung
+      var step = parseInt(every, 10);
+      if (!step || step < 1) step = 1;
+      var anchorDay = start.getDate();
+      var cur = new Date(start.getTime());
+      var tPos = String(tmpl[dateKey]).indexOf('T');
+      var timeSuffix = tPos > 0 ? String(tmpl[dateKey]).slice(tPos) : '';
+      var reps = [];
+      while (cur < limit) {
+        if (unit === 'day') cur.setDate(cur.getDate() + step);
+        else if (unit === 'week') cur.setDate(cur.getDate() + step * 7);
+        else {
+          // bulan: pertahankan tanggal sebisa mungkin (31 Jan → 28 Feb → 31 Mar), jangan melompat ke bulan berikutnya
+          var ym = cur.getFullYear(), xm = cur.getMonth() + step;
+          var dim = new Date(ym, xm + 1, 0).getDate();
+          cur = new Date(ym, xm, Math.min(anchorDay, dim));
+        }
+        if (cur > limit) break;
+        var rep = JSON.parse(JSON.stringify(tmpl));
+        var ds = ymd_(cur);
+        // jam mulai ikut pindah - rentang waktu salinan sama persis dengan induk
+        rep[dateKey] = timeSuffix ? ds + timeSuffix : ds;
+        // rentang akhir SELALU digeser sejumlah durasi induk (durasi 0 → endDate = tanggal salinan)
+        rep[endKey] = end ? ymd_(new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() + diffDays)) : (tmpl[endKey] || '');
+        reps.push(rep);
+      }
+      return { reps: reps, until: until };
+    }
+
+    // State simpan: seluruh kontrol form dimatikan + overlay "Memproses data" tampil,
+    // status disabled asal tiap kontrol disimpan supaya bentuk form persis kembali setelahnya.
+    function setFormBusy_(on) {
+      var modal = document.getElementById('task-modal');
+      if (!modal) return;
+      if (on) {
+        if (modal.classList.contains('is-saving')) return;
+        var saved = [], els = modal.querySelectorAll('input, select, textarea, button');
+        for (var i = 0; i < els.length; i++) {
+          saved.push([els[i], els[i].disabled]);
+          els[i].disabled = true;
+        }
+        modal._busySaved = saved;
+        modal.classList.add('is-saving');
+        modal.setAttribute('aria-busy', 'true');
+      } else if (modal._busySaved) {
+        for (var j = 0; j < modal._busySaved.length; j++) modal._busySaved[j][0].disabled = modal._busySaved[j][1];
+        modal._busySaved = null;
+        modal.classList.remove('is-saving');
+        modal.removeAttribute('aria-busy');
+      }
+    }
+
+    // Semua jalur keluar submitTask melewati sini - tombol, form, dan flag balik serentak
+    function endSaving_(saveBtn, origText) {
+      if (saveBtn) { saveBtn.textContent = origText; saveBtn.disabled = false; }
+      setFormBusy_(false);
+      S.saving = false;
     }
 
     async function submitTask() {
@@ -4391,6 +4624,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       var origText = saveBtn.textContent;
       saveBtn.innerHTML = '<span class="spinner"></span> Menyimpan...';
       saveBtn.disabled = true;
+      setFormBusy_(true);
 
       if (type === 'event') {
         var ed = {
@@ -4406,10 +4640,10 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
           subtasks: S.editSubs || [],
           status: ''
         };
-        if (!ed.nama || !document.getElementById('f-date').value) { S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return showFormErr_(!ed.nama ? 'Judul wajib diisi.' : 'Tanggal Mulai wajib dipilih.', !ed.nama ? 'f-title' : 'f-date'); }
+        if (!ed.nama || !document.getElementById('f-date').value) { endSaving_(saveBtn, origText); return showFormErr_(!ed.nama ? 'Judul wajib diisi.' : 'Tanggal Mulai wajib dipilih.', !ed.nama ? 'f-title' : 'f-date'); }
         try {
           await api('saveCalendarItem', ed);
-        } catch (e) { toast('Gagal menyimpan Event', true); S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return; }
+        } catch (e) { toast('Gagal menyimpan Event', true); endSaving_(saveBtn, origText); return; }
         try {
           if (document.getElementById('f-repeat').checked && !editId) await repeatCalendarItem_(ed);
         } catch (e) { /* repeat gagal bukan bencana */ }
@@ -4419,7 +4653,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
           renderAll();
           toast('✓ Event tersimpan');
         } catch (e) { toast('Tersimpan - data terbaru gagal dimuat, klik Refresh', true); }
-        S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText;
+        endSaving_(saveBtn, origText);
         return;
       }
 
@@ -4436,10 +4670,10 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
           subtasks: S.editSubs || [],
           status: ''
         };
-        if (!rd.nama || !document.getElementById('f-date').value) { S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return showFormErr_(!rd.nama ? 'Judul wajib diisi.' : 'Tanggal Mulai wajib dipilih.', !rd.nama ? 'f-title' : 'f-date'); }
+        if (!rd.nama || !document.getElementById('f-date').value) { endSaving_(saveBtn, origText); return showFormErr_(!rd.nama ? 'Judul wajib diisi.' : 'Tanggal Mulai wajib dipilih.', !rd.nama ? 'f-title' : 'f-date'); }
         try {
           await api('saveCalendarItem', rd);
-        } catch (e) { toast('Gagal menyimpan Reminder', true); S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return; }
+        } catch (e) { toast('Gagal menyimpan Reminder', true); endSaving_(saveBtn, origText); return; }
         try {
           if (document.getElementById('f-repeat').checked && !editId) await repeatCalendarItem_(rd);
         } catch (e) { /* repeat gagal bukan bencana */ }
@@ -4449,7 +4683,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
           renderAll();
           toast('✓ Reminder tersimpan');
         } catch (e) { toast('Tersimpan - data terbaru gagal dimuat, klik Refresh', true); }
-        S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText;
+        endSaving_(saveBtn, origText);
         return;
       }
 
@@ -4486,8 +4720,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         subtasks: S.editSubs || [],
         // task baru selalu nomor 1 (urutan -1) - key hilang saat edit (JSON drop undefined) → urutan lama utuh
         urutan: editId ? undefined : -1
-      };
-      if (!task.title || !task.date) { S.saving = false; saveBtn.disabled = false; saveBtn.textContent = origText; return showFormErr_(!task.title ? 'Judul wajib diisi.' : 'Tanggal Mulai wajib dipilih.', !task.title ? 'f-title' : 'f-date'); }
+      };        if (!task.title || !task.date) { endSaving_(saveBtn, origText); return showFormErr_(!task.title ? 'Judul wajib diisi.' : 'Tanggal Mulai wajib dipilih.', !task.title ? 'f-title' : 'f-date'); }
       applyAuto_(task);
 
       const exIdx = S.tasks.findIndex(x => x.id === task.id);
@@ -4504,32 +4737,17 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         if (document.getElementById('f-repeat').checked && !editId) {
           var repEvery = parseInt(document.getElementById('f-repeat-every').value) || 1;
           var repUnit = document.getElementById('f-repeat-unit').value;
-          // Ulangi = salinan hanya sampai akhir bulan tanggal mulai (tidak lebih); field Berakhir tetap jadi durasi tiap salinan lewat diffDays
-          var _p = task.date.slice(0, 10).split('-');
-          var repUntil = _p[0] + '-' + _p[1] + '-' + pad(new Date(+_p[0], +_p[1], 0).getDate());
-          var cur = new Date(task.date);
-          var origEnd = task.enddate ? new Date(task.enddate) : null;
-          var diffDays = origEnd ? Math.round((origEnd - cur) / 86400000) : 0;
-          var endD = new Date(repUntil);
-          endD.setHours(23, 59, 59, 999); // hari terakhir dalam bulan ikut terhitung
-          var reps = [];
-          while (cur < endD) {
-            if (repUnit === 'day') cur.setDate(cur.getDate() + repEvery);
-            else if (repUnit === 'week') cur.setDate(cur.getDate() + repEvery * 7);
-            else cur.setMonth(cur.getMonth() + repEvery);
-            if (cur > endD) break;
-            var ds = cur.getFullYear() + '-' + pad(cur.getMonth() + 1) + '-' + pad(cur.getDate());
-            var rep = JSON.parse(JSON.stringify(task));
-            rep.id = 'T' + Date.now() + reps.length;
-            rep.date = ds;
-            if (diffDays > 0) {
-              var edr = new Date(cur); edr.setDate(edr.getDate() + diffDays);
-              rep.enddate = edr.getFullYear() + '-' + pad(edr.getMonth() + 1) + '-' + pad(edr.getDate());
-            }
+          // Ulangi = salinan hanya sampai akhir bulan tanggal mulai (tidak lebih)
+          var rr = computeRepeats_(task, 'date', 'enddate', repEvery, repUnit);
+          var reps = rr.reps, repUntil = rr.until;
+          reps.forEach(function(rep, i) {
+            rep.id = 'T' + Date.now() + i;
+            // kolom ganda task (mulai/selesai) ikut digeser - jangan tertinggal di rentang induk
+            rep.mulai = rep.date;
+            rep.selesai = rep.enddate;
             // salinan mendatang tidak mewarisi status auto-complete dari induk lewat tanggal
             if (!isOverdue3_(rep)) { rep.done = false; rep.status = ''; }
-            reps.push(rep);
-          }
+          });
           if (!reps.length) toast('Ulangi: tidak ada tanggal tersisa dalam bulan ini', false);
           if (reps.length && !(await showConfirm('Agenda ini disalin ' + reps.length + '× sampai ' + formatShortDate(repUntil) + '. Lanjutkan?', 'Ya, Ulangi'))) {
             note = '✓ Tersimpan - ulangan dibatalkan';
@@ -4565,9 +4783,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         renderAll();
         toast('Gagal menyimpan! Data form tetap tersimpan.', true);
       } finally {
-        saveBtn.textContent = origText;
-        saveBtn.disabled = false;
-        S.saving = false;
+        endSaving_(saveBtn, origText);
       }
       return;
     }
@@ -4576,29 +4792,9 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       var repEvery = parseInt(document.getElementById('f-repeat-every').value) || 1;
       var repUnit = document.getElementById('f-repeat-unit').value;
       // Ulangi = salinan hanya sampai akhir bulan tanggal mulai (tidak lebih)
-      var _p = tmpl.mulai.slice(0, 10).split('-');
-      var repUntil = _p[0] + '-' + _p[1] + '-' + pad(new Date(+_p[0], +_p[1], 0).getDate());
-      var cur = new Date(tmpl.mulai);
-      var origEnd = tmpl.selesai ? new Date(tmpl.selesai) : null;
-      var diffDays = origEnd ? Math.round((origEnd - cur) / 86400000) : 0;
-      var endD = new Date(repUntil);
-      endD.setHours(23, 59, 59, 999); // hari terakhir dalam bulan ikut terhitung
-      var reps = [];
-      while (cur < endD) {
-        if (repUnit === 'day') cur.setDate(cur.getDate() + repEvery);
-        else if (repUnit === 'week') cur.setDate(cur.getDate() + repEvery * 7);
-        else cur.setMonth(cur.getMonth() + repEvery);
-        if (cur > endD) break;
-        var ds = cur.getFullYear() + '-' + pad(cur.getMonth() + 1) + '-' + pad(cur.getDate());
-        var rep = JSON.parse(JSON.stringify(tmpl));
-        rep.id = undefined;
-        rep.mulai = ds;
-        if (diffDays > 0) {
-          var ed = new Date(cur); ed.setDate(ed.getDate() + diffDays);
-          rep.selesai = ed.getFullYear() + '-' + pad(ed.getMonth() + 1) + '-' + pad(ed.getDate());
-        }
-        reps.push(rep);
-      }
+      var rr = computeRepeats_(tmpl, 'mulai', 'selesai', repEvery, repUnit);
+      var reps = rr.reps, repUntil = rr.until;
+      reps.forEach(function(rep) { rep.id = undefined; }); // id baru dari server saat caller refetch getCalendarData
       if (!reps.length) { toast('Ulangi: tidak ada tanggal tersisa dalam bulan ini', false); return; }
       if (!(await showConfirm('Agenda ini disalin ' + reps.length + '× sampai ' + formatShortDate(repUntil) + '. Lanjutkan?', 'Ya, Ulangi'))) return;
       // W7: 1 batch POST - id baru dari server diambil saat caller refetch getCalendarData
