@@ -29,6 +29,16 @@ class ReynaHubRouter {
     window.location.hash = hash;
   }
 
+  // Kembali ke dashboard: hash dinetralkan supaya modul yang sama bisa dibuka lagi
+  // (tanpa ini, navigate() ke hash yang sama tidak memicu hashchange).
+  reset() {
+    this.currentHash = '#dashboard';
+    if (window.location.hash && window.location.hash !== '#dashboard') {
+      try { window.history.replaceState(null, '', '#dashboard'); }
+      catch (e) { window.location.hash = '#dashboard'; }
+    }
+  }
+
   getToolPath(hash) {
     var clean = hash.split('?')[0];
     // Share link publik: #ss-<slug> → planner (share mode; hash tool lama tak tersentuh)

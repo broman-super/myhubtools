@@ -175,10 +175,10 @@ body {
     text-overflow: ellipsis;
 }
 
-.art-chip-1 { right: 48%; bottom: 7%; animation: chip-float 6.5s ease-in-out infinite alternate; }
-.art-chip-2 { right: 43%; bottom: 16%; animation: chip-float 7.5s .8s ease-in-out infinite alternate; }
+.art-chip-1 { right: 36%; bottom: 6%; animation: chip-float 6.5s ease-in-out infinite alternate; }
+.art-chip-2 { right: 31%; bottom: 15%; animation: chip-float 7.5s .8s ease-in-out infinite alternate; }
 .art-chip-2 i { background: var(--text-muted); }
-.art-chip-3 { right: 38%; bottom: 7%; animation: chip-float 8s 1.4s ease-in-out infinite alternate; }
+.art-chip-3 { right: 27%; bottom: 24%; animation: chip-float 8s 1.4s ease-in-out infinite alternate; }
 .art-chip-3 i { background: var(--surface2); border: 1px solid var(--border); }
 
 .hero-sheen {
@@ -262,6 +262,7 @@ html[data-theme="dark"] .hero-sheen {
     font-weight: 600;
     color: var(--text-muted);
     margin: 0 0 28px;
+    font-variant-numeric: tabular-nums;
 }
 
 .hero-cta {
@@ -301,6 +302,9 @@ html[data-theme="dark"] .hero-sheen {
 .hero-media {
     position: relative;
     aspect-ratio: 4 / 5;
+    /* Lebar pasti: anak-anaknya semua absolute sehingga tanpa ini item grid
+       kolapse ke ~2px dan panel foto tidak pernah tampak. */
+    width: 100%;
     max-width: 340px;
     justify-self: center;
     border-radius: 16px;
@@ -409,10 +413,32 @@ html[data-theme="dark"] .hero-sheen {
     to   { transform: translateY(-8px); }
 }
 
+/* Skip link: hanya muncul saat fokus, di dalam workspace (inert saat landing). */
+.skip-link {
+    position: absolute;
+    left: 12px;
+    top: 8px;
+    z-index: 80;
+    padding: 8px 14px;
+    background: var(--text-main);
+    color: var(--bg-primary);
+    border-radius: 8px;
+    font-family: var(--font-sans);
+    font-size: .85rem;
+    font-weight: 700;
+    transform: translateY(-160%);
+}
+.skip-link:focus {
+    transform: none;
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
 /* ===== SHELL — strip navigasi atas ===== */
 #workspace { flex-direction: column; }
 
 #workspace aside.sidebar {
+    display: flex;
     width: 100%;
     min-width: 0;
     height: auto;
@@ -440,7 +466,10 @@ html[data-theme="dark"] .hero-sheen {
     letter-spacing: .04em;
     color: var(--text-main);
     border-right: 1px solid var(--border);
-    padding-right: 18px;
+    padding: 6px 18px 6px 0;
+    line-height: 1.2;
+    text-align: left;
+    flex: none;
 }
 
 #workspace aside.sidebar .aside-logo::after {
@@ -512,7 +541,7 @@ html[data-theme="dark"] .hero-sheen {
     border-bottom: 1px solid var(--border);
 }
 
-.header-info h2 {
+.header-info h1 {
     font-family: var(--font-sans);
     font-size: clamp(1.35rem, 3vw, 1.7rem);
     font-weight: 800;
@@ -527,6 +556,7 @@ html[data-theme="dark"] .hero-sheen {
     color: var(--text-muted);
     text-transform: none;
     letter-spacing: normal;
+    font-variant-numeric: tabular-nums;
 }
 
 .search-box {
@@ -574,8 +604,10 @@ html[data-theme="dark"] .hero-sheen {
 .section-label {
     display: block;
     font-family: var(--font-sans);
-    font-size: .95rem;
-    font-weight: 700;
+    /* 1.05rem/800: satu langkah jelas di atas judul kartu (.98rem/700) —
+       dulu 15.2px vs 15.68px bobot sama, kelompok tak beda dari kartu. */
+    font-size: 1.05rem;
+    font-weight: 800;
     color: var(--text-main);
     margin: 0 0 14px;
     padding: 0;
@@ -665,7 +697,7 @@ html[data-theme="dark"] .hero-sheen {
     letter-spacing: .06em;
     text-transform: uppercase;
     background: var(--accent);
-    color: #fff;
+    color: var(--stamp-ink);
 }
 
 .card-badge-new { background: var(--text-main); color: var(--bg-primary); }
@@ -687,6 +719,40 @@ html[data-theme="dark"] .hero-sheen {
     font-weight: 600;
     color: var(--text-main);
     margin: 12px 0 4px;
+}
+
+/* Jalur kembali dari iframe: strip di chrome hub, tidak menimpa isi modul */
+#frame-container.is-open {
+    display: flex;
+    flex-direction: column;
+}
+
+.hub-back {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 16px;
+    background: var(--bg-card);
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    font-size: .82rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    z-index: 30;
+}
+
+.hub-back:hover { background: var(--surface2); }
+
+#frame-container.is-open #main-frame {
+    flex: 1;
+    min-height: 0;
+    height: auto;
 }
 
 #search-empty .hint { font-size: .82rem; }
@@ -754,7 +820,7 @@ html[data-theme="dark"] .hero-sheen {
 
 .about-link span {
     display: block;
-    font-size: .76rem;
+    font-size: .8rem;
     line-height: 1.5;
     color: var(--text-muted);
     margin-top: 2px;
@@ -840,6 +906,12 @@ html[data-theme="dark"] .hero-sheen {
 }
 
 /* ===== Reduced motion: matikan gerak spasial & ambient, pertahankan state ===== */
+/* Ikon 44px di bar bawah mobile; strip atas tablet layar sentuh juga
+   ditingkatkan ke target sentuh (dulu 38px = di bawah 44px minimum). */
+@media (min-width: 769px) and (pointer: coarse) {
+    #workspace aside.sidebar .nav-btn { height: 44px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         animation-duration: .01ms !important;
@@ -852,6 +924,8 @@ html[data-theme="dark"] .hero-sheen {
 
     .hero-art,
     .hero-media { transition: none; }
+
+    #dashboard-view { scroll-behavior: auto; }
 }
 
 /* ===== Responsive ===== */
@@ -896,6 +970,6 @@ html[data-theme="dark"] .hero-sheen {
 
     #workspace aside.sidebar .aside-logo { display: none; }
     #workspace aside.sidebar .nav-label { display: none; }
-    #workspace aside.sidebar .nav-btn { padding: 0; width: 44px; justify-content: center; }
+    #workspace aside.sidebar .nav-btn { padding: 0; width: 44px; height: 44px; justify-content: center; }
     #workspace aside.sidebar .nav-list { flex: 1; justify-content: space-around; }
 }

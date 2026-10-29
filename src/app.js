@@ -5,6 +5,24 @@
   var themeManager = null;
   var activeGroup = 'all';
 
+  // Elemen yang tidak aktif harus keluar dari tab order + a11y tree (opacity:0 saja tidak cukup)
+  function setInert(el, on) {
+    if (!el) return;
+    el.inert = !!on;
+    if (on) el.setAttribute('aria-hidden', 'true');
+    else el.removeAttribute('aria-hidden');
+  }
+
+  function setToolOpen(on) {
+    if (ui.workspace) ui.workspace.classList.toggle('is-tool-open', !!on);
+    if (ui.asideLogo) {
+      ui.asideLogo.setAttribute(
+        'aria-label',
+        on ? 'Kembali ke workspace' : 'REYNAHUB, beranda workspace'
+      );
+    }
+  }
+
   function init() {
     ui = {
       landing: document.getElementById('landing-page'),
@@ -19,6 +37,7 @@
       themeBtn: document.getElementById('theme-btn'),
       aboutBtn: document.getElementById('about-btn'),
       asideLogo: document.getElementById('aside-logo'),
+      hubBack: document.getElementById('hub-back'),
       modalClose: document.getElementById('modal-close-btn')
     };
 
@@ -30,6 +49,7 @@
 
     // Render cards
     ToolCard.renderAll();
+    setInert(ui.workspace, true);
 
     // Label manifest diisi dari data kartu (anti-hardcode jumlah modul)
     var countIn = function(id, sel) {
@@ -81,19 +101,39 @@
     }
     themeManager = new ThemeManager();
 
+    function syncShellChrome() {
+      var dark = themeManager && themeManager.getEffectiveTheme();
+      if (ui.themeBtn) {
+        ui.themeBtn.setAttribute('aria-label', dark ? 'Ubah ke tema terang' : 'Ubah ke tema gelap');
+      }
+    }
+
+    function restoreBackgroundInert() {
+      var landingShown = ui.landing && !ui.landing.classList.contains('hide');
+      setInert(ui.landing, !landingShown);
+      setInert(ui.workspace, landingShown);
+    }
+
     // Event listeners
     ui.enterBtn.addEventListener('click', enterWorkspace);
     ui.asideLogo.addEventListener('click', goHome);
+    if (ui.hubBack) ui.hubBack.addEventListener('click', goHome);
     ui.themeBtn.addEventListener('click', function() { themeManager.toggle(); });
+    syncShellChrome();
     // Modal: satu jalur buka/tutup dengan manajemen fokus (dialog semantics)
     var lastFocus = null;
     function openAbout() {
       lastFocus = document.activeElement;
+      setInert(ui.landing, true);
+      setInert(ui.workspace, true);
       ui.about.classList.add('open');
+      ui.about.removeAttribute('aria-hidden');
       ui.modalClose.focus();
     }
     function closeAbout() {
       ui.about.classList.remove('open');
+      ui.about.setAttribute('aria-hidden', 'true');
+      restoreBackgroundInert();
       if (lastFocus && lastFocus.focus) { lastFocus.focus(); }
       lastFocus = null;
     }
@@ -138,7 +178,7 @@
       if (e.key === 'Escape') {
         if (ui.about.classList.contains('open')) {
           closeAbout();
-        } else if (ui.frameCont.style.display === 'block') {
+        } else if (ui.frameCont.classList.contains('is-open')) {
           goHome();
         }
       }
@@ -146,6 +186,7 @@
 
     // Theme broadcast on change
     window.addEventListener('theme-changed', function() {
+      syncShellChrome();
       broadcastCurrentTheme();
     });
 
@@ -175,6 +216,8 @@
   function enterWorkspace() {
     ui.landing.classList.add('hide');
     ui.workspace.classList.add('active');
+    setInert(ui.landing, true);
+    setInert(ui.workspace, false);
     localStorage.setItem('workspace_entered', 'true');
     setTimeout(function() { router.handleRoute(); }, 300);
   }
@@ -183,50 +226,71 @@
     if (!ui.landing.classList.contains('hide')) {
       ui.landing.classList.add('hide');
       ui.workspace.classList.add('active');
+      setInert(ui.landing, true);
+      setInert(ui.workspace, false);
     }
 
-    showFrame(path);
+    // Nama frame = judul modul, supaya screen reader tahu isi iframe
+    var owner = hash ? document.querySelector('.bento-card[data-hash="' + hash + '"]') : null;
+    ui.frame.title = owner ? owner.querySelector('h3').textContent : 'Modul workspace';
+
+    // Mulai unduh modul selama fade dashboard 300ms, bukan setelahnya
+    // (dulu src baru diset di dalam setTimeout, +0,3s ke setiap buka modul)
+    ui.frameLoad = false;
+    ui.frame.onload = function() {
+      ui.frameLoad = true;
+      ui.frameCont.classList.remove('loading');
+      broadcastCurrentTheme();
+    };
+    ui.frame.onerror = function() {
+      ui.frameCont.classList.remove('loading');
+      ui.frameCont.style.opacity = '1';
+      ui.frame.style.display = 'none';
+      var errEl = document.createElement('div');
+      errEl.style.cssText = 'text-align:center;padding:40px;opacity:0.5;';
+      errEl.innerHTML = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Gagal memuat modul';
+      frameCont.appendChild(errEl);
+    };
+    if (ui.frame.getAttribute('src') !== path) ui.frame.setAttribute('src', path);
+
+    showFrame();
+    setToolOpen(true);
 
     // Highlight nav grup pemilik kartu (grup tidak lagi diturunkan dari prefix hash)
-    var owner = hash ? document.querySelector('.bento-card[data-hash="' + hash + '"]') : null;
     activeGroup = owner ? owner.getAttribute('data-group') : 'all';
     setActiveNav(activeGroup);
   }
 
-  function showFrame(toolPath) {
+  function showFrame() {
+    // src sudah diset oleh openTool: unduhan modul paralel dengan fade dashboard
+    // (dulu menunggu 300ms kosong sebelum src diset).
     var db = ui.dbView;
     var frame = ui.frameCont;
     db.style.opacity = '0';
-    setTimeout(function() {
+    openFrameTimer = setTimeout(function() {
       db.style.display = 'none';
-      frame.style.display = 'block';
-      frame.classList.add('loading');
-      ui.frame.src = toolPath;
-      ui.frame.onload = function() {
-        frame.classList.remove('loading');
-        broadcastCurrentTheme();
-      };
-      ui.frame.onerror = function() {
-        frame.classList.remove('loading');
-        frame.style.opacity = '1';
-        ui.frame.style.display = 'none';
-        var errEl = document.createElement('div');
-        errEl.style.cssText = 'text-align:center;padding:40px;opacity:0.5;';
-        errEl.innerHTML = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Gagal memuat modul';
-        frame.appendChild(errEl);
-      };
+      frame.style.display = 'flex';
+      frame.classList.add('is-open');
+      if (!ui.frameLoad) frame.classList.add('loading');
       frame.style.opacity = '0';
       setTimeout(function() { frame.style.opacity = '1'; }, 50);
     }, 300);
   }
 
+  var openFrameTimer;
+
   function goHome() {
+    router.reset();
+    setToolOpen(false);
+    clearTimeout(openFrameTimer);
+    ui.frameLoad = false;
     ui.frameCont.style.opacity = '0';
     ui.frame.src = '';
     ui.frame.onload = null;
     ui.frame.onerror = null;
-    setTimeout(function() {
+    openFrameTimer = setTimeout(function() {
       ui.frameCont.style.display = 'none';
+      ui.frameCont.classList.remove('is-open');
       ui.dbView.style.display = 'block';
       ui.dbView.style.opacity = '1';
       ui.dbView.scrollTop = 0;
@@ -240,7 +304,9 @@
   function setActiveNav(group) {
     var btns = document.querySelectorAll('.nav-list .nav-btn');
     for (var i = 0; i < btns.length; i++) {
-      btns[i].classList.toggle('active', btns[i].getAttribute('data-group') === group);
+      var on = btns[i].getAttribute('data-group') === group;
+      btns[i].classList.toggle('active', on);
+      btns[i].setAttribute('aria-pressed', on ? 'true' : 'false');
     }
   }
 
@@ -276,9 +342,12 @@
     // Visibilitas section: gabungan filter grup + hasil pencarian
     applyGroupFilter();
 
-    var totalVisible = document.querySelectorAll('.bento-card:not(.hidden-card)').length;
+    // Hitung hanya kartu di section yang benar-benar tampil (filter grup + pencarian)
+    var totalVisible = document.querySelectorAll('.group-section:not(.hidden) .bento-card:not(.hidden-card)').length;
     var emptyEl = document.getElementById('search-empty');
     if (emptyEl) emptyEl.style.display = totalVisible === 0 ? 'block' : 'none';
+    var statusEl = document.getElementById('search-status');
+    if (statusEl) statusEl.textContent = totalVisible === 0 ? 'Tidak ada modul yang cocok' : totalVisible + ' modul ditemukan';
   }
 
   function broadcastCurrentTheme() {
@@ -296,6 +365,8 @@
       ui.landing.style.display = 'none';
       ui.landing.classList.add('hide');
       ui.workspace.classList.add('active');
+      setInert(ui.landing, true);
+      setInert(ui.workspace, false);
       router.handleRoute();
     }
   }

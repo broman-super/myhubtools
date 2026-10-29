@@ -34,6 +34,7 @@ rounded:
   btn: "10px"
   card: "12px"
   panel: "16px"
+  hero: "20px"
   pill: "999px"
 spacing:
   sm: "8px"
@@ -85,7 +86,7 @@ Palet netral profesional dengan satu aksen merah.
 **Display Font:** Geomini (fallback Plus Jakarta Sans)
 **Body/Label Font:** Plus Jakarta Sans (fallback system-ui stack)
 
-**Character:** Satu keluarga sans yang bersih untuk seluruh antarmuka kerja; Geomini hanya muncul di wordmark display dan fallback banner — pasangan yang bisnis, bukan hiburan.
+**Character:** Satu keluarga sans yang bersih untuk seluruh antarmuka kerja; Geomini muncul di wordmark display, fallback banner, dan heading halaman tool — pasangan yang bisnis, bukan hiburan.
 
 ### Hierarchy
 - **Display** (Geomini, 900, clamp 2.4–3.4rem): judul halaman awal.
@@ -95,7 +96,9 @@ Palet netral profesional dengan satu aksen merah.
 - **Label** (PJS, 600–700, .75–.95rem): nav, tombol, meta, section.
 
 ### Named Rules
-**The One Family Rule.** Antarmuka memakai Plus Jakarta Sans di semua peran teks. Geomini hanya untuk display wordmark/banner. Monospace tidak dipakai di shell ini.
+**The One Family Rule.** Shell hub memakai Plus Jakarta Sans di semua peran teks. Di halaman tool, heading h1–h6 boleh Geomini (aturan global `tools.css`); teks kerja tetap PJS. Monospace tidak dipakai di shell ini.
+
+**The Variable Font Rule.** Plus Jakarta Sans di-host sebagai satu file variable (`assets/fonts/plus-jakarta-sans-var.woff2`, axis wght 200–800) dengan satu deklarasi `@font-face; font-weight: 200 800` — jangan memecahnya kembali jadi beberapa @font-face per bobot.
 
 ## Layout
 
