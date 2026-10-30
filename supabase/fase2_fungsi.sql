@@ -45,10 +45,10 @@ t AS (
 ),
 tx AS (
   SELECT t.*,
-    -- Klasifikasi terpadu (§4.2). is_batal = false: tabel transaksi TIDAK punya kolom Status.
+    -- Klasifikasi terpadu - whitelist ketat
     (t.tipe LIKE '%retur%' OR t.tipe LIKE '%kembali%') AS is_retur,
-    (t.tipe LIKE '%faktur%' OR t.tipe LIKE '%penjualan%' OR t.tipe LIKE '%sales%'
-     OR NOT (t.tipe LIKE '%retur%' OR t.tipe LIKE '%kembali%')) AS is_penjualan,
+    ((t.tipe LIKE '%faktur%' OR t.tipe LIKE '%penjualan%' OR t.tipe LIKE '%sales%' OR t.tipe LIKE '%invoice%')
+     AND NOT (t.tipe LIKE '%retur%' OR t.tipe LIKE '%kembali%')) AS is_penjualan,
     -- passProductFilter (Analytic.html L2317-2319) — RESELLER/KYX longgar: filter RESELLER tangkap semua RESELLER* dan KYX*
     (p_kat_filter = 'ALL' OR p_kat_filter IS NULL OR t.kat = p_kat_filter
       OR (upper(p_kat_filter) LIKE '%RESELLER%' AND (t.kat LIKE '%RESELLER%' OR t.kat LIKE '%KYX%'))
