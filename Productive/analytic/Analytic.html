@@ -15,8 +15,8 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/moment@2.29.4/min/moment.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.1/daterangepicker.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.1/daterangepicker.css" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -1488,7 +1488,10 @@
                 <path d="M3 3v18h18" />
                 <path d="m19 9-5 5-4-4-3 3" />
             </svg> SAS - SALES ANALYTIC</h1>
-        <div id="syncStatus" style="font-size: 11px; color: var(--muted); font-weight: 500; margin-left: 20px;">Mengecek data...</div>
+        <div style="display:flex; align-items:center; gap:10px; margin-left: 20px; flex-wrap:wrap;">
+            <div id="syncStatus" style="font-size: 11px; color: var(--muted); font-weight: 500;">Mengecek data...</div>
+            <button id="dqBadge" onclick="alert('Data Quality:\n- Tidak terklasifikasi: ' + (dqUnclassified||0) + '\n- HPP hilang (perkiraan): ' + (dqMissingHpp||0) + '\n- Retur tanpa kecocokan HPP (dibatasi): ' + (dqReturNoMatch||0))" style="display:none; padding:4px 10px; border-radius:999px; border:1px solid var(--warning); background:var(--warning-light); color:var(--warning-strong); font-size:10px; font-weight:800; cursor:pointer;">Data Quality</button>
+        </div>
         <div class="nav-controls">
             <div class="nav-group">
                 <div class="compare-pill" style="margin-right:2px;" title="Pilih tampilan dashboard">
@@ -1665,7 +1668,7 @@
 
         <div id="cardKpiPiutang" class="bento-item col-span-3">
             <div class="bento-header">
-                <div class="bento-title">PIUTANG <span class="help-icon" data-static-tooltip="Piutang = Omzet Bersih di 7 hari terakhir (proxy payout marketplace). Lunas = Omzet Bersih − Piutang. Retur Faktur tersendiri.">?</span></div>
+                <div class="bento-title">PIUTANG <span class="help-icon" data-static-tooltip="Piutang = estimasi/proxy (berdasarkan porsi 7 hari terakhir). BUKAN saldo AR riil karena tidak ada status pembayaran/jatuh tempo di data.">?</span></div>
                 <div class="badge primary">PIUTANG</div>
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
@@ -2128,13 +2131,57 @@
         // Risiko diterima: siapa pun yang membuka halaman ini bisa ikut menulis data.
         const KEY_WRITE_VALUE = 'f71777528484496aa4dc15b12fdfca88';
         function writeKey() { return KEY_WRITE_VALUE; }
+
+        // --- Security hardening: strict origin check (CSP equivalent) ---
+        const ALLOWED_ORIGINS = [
+          'https://reynahub.pages.dev',
+          'https://reynahub.vercel.app',
+          'https://www.reynahub.id',
+          'https://reynahub.com',
+          window.location.origin
+        ].filter(Boolean);
+
+        function isAllowedOrigin() {
+          const origin = window.location.origin;
+          if (ALLOWED_ORIGINS.includes('*')) return true;
+          return ALLOWED_ORIGINS.some(function(o) {
+            try {
+              return new URL(o, location.href).origin === origin;
+            } catch (e) {
+              return false;
+            }
+          });
+        }
+
+        function checkOrigin() {
+          if (!isAllowedOrigin()) {
+            console.warn('[TaskSpace] Write blocked: origin not in allowed list');
+            return false;
+          }
+          return true;
+        }
         // Mutasi GAS lewat POST (GET hanya untuk baca).
         function postAction(action, params) {
-            return fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(Object.assign({ action: action, token: writeKey() }, params || {}))
-            });
+          if (!checkOrigin()) {
+            console.warn('[Analytic] POST blocked: origin check failed');
+            return Promise.reject(new Error('Origin blocked'));
+          }
+          return fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(Object.assign({ action: action, token: writeKey() }, params || {}))
+          });
+        }
+
+        // MessageEvent origin bypass: only same-origin, same-parent iframe, or localhost.
+        function isSafeMessageSource(e) {
+          const origin = e.origin || '';
+          if (origin === location.origin) return true;
+          if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return true;
+          try {
+            if (e.source && e.source.closest && e.source.closest('.Analytic') === null) return false;
+          } catch (err) { /* ignore */ }
+          return false;
         }
 
         // State pengaman proses GAS & refresh otomatis
@@ -3271,6 +3318,7 @@
 
 
         async function prosesData() {
+            try { if (typeof window.__lastNetSales === 'undefined') { window.__lastNetSales=0; window.__lastGrossSales=0; window.__lastCogs=0; window.__lastGrossCogs=0; window.__lastNetProfit=0; window.__lastPiutang=0; window.__lastLunas=0; } } catch(e){}
             let startVal = document.getElementById('startDate').value;
             let endVal = document.getElementById('endDate').value;
             let gStart = null;
@@ -3333,6 +3381,8 @@
             let rekapTrendProd = {};
             let freqPelanggan = {};
             let basketData = {};
+            // Data Quality counters
+            let dqUnclassified = 0, dqMissingHpp = 0, dqReturNoMatch = 0;
             const listHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
             let barisDihitung = 0;
@@ -3375,9 +3425,14 @@
                     let isRetur = tipe.includes('retur') || tipe.includes('kembali');
                     let isBatal = status.includes('batal') || status.includes('void') || status.includes('cancel');
 
-                    // 🔥 Logika Tahan Banting: Cari kata kunci, kalau ga ada tetep anggap penjualan selama bukan batal/retur
-                    let isPenjualan = tipe.includes('faktur') || tipe.includes('penjualan') || tipe.includes('sales');
-                    if (!isRetur && !isBatal) isPenjualan = true; // Fix Fatal: Data kosong = Penjualan
+                    // Klasifikasi ketat berbasis whitelist
+                    let isPenjualan = tipe.includes('faktur') || tipe.includes('penjualan') || tipe.includes('sales') || tipe.includes('invoice');
+                    if (isRetur) {
+                        isPenjualan = false;
+                    }
+                    if (!isRetur && !isBatal && !isPenjualan && tipe && tipe.trim() !== '') {
+                        dqUnclassified++;
+                    }
 
                     let nilai = b.parsedNilai || 0;
                     let qty = b.parsedQty || 0;
@@ -3424,8 +3479,14 @@
                         if (isRetur) {
                             dSkrg.retur += Math.abs(nilai);
                             dSkrg.returQty += Math.abs(qty);
-                            dSkrg.cogs -= Math.abs(hppTotalBaris);
-                            if (passProductFilter) {
+                            let hppRetur = Math.abs(hppTotalBaris || 0);
+                            if (dSkrg.cogs >= hppRetur) {
+                                dSkrg.cogs -= hppRetur;
+                            } else {
+                                dSkrg.cogs = 0;
+                                dqReturNoMatch++;
+                            }
+                            if (passProductFilter && rekapProdukDetail[prod]) {
                                 rekapProdukDetail[prod].returQty += Math.abs(qty);
                                 rekapProdukDetail[prod].returRp += Math.abs(nilai);
                             }
@@ -3433,14 +3494,19 @@
                         } else if (isPenjualan) {
                             dSkrg.sales += nilai;
                             dSkrg.salesQty += Math.abs(qty);
-                            dSkrg.cogs += Math.abs(hppTotalBaris);
+                            let hppSales = Math.abs(hppTotalBaris || 0);
+                            if (hppSales <= 0 && prod && prod.trim() !== '') {
+                                dqMissingHpp++;
+                            }
+                            dSkrg.cogs += hppSales;
                             barisDihitung++;
 
                             if (passProductFilter) {
+                                if (!rekapProdukDetail[prod]) rekapProdukDetail[prod] = { qty: 0, sales: 0, cogs: 0, returQty: 0, returRp: 0 };
                                 rekapProdukDetail[prod].qty += Math.abs(qty);
                                 rekapProdukDetail[prod].sales += nilai;
-                                rekapProdukDetail[prod].cogs += Math.abs(hppTotalBaris);
-                                if (prod) rekapProd[prod] = (rekapProd[prod] || 0) + qty;
+                                rekapProdukDetail[prod].cogs += hppSales;
+                                if (prod) rekapProd[prod] = (rekapProd[prod] || 0) + Math.abs(qty);
                             }
 
                             // Basket Tracking (UPT)
@@ -3499,13 +3565,19 @@
 
                         if (isRetur) {
                             dLalu.retur += Math.abs(nilai);
-                            dLalu.returQty += qty;
-                            dLalu.cogs -= Math.abs(hppTotalBaris);
+                            dLalu.returQty += Math.abs(qty);
+                            let hppReturL = Math.abs(hppTotalBaris || 0);
+                            if (dLalu.cogs >= hppReturL) {
+                                dLalu.cogs -= hppReturL;
+                            } else {
+                                dLalu.cogs = 0;
+                            }
                             if (kat) rekapKatLalu[kat] = (rekapKatLalu[kat] || 0) - Math.abs(nilai);
                         } else if (isPenjualan) {
                             dLalu.sales += nilai;
-                            dLalu.salesQty += qty;
-                            dLalu.cogs += Math.abs(hppTotalBaris);
+                            dLalu.salesQty += Math.abs(qty);
+                            let hppSalesL = Math.abs(hppTotalBaris || 0);
+                            dLalu.cogs += hppSalesL;
                             if (kat) rekapKatLalu[kat] = (rekapKatLalu[kat] || 0) + nilai;
                             rekapTren[offsetLalu].salesLalu += nilai;
                         }
@@ -3527,26 +3599,37 @@
             }
 
             let netSales = (dSkrg.sales || 0) - (dSkrg.retur || 0);
-            __lastNetSales = netSales;
-            __lastGrossSales = dSkrg.sales || 0;
-            __lastCogs = dSkrg.cogs || 0;
-            __lastGrossCogs = dSkrg.cogs || 0; // TODO: grossCogs ideally salesQty*avgHPP, fallback to net cogs (limitation documented)
+            try { window.__lastNetSales = netSales; window.__lastGrossSales = dSkrg.sales || 0; window.__lastCogs = dSkrg.cogs || 0; window.__lastGrossCogs = dSkrg.cogs || 0; } catch(e){}
             let grossProfit = netSales - dSkrg.cogs;
             let netProfit = grossProfit - totalBiaya;
-            __lastNetProfit = netProfit;
+            try { window.__lastNetProfit = netProfit; } catch(e){}
             // Piutang proxy 7 hari (karena template tanpa Status Pembayaran)
             const totalDaysForPiutang = Math.max(1, Math.round((gEnd - gStart) / 86400000) + 1);
             const piutangDays = Math.min(7, totalDaysForPiutang);
             const piutangVal = netSales * (piutangDays / totalDaysForPiutang);
             const lunasVal = netSales - piutangVal;
-            __lastPiutang = piutangVal;
-            __lastLunas = lunasVal;
+            try { window.__lastPiutang = piutangVal; window.__lastLunas = lunasVal; } catch(e){}
 
             let netMargin = netSales > 0 ? (netProfit / netSales) * 100 : 0;
             let opexRatio = netSales > 0 ? (totalBiaya / netSales) * 100 : 0;
 
             let netSalesLalu = (dLalu.sales || 0) - (dLalu.retur || 0);
             let netProfitLalu = (netSalesLalu - dLalu.cogs) - totalBiayaLalu;
+            try {
+                window.dqUnclassified = dqUnclassified;
+                window.dqMissingHpp = dqMissingHpp;
+                window.dqReturNoMatch = dqReturNoMatch;
+                var dqBadge = document.getElementById('dqBadge');
+                if (dqBadge) {
+                    var dqTotal = (dqUnclassified||0) + (dqMissingHpp||0) + (dqReturNoMatch||0);
+                    if (dqTotal > 0) {
+                        dqBadge.style.display = 'inline-flex';
+                        dqBadge.textContent = 'Data Quality: ' + dqTotal + ' issue';
+                    } else {
+                        dqBadge.style.display = 'none';
+                    }
+                }
+            } catch(e){}
 
             function hitungVsText(skrg, lalu, revertColor = false) {
                 if (lalu === 0 && skrg === 0) return `<span style="color:var(--muted)">(-%)</span>`;
@@ -3568,7 +3651,7 @@
 
                 if (document.getElementById('kpiSales')) document.getElementById('kpiSales').innerText = formatRp(netSales);
                 let notaCount = Object.keys(basketData).length;
-                __lastNotaCount = notaCount;
+                window.__lastNotaCount = notaCount;
                 updateEmptyState(netSales, notaCount);
                 if (document.getElementById('kpiSalesVs')) document.getElementById('kpiSalesVs').innerHTML = `<span class="help-icon" data-tooltip="Persentase pertumbuhan omzet bersih vs periode pembanding. Nota = 1 pembeli yang belanja dalam 1 hari (proxy transaksi).">?</span> ${hitungVsText(netSales, netSalesLalu)} vs <span style="font-weight:700; color:var(--muted);">${formatRp(netSalesLalu)}</span> · <span style="color:var(--muted); font-weight:700;">${notaCount.toLocaleString('id-ID')} Nota</span>`;
                 let barFill = document.getElementById('kpiSalesProgress');
@@ -4501,6 +4584,7 @@
                         // Paksa refetch tab biaya bila sedang terbuka (setelah sync → omzet overlay fresh)
                         _biayaRangeKey = null;
                         _biayaPrevKey = null;
+                        _biayaLatestIso = null;
                         if (isBiayaTabActive()) renderBiayaTab().catch(() => {});
                         if (!ok) showRefreshToast();
                     });
@@ -4537,6 +4621,27 @@
             } catch (e) { content.innerHTML = '<span style="color:var(--danger);">Gagal menghubungi Gemini.</span>'; }
         }
 
+        // Secure postMessage: only same-origin / configured targets.
+        function securePostMessage(type, data) {
+          try {
+            const target = (typeof window !== 'undefined' && window.parent) ? window.parent : window;
+            // Skip source validation when passing window objects (not MessageEvents)
+            try {
+              if (typeof isSafeMessageSource === 'function' && target && typeof target.origin === 'undefined' && typeof target.addEventListener === 'function') {
+                // Likely a window object, not a MessageEvent - skip check
+              } else if (typeof isSafeMessageSource === 'function' && target && target.origin !== undefined) {
+                if (!isSafeMessageSource(target)) {
+                  console.warn('[Analytic] postMessage blocked: source not allowed');
+                  return;
+                }
+              }
+            } catch (e) { /* ignore */ }
+            target.postMessage({ type: type, data: data }, '*');
+          } catch (e) {
+            console.warn('[Analytic] postMessage failed:', e);
+          }
+        }
+
         function toggleTheme() {
             let html = document.documentElement;
             if (html.getAttribute('data-theme') === 'dark') {
@@ -4546,13 +4651,13 @@
                 html.setAttribute('data-theme', 'dark');
                 if (window.parent === window) localStorage.setItem('theme', 'dark');
             }
-            if (window.parent !== window) { try { window.parent.postMessage({ type: 'THEME_CHANGED', theme: document.documentElement.getAttribute('data-theme') }, '*'); } catch (e) {} }
+            if (window.parent !== window) { securePostMessage('THEME_CHANGED', document.documentElement.getAttribute('data-theme')); }
             if (typeof prosesData === 'function') prosesData();
             if (typeof isBiayaTabActive === 'function' && isBiayaTabActive() && typeof renderBiayaTab === 'function') renderBiayaTab();
         }
 
         if (window.parent !== window) {
-            try { window.parent.postMessage({ type: 'request-theme' }, '*'); } catch (e) {}
+            securePostMessage('request-theme', null);
         } else if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.setAttribute('data-theme', 'dark');
         }
@@ -5652,6 +5757,15 @@
             kirimChunk(0);
         }
 
+        // ===== TAB BIAYA: dashboard khusus pengeluaran (OPEX) ===== (declare early to avoid TDZ)
+        let _biayaRowsCur = null, _biayaRowsPrev = null, _biayaRangeKey = null, _biayaPrevKey = null;
+        let _biayaGran = 'daily', _biayaDaily = null, _biayaCatCur = [], _biayaAggPrev = {}, _biayaTotalCur = 0;
+        let _biayaChartTren = null, _biayaChartKomposisi = null, _biayaDataTable = null;
+        let _editBiayaId = null;
+        let _biayaLatestIso = null; // tanggal biaya terakhir di DB (untuk hint empty-state)
+        const _BIYA_PALETTE = ['#a855f7', '#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#64748b'];
+        window.__lastNetSales = window.__lastNetSales || 0; window.__lastGrossSales = window.__lastGrossSales || 0; window.__lastCogs = window.__lastCogs || 0; window.__lastGrossCogs = window.__lastGrossCogs || 0; window.__lastNetProfit = window.__lastNetProfit || 0; window.__lastPiutang = window.__lastPiutang || 0; window.__lastLunas = window.__lastLunas || 0;
+
         function checkLogin() {
             if (sessionStorage.getItem('intel_auth') === '1') {
                 document.getElementById('loginOverlay').style.display = 'none';
@@ -5677,14 +5791,6 @@
             if (e.key === 'Enter') verifyPwd();
         });
         checkLogin();
-
-        // ===== TAB BIAYA: dashboard khusus pengeluaran (OPEX) =====
-        let _biayaRowsCur = null, _biayaRowsPrev = null, _biayaRangeKey = null, _biayaPrevKey = null;
-        let _biayaGran = 'daily', _biayaDaily = null, _biayaCatCur = [], _biayaAggPrev = {}, _biayaTotalCur = 0;
-        let _biayaChartTren = null, _biayaChartKomposisi = null, _biayaDataTable = null;
-        let _editBiayaId = null;
-        const _BIYA_PALETTE = ['#a855f7', '#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#64748b'];
-        let __lastNetSales = 0, __lastGrossSales = 0, __lastCogs = 0, __lastGrossCogs = 0, __lastNetProfit = 0, __lastPiutang = 0, __lastLunas = 0;
 
         function isBiayaTabActive() {
             const c = document.getElementById('biayaContainer');
@@ -6043,14 +6149,59 @@
         }
 
         async function fetchBiayaRows(startIso, endIso) {
-            const p = new URLSearchParams({ select: 'id,"Tanggal","Kategori Biaya","Nominal"', order: '"Tanggal".asc' });
-            p.append('"Tanggal"', 'gte.' + startIso);
-            p.append('"Tanggal"', 'lte.' + endIso);
+            // Mode Supabase: RPC rekap_dashboard hanya mengembalikan angka agregat,
+            // bukan baris biaya → baris tabel diambil langsung dari tabel `biaya`
+            // (policy RLS "allow public read", lihat supabase/migrasi_analytic.sql).
+            if (DATA_SOURCE === 'supabase') {
+                const p = new URLSearchParams({
+                    select: 'id,"Tanggal","Kategori Biaya","Nominal"',
+                    order: '"Tanggal".asc'
+                });
+                p.append('"Tanggal"', 'gte.' + startIso);
+                p.append('"Tanggal"', 'lte.' + endIso);
+                const res = await fetch(SUPABASE_URL + '/rest/v1/biaya?' + p.toString(), {
+                    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
+                });
+                if (!res.ok) {
+                    const txt = await res.text().catch(() => '');
+                    throw new Error('Supabase ' + res.status + (txt ? ' — ' + txt.slice(0, 200) : ''));
+                }
+                const data = await res.json();
+                return Array.isArray(data) ? data : [];
+            }
+            // Mode GAS/Sheet: pakai baris biaya yang sudah diolah dari getSalesData
+            const start = new Date(startIso + 'T00:00:00');
+            const end = new Date(endIso + 'T23:59:59.999');
+            const rows = [];
+            if (Array.isArray(rawDataBiaya)) {
+                rawDataBiaya.forEach(c => {
+                    let d = c.parsedDate;
+                    if (!d || isNaN(d.getTime())) return;
+                    if (d >= start && d <= end) {
+                        rows.push({
+                            id: c.id || null,
+                            'Tanggal': isoDate(d),
+                            'Kategori Biaya': c.kategoriBiaya || c['Kategori Biaya'] || c.kategori || 'Lain-lain',
+                            'Nominal': c.nominal || c['Nominal'] || 0
+                        });
+                    }
+                });
+            }
+            rows.sort((a,b) => String(a['Tanggal']).localeCompare(String(b['Tanggal'])));
+            return rows;
+        }
+
+        // Tanggal biaya terakhir di DB — dipakai hanya untuk hint saat rentang kosong.
+        async function fetchBiayaLatestIso() {
+            if (DATA_SOURCE !== 'supabase') return null;
+            const p = new URLSearchParams({ select: '"Tanggal"', order: '"Tanggal".desc', limit: '1' });
             const res = await fetch(SUPABASE_URL + '/rest/v1/biaya?' + p.toString(), {
                 headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
             });
-            if (!res.ok) throw new Error('Supabase ' + res.status);
-            return await res.json();
+            if (!res.ok) return null;
+            const data = await res.json();
+            const tgl = Array.isArray(data) && data[0] ? data[0]['Tanggal'] : null;
+            return tgl ? String(tgl).slice(0, 10) : null;
         }
 
         function fmtRpBiaya(v) {
@@ -6073,11 +6224,15 @@
                     _biayaRowsPrev = await fetchBiayaRows(prev.start, prev.end);
                     _biayaPrevKey = prevKey;
                 }
+                // Rentang tanpa baris biaya bukan error — beri hint tanggal data terakhir.
+                if ((!_biayaRowsCur || _biayaRowsCur.length === 0) && !_biayaLatestIso) {
+                    try { _biayaLatestIso = await fetchBiayaLatestIso(); } catch (e) {}
+                }
                 drawBiaya();
             } catch (err) {
                 console.error('Gagal memuat data biaya:', err);
                 const tbody = document.getElementById('biayaTableBody');
-                if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="color:var(--danger); text-align:center; padding:20px;">Gagal memuat data biaya. Periksa koneksi lalu coba lagi.</td></tr>';
+                if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="color:var(--danger); text-align:center; padding:20px;">Gagal memuat data biaya. Periksa koneksi lalu coba lagi. <span style="display:block; margin-top:6px; font-size:11px; color:var(--muted);">' + String(err && err.message ? err.message : err) + '</span></td></tr>';
             }
         }
 
@@ -6297,6 +6452,12 @@
         function renderBiayaTable() {
             const tbody = document.getElementById('biayaTableBody');
             if (!tbody) return;
+            // destroy() HARUS sebelum tbody diisi ulang: DataTables mengembalikan
+            // baris lama saat destroy, jadi urutan sebaliknya membuat tabel basi.
+            if (window.$ && $.fn && $.fn.DataTable && $.fn.DataTable.isDataTable('#biayaTable')) {
+                try { $('#biayaTable').DataTable().destroy(); } catch (e) {}
+            }
+            _biayaDataTable = null;
             tbody.innerHTML = (_biayaRowsCur || []).map(r => {
                 const id = r.id;
                 const tgl = String(r['Tanggal'] || '').slice(0, 10);
@@ -6313,9 +6474,11 @@
                         <button onclick="editBiayaRow(${id})" class="theme-toggle" title="Edit" style="padding:6px 10px; color:var(--primary); font-weight:800; font-size:11px;">EDIT</button>
                         <button onclick="deleteBiayaRow(${id}, this)" class="theme-toggle" title="Hapus" style="padding:6px 10px; color:var(--danger); font-weight:800; font-size:11px;">HAPUS</button>
                     </div></td></tr>`;
-            }).join('') || '<tr><td colspan="4" style="text-align:center; color:var(--muted); padding:20px;">Belum ada biaya pada rentang ini.</td></tr>';
-            if ($.fn.DataTable.isDataTable('#biayaTable')) { $('#biayaTable').DataTable().destroy(); }
-            _biayaDataTable = null;
+            }).join('') || ('<tr><td colspan="4" style="text-align:center; color:var(--muted); padding:20px;">Belum ada biaya pada rentang ini.' +
+                (_biayaLatestIso
+                    ? ' <span style="display:block; margin-top:6px; font-size:11px;">Data biaya terakhir: ' + new Date(_biayaLatestIso + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ' — perluas rentang tanggal.</span>'
+                    : '') +
+                '</td></tr>');
             if (window.$ && $.fn.DataTable && (_biayaRowsCur || []).length > 0) {
                 _biayaDataTable = $('#biayaTable').DataTable({ pageLength: 10, lengthChange: false, order: [], columns: [null, null, null, { orderable: false }] });
             }
@@ -6479,6 +6642,7 @@
                 const data = await res.json();
                 if (data.status !== 'success') throw new Error(data.message || 'Gagal menghapus biaya');
                 _biayaRangeKey = null; // paksa refetch pada render berikutnya
+                _biayaLatestIso = null;
                 if (isBiayaTabActive()) await renderBiayaTab();
                 showSuccessOverlay('Biaya Dihapus', 'Baris biaya dihapus.', 1500);
             } catch (err) {

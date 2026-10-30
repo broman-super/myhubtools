@@ -42,7 +42,7 @@ Dashboard analitik penjualan real-time berbasis **Google Sheets + Google Apps Sc
 - Service worker `src/sw.js` cache versi `reynahub-v4` (route `/Productive/`, strategi **network-first**). Setelah edit file ini, bump versi cache.
 
 ### 2.3 Dependency (CDN, versi ter-pin)
-Chart.js 3.9.1 · datalabels 2.2.0 · zoom 2.0.1 (+hammerjs 2.0.8) · jQuery 3.7.1 · moment 2.29.4 · daterangepicker 3.1.1 · DataTables 1.13.6 · SheetJS (xlsx) 0.18.5 · marked.
+Chart.js 3.9.1 · datalabels 2.2.0 · zoom 2.0.1 (+hammerjs 2.0.8) · jQuery 3.7.1 · moment 2.29.4 · daterangepicker 3.1.0 · DataTables 1.13.6 · SheetJS (xlsx) 0.18.5 · marked.
 
 > Jangan "upgrade" ke major baru tanpa uji — unpinned version pernah jadi masalah (catatan internal).
 
@@ -105,7 +105,8 @@ Jangan "perbaiki" preset jadi anchor `refEnd` semua — itu keputusan user (defa
 
 ### 3.4d 📊 Tab BIAYA (Dashboard khusus OPEX)
 - Nav-bar mendapat **segmented pill** `DASHBOARD`/`BIAYA` (`showTab`) — satu baris dengan tombol dark mode. `biayaContainer` adalah bento grid kedua (hidden default). Baris tanggal & pill komparasi **tetap global**.
-- **Data:** baris biaya di-fetch langsung ke Supabase REST (`GET /rest/v1/biaya?...` filter `"Tanggal" gte/lte`, anon, RLS public read) — **tanpa SQL/RPC baru**. Fetch lazy + cache per rentang (`_biayaRangeKey`/`_biayaPrevKey`); refetch saat rentang/mode komparasi berubah atau setelah tambah/edit/hapus.
+- **Data:** baris biaya di-fetch langsung ke Supabase REST (`GET /rest/v1/biaya?...` filter `"Tanggal" gte/lte`, anon, RLS public read) — **tanpa SQL/RPC baru**. Fetch lazy + cache per rentang (`_biayaRangeKey`/`_biayaPrevKey`); refetch saat rentang/mode komparasi berubah atau setelah tambah/edit/hapus. Mode `DATA_SOURCE==='supabase'` **wajib** ambil baris ke tabel `biaya` — `rawDataBiaya` hanya terisi di mode GAS, jadi memakainya di mode Supabase membuat tabel kosong.
+- **Rentang kosong bukan error:** bila tak ada baris di rentang terpilih, tabel menampilkan tanggal biaya terakhir (`_biayaLatestIso`) sebagai hint. Jangan ganti dengan pesan "gagal memuat".
 - **Rentang pembanding** dihitung ulang di `getPrevRangeIso()` — duplikat logika `pStart/pEnd` di `prosesData` (monthly = tanggal sama bulan lalu; rolling = N hari sebelum rentang). Jangan "refactor" salah satu saja tanpa menyesuaikan yang lain.
 - **Widget:** KPI×4 (TOTAL BIAYA +% vs lalu [naik=merah], OPEX RATIO = biaya÷omzet bersih, BIAYA/NOTA = biaya÷nota, KATEGORI TERBESAR + share%) · TREN BIAYA **di-overlay omzet bersih** (`_trendDaily`) · doughnut KOMPOSISI + RANKING kategori (+selisih vs lalu / NEW) · TABEL per-entri (DataTables) dengan **EDIT** (reuse `expenseModal` mode update `_editBiayaId` → GAS `updateBiaya`) & **HAPUS** (confirm → GAS `deleteBiaya`).
 - **GAS:** `deleteBiaya` & `updateBiaya` baru di `doGet` (`supabaseRequest_` method `delete`/`patch` — helper sudah generik). Simpanan cache `dash_data_v2` dihapus agar sync ambil data terbaru.
