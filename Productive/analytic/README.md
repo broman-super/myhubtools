@@ -111,6 +111,7 @@ Jangan "perbaiki" preset jadi anchor `refEnd` semua — itu keputusan user (defa
 - **Widget:** KPI×4 (TOTAL BIAYA +% vs lalu [naik=merah], OPEX RATIO = biaya÷omzet bersih, BIAYA/NOTA = biaya÷nota, KATEGORI TERBESAR + share%) · TREN BIAYA **di-overlay omzet bersih** (`_trendDaily`) · doughnut KOMPOSISI + RANKING kategori (+selisih vs lalu / NEW) · TABEL per-entri (DataTables) dengan **EDIT** (reuse `expenseModal` mode update `_editBiayaId` → GAS `updateBiaya`) & **HAPUS** (confirm → GAS `deleteBiaya`).
 - **GAS:** `deleteBiaya` & `updateBiaya` baru di `doGet` (`supabaseRequest_` method `delete`/`patch` — helper sudah generik). Simpanan cache `dash_data_v2` dihapus agar sync ambil data terbaru.
 - **Global state yang dipakai tab biaya:** `__lastNetSales` & `__lastNotaCount` di-set di `prosesData` (jangan dihapus); `_trendDaily` (omzet per hari) dari `renderCharts`. Chart biaya di-`destroy` tiap re-render (anti-leak Chart.js).
+- **WAJIB menunggu `prosesData()`:** semua pemanggilan lewat `jalankanProsesData_()` (mencatat `_prosesDataPromise`), dan `renderBiayaTab()` meng-`await` promise itu sebelum menggambar. Tanpa ini Total Biaya (dari baris tabel) sudah baru sementara Omzet/OPEX Ratio/Laba/ROAS/ROI masih angka rentang sebelumnya — lihat §3.11.
 - `updateGranPills` di-scope `#mainContainer` supaya tidak menyentuh pill granularity tab biaya (`updateBiayaGranPills` terpisah).
 - **Pendekatan komputasi:** semua KPI/komposisi/delta dihitung **client-side dari baris biaya** (bukan dari agregat RPC `rekapBiaya`) — konsisten antar widget di tab ini.
 
@@ -137,6 +138,12 @@ Bug layout di file ini mustahil dideteksi sekilas (lihat §3.1). Setelah menguba
 **Gejala:** saat mode komparasi "Bandingkan Bulan Lalu", hover di grafik Trend menampilkan markup `<svg xmlns=...` mentah sebagai judul tooltip.
 **Akar:** tooltip `title` callback menempelkan `ICONS.calendar` (string SVG) ke teks tooltip. Chart.js tooltip merender teks polos (`textContent`) — SVG tidak pernah dirender, malah tampil sebagai string.
 **Fix:** ikon dihapus dari `title` callback chart Tren. **Aturan: jangan pernah menaruh string SVG/HTML ke dalam callback tooltip Chart.js** — tooltip tidak mendukung HTML; kalau mau ikon di tooltip, pakai `external` tooltip (elemen kustom).
+
+### 3.11 🔴 Tab Biaya: Total Biaya benar, KPI lain kosong/angka lama — SUDAH DIPERBAIKI
+**Gejala:** Total Biaya menampilkan angka benar, tapi OPEX RATIO / BIAYA-NOTA / ROAS / ROI / LABA tampak `0%` atau tetap angka rentang sebelumnya.
+**Akar:** `drawBiaya()` membaca global hasil `prosesData()` (`__lastNetSales`, `__lastNotaCount`, `__lastNetProfit`, `_trendDaily`), sementara pemanggil (`applyRange`, `setCompareMode`, `toggleTheme`) memanggil `prosesData()` tanpa `await` lalu langsung `renderBiayaTab()`. Baris biaya di-fetch sendiri, jadi Total Biaya segar; global penjualan belum ter-update.
+**Perbaikan:** satu jalur `jalankanProsesData_()` + `await _prosesDataPromise` di awal `renderBiayaTab()`. Jangan panggil `prosesData()` langsung dari handler baru — gunakan helper itu.
+**Turunan yang ikut diperbaiki:** tren harian memakai mode Omzet (kotor/bersih) yang dipilih; sumbu kiri (biaya) dan kanan (omzet) + legend supaya tren terbaca; ROAS/ROI tanpa penyebut berhenti menampilkan `0%` (jadi `—`); delta periode lalu tidak lagi `+0.0%` saat pembanding nol; banner rentang kosong menampilkan tanggal biaya terakhir; import bulk biaya membuang cache rentang supaya baris baru langsung terlihat; `fetchBiayaRows` ikut mengambil `Keterangan Jurnal` (tanpa itu derivasi 5 frasa iklan mati di mode Supabase).
 
 ---
 ## 4. Flow Data (ringkas)
