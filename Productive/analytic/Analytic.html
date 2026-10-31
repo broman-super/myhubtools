@@ -269,9 +269,21 @@
             grid-column: span 3;
         }
 
+        /* Baris KPI biaya berisi 11 kartu: biarkan LABA mengisi sisa baris
+           (span 6 di desktop, span 12 di layar sempit) supaya tidak ada sel kosong. */
+        #cardBiayaLaba {
+            grid-column: span 6;
+        }
+
         @media (max-width: 1280px) {
             .col-span-3 {
                 grid-column: span 6;
+            }
+
+            /* 11 kartu KPI biaya + 2 kolom = satu sel kosong di baris terakhir;
+               biarkan LABA mengisi penuh baris itu. */
+            #cardBiayaLaba {
+                grid-column: span 12;
             }
 
             .col-span-4 {
@@ -1755,7 +1767,7 @@
                         style="padding:6px 12px; font-size:11px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-weight:700; outline:none; max-width:200px;">
                         <option value="ALL">SEMUA KATEGORI</option>
                     </select>
-                    <select id="filterResellerPelanggan" onchange="prosesData()" aria-label="Filter reseller atau pelanggan"
+                    <select id="filterResellerPelanggan" onchange="jalankanProsesData_()" aria-label="Filter reseller atau pelanggan"
                         style="display:none; padding:6px 12px; font-size:11px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-weight:700; outline:none; max-width:260px;">
                         <option value="ALL">SEMUA RESELLER</option>
                     </select>
@@ -1929,6 +1941,9 @@
             </div>
         </div>
 
+        <!-- ROW 0: PEMBERITAHUAN RENTANG KOSONG -->
+        <div id="biayaEmptyHint" style="display:none; grid-column:1 / -1; align-items:center; gap:8px; background:var(--warning-light); color:var(--warning-strong); border:1px solid var(--warning); border-radius:12px; padding:10px 14px; font-weight:700; font-size:12px;"></div>
+
         <!-- ROW 1: KPI BIAYA -->
         <div id="cardBiayaTotal" class="bento-item col-span-3">
             <div class="bento-header">
@@ -1962,7 +1977,7 @@
                 <div class="bento-title">KATEGORI TERBESAR <span class="help-icon" data-static-tooltip="Kategori biaya dengan total tertinggi pada rentang aktif, beserta persentase dari seluruh biaya.">?</span></div>
                 <div class="badge primary">TOP 1</div>
             </div>
-            <div class="bento-value" id="biayaKpiTopCat" style="font-size:18px;">—</div>
+            <div class="bento-value" id="biayaKpiTopCat" style="font-size:18px; white-space:normal; overflow-wrap:anywhere;">—</div>
             <div id="biayaKpiTopCatShare" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">0% dari total biaya</div>
         </div>
 
@@ -2047,7 +2062,7 @@
         <!-- ROW 2: TREN BIAYA + OMSET -->
         <div id="cardBiayaTren" class="bento-item col-span-12">
             <div class="bento-header">
-                <div class="bento-title">TREN BIAYA & OMZET <span class="help-icon" data-static-tooltip="Garis biaya vs omzet bersih per hari/minggu/bulan. Bila biaya naik tajam saat omzet turun = indikasi kebocoran biaya.">?</span></div>
+                <div class="bento-title">TREN BIAYA & OMZET <span class="help-icon" data-static-tooltip="Garis biaya (sumbu kiri) vs omzet sesuai pilihan dropdown Omzet (sumbu kanan) per hari/minggu/bulan. Bila biaya naik tajam saat omzet turun = indikasi kebocoran biaya.">?</span></div>
                 <div class="compare-pill" title="Kerincian sumbu waktu chart biaya">
                     <button data-gran="daily" onclick="setBiayaGranularity('daily')">Hari</button>
                     <button data-gran="weekly" onclick="setBiayaGranularity('weekly')">Minggu</button>
@@ -2422,7 +2437,7 @@
         async function syncDashboardData() {
             try {
                 if (DATA_SOURCE === 'supabase') {
-                    await prosesData(); // refetch RPC + render ulang; cache v3 tidak dipakai di mode ini
+                    await jalankanProsesData_(); // refetch RPC + render ulang; cache v3 tidak dipakai di mode ini
                     return true;
                 }
                 // Tarik data keuangan terupdate
@@ -2445,7 +2460,7 @@
                 }
 
                 // Render ulang seluruh visualisasi grid dashboard tanpa reload
-                prosesData();
+                jalankanProsesData_();
 
                 // Deteksi Stale AI Suggestion
                  const aiBox = document.getElementById('aiResultBox');
@@ -2687,7 +2702,7 @@
         function onFilterProdukKategoriChange() {
             const selPel = document.getElementById('filterResellerPelanggan');
             if (selPel) selPel.value = 'ALL';
-            prosesData();
+            jalankanProsesData_();
         }
 
         function initDtProdukTable() {
@@ -2896,7 +2911,7 @@
                 setHiddenRange(sM, eM);
                 const box = document.getElementById('aiResultBox');
                 if (box) box.style.display = 'none';
-                prosesData();
+                jalankanProsesData_();
                 if (isBiayaTabActive()) renderBiayaTab();
             }
             // ponytail: selalu isi input tersembunyi, jangan hanya saat plugin daterangepicker berhasil init
@@ -3251,7 +3266,7 @@
 
                 syncing = false;
                 setupDatePicker();
-                await prosesData();
+                await jalankanProsesData_();
                 if (syncStatus) {
                     let iso = null;
                     if (DATA_SOURCE === 'supabase') {
@@ -3309,13 +3324,21 @@
                 }
                 setStage(2, 'active', 'Merender dashboard dari data yang tersedia...');
                 setupDatePicker();
-                await prosesData();
+                await jalankanProsesData_();
                 unlock();
             }
         }
 
         // applyQuickFilter digantikan oleh Library Daterangepicker.
 
+
+        // Satu jalur pemanggilan prosesData(): hasil promise-nya dicatat supaya widget lain
+        // (tab Biaya) menunggu angka penjualan yang segar, bukan membaca global yang basi.
+        let _prosesDataPromise = Promise.resolve();
+        function jalankanProsesData_() {
+            _prosesDataPromise = prosesData();
+            return _prosesDataPromise;
+        }
 
         async function prosesData() {
             try { if (typeof window.__lastNetSales === 'undefined') { window.__lastNetSales=0; window.__lastGrossSales=0; window.__lastCogs=0; window.__lastGrossCogs=0; window.__lastNetProfit=0; window.__lastPiutang=0; window.__lastLunas=0; } } catch(e){}
@@ -4501,7 +4524,7 @@
             });
 
             // Re-render data dengan mode baru
-            prosesData();
+            jalankanProsesData_();
             if (isBiayaTabActive()) renderBiayaTab();
         }
 
@@ -4652,7 +4675,7 @@
                 if (window.parent === window) localStorage.setItem('theme', 'dark');
             }
             if (window.parent !== window) { securePostMessage('THEME_CHANGED', document.documentElement.getAttribute('data-theme')); }
-            if (typeof prosesData === 'function') prosesData();
+            jalankanProsesData_();
             if (typeof isBiayaTabActive === 'function' && isBiayaTabActive() && typeof renderBiayaTab === 'function') renderBiayaTab();
         }
 
@@ -6102,7 +6125,14 @@
                     const msg = `<b>Import Biaya Berhasil!</b><br>• Baris Baru: <b>${acc.added}</b><br>• Baris Skip (Duplikat): <b>${acc.skipped}</b>`;
                     showSuccessOverlay('Import Biaya Selesai', msg, 4000);
                     // Dynamic Sync di latar belakang; gagal hanya tampilkan toast kecil.
-                    syncDashboardData().then(ok => { if (!ok) showRefreshToast(); });
+                    syncDashboardData().then(ok => {
+                        // Baris hasil import baru terlihat kalau cache per rentang dibuang dulu.
+                        _biayaRangeKey = null;
+                        _biayaPrevKey = null;
+                        _biayaLatestIso = null;
+                        if (isBiayaTabActive()) renderBiayaTab().catch(() => {});
+                        if (!ok) showRefreshToast();
+                    });
                     return;
                 }
                 postChunk(chunks[i])
@@ -6154,7 +6184,7 @@
             // (policy RLS "allow public read", lihat supabase/migrasi_analytic.sql).
             if (DATA_SOURCE === 'supabase') {
                 const p = new URLSearchParams({
-                    select: 'id,"Tanggal","Kategori Biaya","Nominal"',
+                    select: 'id,"Tanggal","Kategori Biaya","Nominal","Keterangan Jurnal"',
                     order: '"Tanggal".asc'
                 });
                 p.append('"Tanggal"', 'gte.' + startIso);
@@ -6209,6 +6239,8 @@
         }
 
         async function renderBiayaTab() {
+            // Tunggu prosesData() yang sedang berjalan: KPI tab ini membaca global dari sana.
+            try { await _prosesDataPromise; } catch (e) {}
             const gStart = document.getElementById('startDate').value;
             const gEnd = document.getElementById('endDate').value;
             if (!gStart || !gEnd) return;
@@ -6247,9 +6279,11 @@
                 if (iso) biayaByDate[iso] = (biayaByDate[iso] || 0) + (parseFloat(r['Nominal']) || 0);
             });
             const omzetByDate = {};
+            const omzetModeDaily = getBiayaOmzetMode_();
             (_trendDaily || []).forEach(e => {
                 const d = new Date(gStart.getTime() + e.ts * DAY);
-                omzetByDate[isoDate(d)] = (omzetByDate[isoDate(d)] || 0) + (e.sales || 0);
+                const v = omzetModeDaily === 'kotor' ? (e.sales || 0) : ((e.sales || 0) - (e.retur || 0));
+                omzetByDate[isoDate(d)] = (omzetByDate[isoDate(d)] || 0) + v;
             });
             const daily = [];
             for (let i = 0; i < totalDays; i++) {
@@ -6321,13 +6355,23 @@
             if (!el) return;
             if (_biayaChartTren) _biayaChartTren.destroy();
             const tA = bucketBiaya(_biayaDaily || [], _biayaGran);
+            const omzetLabel = getBiayaOmzetMode_() === 'kotor' ? 'Omzet Kotor' : 'Omzet Bersih';
+            // Skala kanan terpisah dari biaya: tanpa ini garis biaya menempel di dasar sumbu omzet
+            // dan variasi biaya tidak terbaca. Label singkat supaya tick muat di kartu.
+            const fmtTick = v => {
+                const n = Math.abs(v);
+                if (n >= 1000000000) return (v / 1000000000).toFixed(1).replace('.', ',') + ' M';
+                if (n >= 1000000) return Math.round(v / 1000000) + ' jt';
+                if (n >= 1000) return Math.round(v / 1000) + ' rb';
+                return String(v);
+            };
             _biayaChartTren = new Chart(el.getContext('2d'), {
                 type: 'line',
                 data: {
                     labels: tA.map(x => x.label),
                     datasets: [
-                        { label: 'Biaya', data: tA.map(x => x.biaya), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)', fill: true, tension: 0.4, borderWidth: 3, pointRadius: 0, pointHoverRadius: 5 },
-                        { label: 'Omzet Bersih', data: tA.map(x => x.omzet), borderColor: '#3b82f6', borderDash: [5, 5], borderWidth: 2, tension: 0.4, pointRadius: 0 }
+                        { label: 'Biaya', yAxisID: 'y', data: tA.map(x => x.biaya), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)', fill: true, tension: 0.4, borderWidth: 3, pointRadius: 0, pointHoverRadius: 5 },
+                        { label: omzetLabel, yAxisID: 'y1', data: tA.map(x => x.omzet), borderColor: '#3b82f6', borderDash: [5, 5], borderWidth: 2, tension: 0.4, pointRadius: 0 }
                     ]
                 },
                 options: {
@@ -6335,11 +6379,16 @@
                     interaction: { mode: 'index', intersect: false },
                     scales: {
                         x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
-                        y: { display: false }
+                        y: { position: 'left', beginAtZero: true, grid: { color: cssVar_('--border'), drawTicks: false }, border: { display: false }, ticks: { maxTicksLimit: 5, callback: fmtTick } },
+                        y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, border: { display: false }, ticks: { maxTicksLimit: 5, callback: fmtTick } }
                     },
                     plugins: {
-                        legend: { display: false },
-                        tooltip: { callbacks: { label: (item) => ' ' + item.dataset.label + ': ' + fmtRpBiaya(item.raw) } }
+                        legend: { display: true, position: 'bottom', labels: { usePointStyle: true, pointStyle: 'line', boxWidth: 24, padding: 14, font: { size: 11, weight: '700' } } },
+                        tooltip: {
+                            callbacks: {
+                                label: (item) => ' ' + item.dataset.label + ' (' + (item.dataset.yAxisID === 'y' ? 'kiri' : 'kanan') + '): ' + fmtRpBiaya(item.raw)
+                            }
+                        }
                     }
                 }
             });
@@ -6369,7 +6418,26 @@
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false, cutout: '65%',
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12, font: { size: 10 }, padding: 8,
+                                // Persentase di legend: porsi tiap kategori terbaca tanpa hover.
+                                generateLabels: (chart) => {
+                                    const ds = chart.data.datasets[0];
+                                    const total = ds.data.reduce((a, v) => a + (Number(v) || 0), 0);
+                                    return chart.data.labels.map((l, i) => ({
+                                        text: l + ' · ' + (total > 0 ? (ds.data[i] / total * 100).toFixed(0) : '0') + '%',
+                                        fillStyle: ds.backgroundColor[i],
+                                        strokeStyle: ds.backgroundColor[i],
+                                        lineWidth: 0,
+                                        index: i
+                                    }));
+                                }
+                            }
+                        }
+                    }
                 }
             });
         }
@@ -6495,17 +6563,36 @@
             updateBiayaGranPills();
 
             document.getElementById('biayaKpiTotal').textContent = fmtRpBiaya(_biayaTotalCur);
-            const pct = totalPrev > 0 ? ((_biayaTotalCur - totalPrev) / totalPrev * 100) : 0;
+            const emptyHint = document.getElementById('biayaEmptyHint');
+            if (emptyHint) {
+                const kosong = !_biayaRowsCur || _biayaRowsCur.length === 0;
+                emptyHint.style.display = kosong ? 'flex' : 'none';
+                if (kosong) {
+                    emptyHint.innerHTML = 'Tidak ada biaya pada rentang ini' +
+                        (_biayaLatestIso
+                            ? '. Data biaya terakhir: <b>' + new Date(_biayaLatestIso + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + '</b> — perluas rentang tanggal.'
+                            : '. Belum ada data biaya yang tercatat.');
+                }
+            }
             const deltaEl = document.getElementById('biayaKpiTotalDelta');
-            deltaEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1) + '% vs periode lalu';
-            deltaEl.style.color = _biayaTotalCur > totalPrev ? 'var(--danger)' : 'var(--success)';
+            if (_biayaTotalCur === 0 && totalPrev === 0) {
+                deltaEl.textContent = '— belum ada biaya tercatat';
+                deltaEl.style.color = 'var(--muted)';
+            } else if (totalPrev === 0) {
+                deltaEl.textContent = 'baru pada periode ini (periode lalu nihil)';
+                deltaEl.style.color = 'var(--warning)';
+            } else {
+                const pct = (_biayaTotalCur - totalPrev) / totalPrev * 100;
+                deltaEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1) + '% vs periode lalu';
+                deltaEl.style.color = _biayaTotalCur > totalPrev ? 'var(--danger)' : 'var(--success)';
+            }
 
             const netSales = typeof __lastNetSales === 'number' ? __lastNetSales : 0;
-            document.getElementById('biayaKpiRatio').textContent = (netSales > 0 ? (_biayaTotalCur / netSales * 100) : 0).toFixed(1) + '%';
-            document.getElementById('biayaKpiRatioDelta').textContent = 'dari omzet bersih ' + fmtRpBiaya(netSales);
+            document.getElementById('biayaKpiRatio').textContent = netSales > 0 ? (_biayaTotalCur / netSales * 100).toFixed(1) + '%' : '—';
+            document.getElementById('biayaKpiRatioDelta').textContent = netSales > 0 ? 'dari omzet bersih ' + fmtRpBiaya(netSales) : 'omzet bersih belum tersedia';
 
             const nota = typeof __lastNotaCount === 'number' ? __lastNotaCount : 0;
-            document.getElementById('biayaKpiPerNota').textContent = nota > 0 ? fmtRpBiaya(_biayaTotalCur / nota) : 'Rp 0';
+            document.getElementById('biayaKpiPerNota').textContent = nota > 0 ? fmtRpBiaya(_biayaTotalCur / nota) : '—';
             document.getElementById('biayaKpiPerNotaInfo').textContent = nota.toLocaleString('id-ID') + ' nota';
 
             const top = _biayaCatCur[0];
@@ -6568,11 +6655,11 @@
             const roasTotal = biayaIklanTotal > 0 ? (omzetTotal / biayaIklanTotal) : 0;
             const roasShopee = biayaIklanShopee > 0 ? (omzetShopee / biayaIklanShopee) : 0;
             const roasTiktok = biayaIklanTiktok > 0 ? (omzetTiktok / biayaIklanTiktok) : 0;
-            const roiIklan = biayaIklanTotal > 0 ? (labaForRoi / biayaIklanTotal * 100) : 0;
+            const roiIklan = biayaIklanTotal > 0 ? (labaForRoi / biayaIklanTotal * 100) : null;
             const labaShopee = omzetTotal > 0 ? (labaForRoi * (omzetShopee / omzetTotal)) : 0;
             const labaTiktok = omzetTotal > 0 ? (labaForRoi * (omzetTiktok / omzetTotal)) : 0;
-            const roiShopee = biayaIklanShopee > 0 ? (labaShopee / biayaIklanShopee * 100) : 0;
-            const roiTiktok = biayaIklanTiktok > 0 ? (labaTiktok / biayaIklanTiktok * 100) : 0;
+            const roiShopee = biayaIklanShopee > 0 ? (labaShopee / biayaIklanShopee * 100) : null;
+            const roiTiktok = biayaIklanTiktok > 0 ? (labaTiktok / biayaIklanTiktok * 100) : null;
             // update KPI baru
             const setKpi = (id, val, infoId, infoTxt, color) => {
                 const el = document.getElementById(id);
@@ -6581,9 +6668,9 @@
                 if (infoEl) infoEl.textContent = infoTxt;
             };
             const fmtRoas = v => v > 0 ? v.toFixed(1) + 'x' : '—';
-            const fmtRoi = v => (v > 0 ? '+' : '') + v.toFixed(1) + '%';
-            const colRoas = v => v >= 1.5 ? 'var(--success)' : (v >= 1.0 ? 'var(--warning)' : 'var(--danger)');
-            const colRoi = v => v >= 0 ? 'var(--success)' : 'var(--danger)';
+            const fmtRoi = v => v === null ? '—' : ((v > 0 ? '+' : '') + v.toFixed(1) + '%');
+            const colRoas = v => v > 0 ? (v >= 1.5 ? 'var(--success)' : (v >= 1.0 ? 'var(--warning)' : 'var(--danger)')) : 'var(--muted)';
+            const colRoi = v => v === null ? 'var(--muted)' : (v >= 0 ? 'var(--success)' : 'var(--danger)');
             setKpi('biayaKpiOmzet', fmtRpBiaya(omzetTotal), 'biayaKpiOmzetInfo', omzetMode === 'kotor' ? 'Omzet Kotor (Penjualan)' : 'Omzet Bersih (Penjualan − Retur)', 'var(--text)');
             setKpi('biayaKpiIklan', fmtRpBiaya(biayaIklanTotal), 'biayaKpiIklanInfo', `Shopee ${fmtRpBiaya(biayaIklanShopee)} · Tiktok ${fmtRpBiaya(biayaIklanTiktok)}`, 'var(--text)');
             setKpi('biayaKpiRoasTotal', fmtRoas(roasTotal), 'biayaKpiRoasTotalInfo', `Omzet ${omzetMode} ÷ Biaya Iklan`, colRoas(roasTotal));

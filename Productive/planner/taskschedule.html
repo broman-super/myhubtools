@@ -501,6 +501,23 @@ color: var(--accent-ink);
     .dd-subtasks-head svg { color: var(--text-soft); flex-shrink: 0; width: 11px; height: 11px; }
     .dd-subtasks-count { margin-left: auto; font-size: 10px; padding: 1px 6px; border-radius: 999px; background: transparent; border: 1px solid color-mix(in srgb, var(--border) 70%, transparent); color: var(--text-soft); font-weight: 600; }
     .subs-badge { font-size: 10px; padding: 1px 6px; border-radius: 999px; background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-soft); font-weight: 700; white-space: nowrap; }
+    /* Badge sub-tugas selesai: gaya sama dengan chip di kalender/mingguan */
+    .subs-badge.is-done { background: var(--success-light); border-color: transparent; color: var(--success); }
+    .dd-subtasks-count.is-done { background: var(--success-light); border-color: transparent; color: var(--success); }
+    /* Ringkasan sub-tugas di chip: satu baris tenang, detail penuh ada di kartu */
+    .chip-subs {
+      margin-top: 2px;
+      font-size: 9.5px;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: 0.01em;
+      opacity: 0.62;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    /* Semua sub-tugas selesai: warna hijau lembut, bukan cuma lebih gelap */
+    .chip-subs.is-done { opacity: 1; color: var(--success); }
+    .chip-subs.is-done.on-solid { color: inherit; opacity: 0.95; }
 
     .task-name {
       font-size: 14px;
@@ -520,7 +537,8 @@ color: var(--accent-ink);
     .week-grid,
     .cal-grid {
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
+      /* minmax(0,1fr): kolom tetap sama lebar walau judul chip panjang (nowrap) */
+      grid-template-columns: repeat(7, minmax(0, 1fr));
       gap: clamp(2px, 0.4vw, 6px);
     }
 
@@ -534,6 +552,19 @@ color: var(--accent-ink);
       position: relative;
       display: flex;
       flex-direction: column;
+    }
+
+    /* Month view butuh ruang untuk 4 baris agenda yang terbaca, bukan 3 baris terpotong */
+    .cal-cell {
+      min-height: clamp(118px, 14vh, 240px);
+      padding: 6px 6px 4px;
+    }
+    .cal-cell-num {
+      font-size: 12px;
+      line-height: 1;
+      margin-bottom: 5px;
+      align-items: center;
+      min-height: 16px;
     }
 
     .week-col.today,
@@ -568,19 +599,71 @@ color: var(--accent-ink);
     .cal-chip {
       padding: 0.25em 0.6em;
       margin-bottom: 2px;
-      border-radius: 4px;
+      border-radius: 5px;
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      transition: 0.2s;
+      transition: background 0.15s ease, box-shadow 0.15s ease;
       border: 1px solid transparent;
       min-height: 1.6em;
       display: flex;
       align-items: center;
     }
+
+    /* Month view: satu baris per agenda - titik warna + judul, bukan pita tebal berbingkai */
+    .cal-chip {
+      height: 21px;
+      min-height: 21px;
+      padding: 0 6px;
+      margin-bottom: 3px;
+      gap: 5px;
+      border: none;
+      font-size: 11px;
+      letter-spacing: -0.005em;
+    }
+    .cal-chip.start { border-radius: 5px 0 0 5px; }
+    /* Segmen lanjutan tugas multi-hari: benang tipis, bukan pita 21px tanpa teks.
+       Tinggi 6 + margin 8/7 = 21px supaya tetap sebaris dengan sel tetangga. */
+    .cal-chip.mid,
+    .cal-chip.end {
+      height: 4px;
+      min-height: 4px;
+      margin-top: 9px;
+      margin-bottom: 8px;
+      padding: 0;
+      border-radius: 2px;
+      opacity: 0.34;
+    }
+    .cal-chip.end { border-radius: 0 2px 2px 0; }
+    .cal-chip:hover { box-shadow: 0 1px 4px var(--sh-mid); }
+    .cal-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .cal-chip-title {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .cal-chip-count {
+      flex-shrink: 0;
+      font-size: 9.5px;
+      font-weight: 700;
+      opacity: 0.66;
+      font-variant-numeric: tabular-nums;
+    }
+    .cal-chip-count.is-done { opacity: 1; color: var(--success); }
+    .cal-chip-count.is-done.on-solid { color: inherit; opacity: 0.95; }
+    .cal-chip .quick-toggle { opacity: 0.45; }
+    .cal-chip:hover .quick-toggle,
+    .cal-chip:focus-visible .quick-toggle { opacity: 0.9; }
 
     /* Dot indicator for mobile month view */
     .day-dots {
@@ -1344,6 +1427,10 @@ background: var(--danger-light);
 
     .timeline-bar {
       position: absolute;
+      left: var(--tl-left, 0);
+      width: var(--tl-w, 0);
+      background: var(--tl-bg, var(--surface-alt));
+      color: var(--tl-ink, var(--text));
       height: 24px;
       border-radius: 4px;
       display: flex;
@@ -1378,11 +1465,11 @@ background: var(--danger-light);
     /* Judul boleh lewat batas chip, lebar chip tetap mengikuti rentang tanggal */
 
     .timeline-bar.campaign {
-      color: var(--text);
+      color: var(--tl-ink, var(--text));
     }
 
     .timeline-bar.task {
-      border-left: 3px solid;
+      border-left: 3px solid var(--tl-accent, currentColor);
     }
 
     .timeline-bar.event {
@@ -1394,10 +1481,9 @@ background: var(--danger-light);
     }
 
     .cal-chip-reminder {
-      font-size: 10px;
-      height: 16px;
-      line-height: 16px;
-      opacity: 0.8;
+      font-size: 10.5px;
+      height: 21px;
+      line-height: 21px;
     }
 
     .timeline-bar.single {
@@ -2363,7 +2449,7 @@ border-color: var(--accent);
     const CHANNELS = {
       'Instagram': { color: '#a855f7', prefix: 'IG |' },
       'Whatsapp':  { color: '#22c55e', prefix: 'WA |' },
-      'Tiktok':    { color: '#101010', prefix: 'TT |' },
+      'Tiktok':    { color: '#BCBCBC', prefix: 'TT |' },
       'Shopee':    { color: '#f97316', prefix: 'SP |' },
       'Web':       { color: '#14b8a6', prefix: 'WEB |' },
       'Event':     { color: '#06b6d4', prefix: 'EVT |' }
@@ -2406,15 +2492,29 @@ border-color: var(--accent);
       return `rgba(${r},${g},${b},${a})`;
     }
     // ponytail: teks di atas warna campaign → balik tinta otomatis (WCAG 4.5:1; putih hanya utk bg gelap)
-    function inkOn_(c) {
+    // Luminance relatif (0..1) dari hex; null bila bukan hex 6 digit
+    function lum_(c) {
       var m = /^#([0-9a-f]{6})$/i.exec(String(c || ''));
-      if (!m) return '#ffffff';
+      if (!m) return null;
       var n = parseInt(m[1], 16);
       var ch = [n >> 16 & 255, n >> 8 & 255, n & 255].map(function(v) {
         v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
       });
-      var L = 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+      return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+    }
+    function inkOn_(c) {
+      var L = lum_(c);
+      if (L === null) return '#ffffff';
       return L <= 0.183 ? '#ffffff' : '#111111';
+    }
+    // Campur hex dengan putih sebanyak `amount` (0..1) - menggantikan color-mix() di dalam style inline
+    function lightenHex_(c, amount) {
+      var m = /^#([0-9a-f]{6})$/i.exec(String(c || ''));
+      if (!m) return c;
+      var n = parseInt(m[1], 16);
+      function mix(v) { return Math.round(v + (255 - v) * amount); }
+      var r = mix(n >> 16 & 255), g = mix(n >> 8 & 255), b = mix(n & 255);
+      return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
     }
     // ponytail: data lama di sheet bisa berisi 'var(--platform-ig)' / non-hex - normalkan sekali saat load
     const VAR_COLOR_MAP = { 'var(--platform-ig)': '#a855f7', 'var(--platform-wa)': '#22c55e', 'var(--platform-tt)': '#ec4899', 'var(--platform-sp)': '#f97316', 'var(--platform-wb)': '#3b82f6', 'var(--platform-evt)': '#06b6d4', 'var(--platform-other)': '#64748b' };
@@ -2424,18 +2524,41 @@ border-color: var(--accent);
       if (VAR_COLOR_MAP[c]) return VAR_COLOR_MAP[c];
       return /^#[0-9a-fA-F]{6}$/.test(c) ? c : fb;
     }
+    // Satu-satunya aturan warna TikTok. Dipakai mapping data, timeline, dan kedua mode cetak.
+    // Cocok bila tag/channel = Tiktok, judul berprefix "TT |", atau judul menyebut tiktok/tt.
+    var TT_COLOR = '#BCBCBC';
+    function isTikTokItem_(o) {
+      if (!o) return false;
+      if (String(o.tag || o.channel || '').trim().toLowerCase() === 'tiktok') return true;
+      var title = String(o.title || o.nama || '');
+      if (/^\s*TT\s*\|/i.test(title)) return true;
+      return /(tiktok|tik.?tok)/i.test(title) || /(^|\W)tt(\W|$)/i.test(title);
+    }
     // Subtask: array di memori, JSON string di sheet (kolom "Subtasks" auto-dibuat backend)
     function parseSubs_(v) {
       if (Array.isArray(v)) return v;
       if (typeof v === 'string' && v) { try { var a = JSON.parse(v); if (Array.isArray(a)) return a; } catch (e) {} }
       return [];
     }
-    function subsBadge_(o) {
+    function subsCount_(o) {
       var s = o && o.subtasks;
-      if (!s || !s.length) return '';
+      if (!s || !s.length) return null;
       var d = 0;
       for (var i = 0; i < s.length; i++) if (s[i] && s[i].done) d++;
-      return '☑ ' + d + '/' + s.length;
+      return { done: d, total: s.length };
+    }
+    function subsBadge_(o) {
+      var c = subsCount_(o);
+      return c ? '☑ ' + c.done + '/' + c.total : '';
+    }
+    // Chip ringkas untuk kalender/mingguan: "2/3 Sub Tugas". Daftar lengkap ada di kartu detail.
+    function subsMeta_(o) {
+      var c = subsCount_(o);
+      if (!c) return '';
+      var all = c.done === c.total;
+      // on-solid: campaign memakai warna solid, jadi hijau "selesai" tidak dipakai (kontras tak terjamin)
+      var cls = 'chip-subs' + (all ? ' is-done' : '') + (o && o.type === 'campaign' ? ' on-solid' : '');
+      return '<div class="' + cls + '">' + (all ? '✓ ' : '') + c.done + '/' + c.total + ' Sub Tugas</div>';
     }
     // Auto-complete: event/campaign/reminder lewat tanggal akhir → dianggap selesai.
     // Derived saat load saja (tidak menulis sheet) - idempoten, tanpa traffic tulis.
@@ -2471,12 +2594,14 @@ border-color: var(--accent);
       sortByUrutan(plainTasks_);
       S.tasks = [].concat(
         plainTasks_,
-        (result.campaigns || []).map(function(c) { return {
+        (result.campaigns || []).map(function(c) { 
+          var cColor = isTikTokItem_(c) ? TT_COLOR : normColor(c.color || c.warna, '#6366f1');
+          return {
             ...c, title: c.title || c.nama || '', enddate: normDate(c.enddate || c.endDate || c.selesai || ''),
             date: normDate(c.date || c.mulai || c.tanggal || ''), description: String(c.deskripsi || c.description || ''),
             type: 'campaign',
             subtasks: parseSubs_(c.subtasks),
-            color: normColor(c.color || c.warna, '#6366f1')
+            color: cColor
          }; })
       );
       S.events = (result.events || []).map(function(e) { return {
@@ -2517,14 +2642,18 @@ border-color: var(--accent);
           const r = await fetch(`${GAS_URL}?action=getTasks`, { mode: 'cors', redirect: 'follow' });
           if (!r.ok) throw new Error("HTTP " + r.status);
           const raw = await r.json();
-          S.tasks = (Array.isArray(raw) ? raw : []).map(t => ({
-            ...t,
-            enddate: normDate(t.enddate || t.endDate || ''),
-            date: normDate(t.date),
-            type: isCampaignLike(t) ? 'campaign' : 'task',
-            subtasks: parseSubs_(t.subtasks),
-            color: normColor(t.color || t.warna, '#6366f1')
-          }));
+          S.tasks = (Array.isArray(raw) ? raw : []).map(t => {
+            var isCamp = isCampaignLike(t);
+            var tColor = (isCamp && isTikTokItem_(t)) ? TT_COLOR : normColor(t.color || t.warna, '#6366f1');
+            return {
+              ...t,
+              enddate: normDate(t.enddate || t.endDate || ''),
+              date: normDate(t.date),
+              type: isCamp ? 'campaign' : 'task',
+              subtasks: parseSubs_(t.subtasks),
+              color: tColor
+            };
+          });
           // urutan tampil konsisten dengan jalur getCalendarData: plain tasks sesuai kolom Urutan, campaigns di belakang
           var pt_ = S.tasks.filter(function(t) { return t.type !== 'campaign'; });
           var cp_ = S.tasks.filter(function(t) { return t.type === 'campaign'; });
@@ -3095,7 +3224,8 @@ border-color: var(--accent);
             ${t.subtasks && t.subtasks.length ? (() => {
               var d = 0, list = t.subtasks || [];
               for (var di = 0; di < list.length; di++) if (list[di] && list[di].done) d++;
-              return `<div class="subtask-chip" role="button" tabindex="0" onclick="event.stopPropagation();selectTask('${t.id}')"><span style="display:flex;align-items:center;gap:6px;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"/><path d="M5 7V5a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M12 11v6"/><path d="m9 14 3-3 3 3"/></svg><span>Subtask</span></span><span class="subs-badge">${d}/${list.length}</span></div>`;
+              var allDone_ = d === list.length;
+              return `<div class="subtask-chip" role="button" tabindex="0" onclick="event.stopPropagation();selectTask('${t.id}')"><span style="display:flex;align-items:center;gap:6px;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18"/><path d="M5 7V5a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M12 11v6"/><path d="m9 14 3-3 3 3"/></svg><span>Subtask</span></span><span class="subs-badge${allDone_ ? ' is-done' : ''}">${allDone_ ? '✓ ' : ''}${d}/${list.length}</span></div>`;
             })() : ''}
           </div>
         </div>
@@ -3233,7 +3363,7 @@ border-color: var(--accent);
           const bg = isC ? t.color : hexAlpha(t.color || '#ccc', 0.1);
           const co = isC ? '#fff' : 'var(--text)';
           const br = isC ? 'none' : `3px solid ${t.color || '#ccc'}`;
-          return `<div class="week-chip ${cls}" role="button" tabindex="0" style="background:${bg};color:${co};border-left:${br};${t.done ? 'opacity:0.55;text-decoration:line-through;' : ''};height:auto;align-items:flex-start;flex-direction:column;" draggable="true" ondragstart="dragStart(event,'${t.id}')" onclick="event.stopPropagation();selectTask('${t.id}')"><div style="display:flex;align-items:center;gap:6px;width:100%;"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;">${showText ? esc(t.title) : '&nbsp;'}</span><span class="quick-toggle" role="checkbox" aria-checked="${!!t.done}" aria-label="Tandai selesai" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\')">${t.done ? '↩' : '✓'}</span></div>${(t.subtasks && t.subtasks.length) ? '<div style="width:100%;margin-top:4px;">' + subsListHtml_(t.id, t.subtasks) + '</div>' : ''}</div>`;
+          return `<div class="week-chip ${cls}" role="button" tabindex="0" style="background:${bg};color:${co};border-left:${br};${t.done ? 'opacity:0.55;text-decoration:line-through;' : ''};height:auto;align-items:flex-start;flex-direction:column;" draggable="true" ondragstart="dragStart(event,'${t.id}')" onclick="event.stopPropagation();selectTask('${t.id}')"><div style="display:flex;align-items:center;gap:6px;width:100%;"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;">${showText ? esc(t.title) : '&nbsp;'}</span><span class="quick-toggle" role="checkbox" aria-checked="${!!t.done}" aria-label="Tandai selesai" onclick="event.stopPropagation();toggleDone(\'' + t.id + '\')">${t.done ? '↩' : '✓'}</span></div>${showText ? subsMeta_(t) : ''}</div>`;
         }).join('');
 
         const holi = holidaysCache[ds];
@@ -3336,7 +3466,7 @@ border-color: var(--accent);
         const ds = days[idx];
         const daySlots = (slots[ds] || []).filter(Boolean); // Compact slots (filter out undefined)
 
-        const MAX_SLOTS = 3;
+        const MAX_SLOTS = 4;
         const visibleSlots = daySlots.slice(0, MAX_SLOTS);
         const hasMore = daySlots.length > MAX_SLOTS;
 
@@ -3345,16 +3475,29 @@ border-color: var(--accent);
            var e = t.enddate || t.date;
            var cls = 'single', text = true;
            if (t.date !== e) {
-             if (ds === t.date) cls = 'start'; else if (ds === e) { cls = 'end'; text = false; } else { cls = 'mid'; text = false; }
-             if (idx % 7 === 0) text = true;
+             // Segmen lanjutan tidak membawa teks: tingginya 4px (benang). Judul tampil di sel awal,
+             // termasuk saat item mulai di luar bulan yang sedang dilihat.
+             var firstVisible = ds === t.date || (t.date < days[0] && ds === days[0]);
+             if (firstVisible) cls = 'start'; else if (ds === e) { cls = 'end'; text = false; } else { cls = 'mid'; text = false; }
            }
            var isC = t.type === 'campaign', isE = t.type === 'event', isR = t.type === 'reminder';
-           var bg, border, txtColor, extraCls = '';
-if (isC) { bg = t.color || 'var(--item-fallback)'; border = 'none'; txtColor = inkOn_(t.color); }
-else if (isE) { bg = hexAlpha(t.color || '#14b8a6', 0.08); border = '2px dashed ' + (t.color || 'var(--teal)'); txtColor = 'var(--text)'; }
-else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.color || 'var(--item-fallback)'); txtColor = 'var(--text)'; }
+           var col = t.color || (isE ? '#14b8a6' : isR ? '#f59e0b' : '#6366f1');
+           var chipBg, ink, dot, dotRing = '';
+           // Campaign tetap solid; task/event/reminder pakai tint tipis + titik warna identitas
+           if (isC) { chipBg = col; ink = inkOn_(t.color); dot = ink; }
+           else if (isE) { chipBg = hexAlpha(col, 0.10); ink = 'var(--text)'; dot = 'transparent'; dotRing = 'box-shadow:inset 0 0 0 1.5px ' + col + ';'; }
+           else if (isR) { chipBg = 'var(--warning-light)'; ink = 'var(--text)'; dot = 'var(--warning)'; }
+           else { chipBg = hexAlpha(col, 0.10); ink = 'var(--text)'; dot = col; }
+           var sc = subsCount_(t);
+           var titleTxt = esc(t.title || t.nama || 'Tanpa Judul');
+           var tip = titleTxt + ' · ' + formatShortDate(t.date) + (t.enddate && t.enddate !== t.date ? ' → ' + formatShortDate(t.enddate) : '') + (sc ? ' · ' + sc.done + '/' + sc.total + ' Sub Tugas' : '') + (t.done ? ' · Selesai' : '');
            var doneStyle = (t.done || t.status === 'Selesai') ? 'opacity:0.55;text-decoration:line-through;' : '';
-           return '<div class="cal-chip ' + cls + (isR ? ' cal-chip-reminder' : '') + '" role="button" tabindex="0" style="background:' + bg + ';color:' + txtColor + ';border-left:' + border + ';' + doneStyle + ';height:auto;align-items:flex-start;flex-direction:column;" onclick="event.stopPropagation();selectTask(\'' + (t.id || '') + '\')"><div style="display:flex;align-items:center;gap:6px;width:100%;"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;">' + (text ? esc(t.title || t.nama || 'Tanpa Judul') : '&nbsp;') + '</span><span class="quick-toggle" role="checkbox" aria-checked="' + !!t.done + '" aria-label="Tandai selesai" onclick="event.stopPropagation();toggleDone(\'' + (t.id || '') + '\')">' + (t.done ? '↩' : '✓') + '</span></div>' + ((t.subtasks && t.subtasks.length) ? '<div style="width:100%;margin-top:4px;">' + subsListHtml_(t.id, t.subtasks) + '</div>' : '') + '</div>';
+           return '<div class="cal-chip ' + cls + (isR ? ' cal-chip-reminder' : '') + '" role="button" tabindex="0" style="background:' + chipBg + ';color:' + ink + ';' + doneStyle + '" title="' + tip + '" onclick="event.stopPropagation();selectTask(\'' + (t.id || '') + '\')">' +
+             (text ? '<span class="cal-dot" style="background:' + dot + ';' + dotRing + '"></span>' : '') +
+             '<span class="cal-chip-title">' + (text ? titleTxt : '') + '</span>' +
+             (text && sc ? '<span class="cal-chip-count' + (sc.done === sc.total ? ' is-done' : '') + (isC ? ' on-solid' : '') + '">' + (sc.done === sc.total ? '✓ ' : '') + sc.done + '/' + sc.total + '</span>' : '') +
+             (text ? '<span class="quick-toggle" role="checkbox" aria-checked="' + !!t.done + '" aria-label="Tandai selesai" onclick="event.stopPropagation();toggleDone(\'' + (t.id || '') + '\')">' + (t.done ? '↩' : '✓') + '</span>' : '') +
+             '</div>';
          }).join('');
 
         // Dots for Mobile View
@@ -3503,9 +3646,9 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       HUKUM MUTLAK WARNA TIMELINE - TIDAK BOLEH DIUBAH
       ═══════════════════════════════════════════════════════════════════
       1. CAMPAIGN -> background = item.color (warna custom), text = inkOn_(item.color), border = none
-      2. EVENT     -> background = rgba(item.color, 0.15), text = var(--text), border = 2px dashed item.color
+      2. EVENT     -> background = rgba(item.color, 0.18), text = var(--text), border = 2px dashed var(--secondary)
       3. REMINDER  -> background = var(--warning-light), text = var(--text), border = 3px solid var(--warning) [KUNCI - TIDAK MENGGUNAKAN item.color]
-      4. TASK      -> background = rgba(item.color, 0.12), text = var(--text), border = 3px solid item.color
+      4. TASK      -> background = rgba(item.color, 0.16), text = var(--text), border = 3px solid item.color
       Aturan ini berlaku MUTLAK untuk semua tampilan timeline. Jangan ganti logika ini.
       ═══════════════════════════════════════════════════════════════════
     */
@@ -3538,41 +3681,21 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         var e = endD > monthEnd ? daysIn : parseInt(endD.split('-')[2], 10);
         var leftPx = (s - 1) * z;
         var widthPx = (e - s + 1) * z;
-        var bg, color, border;
+        var bg, color, accent = item.color;
         /* HUKUM MUTLAK - JANGAN DIUBAH */
+        // Bar campaign memakai warna solid; event/task/reminder memakai tint tipis,
+        // jadi teksnya wajib var(--text) - inkOn_(warna solid) di atas tint selalu salah kontras.
         if (isCampaign) {
+          if (isTikTokItem_(item)) item.color = TT_COLOR;
           var cBg = item.color;
-          // Jika warna terlalu gelap (L <= 0.12), cerahkan sedikit agar teks tetap terbaca seragam
-          var m2 = /^#([0-9a-f]{6})$/i.exec(String(cBg || ''));
-          if (m2) {
-            var nn = parseInt(m2[1], 16);
-            var cc = [nn >> 16 & 255, nn >> 8 & 255, nn & 255].map(function(v){ v/=255; return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4); });
-            var LL = 0.2126*cc[0]+0.7152*cc[1]+0.0722*cc[2];
-            if (LL <= 0.12) {
-              // cerahkan dengan menambah lightness via mix sederhana
-              cBg = 'color-mix(in srgb, ' + cBg + ' 70%, #ffffff 30%)';
-            }
-          }
+          // Warna sangat gelap dicerahkan sekali di sini, lalu tinta dihitung dari hasil akhirnya
+          if (lum_(cBg) !== null && lum_(cBg) <= 0.12) cBg = lightenHex_(cBg, 0.3);
           bg = cBg;
-          color = inkOn_(String(cBg).startsWith('color-mix') ? '#ffffff' : item.color);
-          // pastikan warna teks tetap terbaca jika hasil mix tetap gelap
-          var m3 = /^#([0-9a-f]{6})$/i.exec(String(bg || ''));
-          if (!m3 && String(bg).startsWith('color-mix')) {
-            // fallback aman
-            color = '#111111';
-          } else if (m3) {
-            var nn2 = parseInt(m3[1], 16);
-            var cc2 = [nn2 >> 16 & 255, nn2 >> 8 & 255, nn2 & 255].map(function(v){ v/=255; return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4); });
-            var LL2 = 0.2126*cc2[0]+0.7152*cc2[1]+0.0722*cc2[2];
-            if (LL2 <= 0.18) color = '#ffffff';
-            else if (LL2 >= 0.6) color = '#111111';
-            else color = inkOn_(bg);
-          }
-          border = 'none';
+          color = inkOn_(cBg);
         }
-        else if (isEvent) { bg = 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.18)'; color = inkOn_(item.color); border = '2px dashed ' + item.color; }
-        else if (isReminder) { bg = 'var(--warning-light)'; color = inkOn_('#f59e0b'); border = '3px solid var(--warning)'; }
-        else { bg = 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.16)'; color = inkOn_(item.color); border = '3px solid ' + item.color; }
+        else if (isEvent) { bg = 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.18)'; color = 'var(--text)'; }
+        else if (isReminder) { bg = 'var(--warning-light)'; color = 'var(--text)'; accent = 'var(--warning)'; }
+        else { bg = 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.16)'; color = 'var(--text)'; }
         var cls = 'timeline-bar';
         if (s === e) cls += ' single'; else if (s === parseInt(item.date.split('-')[2], 10) || item.date < monthStart) cls += ' start'; else if (e === daysIn || e === parseInt(endD.split('-')[2], 10)) cls += ' end'; else cls += ' mid';
         if (isCampaign) cls += ' campaign'; else if (isEvent) cls += ' event'; else if (isReminder) cls += ' reminder'; else cls += ' task';
@@ -3582,7 +3705,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         var descStr = item.description ? '\\n' + esc(item.description.substring(0, 100)) : '';
         var tooltip = esc(item.title) + '\\n' + formatShortDate(item.date) + (item.enddate && item.enddate !== item.date ? ' → ' + formatShortDate(item.enddate) : '') + tagStr + descStr;
 
-        var barHtml = '<div class="' + cls + '" role="button" tabindex="0" style="left:' + leftPx + 'px;width:' + widthPx + 'px;background:' + bg + ';color:' + color + ';border-left:' + border + ';" onclick="selectTask(\'' + item.id + '\')" data-tooltip="' + tooltip + '">' + esc(item.title) + '<span class="quick-toggle" role="checkbox" aria-checked="' + !!item.done + '" aria-label="Tandai selesai" onclick="event.stopPropagation();toggleDone(\'' + item.id + '\')">' + (item.done ? '↩' : '✓') + '</span></div>';
+        var barHtml = '<div class="' + cls + '" role="button" tabindex="0" style="--tl-left:' + leftPx + 'px;--tl-w:' + widthPx + 'px;--tl-bg:' + bg + ';--tl-ink:' + color + ';--tl-accent:' + accent + ';" onclick="selectTask(\'' + item.id + '\')" data-tooltip="' + tooltip + '">' + esc(item.title) + '<span class="quick-toggle" role="checkbox" aria-checked="' + !!item.done + '" aria-label="Tandai selesai" onclick="event.stopPropagation();toggleDone(\'' + item.id + '\')">' + (item.done ? '↩' : '✓') + '</span></div>';
 
         var labelIcon = isCampaign ? ICONS.calendar : (isEvent ? ICONS.flag : (isReminder ? ICONS.reminder : (item.done ? ICONS.check : ICONS.task)));
 
@@ -3696,6 +3819,10 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         }
       }
 
+      // Kunci warna TikTok sebelum bar digambar (satu aturan: isTikTokItem_)
+      items.forEach(function(item){
+        if (item.type === 'campaign' && isTikTokItem_(item)) item.color = TT_COLOR;
+      });
       let rows = '';
       items.forEach(item => {
         const s = item.date < (y + '-' + pad(m + 1) + '-01') ? 1 : parseInt(item.date.split('-')[2], 10);
@@ -3705,8 +3832,25 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         const cs = Math.max(1, s);
         const ce = Math.min(daysIn, e);
         const isC = item.type === 'campaign';
-        const bg = isC ? item.color : 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.12)';
-        const color = '#1e293b';
+        if (isC && isTikTokItem_(item)) item.color = TT_COLOR;
+        let bg = isC ? item.color : 'rgba(' + hexToRgbArr(item.color).join(',') + ',0.12)';
+        let color = '#1e293b';
+        if (isC && /^#([0-9a-f]{6})$/i.test(String(bg || ''))){
+          const m2 = /^#([0-9a-f]{6})$/i.exec(String(bg));
+          const nn = parseInt(m2[1],16);
+          const cc = [nn>>16&255, nn>>8&255, nn&255].map(function(v){ v/=255; return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4); });
+          const LL = 0.2126*cc[0]+0.7152*cc[1]+0.0722*cc[2];
+          if (LL <= 0.12){
+            bg = 'color-mix(in srgb, ' + bg + ' 70%, #ffffff 30%)';
+            color = '#111111';
+          } else if (LL <= 0.18){
+            color = '#ffffff';
+          } else if (LL >= 0.6){
+            color = '#111111';
+          } else {
+            color = '#1e293b';
+          }
+        }
         const bar = '<div class="tpb ' + (isC ? 'camp' : 'task') + '" style="grid-column:' + cs + '/span ' + (ce - cs + 1) + ';background:' + bg + ';color:' + color + ';border-left:' + (isC ? 'none' : '2px solid ' + item.color) + ';"><span class="tpb-text">' + esc(item.title) + '</span></div>';
         rows += '<div class="p-label">' + esc(item.title) + '</div><div class="p-track">' + sunMarkers + bar + '</div>';
       });
@@ -3725,6 +3869,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       });
       let leg = '';
       Object.values(campGroups).forEach(g => {
+        if (isTikTokItem_(g)) g.color = TT_COLOR;
         g.dates.sort((a, b) => a.start.localeCompare(b.start));
         const datesHtml = g.dates.map(d => {
           const dr = d.start !== d.end ? formatShortDate(d.start) + ' → ' + formatShortDate(d.end) : formatShortDate(d.start);
@@ -4298,6 +4443,20 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       var d = el.closest('.sub-dropdown');
       if (d) d.classList.toggle('collapsed');
     }
+    // Blok sub-tugas versi panel: header ikon + hitungan, daftar polos tanpa dropdown.
+    // Dipakai kartu agenda tanggal (.task-row) dan panel detail tugas supaya bentuknya sama.
+    function subsDetailHtml_(t) {
+      var subs = (t && t.subtasks) || [];
+      if (!subs.length) return '';
+      var c = subsCount_(t) || { done: 0, total: subs.length };
+      var list = subsListHtml_(t.id, subs);
+      list = list.replace(/<button[^>]+class="sub-dropdown-head"[\s\S]*?<\/button>/, '');
+      list = list.replace('class="sub-dropdown"', 'class="sub-dropdown sub-dropdown-plain"');
+      return '<div class="dd-subtasks"><div class="dd-subtasks-head">' +
+        '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>' +
+        'Sub-tugas<span class="dd-subtasks-count' + (c.done === c.total ? ' is-done' : '') + '">' + (c.done === c.total ? '✓ ' : '') + c.done + ' selesai dari ' + c.total + '</span></div>' +
+        list + '</div>';
+    }
     function subsListHtml_(id, subs) {
       if (!subs || !subs.length) return '';
       var d = 0;
@@ -4307,7 +4466,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         if (SHARE) return '<div class="sub-i' + (s.done ? ' done' : '') + '">' + inner + '</div>';
         return '<button type="button" class="sub-i' + (s.done ? ' done' : '') + '" aria-label="' + (s.done ? 'Tandai sub-tugas belum selesai: ' : 'Tandai sub-tugas selesai: ') + esc(s.text) + '" onclick="event.stopPropagation();toggleSubItem_(\'' + (id || '') + '\',' + si + ')">' + inner + '</button>';
       }).join('');
-      return '<div class="sub-dropdown"><button type="button" class="sub-dropdown-head" onclick="toggleSubDropdown_(this)" aria-label="Tampilkan/sembunyikan sub-tugas (' + d + ' dari ' + subs.length + ' selesai)"><span class="subs-badge">' + d + ' / ' + subs.length + ' selesai</span><span class="flex1"></span><span class="sub-caret"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button><div class="sub-dropdown-list">' + list + '</div></div>';
+      return '<div class="sub-dropdown"><button type="button" class="sub-dropdown-head" onclick="toggleSubDropdown_(this)" aria-label="Tampilkan/sembunyikan sub-tugas (' + d + ' dari ' + subs.length + ' selesai)"><span class="subs-badge' + (d === subs.length ? ' is-done' : '') + '">' + (d === subs.length ? '✓ ' : '') + d + ' / ' + subs.length + ' selesai</span><span class="flex1"></span><span class="sub-caret"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button><div class="sub-dropdown-list">' + list + '</div></div>';
     }
     function toggleTypeFields() {
       var radio = document.querySelector('input[name="f-type-radio"]:checked');
@@ -4461,7 +4620,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
         var span = (t.enddate && t.enddate !== t.date) ? ' → ' + formatShortDate(t.enddate) : '';
         var desc = esc(t.description) || '<em class="txt-dim">Tidak ada deskripsi.</em>';
         var orgHtml = t.penyelenggara ? '<div class="sub-10">Penyelenggara: ' + esc(t.penyelenggara) + '</div>' : '';
-        var subHtml = (t.subtasks && t.subtasks.length) ? ('<div style="width:100%;margin-top:6px;">' + subsListHtml_(t.id, t.subtasks) + '</div>') : '';
+        var subHtml = subsDetailHtml_(t);
         return '<div class="task-row" role="button" tabindex="0" style="border-left:4px solid ' + (t.color || 'var(--text-soft)') + '; padding: 8px 10px; margin-bottom: 6px; flex-direction: column; align-items: flex-start;" onclick="selectTask(\'' + t.id + '\')">' +
           '<div class="row-sb">' +
           '<div class="fw700-fs13">' + icon + ' ' + esc(t.title) + '</div>' +
@@ -4522,15 +4681,7 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
          '</div></div>' + orgHtml +
          '<div class="dd-date">' + ICONS.calendar + ' ' + formatShortDate(t.date) + (t.enddate && t.enddate !== t.date ? ' → ' + formatShortDate(t.enddate) : '') + '</div>' +
          '<div class="detail-desc dd-body">' + (esc(t.description) || '<span class="empty-em">Tanpa deskripsi.</span>') + '</div>' +
-         (function(){
-           var subs = t.subtasks || [];
-           if (!subs.length) return '';
-           var d=0; for(var i=0;i<subs.length;i++){ if(subs[i]&&subs[i].done) d++; }
-           var list = subsListHtml_(t.id, subs);
-           list = list.replace(/<button[^>]+class="sub-dropdown-head"[\s\S]*?<\/button>/,'');
-           list = list.replace('class="sub-dropdown"', 'class="sub-dropdown sub-dropdown-plain"');
-           return '<div class="dd-subtasks"><div class="dd-subtasks-head"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Sub-tugas<span class="dd-subtasks-count">'+d+' selesai dari '+subs.length+'</span></div>'+list+'</div>';
-         })();
+         subsDetailHtml_(t);
     }
 
     // ── Ulangi: perhitungan tanggal murni tanpa DOM - dipakai jalur Task/Campaign & Event/Reminder ──
@@ -4908,6 +5059,8 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
           for (let i = 0; i < 42; i++) { if (days[i] >= s && days[i] <= e && slots[days[i]][slot]) { free = false; break; } }
           if (free) found = true; else slot++;
         }
+        // Warna TikTok dikunci di satu tempat: helper isTikTokItem_
+        if (isTikTokItem_(t)) { t.color = TT_COLOR; t.warna = TT_COLOR; }
         for (let i = 0; i < 42; i++) { if (days[i] >= s && days[i] <= e) slots[days[i]][slot] = t; }
       });
 
@@ -4915,8 +5068,13 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
       const groupedCampaigns = {};
       visibleCampaigns.forEach(t => {
         const key = (t.title || '').trim().toLowerCase() + '|||' + (t.description || '').trim().toLowerCase();
+        const isTT = isTikTokItem_(t);
+        const gColor = isTT ? TT_COLOR : (t.color || '#6366f1');
+        if (isTT) { t.color = TT_COLOR; t.warna = TT_COLOR; }
         if (!groupedCampaigns[key]) {
-          groupedCampaigns[key] = { title: t.title || '', color: t.color || '#6366f1', description: t.description || '', dates: [] };
+          groupedCampaigns[key] = { title: t.title || '', color: gColor, description: t.description || '', dates: [] };
+        } else if (isTT) {
+          groupedCampaigns[key].color = TT_COLOR;
         }
         groupedCampaigns[key].dates.push({ start: t.date, end: t.enddate || t.date });
       });
@@ -4928,6 +5086,13 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
           return d2 ? `${d1} → ${d2}` : `${d1}`;
         });
        return g;
+        });
+        // Kunci warna TikTok sebelum grid + daftar digambar
+        uniqueCampaigns.forEach(function(g){
+          if (isTikTokItem_(g)) g.color = TT_COLOR;
+        });
+        visibleCampaigns.forEach(function(t){
+          if (isTikTokItem_(t)) { t.color = TT_COLOR; t.warna = TT_COLOR; }
         });
         // Number campaigns by color group for grid + list consistency
         const colorGroups = {};
@@ -4961,6 +5126,11 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
            var dots = daySlots.map(function(t) {
             var dotTitle = esc(((t.title || t.nama) || '').trim() || 'Agenda');
             var dotColor = t.color || t.warna || '#6366f1';
+            if (isTikTokItem_(t)) {
+              dotColor = TT_COLOR;
+              t.color = TT_COLOR;
+              t.warna = TT_COLOR;
+            }
             var showNum = t.colorTotal > 1;
             var dotContent = showNum ? '<span style="color:#fff;font-size:8px;font-weight:900;line-height:1;">' + t.colorNum + '</span>' : '';
             return '<span class="p-dot" style="background:' + dotColor + ';" title="' + dotTitle + '">' + dotContent + '</span>';
@@ -4978,10 +5148,13 @@ else { bg = hexAlpha(t.color || '#6366f1', 0.08); border = '2px solid ' + (t.col
        }).join('');
 
         var listHtml = uniqueCampaigns.map(function(g) {
+          var gTikTok = isTikTokItem_(g);
+          var gColor = gTikTok ? TT_COLOR : (g.color || '#6366f1');
+          if (gTikTok) g.color = TT_COLOR;
           var datesHtml = g.dateLabels.map(function(d) { return '<span style="background:#e0e7ff; padding:1px 5px; border-radius:3px; margin-right:3px; display:inline-block; margin-bottom:2px; font-size:8px; font-weight:700; color:#3730a3;">' + d + '</span>'; }).join('');
-           return '<div class="p-item" style="--item-color:' + g.color + ';">' +
+           return '<div class="p-item" style="--item-color:' + gColor + ';">' +
              '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">' +
-               '<span style="background:' + g.color + ';color:#fff;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;flex-shrink:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;" title="' + esc(g.title) + '">' + (g.colorTotal > 1 ? g.colorNum : '') + '</span>' +
+               '<span style="background:' + gColor + ';color:#fff;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;flex-shrink:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;" title="' + esc(g.title) + '">' + (g.colorTotal > 1 ? g.colorNum : '') + '</span>' +
                '<div style="font-size:11px;font-weight:800;color:#0f172a;line-height:1.2;">' + esc(g.title) + '</div>' +
              '</div>' +
            '<div style="margin-bottom:2px;">' + datesHtml + '</div>' +

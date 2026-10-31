@@ -1040,9 +1040,12 @@ function buildResiHTML(d) {
   var now = new Date();
   var tgl = now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
 
-  var logoSection = (typeof COMPANY_LOGO_BASE64 !== 'undefined' && COMPANY_LOGO_BASE64)
-    ? '<img src="' + COMPANY_LOGO_BASE64 + '" style="max-height:35px;max-width:140px;object-fit:contain;" alt="Logo">'
-    : '<div style="font-size:16px;font-weight:900;color:#000;letter-spacing:1px">SUPERSUB</div>';
+  // Reseller = isi manual: header kiri menampilkan ikon paket, bukan logo perusahaan
+  var logoSection = (senderMode === 'reseller')
+    ? '<svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Paket"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/><path d="m7.5 4.27 9 5.15"/></svg>'
+    : (typeof COMPANY_LOGO_BASE64 !== 'undefined' && COMPANY_LOGO_BASE64)
+      ? '<img src="' + COMPANY_LOGO_BASE64 + '" style="max-height:35px;max-width:140px;object-fit:contain;" alt="Logo">'
+      : '<div style="font-size:16px;font-weight:900;color:#000;letter-spacing:1px">SUPERSUB</div>';
 
   // Logo ekspedisi (kanan). Ambil dari EXPEDISI_LOGOS, fallback ke teks.
   var expName = (typeof EMBEDDED_EXPEDISI !== 'undefined' && EMBEDDED_EXPEDISI[d.ekspedisi])
@@ -1133,6 +1136,7 @@ function buildResiHTML(d) {
     '.hdr-right { justify-self:end; min-width:0; }' +
     '.layanan-txt { font-size:14px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:#000; overflow-wrap:anywhere; }' +
     '.exp-logo { max-height:35px; max-width:110px; object-fit:contain; display:block; }' +
+    '.hdr-ico { width:30px; height:30px; display:block; }' +
     '.sec { padding:8px 12px; border:1px solid #000; border-radius:5px; margin:5px 8px; background:#fff; break-inside:avoid; }' +
     '.sec.flow { break-inside:auto; }' +
     '.sec.alt { background:#f9f9f9; }' +
