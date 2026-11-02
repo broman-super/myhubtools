@@ -65,6 +65,47 @@
       gap: 6px;
     }
 
+    /* Pengenal resi: tombol gear + info pemotongan */
+    .gear-btn {
+      margin-left: auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      text-transform: none;
+    }
+    .prefix-info {
+      display: none;
+      margin-top: 8px;
+      font-size: 11.5px;
+      line-height: 1.4;
+      color: #64748b;
+      word-break: break-all;
+    }
+    .prefix-lbl { font-size: 12px; font-weight: 700; color: var(--text); }
+    .prefix-pos { display: flex; gap: 14px; font-size: 13px; }
+    .prefix-pos label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+    .prefix-aktif { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .prefix-preview {
+      font-family: monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      background: var(--bg);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      word-break: break-all;
+      color: var(--text);
+    }
+    #prefixInput { padding: 10px; font-family: monospace; letter-spacing: 2px; text-transform: uppercase; }
+
+
     .input-group {
       margin-bottom: 15px;
     }
@@ -176,6 +217,42 @@
     .resi-card.hit-card {
       background: color-mix(in srgb, var(--primary) 10%, transparent);
     }
+
+    /* Penanda resi double: sesi ini maupun riwayat database (tanpa batas hari) */
+    .resi-card.dobel {
+      border-color: var(--danger);
+      background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+    }
+
+    .dup-badge {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      color: white;
+      background: var(--danger);
+    }
+
+    #dupAlertBox {
+      display: none;
+      margin-bottom: 15px;
+      padding: 12px;
+      border: 1px solid var(--danger);
+      border-left: 5px solid var(--danger);
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    #dupAlertBox ul { margin: 4px 0 8px 16px; padding: 0; }
+    #dupAlertBox li { margin-bottom: 2px; }
+    #dupAlertBox .dup-title { font-weight: 800; color: var(--danger); display: flex; align-items: center; gap: 6px; }
+    #dupAlertBox .dup-sub { font-weight: 700; margin-top: 6px; }
+    #dupConfirmList ul { margin: 4px 0 8px 16px; padding: 0; }
 
     .resi-card .resi-text {
       font-family: monospace;
@@ -481,6 +558,18 @@
     </div>
   </div>
 
+  <div id="dupConfirmOverlay" class="modal-overlay">
+    <div class="modal-content" style="max-width: 480px;">
+      <h3 style="color: var(--danger);">Resi Double Terdeteksi</h3>
+      <p style="font-size: 13px; margin: 0;">Resi berikut sudah ada di sesi ini atau pernah discan ke database. Periksa kembali paketnya, atau lanjutkan jika memang dikirim ulang.</p>
+      <div id="dupConfirmList" style="max-height: 240px; overflow-y: auto; text-align: left; font-size: 12px;"></div>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn-outline" style="flex: 1;" onclick="tutupKonfirmasiDuplikat()">Periksa Kembali Paket</button>
+        <button style="flex: 1; background-color: var(--danger);" onclick="lanjutDouble()">Lanjut Double</button>
+      </div>
+    </div>
+  </div>
+
   <div class="container" id="mainApp">
     <div class="header-container">
       <h2>Scanner Gudang</h2>
@@ -534,12 +623,22 @@
                 <path d="M4 7V4h16v3M4 17v3h16v-3M7 11h10v2H7z"/>
               </svg>
               Area Scanner Barcode
+              <button type="button" class="gear-btn" onclick="bukaModalPengenal()" title="Atur pengenal resi (potong kode di depan/akhir)" aria-label="Atur pengenal resi">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                Pengenal
+              </button>
             </div>
             <div class="input-group" style="margin-bottom: 0;">
               <input type="text" id="inputResi" placeholder="Tembakkan barcode di sini..." autofocus autocomplete="off">
             </div>
+            <div id="prefixInfo" class="prefix-info" role="status" aria-live="polite"></div>
           </div>
         </div>
+
+        <div id="dupAlertBox" role="alert" aria-live="polite"></div>
 
         <div id="summaryArea">
           <table>
@@ -618,6 +717,26 @@
     <div class="modal-content" id="modalButtons">
       <h3>Pilih Ekspedisi</h3>
       <button class="btn-outline" onclick="tutupModalPrint()">Batal</button>
+    </div>
+  </div>
+
+  <div id="prefixModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px; text-align: left;">
+      <h3 style="color: var(--primary);">Pengenal Resi</h3>
+      <p style="font-size: 13px; margin: 0;">Potong kode pengenal dari hasil scan sebelum resi disimpan. Kode tidak ikut masuk database.</p>
+      <label class="prefix-lbl" for="prefixInput">Kode pengenal (maks 5 karakter)</label>
+      <input type="text" id="prefixInput" maxlength="5" placeholder="cth: ABC" autocomplete="off" autocapitalize="characters" oninput="normalkanKodePengenal_(this)">
+      <div class="prefix-lbl">Posisi kode pada resi</div>
+      <div class="prefix-pos">
+        <label><input type="radio" name="prefixPos" value="depan" checked onchange="pratinjauPengenal_()"> Di depan</label>
+        <label><input type="radio" name="prefixPos" value="akhir" onchange="pratinjauPengenal_()"> Di akhir</label>
+      </div>
+      <label class="prefix-aktif"><input type="checkbox" id="prefixAktif" checked onchange="pratinjauPengenal_()"> Aktifkan pemotongan</label>
+      <div class="prefix-preview" id="prefixPreview"></div>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn-outline" style="flex: 1;" onclick="tutupModalPengenal()">Batal</button>
+        <button style="flex: 1;" onclick="simpanPengenal()">Simpan</button>
+      </div>
     </div>
   </div>
 
@@ -867,6 +986,9 @@
 
     let dataPengiriman = {};
     let semuaResi = new Set();
+    // Penanda resi double: sesi ini (jumlah scan dobel) & riwayat database (semua tanggal)
+    let resiDuplikatSesi = {};
+    let resiRiwayatDb = {};
     let kurirSedangDilihat = "";
     let dataDetailRiwayat = [];
     let dataRiwayatGrouped = [];
@@ -879,6 +1001,42 @@
       document.getElementById('alertMessageText').innerHTML = pesan;
       document.getElementById('customAlertOverlay').style.display = 'flex';
     }
+
+    function escHtml(t) {
+      return String(t == null ? '' : t)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    // Panel penanda dobel di bawah area scanner (sesi + database)
+    function renderPanelDuplikat() {
+      const box = document.getElementById('dupAlertBox');
+      if (!box) return;
+      const sesi = Object.keys(resiDuplikatSesi);
+      const db = Object.keys(resiRiwayatDb);
+      if (sesi.length === 0 && db.length === 0) {
+        box.style.display = 'none';
+        box.innerHTML = '';
+        return;
+      }
+      let html = '<div class="dup-title">' + ICONS.warning + ' Resi double terdeteksi</div>';
+      if (sesi.length) {
+        html += '<div class="dup-sub">Dobel di sesi ini (' + sesi.length + '):</div><ul>';
+        sesi.forEach(r => { html += '<li><b>' + escHtml(r) + '</b> — ' + resiDuplikatSesi[r] + 'x scan dobel</li>'; });
+        html += '</ul>';
+      }
+      if (db.length) {
+        html += '<div class="dup-sub">Pernah discan ke database (' + db.length + '):</div><ul>';
+        db.forEach(r => {
+          const d = resiRiwayatDb[r] || {};
+          html += '<li><b>' + escHtml(r) + '</b> — ' + escHtml(d.waktu || '-') + ' · ' + escHtml(d.ekspedisi || '-') + ' · ' + escHtml(d.id || '-') + '</li>';
+        });
+        html += '</ul>';
+      }
+      box.innerHTML = html;
+      box.style.display = 'block';
+    }
+
     function closeAlert() {
       document.getElementById('customAlertOverlay').style.display = 'none';
       document.getElementById('inputResi').focus();
@@ -903,9 +1061,17 @@
     document.getElementById('inputResi').addEventListener('keypress', function (e) {
       if (e.key === 'Enter') {
         e.preventDefault();
-        let resi = this.value.trim().toUpperCase();
-        if (resi !== "") {
-          prosesResi(resi);
+        let mentah = this.value.trim().toUpperCase();
+        if (mentah !== "") {
+          // Satu-satunya titik masuk scan: pengenal dipotong di sini supaya
+          // deteksi kurir, cek dobel, tampilan, dan data tersimpan memakai resi bersih.
+          var potong = terapkanPengenal_(mentah);
+          if (potong.dipotong) {
+            renderPengenalInfo_(mentah + ' → ' + potong.resi + ' (pengenal dipotong)');
+            clearTimeout(window._infoPengenalTimer);
+            window._infoPengenalTimer = setTimeout(function () { renderPengenalInfo_(); }, 6000);
+          }
+          prosesResi(potong.resi);
           this.value = "";
         }
       }
@@ -924,10 +1090,14 @@
       } else if (e.key === 'Escape') {
         if (document.getElementById('customAlertOverlay').style.display === 'flex') {
           closeAlert();
+        } else if (document.getElementById('dupConfirmOverlay').style.display === 'flex') {
+          tutupKonfirmasiDuplikat();
         } else if (document.getElementById('customConfirmOverlay').style.display === 'flex') {
           closeConfirm();
         } else if (document.getElementById('printModal').style.display === 'flex') {
           tutupModalPrint();
+        } else if (document.getElementById('prefixModal').style.display === 'flex') {
+          tutupModalPengenal();
         } else if (document.getElementById('detailRiwayatArea').style.display === 'block') {
           tutupDetailRiwayat();
         } else if (document.getElementById('detailArea').style.display === 'block') {
@@ -940,9 +1110,157 @@
       }
     });
 
+    // ═══════════════════════════════════════
+    // PENGENAL RESI - potong kode depan/akhir sebelum disimpan
+    // Disimpan di localStorage (per perangkat), bukan database: ini setelan alat scan.
+    // ═══════════════════════════════════════
+    var PENGENAL_KEY = 'outbond_pengenal_resi';
+    var pengenalResi = bacaPengenal_();
+
+    function bacaPengenal_() {
+      try {
+        var raw = localStorage.getItem(PENGENAL_KEY);
+        if (!raw) return { aktif: false, kode: '', posisi: 'depan' };
+        var o = JSON.parse(raw) || {};
+        return {
+          aktif: !!o.aktif,
+          kode: String(o.kode || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5),
+          posisi: o.posisi === 'akhir' ? 'akhir' : 'depan'
+        };
+      } catch (e) {
+        console.warn('[pengenal] setelan tidak terbaca:', e);
+        return { aktif: false, kode: '', posisi: 'depan' };
+      }
+    }
+
+    function simpanKeStoragePengenal_(cfg) {
+      try { localStorage.setItem(PENGENAL_KEY, JSON.stringify(cfg)); }
+      catch (e) { console.warn('[pengenal] gagal menyimpan setelan:', e); }
+    }
+
+    // Fungsi murni: boleh dipanggil dengan cfg lain untuk pratinjau.
+    // Tidak memotong kalau hasilnya kosong atau kode tidak ada di posisi tsb.
+    function terapkanPengenal_(resiMentah, cfg) {
+      var c = cfg || pengenalResi;
+      var asli = String(resiMentah || '');
+      var utuh = { resi: asli, dipotong: false };
+      if (!c || !c.aktif || !c.kode) return utuh;
+      var kode = String(c.kode).toUpperCase();
+      var up = asli.toUpperCase();
+      if (up.length <= kode.length) return utuh;
+      if (c.posisi === 'akhir') {
+        if (up.slice(-kode.length) !== kode) return utuh;
+        var sisaAkhir = asli.slice(0, asli.length - kode.length);
+        return sisaAkhir ? { resi: sisaAkhir, dipotong: true } : utuh;
+      }
+      if (up.slice(0, kode.length) !== kode) return utuh;
+      var sisaDepan = asli.slice(kode.length);
+      return sisaDepan ? { resi: sisaDepan, dipotong: true } : utuh;
+    }
+
+    function posisiPengenalTerpilih_() {
+      var r = document.querySelector('input[name="prefixPos"]:checked');
+      return r ? r.value : 'depan';
+    }
+
+    function normalkanKodePengenal_(el) {
+      var v = String(el.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
+      if (el.value !== v) el.value = v;
+      pratinjauPengenal_();
+    }
+
+    function pratinjauPengenal_() {
+      var box = document.getElementById('prefixPreview');
+      if (!box) return;
+      var kode = String(document.getElementById('prefixInput').value || '').toUpperCase();
+      var pos = posisiPengenalTerpilih_();
+      var aktif = document.getElementById('prefixAktif').checked;
+      var contoh = pos === 'akhir' ? ('1234567890' + kode) : (kode + '1234567890');
+      if (!kode) { box.textContent = 'Isi kode pengenal dulu untuk melihat contoh.'; return; }
+      var hasil = terapkanPengenal_(contoh, { aktif: true, kode: kode, posisi: pos });
+      box.textContent = 'Contoh: ' + contoh + ' → ' + hasil.resi + (aktif ? '' : ' (pemotongan nonaktif — resi disimpan utuh)');
+    }
+
+    function bukaModalPengenal() {
+      document.getElementById('prefixInput').value = pengenalResi.kode || '';
+      document.getElementById('prefixAktif').checked = !!pengenalResi.aktif || !pengenalResi.kode;
+      document.querySelectorAll('input[name="prefixPos"]').forEach(function (r) {
+        r.checked = r.value === (pengenalResi.posisi || 'depan');
+      });
+      pratinjauPengenal_();
+      document.getElementById('prefixModal').style.display = 'flex';
+      setTimeout(function () { document.getElementById('prefixInput').focus(); }, 50);
+    }
+
+    function tutupModalPengenal() {
+      document.getElementById('prefixModal').style.display = 'none';
+      document.getElementById('inputResi').focus();
+    }
+
+    function simpanPengenal() {
+      var kode = String(document.getElementById('prefixInput').value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
+      var aktif = document.getElementById('prefixAktif').checked;
+      if (aktif && !kode) {
+        customAlert('Isi kode pengenal dulu (maks 5 karakter), atau matikan pemotongan.');
+        return;
+      }
+      pengenalResi = { aktif: !!aktif, kode: kode, posisi: posisiPengenalTerpilih_() };
+      simpanKeStoragePengenal_(pengenalResi);
+      renderPengenalInfo_();
+      tutupModalPengenal();
+      customAlert(aktif
+        ? 'Pengenal "' + kode + '" aktif — dipotong dari ' + (pengenalResi.posisi === 'akhir' ? 'akhir' : 'depan') + ' resi sebelum disimpan.'
+        : 'Pemotongan pengenal dimatikan. Resi disimpan apa adanya.');
+    }
+
+    function renderPengenalInfo_(contoh) {
+      var el = document.getElementById('prefixInfo');
+      if (!el) return;
+      if (contoh) { el.textContent = contoh; el.style.display = 'block'; return; }
+      if (pengenalResi && pengenalResi.aktif && pengenalResi.kode) {
+        el.textContent = 'Pengenal aktif: ' + pengenalResi.kode + ' · dipotong dari ' + (pengenalResi.posisi === 'akhir' ? 'akhir' : 'depan') + ' sebelum disimpan.';
+        el.style.display = 'block';
+      } else {
+        el.style.display = 'none';
+      }
+    }
+
+    // Bunyi hanya untuk resi dobel di memori sesi. WebAudio, tanpa file & tanpa dependency.
+    var _audioCtx = null;
+    function bunyiResiDouble_() {
+      try {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        if (!_audioCtx) _audioCtx = new AC();
+        if (_audioCtx.state === 'suspended') _audioCtx.resume();
+        var t0 = _audioCtx.currentTime;
+        [880, 620].forEach(function (freq, i) {
+          var osc = _audioCtx.createOscillator();
+          var gain = _audioCtx.createGain();
+          osc.type = 'square';
+          osc.frequency.value = freq;
+          var start = t0 + i * 0.16;
+          gain.gain.setValueAtTime(0.0001, start);
+          gain.gain.exponentialRampToValueAtTime(0.12, start + 0.012);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.13);
+          osc.connect(gain);
+          gain.connect(_audioCtx.destination);
+          osc.start(start);
+          osc.stop(start + 0.14);
+        });
+      } catch (e) {
+        console.warn('[suara] gagal memutar bunyi dobel:', e);
+      }
+    }
+
     function prosesResi(resi) {
       if (semuaResi.has(resi)) {
-        customAlert(ICONS.warning + " Resi " + resi + " sudah discan!");
+        // Resi dobel TIDAK ditambahkan lagi ke rekap, tapi ditandai jelas di memori sesi.
+        resiDuplikatSesi[resi] = (resiDuplikatSesi[resi] || 0) + 1;
+        bunyiResiDouble_();
+        renderPanelDuplikat();
+        if (kurirSedangDilihat) renderListDetail(kurirSedangDilihat, document.getElementById('searchResi').value.trim().toUpperCase());
+        customAlert(ICONS.warning + ' <b>RESI DOBEL:</b> ' + escHtml(resi) + ' sudah discan di sesi ini (' + resiDuplikatSesi[resi] + 'x). Paket tidak ditambahkan ke rekap — periksa kembali paket.');
         return;
       }
 
@@ -1034,9 +1352,14 @@
 
       dataPengiriman[kurir].forEach(resi => {
         if (resi.includes(filterText)) {
+          const dobelSesi = resiDuplikatSesi[resi] || 0;
+          const dobelDb = resiRiwayatDb[resi];
           let item = document.createElement('div');
-          item.className = 'resi-card';
-          item.innerHTML = `<span class="resi-text">${resi}</span><button class="del-btn" onclick="hapusResi('${kurir}', '${resi}')">Hapus</button>`;
+          item.className = 'resi-card' + (dobelSesi || dobelDb ? ' dobel' : '');
+          let badge = '';
+          if (dobelSesi) badge += `<span class="dup-badge">DOBEL ${dobelSesi}x SESI INI</span>`;
+          if (dobelDb) badge += `<span class="dup-badge">PERNAH DISCAN ${escHtml(dobelDb.waktu || '')}</span>`;
+          item.innerHTML = `<div style="display:flex; flex-direction:column; gap:2px; min-width:0;"><span class="resi-text">${resi}</span>${badge}</div><button class="del-btn" onclick="hapusResi('${kurir}', '${resi}')">Hapus</button>`;
           listDetail.appendChild(item);
         }
       });
@@ -1051,6 +1374,9 @@
       customConfirm('Yakin ingin menghapus resi ' + resi + '?', function() {
         dataPengiriman[kurir] = dataPengiriman[kurir].filter(r => r !== resi);
         semuaResi.delete(resi);
+        delete resiDuplikatSesi[resi];
+        delete resiRiwayatDb[resi];
+        renderPanelDuplikat();
         updateTampilan();
         renderListDetail(kurir);
         if (dataPengiriman[kurir].length === 0) {
@@ -1133,13 +1459,86 @@
       setTimeout(() => { window.print(); document.getElementById('inputResi').focus(); }, 300);
     }
 
+    // Cek resi yang sudah pernah tersimpan di database — TANPA batas rentang hari.
+    // Read lewat Supabase REST (anon), dipecah per 100 resi agar URL tidak kepanjangan.
+    function cekDuplikatDatabase(daftarResi, callback) {
+      const uniq = Array.from(new Set(daftarResi));
+      const hasil = {};
+      const CHUNK = 100;
+      const chunks = [];
+      for (let i = 0; i < uniq.length; i += CHUNK) chunks.push(uniq.slice(i, i + CHUNK));
+      if (chunks.length === 0) { callback(hasil, false); return; }
+      let sisa = chunks.length;
+      let gagal = false;
+      const selesai = () => { if (--sisa === 0) callback(hasil, gagal); };
+      chunks.forEach(chunk => {
+        const p = new URLSearchParams({ select: 'resi,waktu,"id_penginputan",ekspedisi', order: 'id.desc' });
+        p.append('resi', 'in.(' + chunk.map(r => '"' + String(r).replace(/["\\]/g, '') + '"').join(',') + ')');
+        supabaseGet('/rest/v1/outbond_paket?' + p.toString())
+          .then(rows => {
+            (rows || []).forEach(r => {
+              const k = String(r.resi || '').toUpperCase();
+              if (!k) return;
+              if (!hasil[k]) hasil[k] = { waktu: r.waktu, id: r.id_penginputan, ekspedisi: r.ekspedisi, jumlah: 1 };
+              else hasil[k].jumlah++;
+            });
+          })
+          .catch(err => { gagal = true; console.error('[Supabase] cek duplikat gagal:', err); })
+          .then(selesai);
+      });
+    }
+
+    function tampilkanKonfirmasiDuplikat(cekDbGagal) {
+      const sesi = Object.keys(resiDuplikatSesi);
+      const db = Object.keys(resiRiwayatDb);
+      let html = '';
+      if (sesi.length) {
+        html += '<div class="dup-sub">Dobel di sesi ini (' + sesi.length + '):</div><ul>';
+        sesi.forEach(r => { html += '<li><b>' + escHtml(r) + '</b> — ' + resiDuplikatSesi[r] + 'x scan dobel</li>'; });
+        html += '</ul>';
+      }
+      if (db.length) {
+        html += '<div class="dup-sub">Pernah discan ke database (' + db.length + '):</div><ul>';
+        db.forEach(r => {
+          const d = resiRiwayatDb[r] || {};
+          html += '<li><b>' + escHtml(r) + '</b> — ' + escHtml(d.waktu || '-') + ' · ' + escHtml(d.id || '-') + '</li>';
+        });
+        html += '</ul>';
+      }
+      if (cekDbGagal) html += '<div style="color: var(--danger); font-weight: 700; margin-top: 6px;">Pemeriksaan riwayat database gagal — daftar di atas mungkin belum lengkap.</div>';
+      document.getElementById('dupConfirmList').innerHTML = html;
+      document.getElementById('dupConfirmOverlay').style.display = 'flex';
+    }
+
+    function tutupKonfirmasiDuplikat() {
+      document.getElementById('dupConfirmOverlay').style.display = 'none';
+      document.getElementById('inputResi').focus();
+    }
+
+    function lanjutDouble() {
+      document.getElementById('dupConfirmOverlay').style.display = 'none';
+      simpanSekarang();
+    }
+
     function simpanDanReset() {
       if (semuaResi.size === 0) {
         customAlert("Tidak ada data yang perlu disimpan.");
         return;
       }
 
-      customConfirm("Apakah pengiriman sesi ini sudah selesai? Data akan direkap lalu di-reset.", function () {
+      cekDuplikatDatabase(Array.from(semuaResi), function (hit, gagal) {
+        resiRiwayatDb = hit || {};
+        renderPanelDuplikat();
+        if (kurirSedangDilihat) renderListDetail(kurirSedangDilihat, '');
+        if (Object.keys(resiDuplikatSesi).length > 0 || Object.keys(resiRiwayatDb).length > 0) {
+          tampilkanKonfirmasiDuplikat(gagal);
+          return;
+        }
+        customConfirm("Apakah pengiriman sesi ini sudah selesai? Data akan direkap lalu di-reset." + (gagal ? ' Catatan: pemeriksaan riwayat database gagal, resi dobel lama belum terverifikasi.' : ''), simpanSekarang);
+      });
+    }
+
+    function simpanSekarang() {
         const btnReset = document.getElementById('btnReset');
         btnReset.style.opacity = "0.5";
         btnReset.disabled = true;
@@ -1165,6 +1564,9 @@
         apiCall("simpanDataGudang", dataToSave, function () {
           dataPengiriman = {};
           semuaResi.clear();
+          resiDuplikatSesi = {};
+          resiRiwayatDb = {};
+          renderPanelDuplikat();
           kurirSedangDilihat = "";
           document.getElementById('detailArea').style.display = 'none';
           document.getElementById('riwayatArea').style.display = 'none';
@@ -1181,7 +1583,6 @@
           btnReset.disabled = false;
           customAlert("Gagal menyimpan data: " + err);
         });
-      });
     }
 
     // PEMISAHAN TANGGAL DI RIWAYAT UDAH DIAMANIN
@@ -1250,6 +1651,9 @@
       document.getElementById('detailRiwayatArea').style.display = 'none';
       document.getElementById('inputResi').focus();
     }
+
+    // Tampilkan status pengenal yang tersimpan saat alat dibuka
+    renderPengenalInfo_();
   </script>
     <script>
         function toggleTheme() {

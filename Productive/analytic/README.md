@@ -143,7 +143,15 @@ Bug layout di file ini mustahil dideteksi sekilas (lihat §3.1). Setelah menguba
 **Gejala:** Total Biaya menampilkan angka benar, tapi OPEX RATIO / BIAYA-NOTA / ROAS / ROI / LABA tampak `0%` atau tetap angka rentang sebelumnya.
 **Akar:** `drawBiaya()` membaca global hasil `prosesData()` (`__lastNetSales`, `__lastNotaCount`, `__lastNetProfit`, `_trendDaily`), sementara pemanggil (`applyRange`, `setCompareMode`, `toggleTheme`) memanggil `prosesData()` tanpa `await` lalu langsung `renderBiayaTab()`. Baris biaya di-fetch sendiri, jadi Total Biaya segar; global penjualan belum ter-update.
 **Perbaikan:** satu jalur `jalankanProsesData_()` + `await _prosesDataPromise` di awal `renderBiayaTab()`. Jangan panggil `prosesData()` langsung dari handler baru — gunakan helper itu.
-**Turunan yang ikut diperbaiki:** tren harian memakai mode Omzet (kotor/bersih) yang dipilih; sumbu kiri (biaya) dan kanan (omzet) + legend supaya tren terbaca; ROAS/ROI tanpa penyebut berhenti menampilkan `0%` (jadi `—`); delta periode lalu tidak lagi `+0.0%` saat pembanding nol; banner rentang kosong menampilkan tanggal biaya terakhir; import bulk biaya membuang cache rentang supaya baris baru langsung terlihat; `fetchBiayaRows` ikut mengambil `Keterangan Jurnal` (tanpa itu derivasi 5 frasa iklan mati di mode Supabase).
+
+### 3.12 🔴 Grafik TREN memunculkan bulan/data pembanding padahal periode sebelumnya kosong — SUDAH DIPERBAIKI
+**Gejala:** rentang Januari–Oktober + pill **Bulan Lalu** (granularitas Bulanan) memunculkan bucket bulan di luar rentang (mis. `NOV 26`) yang penjualannya `0` tetapi garis pembandingnya berisi nominal; angka pembanding tiap bulan juga tidak sama dengan total bulan sebelumnya.
+**Akar (3 lapis, semuanya di jalur yang sama):**
+1. `pEnd.setMonth(pEnd.getMonth() - 1)` pada tanggal 29–31 *melempar* hari ke bulan berikutnya (31 Okt → 1 Okt), jadi periode pembanding memakan 1 hari data periode ini (31 Des → sisa seluruh Desember). Ini juga membuat `getPrevRangeIso()` (tab Biaya) salah rentang.
+2. `bucketTrend()` membuat bucket dari entry yang ada, sehingga entry sisa hari pembanding itu melahirkan bulan hantu di luar rentang.
+3. Nilai pembanding dijumlahkan per *offset hari*, padahal panjang bulan berbeda → bucket Feb berisi 1–28 Jan, bucket Mar berisi 29 Jan–28 Feb, dst. Label tooltip lalu menulis "Bulan Lalu (JAN 26)" untuk angka Desember.
+**Perbaikan:** satu helper `hitungRentangPembanding()` + `geserBulanClamp_()` (hari di-clamp ke akhir bulan tujuan) dipakai `prosesData()` **dan** `getPrevRangeIso()`; bucket bulanan dibuat lengkap hanya untuk bulan di rentang tanggal; nilai pembanding dipetakan ke bulan tanggalnya + 1 bulan, sehingga tiap bulan dibandingkan dengan total bulan kalender sebelumnya.
+**Aturan:** jangan kembali ke `setMonth()` polos untuk menggeser bulan, dan jangan membuat bucket chart dari data (buat dari rentang tanggal). Regresi dikunci di `tests/analytic-trend.test.js`.
 
 ---
 ## 4. Flow Data (ringkas)

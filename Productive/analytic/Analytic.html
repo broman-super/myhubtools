@@ -3340,6 +3340,37 @@
             return _prosesDataPromise;
         }
 
+        // Geser tanggal sejumlah bulan tanpa "melempar" hari ke bulan berikutnya.
+        // setMonth(-1) pada 31 Okt menghasilkan 1 Okt (September cuma 30 hari), sehingga
+        // periode pembanding memakan data periode ini. Hari di-clamp ke akhir bulan tujuan.
+        function geserBulanClamp_(date, deltaBulan) {
+            let d = new Date(date.getTime());
+            d.setDate(1);
+            d.setMonth(d.getMonth() + deltaBulan);
+            let hariTerakhir = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+            d.setDate(Math.min(date.getDate(), hariTerakhir));
+            return d;
+        }
+
+        // Satu-satunya sumber rentang periode pembanding (dipakai prosesData & getPrevRangeIso).
+        function hitungRentangPembanding(gStart, gEnd, mode) {
+            if (mode === 'monthly') {
+                // Tanggal sama di bulan sebelumnya, contoh 1 Mei - 31 Mei → 1 Apr - 30 Apr
+                const pStart = geserBulanClamp_(gStart, -1);
+                pStart.setHours(0, 0, 0, 0);
+                const pEnd = geserBulanClamp_(gEnd, -1);
+                pEnd.setHours(23, 59, 59, 999);
+                return { pStart, pEnd };
+            }
+            // Periode Sebelumnya → Rolling N hari tepat sebelum rentang ini
+            const totalHari = countDaysInclusive(gStart, gEnd);
+            const pEnd = new Date(gStart.getTime() - 1);
+            const pStart = new Date(pEnd.getTime() - ((totalHari - 1) * 24 * 3600 * 1000));
+            pStart.setHours(0, 0, 0, 0);
+            pEnd.setHours(23, 59, 59, 999);
+            return { pStart, pEnd };
+        }
+
         async function prosesData() {
             try { if (typeof window.__lastNetSales === 'undefined') { window.__lastNetSales=0; window.__lastGrossSales=0; window.__lastCogs=0; window.__lastGrossCogs=0; window.__lastNetProfit=0; window.__lastPiutang=0; window.__lastLunas=0; } } catch(e){}
             let startVal = document.getElementById('startDate').value;
@@ -3369,26 +3400,7 @@
 
             // Perhitungan "Mesin Waktu" berdasarkan mode komparasi yang dipilih user
             let comparisonMode = document.getElementById('comparisonMode')?.value || 'rolling';
-            let pStart, pEnd;
-
-            if (comparisonMode === 'monthly') {
-                // Bulan Ini / Bulan Lalu / Custom → Tanggal sama di bulan sebelumnya
-                // Contoh: 1 Mei - 19 Mei → dibandingkan dengan 1 Apr - 19 Apr
-                pStart = new Date(gStart);
-                pStart.setMonth(pStart.getMonth() - 1);
-                pStart.setHours(0, 0, 0, 0);
-                pEnd = new Date(gEnd);
-                pEnd.setMonth(pEnd.getMonth() - 1);
-                pEnd.setHours(23, 59, 59, 999);
-            } else {
-                // Hari Ini / Kemarin / 7 Hari / 30 Hari → Rolling N hari sebelumnya
-                // Contoh: 7 hari terakhir → bandingkan dengan 7 hari sebelum rentang ini
-                let totalHari = countDaysInclusive(gStart, gEnd);
-                pEnd = new Date(gStart.getTime() - 1);
-                pStart = new Date(pEnd.getTime() - ((totalHari - 1) * 24 * 3600 * 1000));
-                pStart.setHours(0, 0, 0, 0);
-                pEnd.setHours(23, 59, 59, 999);
-            }
+            let { pStart, pEnd } = hitungRentangPembanding(gStart, gEnd, comparisonMode);
 
             let dSkrg = { sales: 0, salesQty: 0, retur: 0, returQty: 0, trx: 0, cogs: 0 };
             let dLalu = { sales: 0, salesQty: 0, retur: 0, returQty: 0, trx: 0, cogs: 0 };
@@ -3954,7 +3966,6 @@
                         const tbody = tb.querySelector('tbody');
                         if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--muted)">Tidak Ditemukan Top Produk Di Periode ini</td></tr>';
                     }
-                    return;
                 }
                 table.clear();
                 let newRows = [];
@@ -4103,7 +4114,31 @@
             let gStart = new Date((document.getElementById('startDate')?.value || '') + 'T00:00:00');
             if (isNaN(gStart.getTime())) return arr;
             let DAY = 86400000;
+            // Label seri pembanding harus dari tanggal periode pembanding, bukan disalin dari
+            // label periode ini (dulu tooltip menulis "Bulan Lalu (JAN 26)" padahal angkanya
+            // penjualan Desember).
+            let gEnd = new Date((document.getElementById('endDate')?.value || '') + 'T00:00:00');
+            if (isNaN(gEnd.getTime())) gEnd = gStart;
+            let comparisonModeTrend = document.getElementById('comparisonMode')?.value || 'rolling';
+            let pStartTrend = hitungRentangPembanding(gStart, gEnd,
+                comparisonModeTrend).pStart;
             let out = [], idx = {};
+            // Mode bulanan: bucket dibuat untuk SETIAP bulan dalam rentang tanggal, jadi tidak
+            // ada bulan "hantu" di luar rentang yang hanya punya garis pembanding.
+            if (gran === 'monthly') {
+                let cur = new Date(gStart.getFullYear(), gStart.getMonth(), 1);
+                while (cur.getTime() <= gEnd.getTime()) {
+                    let k = cur.getFullYear() + '-' + cur.getMonth();
+                    idx[k] = out.length;
+                    out.push({
+                        ts: Math.max(0, Math.round((cur.getTime() - gStart.getTime()) / DAY)),
+                        label: cur.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' }).toUpperCase(),
+                        labelLalu: geserBulanClamp_(cur, -1).toLocaleDateString('id-ID', { month: 'short', year: '2-digit' }).toUpperCase(),
+                        sales: 0, retur: 0, salesLalu: 0
+                    });
+                    cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+                }
+            }
             arr.forEach(e => {
                 let key, lbl;
                 if (gran === 'weekly') {
@@ -4118,6 +4153,9 @@
                 } else {
                     let d = new Date(gStart.getTime() + e.ts * DAY);
                     key = d.getFullYear() + '-' + d.getMonth();
+                    // Bucket bulanan sudah disiapkan untuk seluruh rentang; offset di luar
+                    // rentang (mis. sisa hari periode pembanding) tidak boleh bikin bulan baru.
+                    if (gran === 'monthly' && idx[key] === undefined) return;
                     if (idx[key] === undefined) {
                         lbl = d.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' }).toUpperCase();
                         idx[key] = out.length;
@@ -4125,9 +4163,26 @@
                     }
                 }
                 let b = out[idx[key]];
-                b.sales += e.sales || 0;
-                b.retur += e.retur || 0;
-                b.salesLalu += e.salesLalu || 0;
+                if (b) {
+                    b.sales += e.sales || 0;
+                    b.retur += e.retur || 0;
+                }
+                if (gran === 'monthly' && comparisonModeTrend === 'monthly') {
+                    // Nilai pembanding dipetakan ke bulan tanggalnya sendiri + 1 bulan
+                    // (penjualan Des 2025 menjadi pembanding bucket JAN 26). Offset hari tidak
+                    // sejajar 1:1 dengan bulan kalender saat panjang bulan berbeda.
+                    let pd = new Date(pStartTrend.getTime() + e.ts * DAY);
+                    let pk = new Date(pd.getFullYear(), pd.getMonth() + 1, 1);
+                    let pb = out[idx[pk.getFullYear() + '-' + pk.getMonth()]];
+                    if (pb) pb.salesLalu += e.salesLalu || 0;
+                } else if (b) {
+                    b.salesLalu += e.salesLalu || 0;
+                }
+            });
+            out.filter(b => gran === 'weekly').forEach(b => {
+                let off = Math.floor(b.ts / 7) * 7;
+                let d = new Date(pStartTrend.getTime() + off * DAY);
+                b.labelLalu = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }) + ' – ' + new Date(d.getTime() + 6 * DAY).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
             });
             return out;
         }
@@ -6166,15 +6221,7 @@
             const gStart = new Date((document.getElementById('startDate').value || '') + 'T00:00:00');
             const gEnd = new Date((document.getElementById('endDate').value || '') + 'T00:00:00');
             const mode = document.getElementById('comparisonMode')?.value || 'rolling';
-            let pStart, pEnd;
-            if (mode === 'monthly') {
-                pStart = new Date(gStart); pStart.setMonth(pStart.getMonth() - 1);
-                pEnd = new Date(gEnd); pEnd.setMonth(pEnd.getMonth() - 1);
-            } else {
-                const totalHari = Math.round((gEnd - gStart) / 86400000) + 1;
-                pEnd = new Date(gStart.getTime() - 86400000);
-                pStart = new Date(pEnd.getTime() - (totalHari - 1) * 86400000);
-            }
+            const { pStart, pEnd } = hitungRentangPembanding(gStart, gEnd, mode);
             return { start: isoDate(pStart), end: isoDate(pEnd) };
         }
 

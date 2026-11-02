@@ -2,7 +2,7 @@
 
 Manajemen perencanaan tugas tim, campaign, event, dan reminder dengan tampilan kalender + timeline, plus view cetak. Backend Google Sheets + GAS.
 
-- **File:** `Productive/planner/taskschedule.html` (±3.970 baris)
+- **File:** `Productive/planner/taskschedule.html` (±5.738 baris)
 - **Backend:** `gas/code-taskschedule.gs` (Web App GAS)
 - **Status:** ✅ Stable
 - **Catatan:** file backend pernah di `Productive/planner/`, sekarang dipusatkan di `gas/`.
@@ -15,6 +15,9 @@ Manajemen perencanaan tugas tim, campaign, event, dan reminder dengan tampilan k
 - **CRUD** task, campaign, event, reminder (simpan/ubah/hapus via GAS).
 - **Print** kalender/timeline & daftar tugas (landscape, `@page` khusus — lihat string `html` cetak di dalam file).
 - Deteksi **hari libur nasional** via API eksternal (tanggalmerah), di-cache per tahun.
+- **Tunda overdue** — semua task terlewat dipindah sekaligus ke hari kerja terdekat (hari libur dilewati).
+- **Aksi massal** — tombol *Pilih*: banyak task → selesai / pindah tanggal / hapus, plus undo.
+- **Rangkaian campaign** — campaign baru bisa langsung membuat task turunan (Brief H-3, Approval H-1, Laporan H+1).
 - **Tema** sendiri (toggle) — independen dari tema hub (key `ts-theme`).
 
 ---
@@ -72,6 +75,14 @@ Bug di `gas/code-taskschedule.gs` ini pernah terjadi dan sudah fixed:
 ### 3.5 Struktur file
 - Tool ini single-file. Satu-satunya file pendamping = `gas/code-taskschedule.gs`.
 - `Productive/planner/` sekarang hanya berisi `taskschedule.html`.
+
+### 3.6 Tunda overdue, aksi massal, rangkaian campaign (2026-11)
+- **Geser hari libur** memakai `holidaysCache` (`nextHariKerja_`, `geserRepsLibur_`). Data hanya tersedia untuk tahun yang sudah di-fetch; kalau cache tahun itu kosong dan jaringan gagal, tanggal **tidak** digeser. Jangan mengubah ini jadi error.
+- `computeRepeats_` **tidak diubah**. Penggeseran libur adalah pasca-proses di pemanggilnya (`submitTask` & `repeatCalendarItem_`) — jangan pindahkan logikanya ke dalam `computeRepeats_`, jalur lama harus tetap identik.
+- **Task turunan campaign wajib `tag: 'Campaign'`**, bukan nama channel. Tag channel (`Instagram`, `Whatsapp`, dst.) membuat baris dikenali `isCampaignRow_`/`isCampaignLike` → hilang dari Task List dan dianggap campaign di sheet. Jangan diganti.
+- Rangkaian hanya dibuat untuk campaign **baru** (`!editId`). Mengubah campaign lama tidak boleh menambah task turunan.
+- Mode pilih hidup di `S.selectMode`/`S.selectedIds`; `selectTask()` wajib tetap punya cabang `if (S.selectMode) { pickRow(id); return; }`. Baris harus merender `.pick-box` dan kelas `.picked` saat mode aktif.
+- Undo hapus massal memakai `_pendingBulkRestore` → `undoBulkDelete()` menyimpan ulang salinan dengan **id yang sama** (`saveTask`); backend menambah baris baru bila id tidak ketemu, jadi id tidak boleh diubah saat restore.
 
 ---
 

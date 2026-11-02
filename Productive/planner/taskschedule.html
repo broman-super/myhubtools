@@ -1592,6 +1592,48 @@ background: var(--danger-light);
       border-color: var(--accent);
     }
 
+    /* Aksi massal, tunda overdue, rangkaian campaign */
+    .bulk-bar {
+      display: none;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--accent-light);
+    }
+    .bulk-bar.on { display: flex; }
+    .bulk-count { font-size: 12px; font-weight: 700; color: var(--accent-ink); }
+    .bulk-date {
+      height: 30px;
+      padding: 0 8px;
+      font: inherit;
+      font-size: 12px;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .pick-box {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      border: 2px solid var(--border);
+      border-radius: 5px;
+      display: grid;
+      place-items: center;
+      transition: 0.15s;
+    }
+    .pick-box.on { background: var(--accent); border-color: var(--accent); }
+    .pick-box.on::after { content: '✓'; color: #fff; font-size: 12px; font-weight: 900; line-height: 1; }
+    .task-row.picked { background: var(--accent-light); }
+    #btn-pilih.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    #wrap-chain-rows { display: none; flex-direction: column; gap: 6px; margin-top: 8px; }
+    .chain-row { display: flex; align-items: center; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
+    .chain-off { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-soft); }
+
     /* Tooltip on timeline bars - JS-powered fixed-position, see timeline-scroll handlers */
     #tl-tooltip {
       position: fixed; display: none; pointer-events: none; z-index: 99999;
@@ -2022,6 +2064,22 @@ border-color: var(--accent);
               aria-label="Cari agenda" oninput="handleSearch(this.value)">
             <div class="row-4-wrap" id="tag-filters"></div>
             <div class="row-4" id="priority-filters"></div>
+            <div class="row-4 ml-auto">
+              <button type="button" class="btn btn-ghost btn-xs" id="btn-tunda-overdue" onclick="tundaOverdue()"
+                title="Pindahkan semua agenda terlewat ke hari kerja terdekat">Tunda overdue <span id="overdue-count"></span></button>
+              <button type="button" class="btn btn-ghost btn-xs" id="btn-pilih" aria-pressed="false"
+                title="Pilih beberapa agenda untuk diubah sekaligus" onclick="toggleSelectMode()">Pilih</button>
+            </div>
+          </div>
+          <div class="bulk-bar" id="bulk-bar" role="toolbar" aria-label="Aksi massal agenda terpilih">
+            <span class="bulk-count" id="bulk-count">0 dipilih</span>
+            <button type="button" class="btn btn-primary btn-xs" onclick="bulkDone()">✓ Selesai</button>
+            <span class="row-4">
+              <input type="date" class="bulk-date" id="bulk-date" aria-label="Tanggal tujuan agenda terpilih">
+              <button type="button" class="btn btn-ghost btn-xs" onclick="bulkMove()">Pindah</button>
+            </span>
+            <button type="button" class="btn btn-danger btn-xs" onclick="bulkDelete()">Hapus</button>
+            <button type="button" class="btn btn-ghost btn-xs" onclick="bulkClear()">Batal</button>
           </div>
           <div class="task-list" id="task-list-el"></div>
         </div>
@@ -2285,6 +2343,15 @@ border-color: var(--accent);
         </div>
       </div>
 
+      <div class="modal-sec" id="sec-chain" style="display:none;">Rangkaian campaign</div>
+      <div class="field mb-8" id="wrap-chain" style="display:none;">
+        <label class="tgl8">
+          <input class="m0" type="checkbox" id="f-chain" onchange="toggleChainFields()"> Buat task turunan otomatis
+        </label>
+        <div id="wrap-chain-rows"></div>
+        <div class="repeat-hint">Task dibuat saat campaign baru disimpan. Tanggal yang jatuh di hari libur digeser ke hari kerja berikutnya. Bisa diubah lagi satu per satu setelah tersimpan.</div>
+      </div>
+
       <div class="form-err display-none" id="form-err" role="alert"></div>
 
       <div class="modal-footer">
@@ -2439,7 +2506,8 @@ border-color: var(--accent);
       timelineYear: new Date().getFullYear(), timelineMonth: new Date().getMonth(),
       timelineSelectedDate: null, timelineZoom: 0, timelineLabelWidth: 180,
       activeTags: [], activePriorities: [],
-      listPage: 0, undoStack: [], saving: false, toggleBusy: false
+      listPage: 0, undoStack: [], saving: false, toggleBusy: false,
+      selectMode: false, selectedIds: []
     };
 
     const MONTHS_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -3137,6 +3205,7 @@ border-color: var(--accent);
       if (ec) ec.textContent = S.events.length;
       var rc = document.getElementById('nav-count-reminder');
       if (rc) rc.textContent = S.reminders.length;
+      renderOverdueBtn_();
     }
 
     function switchView(v, el) {
@@ -3203,6 +3272,7 @@ border-color: var(--accent);
         el.innerHTML = '<div class="empty-state">' + msg + cta + tips + '</div>';
         buildTagFilters();
         buildPriorityFilters();
+        renderBulkBar_();
         return;
       }
 
@@ -3212,7 +3282,8 @@ border-color: var(--accent);
       const hasMore = batch.length < total;
 
       el.innerHTML = batch.map(t => `
-        <div class="task-row ${t.done ? 'done' : ''} ${S.selectedId === t.id ? 'selected' : ''} ${S._flashId === t.id ? 'just-in' : ''}" role="button" tabindex="0" onclick="selectTask('${t.id}')" style="border-left:3px solid ${t.color || 'var(--item-fallback)'}">
+        <div class="task-row ${t.done ? 'done' : ''} ${S.selectMode ? 'picking' : ''} ${S.selectedIds.indexOf(t.id) > -1 ? 'picked' : ''} ${S.selectedId === t.id ? 'selected' : ''} ${S._flashId === t.id ? 'just-in' : ''}" role="button" tabindex="0"${S.selectMode ? ` aria-pressed="${S.selectedIds.indexOf(t.id) > -1}"` : ''} onclick="selectTask('${t.id}')" style="border-left:3px solid ${t.color || 'var(--item-fallback)'}">
+          ${S.selectMode ? `<div class="pick-box ${S.selectedIds.indexOf(t.id) > -1 ? 'on' : ''}" aria-hidden="true"></div>` : ''}
           <div class="task-check ${t.done ? 'checked' : ''}" data-id="${t.id}" role="checkbox" aria-checked="${t.done}" aria-label="Tandai selesai: ${esc(t.title)}" onclick="event.stopPropagation();toggleDone('${t.id}')"></div>
           <div class="task-main">
             <div class="task-name">${esc(t.title)}</div>
@@ -3239,6 +3310,7 @@ border-color: var(--accent);
       buildPriorityFilters();
       // C6: inisialisasi drag-reorder langsung (dulu via monkey-patch renderList)
       initDragReorder();
+      renderBulkBar_();
     }
 
     function buildTagFilters() {
@@ -4516,6 +4588,7 @@ border-color: var(--accent);
         if (subAddBtn) { subAddBtn.disabled = !!isC; subAddBtn.style.opacity = isC ? '0.5' : ''; subAddBtn.style.pointerEvents = isC ? 'none' : ''; }
       } catch(e){}
       if (isE || isR) S.tempColor = '';
+      toggleChainVisibility_(val);
 
       // Grid per jenis: baris/seksi kosong disembunyikan (auto-fit tak punya item = tinggi 0, tapi label seksi bohong)
       var secD = document.getElementById('sec-detail');
@@ -4578,6 +4651,7 @@ border-color: var(--accent);
     }
 
     function selectTask(id) {
+      if (S.selectMode) { pickRow(id); return; }
       S.selectedId = id;
       renderAll();
       renderDetail();
@@ -4736,6 +4810,310 @@ border-color: var(--accent);
       return { reps: reps, until: until };
     }
 
+    // ═══════════════════════════════════════
+    // HARI LIBUR - geser ke hari kerja terdekat
+    // holidaysCache diisi fetchHolidays() (cache localStorage per tahun)
+    // ═══════════════════════════════════════
+    function isHariLibur_(ds) {
+      return !!holidaysCache[String(ds || '').slice(0, 10)];
+    }
+    function nextHariKerja_(ds) {
+      var d = parseDateOnly_(String(ds || '').slice(0, 10));
+      if (!d) return ds;
+      var guard = 0;
+      while (isHariLibur_(ymd_(d)) && guard < 30) { d.setDate(d.getDate() + 1); guard++; }
+      return ymd_(d);
+    }
+    function selisihHari_(dari, ke) {
+      var a = parseDateOnly_(String(dari || '').slice(0, 10)), b = parseDateOnly_(String(ke || '').slice(0, 10));
+      if (!a || !b) return 0;
+      return Math.round((b.getTime() - a.getTime()) / 86400000);
+    }
+    function tanggalPlus_(ds, n) {
+      var d = parseDateOnly_(String(ds || '').slice(0, 10));
+      if (!d) return ds;
+      d.setDate(d.getDate() + n);
+      return ymd_(d);
+    }
+    // Muat data libur tahun yang dibutuhkan; fetchHolidays memakai cache localStorage lebih dulu
+    function pastikanLibur_(ds) {
+      var y = parseInt(String(ds || '').slice(0, 4), 10);
+      if (!y) return Promise.resolve();
+      // y-1 ikut dimuat: salinan H-3 campaign awal Januari jatuh di Desember tahun sebelumnya
+      return Promise.all([fetchHolidays(y - 1), fetchHolidays(y), fetchHolidays(y + 1)]);
+    }
+    // Salinan "Ulangi" yang jatuh di hari libur digeser; duplikat tanggal dibuang
+    function geserRepsLibur_(reps, dateKey, endKey) {
+      var shifted = 0, hasil = [];
+      (reps || []).forEach(function(rep) {
+        var asal = String(rep[dateKey] || '').slice(0, 10);
+        if (!asal) { hasil.push(rep); return; }
+        var target = nextHariKerja_(asal);
+        if (target !== asal) {
+          var geser = selisihHari_(asal, target);
+          var waktu = String(rep[dateKey]).slice(10);
+          rep[dateKey] = target + waktu;
+          if (rep[endKey]) {
+            rep[endKey] = tanggalPlus_(String(rep[endKey]).slice(0, 10), geser) + String(rep[endKey]).slice(10);
+          }
+          shifted++;
+        }
+        hasil.push(rep);
+      });
+      var seen = {};
+      hasil = hasil.filter(function(rep) {
+        var k = String(rep[dateKey]).slice(0, 10);
+        if (seen[k]) return false;
+        seen[k] = 1;
+        return true;
+      });
+      return { reps: hasil, shifted: shifted };
+    }
+
+    // ═══════════════════════════════════════
+    // TUNDA MASSAL - semua task terlewat ke hari kerja terdekat
+    // ═══════════════════════════════════════
+    function daftarOverdue_() {
+      var hariIni = todayStr();
+      return S.tasks.filter(function(t) {
+        if ((t.type || 'task') !== 'task' || t.done || !t.date) return false;
+        return String(t.date).slice(0, 10) < hariIni;
+      });
+    }
+    function renderOverdueBtn_() {
+      var btn = document.getElementById('btn-tunda-overdue');
+      if (!btn) return;
+      var n = daftarOverdue_().length;
+      var c = document.getElementById('overdue-count');
+      if (c) c.textContent = n ? '(' + n + ')' : '';
+      btn.disabled = !n || !!SHARE;
+      btn.style.opacity = (n && !SHARE) ? '1' : '0.5';
+    }
+    async function tundaOverdue() {
+      if (SHARE) return;
+      var overdue = daftarOverdue_();
+      if (!overdue.length) { toast('Tidak ada agenda terlewat'); return; }
+      var hariIni = todayStr();
+      await pastikanLibur_(hariIni);
+      var target = nextHariKerja_(hariIni);
+      var lewatLibur = target !== hariIni;
+      var pesan = 'Pindahkan ' + overdue.length + ' agenda terlewat ke ' + formatShortDate(target) + (lewatLibur ? ' (hari ini libur)' : '') + '? Ctrl+Z untuk membatalkan.';
+      if (!(await showConfirm(pesan, 'Ya, Tunda'))) return;
+      pushUndo();
+      var gagal = 0;
+      for (var i = 0; i < overdue.length; i++) {
+        var t = overdue[i];
+        var durasi = t.enddate ? Math.max(0, selisihHari_(t.date, t.enddate)) : 0;
+        t.date = target;
+        t.mulai = target;
+        t.enddate = durasi ? tanggalPlus_(target, durasi) : '';
+        t.selesai = t.enddate;
+        try { await api('saveTask', t); } catch (e) { gagal++; }
+      }
+      renderAll();
+      if (gagal) toast('⚠ ' + (overdue.length - gagal) + '/' + overdue.length + ' agenda ditunda', true);
+      else toast('✓ ' + overdue.length + ' agenda ditunda ke ' + formatShortDate(target));
+    }
+
+    // ═══════════════════════════════════════
+    // AKSI MASSAL - pilih banyak task, ubah sekaligus
+    // ═══════════════════════════════════════
+    function toggleSelectMode() {
+      if (SHARE) return;
+      S.selectMode = !S.selectMode;
+      S.selectedIds = [];
+      renderList();
+      renderBulkBar_();
+    }
+    function pickRow(id) {
+      var i = S.selectedIds.indexOf(id);
+      if (i > -1) S.selectedIds.splice(i, 1); else S.selectedIds.push(id);
+      renderList();
+      renderBulkBar_();
+    }
+    function renderBulkBar_() {
+      var bar = document.getElementById('bulk-bar');
+      var btn = document.getElementById('btn-pilih');
+      if (btn) {
+        btn.classList.toggle('active', !!S.selectMode);
+        btn.setAttribute('aria-pressed', String(!!S.selectMode));
+        btn.textContent = S.selectMode ? 'Selesai pilih' : 'Pilih';
+        btn.disabled = !!SHARE;
+      }
+      if (!bar) return;
+      bar.classList.toggle('on', !!S.selectMode);
+      var c = document.getElementById('bulk-count');
+      if (c) c.textContent = S.selectedIds.length + ' dipilih';
+    }
+    function pickedTasks_() {
+      return S.selectedIds.map(function(id) {
+        return S.tasks.find(function(t) { return t.id === id; });
+      }).filter(Boolean);
+    }
+    function bulkClear() {
+      S.selectMode = false;
+      S.selectedIds = [];
+      var inp = document.getElementById('bulk-date');
+      if (inp) inp.value = '';
+      renderList();
+      renderBulkBar_();
+    }
+    async function bulkDone() {
+      if (SHARE) return;
+      var items = pickedTasks_();
+      if (!items.length) { toast('Belum ada agenda dipilih', true); return; }
+      pushUndo();
+      var gagal = 0;
+      for (var i = 0; i < items.length; i++) {
+        var t = items[i];
+        if (t.done) continue;
+        t.done = true;
+        try { await api('saveTask', t); } catch (e) { t.done = false; gagal++; }
+      }
+      renderAll();
+      if (gagal) toast('⚠ ' + (items.length - gagal) + '/' + items.length + ' ditandai selesai', true);
+      else { toast('✓ ' + items.length + ' agenda selesai'); bulkClear(); }
+    }
+    async function bulkMove() {
+      if (SHARE) return;
+      var inp = document.getElementById('bulk-date');
+      var pilih = inp ? String(inp.value || '').slice(0, 10) : '';
+      if (!pilih) { toast('Pilih tanggal tujuan dulu', true); if (inp) inp.focus(); return; }
+      var items = pickedTasks_();
+      if (!items.length) { toast('Belum ada agenda dipilih', true); return; }
+      await pastikanLibur_(pilih);
+      var target = nextHariKerja_(pilih);
+      pushUndo();
+      var gagal = 0;
+      for (var i = 0; i < items.length; i++) {
+        var t = items[i];
+        var durasi = t.enddate ? Math.max(0, selisihHari_(t.date, t.enddate)) : 0;
+        t.date = target;
+        t.mulai = target;
+        t.enddate = durasi ? tanggalPlus_(target, durasi) : '';
+        t.selesai = t.enddate;
+        try { await api('saveTask', t); } catch (e) { gagal++; }
+      }
+      renderAll();
+      var liburNote = target !== pilih ? ' (libur → ' + formatShortDate(target) + ')' : '';
+      if (gagal) toast('⚠ ' + (items.length - gagal) + '/' + items.length + ' dipindah' + liburNote, true);
+      else { toast('✓ ' + items.length + ' agenda dipindah ke ' + formatShortDate(target) + liburNote); bulkClear(); }
+    }
+    var _pendingBulkRestore = null;
+    async function undoBulkDelete() {
+      if (!_pendingBulkRestore) return;
+      var snaps = _pendingBulkRestore;
+      _pendingBulkRestore = null;
+      var gagal = 0;
+      for (var i = 0; i < snaps.length; i++) {
+        try { await api('saveTask', snaps[i]); } catch (e) { gagal++; }
+      }
+      try { await refreshData(true); } catch (e) { renderAll(); }
+      toast(gagal ? '⚠ ' + gagal + ' agenda gagal dipulihkan' : '✓ ' + snaps.length + ' agenda dipulihkan', !!gagal);
+    }
+    async function bulkDelete() {
+      if (SHARE) return;
+      var items = pickedTasks_();
+      if (!items.length) { toast('Belum ada agenda dipilih', true); return; }
+      if (!(await showConfirm('Hapus ' + items.length + ' agenda terpilih?', 'Ya, Hapus'))) return;
+      pushUndo();
+      var snaps = JSON.parse(JSON.stringify(items));
+      var gagal = 0, okIds = [];
+      for (var i = 0; i < items.length; i++) {
+        try { await api('deleteTask', { id: items[i].id, type: 'task' }); okIds.push(items[i].id); }
+        catch (e) { gagal++; }
+      }
+      S.tasks = S.tasks.filter(function(x) { return okIds.indexOf(x.id) < 0; });
+      S.selectedIds = S.selectedIds.filter(function(id) { return okIds.indexOf(id) < 0; });
+      renderAll();
+      _pendingBulkRestore = snaps.filter(function(x) { return okIds.indexOf(x.id) > -1; });
+      showUndoSnackbar(ICONS.trash + ' ' + okIds.length + ' agenda dihapus', 'undoBulkDelete()');
+      if (gagal) toast('⚠ ' + gagal + ' agenda gagal dihapus', true);
+    }
+
+    // ═══════════════════════════════════════
+    // RANGKAIAN CAMPAIGN - task turunan otomatis saat campaign baru disimpan
+    // ═══════════════════════════════════════
+    var CHAIN_STAGES = [
+      { key: 'brief', label: 'Brief & aset', off: -3, prefix: 'Brief' },
+      { key: 'approval', label: 'Approval konten', off: -1, prefix: 'Approval' },
+      { key: 'report', label: 'Laporan performa', off: 1, prefix: 'Laporan' }
+    ];
+    function buildChainRows_() {
+      var box = document.getElementById('wrap-chain-rows');
+      if (!box || box.dataset.built === '1') return;
+      box.dataset.built = '1';
+      box.innerHTML = CHAIN_STAGES.map(function(s) {
+        return '<div class="chain-row">'
+          + '<label class="tgl8"><input class="m0" type="checkbox" id="f-chain-' + s.key + '" checked> ' + esc(s.label) + '</label>'
+          + '<span class="chain-off">H<input class="inp-w50" type="number" id="f-chain-off-' + s.key + '" value="' + s.off + '" min="-30" max="30" aria-label="Selisih hari ' + esc(s.label) + '"></span>'
+          + '</div>';
+      }).join('');
+    }
+    function toggleChainFields() {
+      var cb = document.getElementById('f-chain');
+      var rows = document.getElementById('wrap-chain-rows');
+      if (!rows) return;
+      var on = !!(cb && cb.checked);
+      if (on) buildChainRows_();
+      rows.style.display = on ? 'flex' : 'none';
+    }
+    function toggleChainVisibility_(val) {
+      var isC = val === 'campaign';
+      var isEdit = !!document.getElementById('edit-id').value;
+      var sec = document.getElementById('sec-chain'), wrap = document.getElementById('wrap-chain');
+      if (sec) sec.style.display = (isC && !isEdit) ? '' : 'none';
+      if (wrap) wrap.style.display = (isC && !isEdit) ? 'block' : 'none';
+      var cb = document.getElementById('f-chain');
+      if (cb && (!isC || isEdit)) cb.checked = false;
+      toggleChainFields();
+    }
+    async function simpanRangkaian_(camp) {
+      var cb = document.getElementById('f-chain');
+      if (!cb || !cb.checked || !camp || !camp.date) return null;
+      var bersih = String(camp.title || '').replace(/^(IG|WA|TT|SP|WB|WEB|EV|EVT)\s*\|\s*/, '').trim();
+      if (!bersih) return null;
+      await pastikanLibur_(camp.date);
+      var items = [];
+      CHAIN_STAGES.forEach(function(s) {
+        var row = document.getElementById('f-chain-' + s.key);
+        if (!row || !row.checked) return;
+        var offEl = document.getElementById('f-chain-off-' + s.key);
+        var off = parseInt(offEl && offEl.value, 10);
+        if (isNaN(off)) off = s.off;
+        var tgl = nextHariKerja_(tanggalPlus_(camp.date, off));
+        var judul = s.prefix + ' · ' + bersih;
+        var ket = 'Rangkaian campaign: ' + (camp.title || bersih);
+        items.push({
+          id: 'T' + Date.now() + items.length,
+          title: judul, nama: judul,
+          type: 'task', tipe: 'task',
+          description: ket, deskripsi: ket,
+          date: tgl, mulai: tgl, enddate: '', selesai: '',
+          priority: 'medium', tag: 'Campaign',
+          color: camp.color || COLORS[0], warna: camp.color || COLORS[0],
+          done: false, subtasks: [], urutan: -1
+        });
+      });
+      if (!items.length) return null;
+      items.forEach(function(r) { S.tasks.unshift(r); });
+      renderAll();
+      try {
+        var br = await api('saveTasksBatch', { items: items });
+        var ok = (br && br.result && br.result.saved) || [];
+        if (ok.length < items.length) {
+          var gagalIds = items.filter(function(x) { return ok.indexOf(x.id) < 0; }).map(function(x) { return x.id; });
+          S.tasks = S.tasks.filter(function(x) { return gagalIds.indexOf(x.id) < 0; });
+          renderAll();
+          return '⚠ Campaign tersimpan, ' + ok.length + '/' + items.length + ' task rangkaian tersimpan';
+        }
+        return '✓ Campaign + ' + items.length + ' task rangkaian tersimpan';
+      } catch (e) {
+        renderAll();
+        return 'Campaign tersimpan, task rangkaian gagal - klik Refresh untuk memeriksa';
+      }
+    }
+
     // State simpan: seluruh kontrol form dimatikan + overlay "Memproses data" tampil,
     // status disabled asal tiap kontrol disimpan supaya bentuk form persis kembali setelahnya.
     function setFormBusy_(on) {
@@ -4890,8 +5268,12 @@ border-color: var(--accent);
           var repEvery = parseInt(document.getElementById('f-repeat-every').value) || 1;
           var repUnit = document.getElementById('f-repeat-unit').value;
           // Ulangi = salinan hanya sampai akhir bulan tanggal mulai (tidak lebih)
+          await pastikanLibur_(task.date);
           var rr = computeRepeats_(task, 'date', 'enddate', repEvery, repUnit);
           var reps = rr.reps, repUntil = rr.until;
+          // salinan yang jatuh di hari libur digeser ke hari kerja berikutnya
+          var geserLibur = geserRepsLibur_(reps, 'date', 'enddate');
+          reps = geserLibur.reps;
           reps.forEach(function(rep, i) {
             rep.id = 'T' + Date.now() + i;
             // kolom ganda task (mulai/selesai) ikut digeser - jangan tertinggal di rentang induk
@@ -4901,7 +5283,7 @@ border-color: var(--accent);
             if (!isOverdue3_(rep)) { rep.done = false; rep.status = ''; }
           });
           if (!reps.length) toast('Ulangi: tidak ada tanggal tersisa dalam bulan ini', false);
-          if (reps.length && !(await showConfirm('Agenda ini disalin ' + reps.length + '× sampai ' + formatShortDate(repUntil) + '. Lanjutkan?', 'Ya, Ulangi'))) {
+          if (reps.length && !(await showConfirm('Agenda ini disalin ' + reps.length + '× sampai ' + formatShortDate(repUntil) + (geserLibur.shifted ? ' (' + geserLibur.shifted + ' digeser dari hari libur)' : '') + '. Lanjutkan?', 'Ya, Ulangi'))) {
             note = '✓ Tersimpan - ulangan dibatalkan';
             reps = [];
             renderAll();
@@ -4925,9 +5307,12 @@ border-color: var(--accent);
             }
           }
         }
+        // Rangkaian campaign: task turunan H-3 / H-1 / H+1 (hanya campaign baru)
+        var chainNote = null;
+        if (isC && !editId) chainNote = await simpanRangkaian_(task);
         closeModal();
         // W8: tanpa refreshData() - state lokal sudah sinkron, refetch penuh per save tidak perlu
-        toast(warnMsg || note || '✓ Berhasil disimpan', !!warnMsg);
+        toast(warnMsg || note || chainNote || '✓ Berhasil disimpan', !!warnMsg);
       } catch (err) {
         // Rollback optimistic update - modal tetap buka, isi form selamat
         if (oldBackup) { var ri = S.tasks.findIndex(x => x.id === task.id); if (ri > -1) S.tasks[ri] = oldBackup; }
@@ -4944,11 +5329,14 @@ border-color: var(--accent);
       var repEvery = parseInt(document.getElementById('f-repeat-every').value) || 1;
       var repUnit = document.getElementById('f-repeat-unit').value;
       // Ulangi = salinan hanya sampai akhir bulan tanggal mulai (tidak lebih)
+      await pastikanLibur_(tmpl.mulai);
       var rr = computeRepeats_(tmpl, 'mulai', 'selesai', repEvery, repUnit);
       var reps = rr.reps, repUntil = rr.until;
+      var geserLibur = geserRepsLibur_(reps, 'mulai', 'selesai');
+      reps = geserLibur.reps;
       reps.forEach(function(rep) { rep.id = undefined; }); // id baru dari server saat caller refetch getCalendarData
       if (!reps.length) { toast('Ulangi: tidak ada tanggal tersisa dalam bulan ini', false); return; }
-      if (!(await showConfirm('Agenda ini disalin ' + reps.length + '× sampai ' + formatShortDate(repUntil) + '. Lanjutkan?', 'Ya, Ulangi'))) return;
+      if (!(await showConfirm('Agenda ini disalin ' + reps.length + '× sampai ' + formatShortDate(repUntil) + (geserLibur.shifted ? ' (' + geserLibur.shifted + ' digeser dari hari libur)' : '') + '. Lanjutkan?', 'Ya, Ulangi'))) return;
       // W7: 1 batch POST - id baru dari server diambil saat caller refetch getCalendarData
       await api('saveTasksBatch', { items: reps });
       toast('✓ + ' + reps.length + ' ulangan tersimpan');

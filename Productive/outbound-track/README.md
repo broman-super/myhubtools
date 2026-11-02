@@ -60,6 +60,18 @@ Kode backend ada di `gas/outbound-track.gs` (script GAS terpisah khusus outbond)
 - Print pakai `#printArea` + style dinamis; saat mengubah tampilan print, pastikan `@media print` dan `dynamicPrintStyle` tidak bertabrakan.
 - `padding-bottom: 80px` di body memberi ruang bottom-nav — jangan dihapus tanpa menyesuaikan nav.
 
+### 3.6 🔴 Pengamanan resi double (sesi + database) — JANGAN DIHAPUS
+**Yang dipasang:**
+1. **Dobel di memori sesi** — `prosesResi()` tetap TIDAK menambah resi kedua ke rekap (hitungan & print tetap unik), tapi menghitungnya di `resiDuplikatSesi` dan menampilkan panel `#dupAlertBox` + badge `DOBEL Nx SESI INI` pada kartu resi. Jangan ubah ini jadi "tambah baris kedua", karena total paket dan surat jalan jadi dobel.
+2. **Cek database tanpa batas hari** — `cekDuplikatDatabase()` memanggil Supabase REST (`outbond_paket`, filter `resi=in.(...)`, dipecah 100 resi/request, urut `id.desc`) dan mencatat `resiRiwayatDb`. Tidak ada filter tanggal: resi dari sesi lama (mis. Maret) tetap tertangkap. Read lewat anon (policy select), jadi tidak perlu action GAS baru.
+3. **Konfirmasi saat simpan** — `simpanDanReset()` selalu cek DB dulu. Bila ada dobel: dialog `#dupConfirmOverlay` dengan dua pilihan — **Periksa Kembali Paket** (batal simpan, sesi & penanda tetap) atau **Lanjut Double** (`simpanSekarang()` menyimpan apa adanya). Tanpa dobel → konfirmasi simpan biasa.
+
+**Aturan:**
+- Jangan pindahkan `cekDuplikatDatabase()` ke `prosesResi()` per scan (satu request per barcode = scanner lambat) dan jangan menambahkan filter tanggal ke query-nya.
+- Simpan tetap satu pintu: `simpanSekarang()` (dipanggil dari konfirmasi normal maupun Lanjut Double). Jangan panggil `apiCall('simpanDataGudang')` langsung dari handler baru.
+- Kalau cek DB gagal (offline), simpan tetap boleh jalan **dengan catatan eksplisit** di konfirmasi — jangan blokir permanen dan jangan sembunyikan kegagalannya.
+- Penanda dibersihkan saat resi dihapus (`hapusResi`) dan setelah simpan sukses; reset sesi tanpa membersihkannya akan menyisakan badge hantu.
+
 ---
 
 ## 4. Flow Data (ringkas)
