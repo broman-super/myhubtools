@@ -94,6 +94,11 @@ body, button, input, select, textarea { font-family: var(--font-sans), sans-seri
   .workspace { grid-template-columns: 1fr; }
 }
 
+/* Kolom grid tidak boleh dipaksa selebar min-content isinya (dulu 420px di
+   layar HP sehingga panel bisa digeser ke samping). */
+.workspace > * { min-width: 0; }
+.pane input, .pane select, .pane textarea { max-width: 100%; }
+
 /* ── Form pane ── */
 .pane {
   background: var(--bg-card);

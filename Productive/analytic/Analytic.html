@@ -322,6 +322,9 @@
         @media (max-width: 768px) {
             body {
                 padding: 16px;
+                /* body dulu dipaksa min-width 360px; di layar 360-390px (HP)
+                   itu membuat halaman melebar dan bisa digeser ke samping. */
+                min-width: 0;
             }
 
             .nav-bar {
@@ -332,6 +335,13 @@
 
             .nav-controls {
                 gap: 8px;
+            }
+
+            /* Tiap grup tombol harus boleh turun baris: sebelumnya grup tetap
+               selebar isinya (>=900px) sehingga toolbar memaksa lebar halaman. */
+            .nav-group {
+                flex-wrap: wrap;
+                min-width: 0;
             }
 
             #reportrange {

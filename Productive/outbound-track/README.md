@@ -74,6 +74,34 @@ Kode backend ada di `gas/outbound-track.gs` (script GAS terpisah khusus outbond)
 
 ---
 
+### 3.7 🔴 Pengenal resi (potong kode depan/akhir) + bunyi dobel — JANGAN DIREGRESI
+**Yang dipasang:**
+1. **Menu Pengenal** — tombol gear di `Area Scanner Barcode` membuka `#prefixModal`: input kode (maks 5 karakter, hanya A–Z/0–9, otomatis di-uppercase), pilihan **Di depan**/**Di akhir**, checkbox aktif, dan baris contoh `#prefixPreview`. Setelan disimpan di `localStorage` key `outbond_pengenal_resi` sebagai `{aktif, kode, posisi}` — per perangkat, tidak masuk DB/sheet.
+2. **Pemotongan di satu titik masuk scan** — handler keypress `#inputResi` memanggil `terapkanPengenal_(mentah)` sebelum `prosesResi()`. Karena itu deteksi kurir, deteksi dobel, tampilan kartu, dan data yang disimpan otomatis memakai resi bersih.
+3. **Baris info `#prefixInfo`** — menampilkan setelan aktif dan hasil potong terakhir (`ABCX12345 → 12345 (pengenal dipotong)`) selama 6 detik, supaya resi tidak berubah diam-diam.
+4. **Bunyi dobel** — `bunyiResiDouble_()` (WebAudio, dua nada 880→620 Hz, tanpa file/dependency) dipanggil **hanya** dari cabang duplikat sesi di `prosesResi()`.
+
+**Aturan:**
+- Pemotongan wajib tetap di handler keypress `#inputResi`. Jangan pindahkan ke `simpanSekarang()` (tampilan & cek dobel jadi tidak sinkron) dan jangan menambah titik potong kedua.
+- `terapkanPengenal_()` harus tetap **tidak** memotong kalau kode tidak cocok, kalau hasil potong kosong, atau kalau `aktif` false. Resi harus lewat apa adanya, tanpa error dan tanpa blokir scan.
+- Jangan mengubah `outbond_pengenal_resi` jadi data backend/sheet tanpa migrasi: ini setelan alat scan, bukan data kiriman.
+- Bunyi jangan dipindah ke jalur scan normal (bunyi tiap barcode = operator cepat terganggu) dan jangan ditambahkan tombol bisu tanpa permintaan.
+- Suara butuh interaksi user dulu (policy autoplay browser); karena selalu dipicu scan manual, `AudioContext` dibuat saat pertama dipakai — jangan dibuat di awal load.
+
+---
+
+### 3.8 Tampilan daftar resi & tabel ekspedisi — jangan diulang salahnya
+**Yang pernah salah (sudah diperbaiki):**
+1. **Nomor resi berisi `<`, `&`, atau `'` tampil beda dari yang discan** — kartu resi dibangun dengan `innerHTML` sehingga `AB<CD>EF&GH` tampil `ABEF&GH` dan `AB'CD` mematikan tombol Hapus. Sekarang kartu di `renderListDetail()` dibuat lewat DOM + `textContent` dan tombol Hapus memakai `addEventListener`, bukan `onclick` berisi string resi. Jangan kembali ke string HTML.
+2. **Resi panjang melebarkan kartu dan panel** — `.resi-card .resi-text` sekarang `min-width:0; overflow-wrap:anywhere; word-break:break-word`, dan `.del-btn` `flex-shrink:0`. Tanpa ini resi ±45 karakter membuat halaman bisa digeser ke samping.
+3. **Baris `Total Semua` tidak terbaca di tema gelap** — warna `<th>` di `<tfoot>` dulu hex gelap tetap; sekarang `var(--text)`. Jangan mengembalikan hex tetap di elemen tabel.
+
+**Aturan:**
+- Teks dari data (resi, ekspedisi, waktu) wajib lewat `textContent` atau `escHtml()` — jangan pernah disisipkan mentah ke `innerHTML`/onclick.
+- `renderDetailRiwayat()` memakai `escHtml()`; pertahankan.
+
+---
+
 ## 4. Flow Data (ringkas)
 
 ```

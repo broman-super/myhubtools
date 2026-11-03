@@ -259,6 +259,10 @@
       font-size: 14px;
       font-weight: 600;
       color: var(--text);
+      min-width: 0;
+      /* Resi panjang (tanpa spasi) harus turun baris, bukan melebarkan kartu/panel. */
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     button {
@@ -290,6 +294,7 @@
       font-size: 12px;
       border-radius: 6px;
       font-weight: bold;
+      flex-shrink: 0;
     }
 
     .modal-overlay {
@@ -376,6 +381,36 @@
 
     .nav-item:active {
       color: var(--primary);
+    }
+
+    /* Nav bawah berisi 5 tombol (4 aksi + tema). Dengan width:25% totalnya
+       125% sehingga label panjang ("Print Total") pecah dua baris di HP.
+       Semua tombol berbagi lebar, label tetap satu baris. */
+    .bottom-nav .nav-item {
+      flex: 1 1 0;
+      width: auto;
+      min-width: 0;
+    }
+
+    .bottom-nav .nav-item span {
+      white-space: nowrap;
+    }
+
+    .bottom-nav .theme-toggle {
+      flex: 0 0 auto;
+      padding: 8px 10px;
+      font-size: 11px;
+    }
+
+    @media (max-width: 400px) {
+      .bottom-nav .nav-item {
+        font-size: 10px;
+        padding: 5px 2px;
+      }
+
+      .bottom-nav .nav-item span {
+        font-size: 10px;
+      }
     }
 
     .split-layout {
@@ -651,8 +686,9 @@
             <tbody id="tabelRekap"></tbody>
             <tfoot>
               <tr>
-                <th style="color: #0f172a;">Total Semua</th>
-                <th id="totalSemua" style="text-align:center; color: #0f172a;">0</th>
+                <!-- var(--text): teks Total wajib terbaca di tema terang maupun gelap -->
+                <th style="color: var(--text);">Total Semua</th>
+                <th id="totalSemua" style="text-align:center; color: var(--text);">0</th>
               </tr>
             </tfoot>
           </table>
@@ -1253,6 +1289,75 @@
       }
     }
 
+    // ═══════════════════════════════════════
+    // FOKUS OTOMATIS KOLOM SCAN
+    // Scanner USB "mengetik" ke elemen yang sedang fokus. Jadi kolom resi harus
+    // selalu siap: setelah klik tombol/panel, kembali dari tab lain, dan setelah print.
+    // ═══════════════════════════════════════
+    // Kolom yang memang diketik manual - jangan direbut fokusnya.
+    var KOLOM_KETIK_MANUAL = ['inputResi', 'searchResi', 'searchRiwayatGlobal', 'searchRiwayatResi', 'prefixInput'];
+
+    function modalTerbuka_() {
+      var daftar = document.querySelectorAll('.modal-overlay');
+      for (var i = 0; i < daftar.length; i++) {
+        if (getComputedStyle(daftar[i]).display !== 'none') return true;
+      }
+      return false;
+    }
+
+    function fokusScan_(paksa) {
+      var el = document.getElementById('inputResi');
+      if (!el || document.hidden || modalTerbuka_()) return;
+      var aktif = document.activeElement;
+      if (aktif === el) return;
+      if (!paksa && aktif && KOLOM_KETIK_MANUAL.indexOf(aktif.id) !== -1) return;
+      if (!paksa && aktif && (aktif.isContentEditable || aktif.tagName === 'TEXTAREA' || aktif.tagName === 'SELECT')) return;
+      el.focus({ preventScroll: true });
+      try { el.setSelectionRange(el.value.length, el.value.length); } catch (e) { /* aman: input tanpa selection */ }
+    }
+
+    // Klik apa pun di luar kolom ketik dan di luar modal -> fokus balik ke scan.
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t && t.closest && t.closest('.modal-overlay')) return;
+      if (t && t.closest && t.closest('input, textarea, select, [contenteditable="true"]')) return;
+      setTimeout(function () { fokusScan_(); }, 0);
+    }, true);
+
+    // Selesai pilih ukuran riwayat -> siap scan lagi (select menyimpan fokus sendiri).
+    document.addEventListener('change', function (e) {
+      var t = e.target;
+      if (!t || !t.closest || t.closest('.modal-overlay')) return;
+      if (t.tagName === 'SELECT') setTimeout(function () { fokusScan_(true); }, 0);
+    });
+
+    // Kembali dari tab/aplikasi lain atau selesai print -> siap scan lagi.
+    window.addEventListener('focus', function () { setTimeout(function () { fokusScan_(); }, 0); });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) fokusScan_(); });
+    window.addEventListener('afterprint', function () { setTimeout(function () { fokusScan_(true); }, 50); });
+
+    // Penjaga ketukan pertama: kalau fokus sempat hilang, huruf pertama barcode
+    // tetap masuk ke kolom scan (bukan terbuang ke halaman).
+    document.addEventListener('keydown', function (e) {
+      var aktif = document.activeElement;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      // Enter di kolom pencarian = selesai mencari, lanjut scan.
+      if (e.key === 'Enter' && aktif && (aktif.id === 'searchResi' || aktif.id === 'searchRiwayatGlobal' || aktif.id === 'searchRiwayatResi')) {
+        setTimeout(function () { fokusScan_(true); }, 0);
+        return;
+      }
+      if (e.key.length !== 1) return;
+      if (aktif && KOLOM_KETIK_MANUAL.indexOf(aktif.id) !== -1) return;
+      if (aktif && (aktif.isContentEditable || aktif.tagName === 'TEXTAREA' || aktif.tagName === 'SELECT')) return;
+      if (aktif && (aktif.tagName === 'BUTTON' || aktif.tagName === 'A')) return;
+      if (modalTerbuka_()) return;
+      var el = document.getElementById('inputResi');
+      if (!el) return;
+      e.preventDefault();
+      el.focus({ preventScroll: true });
+      el.value += e.key;
+    }, true);
+
     function prosesResi(resi) {
       if (semuaResi.has(resi)) {
         // Resi dobel TIDAK ditambahkan lagi ke rekap, tapi ditandai jelas di memori sesi.
@@ -1354,12 +1459,37 @@
         if (resi.includes(filterText)) {
           const dobelSesi = resiDuplikatSesi[resi] || 0;
           const dobelDb = resiRiwayatDb[resi];
-          let item = document.createElement('div');
+          const item = document.createElement('div');
           item.className = 'resi-card' + (dobelSesi || dobelDb ? ' dobel' : '');
-          let badge = '';
-          if (dobelSesi) badge += `<span class="dup-badge">DOBEL ${dobelSesi}x SESI INI</span>`;
-          if (dobelDb) badge += `<span class="dup-badge">PERNAH DISCAN ${escHtml(dobelDb.waktu || '')}</span>`;
-          item.innerHTML = `<div style="display:flex; flex-direction:column; gap:2px; min-width:0;"><span class="resi-text">${resi}</span>${badge}</div><button class="del-btn" onclick="hapusResi('${kurir}', '${resi}')">Hapus</button>`;
+
+          // Dibangun lewat DOM + textContent, bukan innerHTML: resi yang mengandung
+          // < & ' tampil apa adanya dan tombol Hapus tidak patah karena tanda kutip.
+          const kiri = document.createElement('div');
+          kiri.style.cssText = 'display:flex; flex-direction:column; gap:2px; min-width:0;';
+          const teks = document.createElement('span');
+          teks.className = 'resi-text';
+          teks.textContent = resi;
+          kiri.appendChild(teks);
+          if (dobelSesi) {
+            const badge = document.createElement('span');
+            badge.className = 'dup-badge';
+            badge.textContent = 'DOBEL ' + dobelSesi + 'x SESI INI';
+            kiri.appendChild(badge);
+          }
+          if (dobelDb) {
+            const badge = document.createElement('span');
+            badge.className = 'dup-badge';
+            badge.textContent = 'PERNAH DISCAN ' + (dobelDb.waktu || '');
+            kiri.appendChild(badge);
+          }
+
+          const hapus = document.createElement('button');
+          hapus.className = 'del-btn';
+          hapus.textContent = 'Hapus';
+          hapus.addEventListener('click', function () { hapusResi(kurir, resi); });
+
+          item.appendChild(kiri);
+          item.appendChild(hapus);
           listDetail.appendChild(item);
         }
       });
@@ -1631,8 +1761,8 @@
         if (resiUpper.includes(filterText) || kurirUpper.includes(filterText)) {
           const hit = filterText ? ' hit-card' : '';
           html += `<div class="resi-card${hit}">
-                     <span class="kurir-badge">${item.ekspedisi}</span>
-                     <span class="resi-text">${item.resi}</span>
+                     <span class="kurir-badge">${escHtml(item.ekspedisi || '')}</span>
+                     <span class="resi-text">${escHtml(item.resi || '')}</span>
                    </div>`;
         }
       });
@@ -1654,6 +1784,7 @@
 
     // Tampilkan status pengenal yang tersimpan saat alat dibuka
     renderPengenalInfo_();
+    fokusScan_();
   </script>
     <script>
         function toggleTheme() {

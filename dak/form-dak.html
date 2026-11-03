@@ -976,6 +976,9 @@
         (function() {
             if (window.parent !== window) {
                 try { window.parent.postMessage({ type: 'request-theme' }, '*'); } catch (e) {}
+                // Di dalam hub tema dipegang hub: sembunyikan tombol tema lokal ini.
+                var btnTemaLokal = document.querySelector('button[onclick="toggleTheme()"]');
+                if (btnTemaLokal) btnTemaLokal.style.display = 'none';
             }
             window.addEventListener('message', function(e) {
                 var msg = e.data || {};

@@ -69,9 +69,10 @@ Zero runtime dependencies. Tanpa toolchain di root; hanya `Productive/Project_de
 
 ### Dark Mode
 Semua tool mendukung dark mode via `data-theme="dark"` selector. Toggle tersedia di:
-- Shell: tombol sidebar (sun/moon icon)
-- Tiap tool: tombol theme toggle individu
-- Sinkronisasi antar frame via `postMessage`
+- Shell (sumber kebenaran): tombol `#theme-btn` di navigasi hub — inilah satu-satunya tombol tema yang tampil saat modul dibuka dari hub.
+- Tiap tool: tombol tema individu hanya untuk pemakaian mandiri. Saat modul dimuat di iframe hub, hub menambahkan kelas `embedded-in-hub` pada `<html>` modul, dan `src/styles/tools.css` menyembunyikan `.theme-toggle` / `[onclick*="toggleTheme"]` milik modul tersebut. Jangan hapus aturan itu; jangan pula menambah tombol tema baru di level tool selain untuk mode mandiri.
+- Sinkronisasi antar frame via `postMessage` (`SET_THEME` dari hub, `THEME_CHANGED` dari tool).
+- Modul yang tidak memuat `tools.css` (mis. `dak/form-dak.html`) wajib menyembunyikan tombol temanya sendiri saat `window.parent !== window`.
 
 ---
 

@@ -240,6 +240,7 @@
     ui.frame.onload = function() {
       ui.frameLoad = true;
       ui.frameCont.classList.remove('loading');
+      tandaiModulTertanam();
       broadcastCurrentTheme();
     };
     ui.frame.onerror = function() {
@@ -348,6 +349,17 @@
     if (emptyEl) emptyEl.style.display = totalVisible === 0 ? 'block' : 'none';
     var statusEl = document.getElementById('search-status');
     if (statusEl) statusEl.textContent = totalVisible === 0 ? 'Tidak ada modul yang cocok' : totalVisible + ' modul ditemukan';
+  }
+
+  // Modul di dalam hub memakai kontrol tema milik hub, bukan tombol tema sendiri.
+  // Kelas ini dibaca src/styles/tools.css untuk menyembunyikan toggle tema modul.
+  function tandaiModulTertanam() {
+    try {
+      var d = ui.frame.contentDocument;
+      if (d && d.documentElement) d.documentElement.classList.add('embedded-in-hub');
+    } catch (e) {
+      // Modul beda origin: biarkan tombolnya; hub tetap menyiarkan tema.
+    }
   }
 
   function broadcastCurrentTheme() {

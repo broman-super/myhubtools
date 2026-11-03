@@ -66,3 +66,33 @@ input, select, textarea, button, input[type="text"], input[type="password"], inp
 code, pre, .monospace, .font-mono, [style*="font-family: monospace"], [style*="font-family:monospace"], td[style*="monospace"] {
   font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace !important;
 }
+
+/* Modul yang dibuka DI DALAM hub (iframe) tidak perlu tombol tema sendiri:
+   hub sudah memegang kontrol tema dan menyiarkannya lewat postMessage.
+   Kelas `embedded-in-hub` dipasang oleh src/app.js pada <html> modul.
+   Tanpa kelas ini (modul dibuka mandiri/embed lain) tombolnya tetap tampil. */
+html.embedded-in-hub .theme-toggle,
+html.embedded-in-hub #theme-toggle,
+html.embedded-in-hub #themeToggle,
+html.embedded-in-hub #themeToggleDash,
+html.embedded-in-hub [onclick*="toggleTheme"] {
+  display: none !important;
+}
+
+/* Judul/brand modul: hub sudah menampilkan nama modul di header frame.
+   Yang disembunyikan hanya brand, bukan toolbar/filter modul. */
+html.embedded-in-hub .header-container h2,
+html.embedded-in-hub .nav-bar h1,
+html.embedded-in-hub .topbar h1,
+html.embedded-in-hub .topbar .wordmark,
+html.embedded-in-hub .topbar .logo-mark,
+html.embedded-in-hub .topbar-title,
+html.embedded-in-hub .brand {
+  display: none !important;
+}
+
+/* Satu scroll container: modul yang panjang menggulir di dalam frame-nya
+   sendiri, tidak merambat ke halaman hub. */
+html.embedded-in-hub body {
+  overscroll-behavior-y: contain;
+}
