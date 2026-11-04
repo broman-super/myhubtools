@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <script>
+    (function () {
+      if (window.self !== window.top) return;
+      var s = localStorage.getItem('reynahub-theme') || 'system';
+      var d = s === 'dark' ? 'dark' : s === 'light' ? 'light'
+            : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', d);
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Panduan Pengoperasian Webtools — REYNAHUB</title>
+  <link rel="stylesheet" href="../../src/styles/tools.css">
+  <style>
+    :root {
+      --bg:#f8fafc; --surface:#ffffff; --surface2:#f1f5f9;
+      --text:#0f172a; --muted:#64748b; --border:rgba(15,23,42,.06);
+      --primary:#ff0000; --primary-light:#ff7b7b;
+      --primary-soft: color-mix(in srgb, #ff0000 10%, transparent);
+      --danger:#ef4444; --success:#22c55e; --warning:#f59e0b; --info:#3b82f6;
+      --radius-sm:8px; --radius-md:12px; --radius-bento:18px;
+      --shadow-sm:0 1px 2px rgba(15,23,42,.04);
+      --shadow-md:0 4px 12px rgba(15,23,42,.08);
+      --shadow-lg:0 20px 40px rgba(15,23,42,.12);
+      --focus-ring:0 0 0 3px color-mix(in srgb, #ff0000 15%, transparent);
+    }
+    [data-theme="dark"] {
+      --bg:#0f172a; --surface:#1e293b; --surface2:#162032;
+      --text:#f1f5f9; --muted:#94a3b8; --border:rgba(255,255,255,.07);
+      --primary:#ff3b3b; --primary-light:#ff6b6b;
+      --primary-soft: color-mix(in srgb, #ff3b3b 18%, transparent);
+      --shadow-sm:0 1px 2px rgba(0,0,0,.25);
+      --shadow-md:0 4px 12px rgba(0,0,0,.4);
+      --shadow-lg:0 20px 40px rgba(0,0,0,.5);
+      --focus-ring:0 0 0 3px color-mix(in srgb, #ff3b3b 25%, transparent);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at top, color-mix(in srgb, var(--primary) 4%, transparent), transparent 55%), var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.7;
+    }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 18px; background:var(--surface); border-bottom:1px solid var(--border); position: sticky; top: 0; z-index: 5; backdrop-filter: blur(12px); }
+    .topbar-brand { display:flex; align-items:center; gap:10px; font-weight:700; }
+    .topbar-brand-badge { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:var(--primary-soft); color:var(--primary); font-size:12px; }
+    .topbar-actions { display:flex; align-items:center; gap:8px; }
+    .btn-ghost { display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:var(--radius-md); border:1px solid transparent; color:var(--muted); text-decoration:none; font-size:13px; }
+    .btn-ghost:hover { color:var(--text); }
+    .theme-toggle { width:38px; height:38px; border-radius:999px; border:1px solid var(--border); background:var(--surface); color:var(--text); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+    .tool-main { flex:1; width: min(1120px, 100%); margin: 0 auto; padding: clamp(16px, 4vw, 36px); display:flex; flex-direction:column; gap: clamp(18px, 4vw, 28px); }
+    .hero { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: clamp(16px, 4vw, 28px); align-items:center; }
+    .hero-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-bento); box-shadow:var(--shadow-lg); overflow:hidden; position:relative; }
+    .hero-card::after { content:""; position:absolute; inset:0; background: radial-gradient(circle at top right, color-mix(in srgb, var(--primary) 12%, transparent), transparent 60%); pointer-events:none; }
+    .hero-card-inner { position:relative; display:flex; flex-direction:column; gap:14px; padding: clamp(18px, 6vw, 42px); }
+    .eyebrow { display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; background:var(--primary-soft); color:var(--primary); font-size:12px; text-transform:uppercase; letter-spacing:.16em; }
+    .hero-title { font-size: clamp(28px, 6vw, 56px); line-height: 1.05; font-weight:800; }
+    .hero-lead { color:var(--muted); font-size: clamp(15px, 2vw, 18px); max-width: 720px; }
+    .hero-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; }
+    .hero-pill { display:flex; flex-direction:column; gap:4px; padding:12px 16px; border-radius:var(--radius-md); border:1px solid var(--border); background:color-mix(in srgb, var(--surface) 80%, transparent); }
+    .hero-pill-label { font-size:12px; text-transform:uppercase; letter-spacing:.14em; color:var(--muted); }
+    .nav-strip { display:flex; flex-wrap:wrap; gap:8px; padding:10px 14px; border-radius:999px; border:1px solid var(--border); background:var(--surface); box-shadow:var(--shadow-sm); align-self:flex-start; }
+    .nav-strip a { display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:999px; text-decoration:none; color:var(--muted); font-size:13px; }
+    .nav-strip a.active, .nav-strip a:hover { color:var(--text); background:var(--primary-soft); color:var(--primary); }
+    .section { display:flex; flex-direction:column; gap:18px; }
+    .section-header { display:flex; flex-direction:column; gap:6px; }
+    .section-kicker { font-size:12px; text-transform:uppercase; letter-spacing:.18em; color:var(--muted); }
+    .section-title { font-size: clamp(22px, 4vw, 34px); font-weight:800; }
+    .section-lead { color:var(--muted); max-width: 880px; }
+    .grid-cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:14px; }
+    .card { position:relative; display:flex; flex-direction:column; gap:10px; padding:18px; border-radius:var(--radius-bento); border:1px solid var(--border); background:var(--surface); box-shadow:var(--shadow-sm); overflow:hidden; }
+    .card::before { content:""; position:absolute; inset:0; background: radial-gradient(circle at top, color-mix(in srgb, var(--primary) 6%, transparent), transparent 65%); pointer-events:none; }
+    .card > * { position:relative; }
+    .card-header { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .card-title-group { display:flex; align-items:center; gap:10px; }
+    .card-icon { width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:var(--primary-soft); color:var(--primary); }
+    .card-title { font-weight:700; }
+    .card-desc { color:var(--muted); font-size:14px; }
+    .pill-list { display:flex; flex-wrap:wrap; gap:8px; }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); font-size:12px; color:var(--muted); }
+    .steps { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:14px; counter-reset: step; }
+    .step { position:relative; display:flex; flex-direction:column; gap:10px; padding:18px 18px 18px 56px; border-radius:var(--radius-bento); border:1px solid var(--border); background:var(--surface); box-shadow:var(--shadow-sm); }
+    .step::before { counter-increment: step; content: counter(step); position:absolute; left:18px; top:18px; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--primary-soft); color:var(--primary); font-weight:700; }
+    .step-title { font-weight:700; }
+    .step-text { color:var(--muted); font-size:14px; }
+    .diagram { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:12px; align-items:stretch; }
+    .diagram-node { display:flex; flex-direction:column; gap:8px; padding:16px; border-radius:var(--radius-bento); border:1px solid var(--border); background:var(--surface); text-align:center; box-shadow:var(--shadow-sm); }
+    .diagram-node.active { border-color: color-mix(in srgb, var(--primary) 60%, var(--border)); box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 18%, transparent); }
+    .diagram-arrow { display:flex; align-items:center; justify-content:center; color:var(--muted); }
+    .callout { display:flex; flex-direction:column; gap:10px; padding:18px; border-radius:var(--radius-bento); border:1px solid color-mix(in srgb, var(--warning) 40%, var(--border)); background: color-mix(in srgb, var(--warning) 10%, transparent); }
+    .callout.danger { border-color: color-mix(in srgb, var(--danger) 40%, var(--border)); background: color-mix(in srgb, var(--danger) 10%, transparent); }
+    .callout.success { border-color: color-mix(in srgb, var(--success) 40%, var(--border)); background: color-mix(in srgb, var(--success) 10%, transparent); }
+    .callout-header { display:flex; align-items:center; gap:10px; font-weight:700; }
+    .table-wrapper { overflow-x:auto; border-radius:var(--radius-bento); border:1px solid var(--border); background:var(--surface); box-shadow:var(--shadow-sm); }
+    table { width:100%; border-collapse:collapse; min-width:720px; }
+    thead th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.16em; color:var(--muted); padding:12px 18px; background:var(--surface2); }
+    tbody td { padding:14px 18px; border-top:1px solid var(--border); vertical-align:top; }
+    tbody tr:hover { background: color-mix(in srgb, var(--primary) 4%, transparent); }
+    .tag { display:inline-flex; align-items:center; padding:4px 8px; border-radius:999px; border:1px solid var(--border); font-size:11px; }
+    .footer-note { text-align:center; color:var(--muted); font-size:13px; }
+    .is-embedded .topbar { display:none !important; }
+    @media (max-width: 720px) {
+      .nav-strip { border-radius:var(--radius-bento); align-self:stretch; justify-content:center; }
+      table { min-width: 640px; }
+    }
+    @media print {
+      @page { size: A4; margin: 12mm; }
+      body { background:#fff !important; color:#000 !important; }
+      .topbar, .nav-strip, .no-print { display:none !important; }
+      .card, .step, .diagram-node, .table-wrapper, .callout { break-inside: avoid; box-shadow:none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="card-icon" style="width:34px;height:34px;border-radius:10px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      </div>
+      <div>
+        <div style="font-size:14px;">Panduan Pengoperasian Webtools</div>
+        <div style="font-size:12px;color:var(--muted);">REYNAHUB · Operasional & Troubleshooting</div>
+      </div>
+      <span class="topbar-brand-badge">DOKUMEN</span>
+    </div>
+    <div class="topbar-actions">
+      <a class="btn-ghost no-print" href="../../index.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Kembali ke Hub
+      </a>
+      <button class="theme-toggle" id="theme-toggle" title="Ubah tema" aria-label="Ubah tema">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+    </div>
+  </header>
+  <main class="tool-main">
+    <section class="hero">
+      <div class="hero-card">
+        <div class="hero-card-inner">
+          <span class="eyebrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            Panduan Operasional
+          </span>
+          <h1 class="hero-title">Panduan Pengoperasian Webtools REYNAHUB</h1>
+          <p class="hero-lead">Panduan praktis untuk operator: cara pakai modul per kategori, alur kerja harian, penanganan masalah (troubleshooting) yang sering terjadi, lengkap dengan panduan visual &amp; langkah perbaikan cepat.</p>
+          <div class="hero-grid">
+            <div class="hero-pill">
+              <span class="hero-pill-label">Fokus</span>
+              <strong>Step-by-step &amp; Troubleshooting</strong>
+            </div>
+            <div class="hero-pill">
+              <span class="hero-pill-label">Cakupan</span>
+              <strong>Semua modul di Workspace</strong>
+            </div>
+            <div class="hero-pill">
+              <span class="hero-pill-label">Mode</span>
+              <strong>Siap dipakai langsung di hub</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <nav class="nav-strip no-print">
+      <a href="#ringkas" class="active">Ringkas</a>
+      <a href="#alur-kerja">Alur Kerja</a>
+      <a href="#pakai-per-modul">Pakai per Modul</a>
+      <a href="#troubleshooting">Troubleshooting</a>
+      <a href="#visual">Panduan Visual</a>
+      <a href="#tips">Tips &amp; Checklist</a>
+    </nav>
+
+    <section id="ringkas" class="section">
+      <div class="section-header">
+        <span class="section-kicker">Quick Overview</span>
+        <h2 class="section-title">Prinsip Pengoperasian</h2>
+        <p class="section-lead">Semua webtool REYNAHUB dirancang konsisten: satu tampilan, satu cara pakai. Ikuti alur ini agar minim kesalahan.</p>
+      </div>
+      <div class="grid-cards">
+        <article class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+              </div>
+              <div>
+                <div class="card-title">1. Buka via Hub</div>
+                <div class="card-desc">Akses dari REYNAHUB, bukan buka file HTML terpisah.</div>
+              </div>
+            </div>
+          </div>
+          <p class="card-desc">Buka Workspace → pilih modul sesuai kebutuhan. Mode <strong>embedded</strong> akan otomatis hilangkan header ganda &amp; ikut tema hub.</p>
+        </article>
+        <article class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              </div>
+              <div>
+                <div class="card-title">2. Ikuti Alur Modul</div>
+                <div class="card-desc">Setiap tool punya urutan logis: input → proses → simpan/print.</div>
+              </div>
+            </div>
+          </div>
+          <p class="card-desc">Baca petunjuk singkat di tiap halaman. Jangan lompat langkah saat ada validasi/konfirmasi.</p>
+        </article>
+        <article class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+              </div>
+              <div>
+                <div class="card-title">3. Periksa Sebelum Simpan</div>
+                <div class="card-desc">Waspada konfirmasi (terutama duplikat/simpan).</div>
+              </div>
+            </div>
+          </div>
+          <p class="card-desc">Baca pesan konfirmasi dengan teliti. Untuk <strong>Pendataan Paket</strong>, modal <em>Resi Double Terdeteksi</em> sengaja minta ketelitian.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="alur-kerja" class="section">
+      <div class="section-header">
+        <span class="section-kicker">Workflow</span>
+        <h2 class="section-title">Alur Kerja Harian Rekomendasi</h2>
+        <p class="section-lead">Urutan aman untuk menghindari error, terutama di modul logistik.</p>
+      </div>
+      <div class="steps">
+        <article class="step">
+          <h3 class="step-title">Persiapan</h3>
+          <p class="step-text">Pastikan koneksi stabil. Untuk tool yang butuh data, biarkan halaman termuat penuh. Cek tema/hub normal.</p>
+        </article>
+        <article class="step">
+          <h3 class="step-title">Input/Scan</h3>
+          <p class="step-text">Gunakan scanner/keyboard. Pastikan fokus di kolom input. Perhatikan notifikasi duplikat jika muncul.</p>
+        </article>
+        <article class="step">
+          <h3 class="step-title">Verifikasi</h3>
+          <p class="step-text">Cek rekap per ekspedisi. Lihat daftar resi, pastikan jumlah &amp; kurir sudah sesuai.</p>
+        </article>
+        <article class="step">
+          <h3 class="step-title">Simpan/Proses</h3>
+          <p class="step-text">Lakukan simpan hanya setelah verifikasi. Baca konfirmasi duplikat dengan teliti.</p>
+        </article>
+        <article class="step">
+          <h3 class="step-title">Cetak/Riwayat</h3>
+          <p class="step-text">Gunakan menu print sesuai kebutuhan. Cek hasil cetak di preview sebelum mencetak fisik.</p>
+        </article>
+        <article class="step">
+          <h3 class="step-title">Selesai &amp; Tutup</h3>
+          <p class="step-text">Kembali ke hub bila sudah selesai. Data sesi tetap aman sesuai desain tool.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="pakai-per-modul" class="section">
+      <div class="section-header">
+        <span class="section-kicker">Per Modul</span>
+        <h2 class="section-title">Cara Pakai Singkat Per Kategori</h2>
+        <p class="section-lead">Ringkas, fokus ke yang wajib diketahui operator.</p>
+      </div>
+      <div class="grid-cards">
+        <article class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 6-6"/></svg>
+              </div>
+              <div>
+                <div class="card-title">Analitik &amp; Insight</div>
+                <div class="card-desc">Analytic Dashboard, Meta Insight Dashboard</div>
+              </div>
+            </div>
+          </div>
+          <ul style="display:flex;flex-direction:column;gap:8px;color:var(--muted);font-size:14px;padding-left:18px;">
+            <li>Impor data sesuai format yang diminta</li>
+            <li>Gunakan filter periode untuk melihat perbandingan</li>
+            <li>Fokus ke ringkasan dulu, baru detail per tabel/grafik</li>
+            <li>Gunakan fitur cetak/ekspor jika butuh laporan</li>
+          </ul>
+        </article>
+        <article class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              </div>
+              <div>
+                <div class="card-title">Operasional &amp; Logistik</div>
+                <div class="card-desc">Resi Generator, Pendataan Paket, Retur Tracker</div>
+              </div>
+            </div>
+          </div>
+          <ul style="display:flex;flex-direction:column;gap:8px;color:var(--muted);font-size:14px;padding-left:18px;">
+            <li><strong>Pendataan Paket:</strong> Scan fokus ke input resi. Perhatikan badge &quot;DOBEL&quot; &amp; panel duplikat.</li>
+            <li><strong>Resi Generator:</strong> Isi data pengiriman lengkap, cek preview sebelum generate.</li>
+            <li><strong>Retur Tracker:</strong> Catat retur dengan alasan jelas agar mudah ditelusuri.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              </div>
+              <div>
+                <div class="card-title">Dokumen &amp; Arsip</div>
+                <div class="card-desc">SPPD Toolbox, Faktur Penjualan, PDFM Merger, Form DAK, LATCH</div>
+              </div>
+            </div>
+          </div>
+          <ul style="display:flex;flex-direction:column;gap:8px;color:var(--muted);font-size:14px;padding-left:18px;">
+            <li>Isi form bertahap, pastikan data wajib terisi</li>
+            <li>Untuk PDF, cek hasil merge/cetak sebelum download</li>
+            <li>Simpan file dengan penamaan jelas</li>
+          </ul>
+        </article>
+        <article class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <div>
+                <div class="card-title">Perencanaan &amp; Tim</div>
+                <div class="card-desc">TaskSpace, RND Roadmap Tracker, Activity Tracker</div>
+              </div>
+            </div>
+          </div>
+          <ul style="display:flex;flex-direction:column;gap:8px;color:var(--muted);font-size:14px;padding-left:18px;">
+            <li>Update status tugas secara berkala</li>
+            <li>Isi aktivitas harian dengan ringkas &amp; jelas</li>
+            <li>Manfaatkan filter untuk fokus per anggota/proyek</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="troubleshooting" class="section">
+      <div class="section-header">
+        <span class="section-kicker">Troubleshooting</span>
+        <h2 class="section-title">Penanganan Masalah yang Sering Terjadi</h2>
+        <p class="section-lead">Langkah perbaikan cepat dengan urutan aman. Ikuti dari atas ke bawah.</p>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Gejala</th>
+              <th>Penyebab Umum</th>
+              <th>Solusi Langkah</th>
+              <th>Keterangan</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Resi terdeteksi DOUBEL saat scan</strong></td>
+              <td>Resi sama sudah discan di sesi ini / pernah ada di history DB</td>
+              <td>1) Baca panel <em>Resi Double Terdeteksi</em>. 2) Pilih <strong>Hapus Duplikat di Sesi Ini</strong> untuk hapus <strong>salah satu</strong> entri. 3) Atau <strong>Periksa Kembali Paket</strong> lalu hapus manual dari daftar per ekspedisi. 4) Gunakan <strong>Lanjut Double</strong> hanya jika memang dikirim ulang.</td>
+              <td><span class="tag">Pendataan Paket</span> · Hapus hanya <u>satu</u> entri, jangan asal tutup. Sistem mencegah keduanya hilang jika keduanya benar-benar ada.</td>
+            </tr>
+            <tr>
+              <td><strong>Saat scan dobel muncul, pilih hapus tapi keduanya hilang</strong></td>
+              <td>Versi lama / logika salah (sudah diperbaiki)</td>
+              <td>Pastikan pakai versi terbaru. Gunakan opsi hapus <strong>salah satu</strong> dari modal/konfirmasi. Jika masih terjadi, lapor beserta nama resi &amp; ekspedisi yang terlihat.</td>
+              <td><span class="tag">Penting</span> · Sudah diperbaiki agar hanya menghapus 1 entri per aksi</td>
+            </tr>
+            <tr>
+              <td><strong>Tidak bisa menghapus salah satu saat duplikat</strong></td>
+              <td>Duplikat hanya tanda, bukan dua baris terpisah, atau masih di mode konfirmasi</td>
+              <td>Buka daftar per ekspedisi (klik baris kurir) → cari resi → hapus dari detail. Atau pakai modal konfirmasi simpan yang baru dengan tombol <strong>Hapus Duplikat di Sesi Ini</strong>.</td>
+              <td><span class="tag">Pendataan Paket</span></td>
+            </tr>
+            <tr>
+              <td><strong>Halaman blank / tidak muncul</strong></td>
+              <td>Cache lama / koneksi / iframe</td>
+              <td>1) Kembali ke hub &amp; buka ulang modul. 2) Hard refresh (Ctrl+Shift+R / Cmd+Shift+R). 3) Coba mode incognito. 4) Pastikan tidak diblokir adblocker.</td>
+              <td><span class="tag">Umum</span></td>
+            </tr>
+            <tr>
+              <td><strong>Tema tidak ikut hub</strong></td>
+              <td>Bridge tema belum tersinkron</td>
+              <td>Ganti tema di sidebar hub (atas/bawah) → modul akan ikut otomatis. Jangan ganti tema manual di beberapa modul.</td>
+              <td><span class="tag">Umum</span></td>
+            </tr>
+            <tr>
+              <td><strong>Scan tidak merespon (Enter)</strong></td>
+              <td>Fokus hilang / input tidak aktif</td>
+              <td>Klik kolom input resi agar fokus kembali. Coba scan ulang atau ketik manual lalu Enter.</td>
+              <td><span class="tag">Pendataan Paket</span></td>
+            </tr>
+            <tr>
+              <td><strong>Cetak hasil berantakan</strong></td>
+              <td>Ukuran kertas / browser print</td>
+              <td>Gunakan <em>More settings</em> → kertas sesuai (A4/Thermal). Matikan &quot;Headers and footers&quot;. Gunakan preview cetak sebelum print fisik.</td>
+              <td><span class="tag">Print</span></td>
+            </tr>
+            <tr>
+              <td><strong>Simpan gagal / loading lama</strong></td>
+              <td>Koneksi jaringan / URL backend</td>
+              <td>Tunggu sebentar, jangan klik simpan berulang. Jika berulang, cek koneksi. Jangan tutup tab saat proses simpan.</td>
+              <td><span class="tag">Butuh Backend</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout danger">
+        <div class="callout-header">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Aturan Penting Saat Duplikat
+        </div>
+        <p style="color:var(--muted);">Saat muncul <strong>Resi Double Terdeteksi</strong>, baca daftar dengan teliti. Jika resi benar-benar sama &amp; salah scan, <strong>hapus salah satu entri</strong>. Jika memang ada dua paket berbeda dengan kondisi unik atau sengaja dicatat ganda, baru pilih <strong>Lanjut Double</strong>.</p>
+      </div>
+    </section>
+
+    <section id="visual" class="section">
+      <div class="section-header">
+        <span class="section-kicker">Visual Guide</span>
+        <h2 class="section-title">Panduan Visual Cepat</h2>
+        <p class="section-lead">Ilustrasi alur sederhana untuk mempermudah pemahaman.</p>
+      </div>
+      <div class="section-header">
+        <h3 style="font-weight:700;">A. Alur Scan &amp; Deteksi Dobel (Pendataan Paket)</h3>
+        <p class="section-lead">Urutan visual saat terjadi duplikasi.</p>
+      </div>
+      <div class="diagram">
+        <div class="diagram-node">
+          <strong>1. Scan Resi</strong>
+          <span style="color:var(--muted);font-size:14px;">Fokus di input → Enter</span>
+        </div>
+        <div class="diagram-arrow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="diagram-node">
+          <strong>2. Cek Sesi/DB</strong>
+          <span style="color:var(--muted);font-size:14px;">Apakah resi sudah ada?</span>
+        </div>
+        <div class="diagram-arrow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="diagram-node active">
+          <strong>3a. Jika DOBEL</strong>
+          <span style="color:var(--muted);font-size:14px;">Muncul modal konfirmasi + opsi hapus salah satu</span>
+        </div>
+        <div class="diagram-arrow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="diagram-node">
+          <strong>4a. Putuskan</strong>
+          <span style="color:var(--muted);font-size:14px;">Hapus salah satu / Periksa kembali / Lanjut Double</span>
+        </div>
+      </div>
+      <div class="diagram" style="margin-top:14px;">
+        <div class="diagram-node">
+          <strong>3b. Jika NORMAL</strong>
+          <span style="color:var(--muted);font-size:14px;">Masuk ke rekap per ekspedisi</span>
+        </div>
+        <div class="diagram-arrow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="diagram-node">
+          <strong>4b. Verifikasi &amp; Simpan</strong>
+          <span style="color:var(--muted);font-size:14px;">Cek rekap → Selesai / Cetak</span>
+        </div>
+      </div>
+      <div class="section-header" style="margin-top:8px;">
+        <h3 style="font-weight:700;">B. Cara Hapus Salah Satu Saat Dobel</h3>
+        <p class="section-lead">Ada 2 jalur aman yang tersedia.</p>
+      </div>
+      <div class="grid-cards">
+        <article class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10"/><path d="M7 12h6"/></svg>
+              </div>
+              <div>
+                <div class="card-title">Jalur 1: Dari Modal Konfirmasi</div>
+                <div class="card-desc">Paling cepat saat baru terdeteksi</div>
+              </div>
+            </div>
+          </div>
+          <ol style="display:flex;flex-direction:column;gap:8px;color:var(--muted);font-size:14px;padding-left:18px;">
+            <li>Muncul modal <strong>Resi Double Terdeteksi</strong></li>
+            <li>Klik <strong>Hapus Duplikat di Sesi Ini</strong></li>
+            <li>Konfirmasi hapus <strong>salah satu</strong> entri</li>
+            <li>Modal tertutup, sisa entri tetap aman</li>
+          </ol>
+        </article>
+        <article class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              </div>
+              <div>
+                <div class="card-title">Jalur 2: Dari Daftar Per Ekspedisi</div>
+                <div class="card-desc">Untuk perbaikan manual</div>
+              </div>
+            </div>
+          </div>
+          <ol style="display:flex;flex-direction:column;gap:8px;color:var(--muted);font-size:14px;padding-left:18px;">
+            <li>Klik baris kurir di tabel rekap</li>
+            <li>Buka <strong>Daftar Resi</strong> di panel detail</li>
+            <li>Temukan resi yang salah / ingin dihapus</li>
+            <li>Klik ikon <strong>Hapus</strong> pada baris tsb → konfirmasi</li>
+          </ol>
+        </article>
+      </div>
+    </section>
+
+    <section id="tips" class="section">
+      <div class="section-header">
+        <span class="section-kicker">Best Practice</span>
+        <h2 class="section-title">Tips, Checklist &amp; Catatan</h2>
+      </div>
+      <div class="grid-cards">
+        <article class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              </div>
+              <div>
+                <div class="card-title">Checklist Harian</div>
+                <div class="card-desc">Cek sebelum tutup sesi</div>
+              </div>
+            </div>
+          </div>
+          <ul style="display:flex;flex-direction:column;gap:8px;color:var(--muted);font-size:14px;padding-left:18px;">
+            <li>[ ] Semua resi ter-scan &amp; masuk rekap per ekspedisi</li>
+            <li>[ ] Tidak ada <strong>dobel</strong> yang belum ditangani</li>
+            <li>[ ] Sudah verifikasi jumlah total</li>
+            <li>[ ] Simpan/Cetak sesuai kebutuhan</li>
+            <li>[ ] Kembali ke hub dengan aman</li>
+          </ul>
+        </article>
+        <article class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"/></svg>
+              </div>
+              <div>
+                <div class="card-title">Tips Cepat</div>
+                <div class="card-desc">Agar kerja lebih efisien</div>
+              </div>
+            </div>
+          </div>
+          <ul style="display:flex;flex-direction:column;gap:8px;color:var(--muted);font-size:14px;padding-left:18px;">
+            <li>Fokus selalu di <strong>kolom input</strong> saat scan massal</li>
+            <li>Jangan menutup modal duplikat tanpa putusan</li>
+            <li>Manfaatkan <strong>hapus salah satu</strong> untuk memperbaiki kesalahan scan</li>
+            <li>Gunakan tampilan hub (embedded) biar konsisten</li>
+            <li>Jika ragu, baca ulang pesan konfirmasi</li>
+          </ul>
+        </article>
+        <article class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              </div>
+              <div>
+                <div class="card-title">Catatan Desain</div>
+                <div class="card-desc">Konsistensi REYNAHUB</div>
+              </div>
+            </div>
+          </div>
+          <ul style="display:flex;flex-direction:column;gap:8px;color:var(--muted);font-size:14px;padding-left:18px;">
+            <li>Satu navbar, satu tema, satu bahasa desain</li>
+            <li>Tool patuh <strong>dual-mode</strong> (embedded/standalone)</li>
+            <li>Warna pakai <strong>token</strong>, bukan hex hardcoded</li>
+            <li>Fokus pada kejelasan &amp; keamanan saat simpan</li>
+          </ul>
+        </article>
+      </div>
+      <div class="callout success">
+        <div class="callout-header">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Rekomendasi Utama
+        </div>
+        <p style="color:var(--muted);">Saat ada keraguan di <strong>Pendataan Paket</strong>, <strong>lebih baik perbaiki di modal duplikat (hapus salah satu) atau dari daftar per ekspedisi</strong>, ketimbang langsung menekan <strong>Lanjut Double</strong> tanpa verifikasi.</p>
+      </div>
+    </section>
+
+    <p class="footer-note">Panduan ini dibuat untuk membantu pengoperasian webtools REYNAHUB. Versi: 2026-11-05 · Desain mengikuti <em>design system</em> REYNAHUB.</p>
+  </main>
+  <script>
+    document.body.classList.toggle('is-embedded', window.self !== window.top);
+    (function(){
+      var root=document.documentElement, isEmbedded=window.self!==window.top;
+      function apply(t){ root.setAttribute('data-theme', t==='dark'?'dark':'light'); }
+      function cur(){ return root.getAttribute('data-theme')==='dark'?'dark':'light'; }
+      if(isEmbedded){
+        window.addEventListener('message',function(e){ if(!e.data)return; if(e.data.type==='SET_THEME'&&(e.data.theme==='dark'||e.data.theme==='light')) apply(e.data.theme); });
+        window.parent.postMessage({type:'request-theme'},'*');
+      } else {
+        apply(localStorage.getItem('reynahub-theme')==='dark'?'dark':'light');
+      }
+      var btn=document.getElementById('theme-toggle');
+      if(btn) btn.addEventListener('click',function(){
+        var n=cur()==='dark'?'light':'dark'; apply(n);
+        if(isEmbedded) window.parent.postMessage({type:'THEME_CHANGED',theme:n},'*');
+        else localStorage.setItem('reynahub-theme',n);
+      });
+      var links=document.querySelectorAll('.nav-strip a');
+      var sections=[...document.querySelectorAll('section[id]')];
+      function onScroll(){
+        var pos=window.scrollY+120;
+        for(var i=sections.length-1;i>=0;i--){
+          var s=sections[i];
+          if(s.offsetTop<=pos){ links.forEach(function(a){a.classList.toggle('active', a.getAttribute('href')==='#'+s.id);}); break; }
+        }
+      }
+      window.addEventListener('scroll',onScroll,{passive:true});
+      onScroll();
+    })();
+  </script>
+</body>
+</html>

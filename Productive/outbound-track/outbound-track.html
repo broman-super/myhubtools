@@ -639,6 +639,15 @@
           </svg>
           <span>Riwayat</span>
         </button>
+        <button class="nav-item" onclick="window.open('../panduan-pengoperasian/panduan-pengoperasian.html','_blank')" title="Panduan Pengoperasian Pendataan Paket">
+          <svg class="nav-icon" viewBox="0 0 24 24">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            <line x1="8" y1="7" x2="16" y2="7"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+          <span>Panduan</span>
+        </button>
         <button class="nav-item" onclick="simpanDanReset()" id="btnReset" title="Selesai (Alt+S)">
           <svg class="nav-icon" viewBox="0 0 24 24">
             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -1366,8 +1375,9 @@
         bunyiResiDouble_();
         renderPanelDuplikat();
         if (kurirSedangDilihat) renderListDetail(kurirSedangDilihat, document.getElementById('searchResi') ? document.getElementById('searchResi').value.trim().toUpperCase() : '');
-        customConfirm(ICONS.warning + ' <b>RESI DOBEL:</b> ' + escHtml(resi) + ' sudah discan di sesi ini (' + resiDuplikatSesi[resi] + 'x).<br><br>Paket tidak ditambahkan ke rekap. Hapus yang lama dari sesi ini atau biarkan keduanya ditandai sebagai dobel?', function () {
-          // Hapus entri lama dari sesi ini (hapus salah satu)
+        customConfirm(ICONS.warning + ' <b>RESI DOBEL:</b> ' + escHtml(resi) + ' sudah discan di sesi ini (' + resiDuplikatSesi[resi] + 'x).<br><br>Paket tidak ditambahkan ke rekap. Hapus salah satu entri dari sesi ini atau biarkan keduanya ditandai sebagai dobel?', function () {
+          // Hapus salah satu entri lama dari sesi ini (hanya yang pertama ditemukan)
+          let dihapus = false;
           for (let kurir in dataPengiriman) {
             if (Array.isArray(dataPengiriman[kurir]) && dataPengiriman[kurir].indexOf(resi) !== -1) {
               dataPengiriman[kurir] = dataPengiriman[kurir].filter(x => x !== resi);
@@ -1375,17 +1385,26 @@
                 document.getElementById('detailArea').style.display = 'none';
                 kurirSedangDilihat = '';
               }
+              dihapus = true;
               break;
             }
           }
-          semuaResi.delete(resi);
-          delete resiDuplikatSesi[resi];
-          delete resiRiwayatDb[resi];
+          if (dihapus) {
+            let masihAda = false;
+            for (let k in dataPengiriman) {
+              if (Array.isArray(dataPengiriman[k]) && dataPengiriman[k].indexOf(resi) !== -1) { masihAda = true; break; }
+            }
+            if (!masihAda) {
+              semuaResi.delete(resi);
+              delete resiDuplikatSesi[resi];
+              delete resiRiwayatDb[resi];
+            }
+          }
           renderPanelDuplikat();
           updateTampilan();
           if (kurirSedangDilihat) renderListDetail(kurirSedangDilihat, document.getElementById('searchResi') ? document.getElementById('searchResi').value.trim().toUpperCase() : '');
           document.getElementById('inputResi').focus();
-          customAlert('Resi lama dihapus dari sesi ini. Silakan scan ulang jika paket ini benar-benar berbeda/salah input.');
+          customAlert('Salah satu entri dihapus dari sesi ini. Jika memang paket beda, scan ulang dengan benar.');
         });
         return;
       }
@@ -1523,14 +1542,28 @@
 
     function hapusResi(kurir, resi) {
       customConfirm('Yakin ingin menghapus resi ' + resi + '?', function() {
-        dataPengiriman[kurir] = dataPengiriman[kurir].filter(r => r !== resi);
-        semuaResi.delete(resi);
-        delete resiDuplikatSesi[resi];
-        delete resiRiwayatDb[resi];
+        if (dataPengiriman[kurir]) {
+          dataPengiriman[kurir] = dataPengiriman[kurir].filter(r => r !== resi);
+        }
+        // Hapus dari semuaResi hanya jika tidak ada lagi di kurir manapun
+        let masihAda = false;
+        for (let k in dataPengiriman) {
+          if (Array.isArray(dataPengiriman[k]) && dataPengiriman[k].indexOf(resi) !== -1) { masihAda = true; break; }
+        }
+        if (!masihAda) {
+          semuaResi.delete(resi);
+          delete resiDuplikatSesi[resi];
+          delete resiRiwayatDb[resi];
+        }
         renderPanelDuplikat();
         updateTampilan();
-        renderListDetail(kurir);
-        if (dataPengiriman[kurir].length === 0) {
+        if (kurirSedangDilihat === kurir) {
+          renderListDetail(kurir);
+          if (dataPengiriman[kurir] && dataPengiriman[kurir].length === 0) {
+            document.getElementById('detailArea').style.display = 'none';
+            kurirSedangDilihat = "";
+          }
+        } else if (dataPengiriman[kurir] && dataPengiriman[kurir].length === 0 && kurirSedangDilihat === kurir) {
           document.getElementById('detailArea').style.display = 'none';
           kurirSedangDilihat = "";
         }
@@ -1679,9 +1712,9 @@
         customAlert('Tidak ada resi duplikat yang bisa dihapus dari sesi ini. Resi duplikat di database tidak bisa dihapus dari sini — hapus langsung dari daftar per ekspedisi atau batalkan dan perbaiki manual.');
         return;
       }
-      customConfirm('Hapus ' + toDelete.length + ' resi duplikat dari sesi ini? (Resi yang sama hanya akan tersimpan 1x)', function () {
+      customConfirm('Hapus salah satu entri dari ' + toDelete.length + ' resi yang terdeteksi dobel di sesi ini?', function () {
         toDelete.forEach(r => {
-          // Cari kurir pemilik resi ini
+          // Hapus hanya satu entri (pertama ditemukan) agar tidak menghapus duplikasi yang memang sengaja terpisah
           for (let kurir in dataPengiriman) {
             if (Array.isArray(dataPengiriman[kurir]) && dataPengiriman[kurir].indexOf(r) !== -1) {
               dataPengiriman[kurir] = dataPengiriman[kurir].filter(x => x !== r);
@@ -1692,15 +1725,24 @@
               break;
             }
           }
-          semuaResi.delete(r);
-          delete resiDuplikatSesi[r];
-          delete resiRiwayatDb[r];
+          let masihAda = false;
+          for (let k in dataPengiriman) {
+            if (Array.isArray(dataPengiriman[k]) && dataPengiriman[k].indexOf(r) !== -1) { masihAda = true; break; }
+          }
+          if (!masihAda) {
+            semuaResi.delete(r);
+            delete resiDuplikatSesi[r];
+            delete resiRiwayatDb[r];
+          } else {
+            // Masih ada entri lain, tetap tandai dobel tapi jangan hapus semua
+            renderPanelDuplikat();
+          }
         });
         renderPanelDuplikat();
         updateTampilan();
         if (kurirSedangDilihat) renderListDetail(kurirSedangDilihat, document.getElementById('searchResi') ? document.getElementById('searchResi').value.trim().toUpperCase() : '');
         document.getElementById('dupConfirmOverlay').style.display = 'none';
-        customAlert('Resi duplikat terpilih telah dihapus dari sesi ini.');
+        customAlert('Salah satu entri terpilih telah dihapus dari sesi ini.');
         document.getElementById('inputResi').focus();
       });
     }
