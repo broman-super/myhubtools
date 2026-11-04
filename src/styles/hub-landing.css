@@ -434,24 +434,45 @@ html[data-theme="dark"] .hero-sheen {
     outline-offset: 2px;
 }
 
-/* ===== SHELL — strip navigasi atas ===== */
+/* ===== SHELL — floating notch ===== */
+/* Nav utama bukan lagi strip yang menempel di tepi: ia kapsul melayang di
+   tengah atas. Ringkas (ikon saja) saat diam, mengembang saat hover/fokus —
+   label grup aktif selalu terbaca seperti Dynamic Island. */
 #workspace { flex-direction: column; }
 
 #workspace aside.sidebar {
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
-    width: 100%;
+    width: auto;
+    max-width: calc(100vw - 24px);
     min-width: 0;
     height: auto;
     flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
-    gap: 18px;
-    padding: 10px clamp(16px, 3vw, 28px);
-    background: var(--bg-card);
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 12px;
+    background: color-mix(in srgb, var(--bg-card) 84%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    backdrop-filter: blur(18px) saturate(1.6);
+    border: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 50;
+    border-radius: 999px;
+    box-shadow: 0 12px 30px -14px rgba(17, 17, 17, .28), 0 2px 6px -3px rgba(17, 17, 17, .14);
+    z-index: 60;
+    transition: box-shadow .3s ease, background .3s ease;
+}
+
+#workspace.active aside.sidebar {
+    animation: notch-in .42s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+@keyframes notch-in {
+    from { opacity: 0; transform: translate(-50%, -16px) scale(.94); }
+    to   { opacity: 1; transform: translate(-50%, 0) scale(1); }
 }
 
 #workspace aside.sidebar .aside-logo {
@@ -466,7 +487,7 @@ html[data-theme="dark"] .hero-sheen {
     letter-spacing: .04em;
     color: var(--text-main);
     border-right: 1px solid var(--border);
-    padding: 6px 18px 6px 0;
+    padding: 4px 12px 4px 2px;
     line-height: 1.2;
     text-align: left;
     flex: none;
@@ -496,39 +517,70 @@ html[data-theme="dark"] .hero-sheen {
 #workspace aside.sidebar .nav-list::-webkit-scrollbar { display: none; }
 
 #workspace aside.sidebar .nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: auto;
     height: 38px;
-    padding: 0 12px;
-    border-radius: 8px;
+    padding: 0 10px;
+    border-radius: 999px;
     border: 1px solid transparent;
     color: var(--text-muted);
     background: transparent;
-    gap: 7px;
-    transition: color .15s ease, background .15s ease, border-color .15s ease;
+    gap: 0;
+    transition: color .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
 }
 
-#workspace aside.sidebar .nav-btn svg { width: 17px; height: 17px; }
+#workspace aside.sidebar .nav-btn svg { width: 17px; height: 17px; flex: none; }
 
+/* Label = bagian yang mengembang. Lebar 0 + opacity 0 saat ringkas supaya
+   animasi lebar berjalan mulus, bukan lompat. */
 #workspace aside.sidebar .nav-label {
     font-size: .8rem;
     font-weight: 600;
     white-space: nowrap;
+    max-width: 0;
+    margin-left: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-width .34s cubic-bezier(.32, .72, 0, 1),
+                margin-left .34s cubic-bezier(.32, .72, 0, 1),
+                opacity .18s ease;
+}
+
+#workspace aside.sidebar:hover .nav-label,
+#workspace aside.sidebar:focus-within .nav-label,
+#workspace aside.sidebar .nav-btn.active .nav-label {
+    max-width: 9rem;
+    margin-left: 8px;
+    opacity: 1;
 }
 
 #workspace aside.sidebar .nav-btn:hover {
     color: var(--text-main);
     background: var(--surface2);
+    transform: translateY(-1px);
 }
 
 #workspace aside.sidebar .nav-btn.active {
     color: var(--text-main);
-    border-color: var(--border);
-    background: var(--surface2);
+    border-color: color-mix(in srgb, var(--accent) 32%, var(--border));
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
     box-shadow: none;
 }
 
+/* Pemisah tipis sebelum kontrol tema/tentang. */
+#workspace aside.sidebar .nav-bottom {
+    margin-left: 4px;
+    padding-left: 6px;
+    border-left: 1px solid var(--border);
+}
+
 /* ===== DASHBOARD ===== */
-#dashboard-view { padding: 30px clamp(16px, 3vw, 32px) 64px; }
+/* Ruang atas menghindari notch melayang; konten tetap bisa menggulir ke bawahnya. */
+#dashboard-view { padding: 92px clamp(16px, 3vw, 32px) 64px; }
+
+#frame-container { top: 76px; }
 
 .dashboard-header {
     display: flex;
@@ -947,29 +999,51 @@ html[data-theme="dark"] .hero-sheen {
 @media (max-width: 768px) {
     #dashboard-view { padding: 22px 16px 104px; }
 
+    /* Notch pindah ke bawah: modul kembali menempel tepi atas. */
+    #frame-container { top: 0; }
+
     .hero-banner {
         width: calc(100% - 28px);
         min-height: 0;
     }
 
-    /* Mobile: aside ikut sistem lama sebagai bar bawah (kontrak frame-container) */
+    /* Mobile: notch melayang di bawah, dekat jempol; tetap kapsul, bukan bar penuh. */
     #workspace aside.sidebar {
         position: fixed;
         top: auto;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: calc(56px + env(safe-area-inset-bottom));
-        padding: 0 15px;
-        padding-bottom: env(safe-area-inset-bottom);
-        background: var(--sidebar-bg);
-        border-bottom: 0;
+        bottom: calc(12px + env(safe-area-inset-bottom));
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        height: auto;
+        padding: 6px;
+        gap: 2px;
+        max-width: calc(100vw - 20px);
+        background: color-mix(in srgb, var(--bg-card) 86%, transparent);
+        border: 1px solid var(--border);
         border-top: 1px solid var(--border);
-        justify-content: space-between;
+        border-radius: 999px;
+        justify-content: center;
+        box-shadow: 0 14px 34px -12px rgba(17, 17, 17, .45);
+    }
+
+    #workspace.active aside.sidebar {
+        animation: notch-in-bottom .42s cubic-bezier(.22, 1, .36, 1) both;
     }
 
     #workspace aside.sidebar .aside-logo { display: none; }
     #workspace aside.sidebar .nav-label { display: none; }
     #workspace aside.sidebar .nav-btn { padding: 0; width: 44px; height: 44px; justify-content: center; }
-    #workspace aside.sidebar .nav-list { flex: 1; justify-content: space-around; }
+    #workspace aside.sidebar .nav-btn:hover { transform: none; }
+    #workspace aside.sidebar .nav-list { flex: 0 1 auto; justify-content: center; }
+    #workspace aside.sidebar .nav-bottom {
+        margin-left: 0;
+        padding-left: 0;
+        border-left: 0;
+    }
+}
+
+@keyframes notch-in-bottom {
+    from { opacity: 0; transform: translate(-50%, 18px) scale(.94); }
+    to   { opacity: 1; transform: translate(-50%, 0) scale(1); }
 }

@@ -594,13 +594,14 @@
   </div>
 
   <div id="dupConfirmOverlay" class="modal-overlay">
-    <div class="modal-content" style="max-width: 480px;">
+    <div class="modal-content" style="max-width: 520px;">
       <h3 style="color: var(--danger);">Resi Double Terdeteksi</h3>
-      <p style="font-size: 13px; margin: 0;">Resi berikut sudah ada di sesi ini atau pernah discan ke database. Periksa kembali paketnya, atau lanjutkan jika memang dikirim ulang.</p>
-      <div id="dupConfirmList" style="max-height: 240px; overflow-y: auto; text-align: left; font-size: 12px;"></div>
-      <div style="display: flex; gap: 10px;">
-        <button class="btn-outline" style="flex: 1;" onclick="tutupKonfirmasiDuplikat()">Periksa Kembali Paket</button>
-        <button style="flex: 1; background-color: var(--danger);" onclick="lanjutDouble()">Lanjut Double</button>
+      <p style="font-size: 13px; margin: 0;">Resi berikut sudah ada di sesi ini atau pernah discan ke database. Hapus salah satu paket jika keliru, atau lanjutkan jika memang dikirim ulang.</p>
+      <div id="dupConfirmList" style="max-height: 260px; overflow-y: auto; text-align: left; font-size: 12px;"></div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn-outline" style="flex: 1 1 140px;" onclick="tutupKonfirmasiDuplikat()">Periksa Kembali Paket</button>
+        <button class="btn-outline" style="flex: 1 1 140px; color: var(--danger); border-color: var(--danger);" onclick="hapusDuplikatTerpilihDariSesi()">Hapus Duplikat di Sesi Ini</button>
+        <button style="flex: 1 1 140px; background-color: var(--danger);" onclick="lanjutDouble()">Lanjut Double (Simpan Apa Adanya)</button>
       </div>
     </div>
   </div>
@@ -1364,8 +1365,28 @@
         resiDuplikatSesi[resi] = (resiDuplikatSesi[resi] || 0) + 1;
         bunyiResiDouble_();
         renderPanelDuplikat();
-        if (kurirSedangDilihat) renderListDetail(kurirSedangDilihat, document.getElementById('searchResi').value.trim().toUpperCase());
-        customAlert(ICONS.warning + ' <b>RESI DOBEL:</b> ' + escHtml(resi) + ' sudah discan di sesi ini (' + resiDuplikatSesi[resi] + 'x). Paket tidak ditambahkan ke rekap — periksa kembali paket.');
+        if (kurirSedangDilihat) renderListDetail(kurirSedangDilihat, document.getElementById('searchResi') ? document.getElementById('searchResi').value.trim().toUpperCase() : '');
+        customConfirm(ICONS.warning + ' <b>RESI DOBEL:</b> ' + escHtml(resi) + ' sudah discan di sesi ini (' + resiDuplikatSesi[resi] + 'x).<br><br>Paket tidak ditambahkan ke rekap. Hapus yang lama dari sesi ini atau biarkan keduanya ditandai sebagai dobel?', function () {
+          // Hapus entri lama dari sesi ini (hapus salah satu)
+          for (let kurir in dataPengiriman) {
+            if (Array.isArray(dataPengiriman[kurir]) && dataPengiriman[kurir].indexOf(resi) !== -1) {
+              dataPengiriman[kurir] = dataPengiriman[kurir].filter(x => x !== resi);
+              if (dataPengiriman[kurir].length === 0 && kurirSedangDilihat === kurir) {
+                document.getElementById('detailArea').style.display = 'none';
+                kurirSedangDilihat = '';
+              }
+              break;
+            }
+          }
+          semuaResi.delete(resi);
+          delete resiDuplikatSesi[resi];
+          delete resiRiwayatDb[resi];
+          renderPanelDuplikat();
+          updateTampilan();
+          if (kurirSedangDilihat) renderListDetail(kurirSedangDilihat, document.getElementById('searchResi') ? document.getElementById('searchResi').value.trim().toUpperCase() : '');
+          document.getElementById('inputResi').focus();
+          customAlert('Resi lama dihapus dari sesi ini. Silakan scan ulang jika paket ini benar-benar berbeda/salah input.');
+        });
         return;
       }
 
@@ -1624,14 +1645,14 @@
       let html = '';
       if (sesi.length) {
         html += '<div class="dup-sub">Dobel di sesi ini (' + sesi.length + '):</div><ul>';
-        sesi.forEach(r => { html += '<li><b>' + escHtml(r) + '</b> — ' + resiDuplikatSesi[r] + 'x scan dobel</li>'; });
+        sesi.forEach(r => { html += '<li><b>' + escHtml(r) + '</b> — ' + resiDuplikatSesi[r] + 'x scan dobel' + (semuaResi.has(r) ? ' · <span style="color:var(--danger)">ada di sesi (bisa dihapus)</span>' : '') + '</li>'; });
         html += '</ul>';
       }
       if (db.length) {
         html += '<div class="dup-sub">Pernah discan ke database (' + db.length + '):</div><ul>';
         db.forEach(r => {
           const d = resiRiwayatDb[r] || {};
-          html += '<li><b>' + escHtml(r) + '</b> — ' + escHtml(d.waktu || '-') + ' · ' + escHtml(d.id || '-') + '</li>';
+          html += '<li><b>' + escHtml(r) + '</b> — ' + escHtml(d.waktu || '-') + ' · ' + escHtml(d.id || '-') + (semuaResi.has(r) ? ' · <span style="color:var(--danger)">ada di sesi ini</span>' : '') + '</li>';
         });
         html += '</ul>';
       }
@@ -1648,6 +1669,40 @@
     function lanjutDouble() {
       document.getElementById('dupConfirmOverlay').style.display = 'none';
       simpanSekarang();
+    }
+
+    function hapusDuplikatTerpilihDariSesi() {
+      const toDelete = [];
+      Object.keys(resiDuplikatSesi).forEach(r => { if (semuaResi.has(r)) toDelete.push(r); });
+      Object.keys(resiRiwayatDb).forEach(r => { if (semuaResi.has(r) && toDelete.indexOf(r) === -1) toDelete.push(r); });
+      if (toDelete.length === 0) {
+        customAlert('Tidak ada resi duplikat yang bisa dihapus dari sesi ini. Resi duplikat di database tidak bisa dihapus dari sini — hapus langsung dari daftar per ekspedisi atau batalkan dan perbaiki manual.');
+        return;
+      }
+      customConfirm('Hapus ' + toDelete.length + ' resi duplikat dari sesi ini? (Resi yang sama hanya akan tersimpan 1x)', function () {
+        toDelete.forEach(r => {
+          // Cari kurir pemilik resi ini
+          for (let kurir in dataPengiriman) {
+            if (Array.isArray(dataPengiriman[kurir]) && dataPengiriman[kurir].indexOf(r) !== -1) {
+              dataPengiriman[kurir] = dataPengiriman[kurir].filter(x => x !== r);
+              if (dataPengiriman[kurir].length === 0 && kurirSedangDilihat === kurir) {
+                document.getElementById('detailArea').style.display = 'none';
+                kurirSedangDilihat = '';
+              }
+              break;
+            }
+          }
+          semuaResi.delete(r);
+          delete resiDuplikatSesi[r];
+          delete resiRiwayatDb[r];
+        });
+        renderPanelDuplikat();
+        updateTampilan();
+        if (kurirSedangDilihat) renderListDetail(kurirSedangDilihat, document.getElementById('searchResi') ? document.getElementById('searchResi').value.trim().toUpperCase() : '');
+        document.getElementById('dupConfirmOverlay').style.display = 'none';
+        customAlert('Resi duplikat terpilih telah dihapus dari sesi ini.');
+        document.getElementById('inputResi').focus();
+      });
     }
 
     function simpanDanReset() {

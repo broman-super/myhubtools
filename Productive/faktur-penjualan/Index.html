@@ -59,6 +59,12 @@ body {
 }
 body, button, input, select, textarea { font-family: var(--font-sans), sans-serif; }
 
+/* Di dalam hub judul + tombol tema topbar disembunyikan (src/styles/tools.css),
+   jadi kartu topbar yang kosong ikut dirapatkan. */
+html.embedded-in-hub .topbar {
+  display: none;
+}
+
 .topbar {
   display: flex;
   align-items: center;

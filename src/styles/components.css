@@ -185,7 +185,8 @@ main {
 /* ===== RESPONSIVE: hanya tumpang tindih keluar yang dipertahankan ===== */
 @media (max-width: 768px) {
     /* bottom bar 56px + safe area: iframe modul tidak boleh berjalan di bawahnya */
+    /* Notch melayang di bawah: sisakan ruang 76px agar modul tidak tertutup. */
     #frame-container {
-        bottom: calc(56px + env(safe-area-inset-bottom));
+        bottom: calc(76px + env(safe-area-inset-bottom));
     }
 }
