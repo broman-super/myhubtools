@@ -14,6 +14,12 @@
       --text: #334155;
       --border: #e2e8f0;
       --primary: #ff0000;
+      --primary-light: rgba(255,0,0,0.10);
+      --radius-xs: 6px;
+      --radius-sm: 8px;
+      --radius: 12px;
+      --radius-lg: 18px;
+      --radius-full: 9999px;
       --danger: #ef4444;
     }
 
@@ -29,7 +35,7 @@
       margin: auto;
       background: var(--surface);
       padding: 15px;
-      border-radius: 12px;
+      border-radius: var(--radius);
       border: 1px solid var(--border);
     }
 
@@ -44,7 +50,7 @@
       background: var(--bg);
       border: 2px dashed #7dd3fc;
       padding: 15px;
-      border-radius: 12px;
+      border-radius: var(--radius);
       margin-bottom: 15px;
       transition: all 0.2s ease-in-out;
     }
@@ -72,7 +78,7 @@
       border: 1px solid var(--border);
       color: var(--text);
       padding: 4px 8px;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       font-size: 11px;
       font-weight: 700;
       display: inline-flex;
@@ -98,7 +104,7 @@
       line-height: 1.5;
       background: var(--bg);
       border: 1px dashed var(--border);
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       padding: 8px;
       word-break: break-all;
       color: var(--text);
@@ -116,7 +122,7 @@
       box-sizing: border-box;
       font-size: 16px;
       border: 2px solid var(--border);
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       outline: none;
       background-color: var(--bg);
       transition: border-color 0.2s;
@@ -168,7 +174,7 @@
       margin-top: 20px;
       padding: 15px;
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: var(--radius);
       background: var(--surface);
     }
 
@@ -191,7 +197,7 @@
       align-items: center;
       padding: 12px;
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       background: var(--surface);
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
@@ -202,14 +208,14 @@
       color: var(--primary);
       background: var(--bg);
       padding: 4px 8px;
-      border-radius: 6px;
+      border-radius: var(--radius-xs);
       text-transform: uppercase;
     }
 
     .hit-resi {
       border: 2px solid var(--primary);
       padding: 2px 8px;
-      border-radius: 6px;
+      border-radius: var(--radius-xs);
       font-weight: 700;
       background: color-mix(in srgb, var(--primary) 12%, transparent);
     }
@@ -228,7 +234,7 @@
       display: inline-block;
       margin-top: 4px;
       padding: 2px 6px;
-      border-radius: 4px;
+      border-radius: var(--radius-xs);
       font-size: 10px;
       font-weight: 800;
       letter-spacing: 0.3px;
@@ -242,7 +248,7 @@
       padding: 12px;
       border: 1px solid var(--danger);
       border-left: 5px solid var(--danger);
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       background: color-mix(in srgb, var(--danger) 8%, var(--surface));
       font-size: 12px;
       line-height: 1.5;
@@ -270,7 +276,7 @@
       background-color: var(--primary);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       font-size: 14px;
       cursor: pointer;
       font-weight: 600;
@@ -292,7 +298,7 @@
       color: var(--danger);
       padding: 6px 12px;
       font-size: 12px;
-      border-radius: 6px;
+      border-radius: var(--radius-xs);
       font-weight: bold;
       flex-shrink: 0;
     }
@@ -314,7 +320,7 @@
     .modal-content {
       background: var(--surface);
       padding: 24px;
-      border-radius: 16px;
+      border-radius: var(--radius-lg);
       width: 85%;
       max-width: 320px;
       display: flex;
@@ -452,16 +458,16 @@
         border-top: none;
         padding: 0;
         justify-content: flex-end;
-        gap: 10px;
+        gap: 6px;
         background: transparent;
       }
       .nav-item {
         flex-direction: row;
         width: auto;
-        padding: 8px 16px;
+        padding: 8px 12px;
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: var(--radius-sm);
         font-size: 13px;
         color: var(--text);
       }
@@ -533,7 +539,7 @@
       border: 1px solid var(--border, #e2e8f0);
       color: var(--text, #0f172a);
       padding: 8px 14px;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       font-family: 'Plus Jakarta Sans';
       font-weight: 600;
       font-size: 13px;
@@ -556,6 +562,7 @@
         --text: #f1f5f9;
         --border: #334155;
         --primary: #ff3b3b;
+        --primary-light: rgba(255,59,59,0.18);
         --danger: #f87171;
     }
     [data-theme="dark"] body { background: var(--bg); color: var(--text); }
@@ -717,7 +724,7 @@
           <h3>Riwayat Sesi</h3>
           <input type="text" id="searchRiwayatGlobal" placeholder="Cari resi / ekspedisi / ID sesi..." onkeyup="filterRiwayatGlobal()" style="margin-bottom: 10px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px; flex-wrap:wrap;">
-            <select id="ukuranRiwayat" onchange="ubahUkuranRiwayat(this.value)" style="padding:4px 8px; border-radius:6px;">
+            <select id="ukuranRiwayat" onchange="ubahUkuranRiwayat(this.value)" style="padding:4px 8px; border-radius: var(--radius-xs);">
               <option value="50" selected>50 data</option>
               <option value="100">100 data</option>
               <option value="500">500 data</option>

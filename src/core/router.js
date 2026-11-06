@@ -45,6 +45,7 @@ class ReynaHubRouter {
     if (clean.indexOf('#ss-') === 0) return 'Productive/planner/taskschedule.html';
     var map = {
       '#productive/planner': 'Productive/planner/taskschedule.html',
+      '#productive/self-management': 'Productive/self-management/Index.html',
       '#productive/analytic': 'Productive/analytic/Analytic.html',
       '#productive/latch': 'Productive/latch/latch.html',
       '#productive/rnd-roadmap': 'Productive/Project_develop/dist/index.html',

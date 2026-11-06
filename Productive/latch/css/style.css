@@ -611,6 +611,9 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
 /* Scroll-lock: panel modal/sheet terbuka mengunci scroll halaman di belakangnya */
 body:has(.modal.open), body:has(.drawer.open), body:has(.bottom-sheet.open){ overflow:hidden; }
 
+/* Drawer tertutup digeser ke luar layar; clip mencegah halaman bisa digeser ke ruang kosong itu. */
+html, body{ overflow-x:clip; }
+
 .drawer{
   position:fixed; top:0; right:0; bottom:0;
   width:380px; max-width:90vw;

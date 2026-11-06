@@ -42,6 +42,21 @@
             --text: #0f172a;
             --muted: #64748b;
             --surface2: #f1f5f9;
+            --radius-sm: 8px;
+            --radius: 12px;
+            --radius-lg: 18px;
+            --radius-full: 9999px;
+            --radius-xs: 6px;
+            --radius-xl: 24px;
+            /* Palet data-viz: warna seri grafik, bukan warna merek. */
+            --chart-1: #ff0000;
+            --chart-2: #f59e0b;
+            --chart-3: #10b981;
+            --chart-4: #6366f1;
+            --chart-5: #8b5cf6;
+            --chart-6: #a855f7;
+            --chart-7: #f97316;
+            --chart-8: #ec4899;
             --focus-ring: 2px solid var(--primary);
             --on-primary: #ffffff;
             --overlay: rgba(15, 23, 42, 0.5);
@@ -74,6 +89,20 @@
             --text: #f8fafc;
             --muted: #94a3b8;
             --surface2: #0f172a;
+            --radius-sm: 8px;
+            --radius: 12px;
+            --radius-lg: 18px;
+            --radius-full: 9999px;
+            --radius-xs: 6px;
+            --radius-xl: 24px;
+            --chart-1: #ff3b3b;
+            --chart-2: #fbbf24;
+            --chart-3: #34d399;
+            --chart-4: #818cf8;
+            --chart-5: #a78bfa;
+            --chart-6: #c084fc;
+            --chart-7: #fb923c;
+            --chart-8: #f472b6;
             --on-primary: #ffffff;
             --overlay: rgba(2, 6, 23, 0.78);
             --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.35);
@@ -111,7 +140,7 @@
         .nav-bar {
             background: var(--surface);
             padding: 16px 24px;
-            border-radius: 20px;
+            border-radius: var(--radius-lg);
             border: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
@@ -168,7 +197,7 @@
             color: var(--text);
             padding: 8px 12px;
             min-height: 44px;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
             font-weight: 800;
             display: flex;
@@ -188,7 +217,7 @@
             grid-auto-columns: 1fr;
             background: var(--surface2);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             overflow: hidden;
             flex-shrink: 0;
         }
@@ -214,7 +243,7 @@
         .compare-pill button.active {
             background: var(--primary-solid);
             color: var(--on-primary);
-            border-radius: 6px;
+            border-radius: var(--radius-xs);
         }
 
         .compare-pill button:hover:not(.active):not(:disabled) {
@@ -232,7 +261,7 @@
         .bento-item {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 24px;
+            border-radius: var(--radius-xl);
             padding: 24px;
             box-shadow: var(--shadow-md);
             transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
@@ -361,7 +390,8 @@
 
         @media (max-width: 640px) {
             .bento-container {
-                grid-template-columns: repeat(12, 1fr);
+                /* minmax(0,…) supaya track boleh lebih sempit dari min-content anak (tabel Top Produk). */
+                grid-template-columns: repeat(12, minmax(0, 1fr));
                 gap: 16px;
             }
 
@@ -371,6 +401,13 @@
             .col-span-4,
             .col-span-3 {
                 grid-column: span 12;
+            }
+
+            /* Akar luapan: html & body dipatok min-width 360px, jadi layar 320–359 tetap
+               360px dan halaman bisa digeser ke samping. Di layar sempit patokannya dilepas. */
+            html,
+            body {
+                min-width: 0;
             }
 
             body {
@@ -513,7 +550,7 @@
 
         .badge {
             padding: 4px 10px;
-            border-radius: 6px;
+            border-radius: var(--radius-xs);
             font-size: 10px;
             font-weight: 800;
             display: inline-flex;
@@ -545,7 +582,7 @@
             width: 100%;
             height: 8px;
             background: var(--border);
-            border-radius: 4px;
+            border-radius: var(--radius-xs);
             margin: 12px 0 8px;
             overflow: hidden;
         }
@@ -553,7 +590,7 @@
         .progress-fill {
             height: 100%;
             background: var(--primary);
-            border-radius: 4px;
+            border-radius: var(--radius-xs);
             transition: width 0.5s ease;
         }
 
@@ -585,7 +622,7 @@
             background: var(--text);
             color: var(--bg);
             padding: 10px;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             font-size: 11px;
             font-weight: 500;
             line-height: 1.4;
@@ -603,7 +640,7 @@
             background: var(--surface2);
             border: 1px solid var(--border);
             color: var(--text);
-            border-radius: 6px;
+            border-radius: var(--radius-xs);
             padding: 4px 8px;
             outline: none;
         }
@@ -679,6 +716,17 @@
             border-collapse: collapse;
         }
 
+        /* Tabel Top Produk: di layar sempit cukup kartunya yang menggulir, bukan seluruh halaman. */
+        @media (max-width: 640px) {
+            /* min-width:0 wajib: tanpa ini min-content tabel 472px melebarkan track grid
+               sehingga seluruh halaman ikut bergeser, bukan hanya kartunya. */
+            .bento-item:has(#dtProduk) { min-width: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+            /* Canvas chart yang masih memakai lebar lama sesaat setelah resize tidak boleh
+               menambah lebar halaman. */
+            .chart-box { max-width: 100%; overflow: hidden; }
+        }
+
         .dataTables_info {
             color: var(--muted) !important;
             font-size: 11px;
@@ -704,7 +752,7 @@
             background: var(--danger-light);
             color: var(--danger);
             padding: 4px 8px;
-            border-radius: 6px;
+            border-radius: var(--radius-xs);
             font-size: 10px;
             font-weight: 800;
         }
@@ -713,7 +761,7 @@
             background: var(--success-light);
             color: var(--success);
             padding: 4px 8px;
-            border-radius: 6px;
+            border-radius: var(--radius-xs);
             font-size: 10px;
             font-weight: 800;
         }
@@ -728,7 +776,7 @@
             margin-top: 12px;
             background: var(--bg);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: var(--radius);
             padding: 10px;
             max-height: 120px;
             overflow-y: auto;
@@ -753,7 +801,7 @@
         .upload-modal-content {
             background: var(--surface);
             padding: 30px;
-            border-radius: 24px;
+            border-radius: var(--radius-xl);
             box-shadow: var(--shadow-lg);
             border: 1px solid var(--border);
             width: 95%;
@@ -779,7 +827,7 @@
         .mapping-card {
             background: var(--bg);
             border: 1px solid var(--border);
-            border-radius: 16px;
+            border-radius: var(--radius-lg);
             padding: 16px;
             display: flex;
             flex-direction: column;
@@ -814,7 +862,7 @@
         .mapping-badge {
             font-size: 10px;
             padding: 2px 6px;
-            border-radius: 4px;
+            border-radius: var(--radius-xs);
             font-weight: 800;
         }
 
@@ -836,7 +884,7 @@
         .mapping-select {
             width: 100%;
             padding: 8px 12px;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             border: 1px solid var(--border);
             background: var(--surface);
             color: var(--text);
@@ -854,7 +902,7 @@
         .preview-container {
             background: var(--bg);
             border: 1px solid var(--border);
-            border-radius: 16px;
+            border-radius: var(--radius-lg);
             padding: 16px;
             display: flex;
             flex-direction: column;
@@ -864,7 +912,7 @@
 
         .preview-table-wrapper {
             overflow-x: auto;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             border: 1px solid var(--border);
             max-height: 310px;
         }
@@ -959,7 +1007,7 @@
             }
 
             html, body {
-                background: #ffffff !important;
+                background: var(--surface) !important;
                 font-size: 8px;
                 padding: 0 !important;
             }
@@ -981,7 +1029,7 @@
                 text-transform: uppercase;
                 letter-spacing: 1px;
                 color: var(--text);
-                border-bottom: 2px solid #94a3b8;
+                border-bottom: 2px solid var(--muted);
                 padding-bottom: 4px;
                 margin-bottom: 10px;
             }
@@ -1003,9 +1051,9 @@
                 margin: 0 !important;
                 padding: 4px !important;
                 box-sizing: border-box !important;
-                background: #ffffff !important;
-                border: 1px solid #94a3b8 !important;
-                border-radius: 6px !important;
+                background: var(--surface) !important;
+                border: 1px solid var(--muted) !important;
+                border-radius: var(--radius-xs) !important;
                 break-inside: avoid;
                 page-break-inside: avoid;
             }
@@ -1079,9 +1127,9 @@
                 box-sizing: border-box !important;
                 break-inside: avoid;
                 page-break-inside: avoid;
-                border: 1px solid #94a3b8 !important;
-                border-radius: 6px !important;
-                background: #ffffff !important;
+                border: 1px solid var(--muted) !important;
+                border-radius: var(--radius-xs) !important;
+                background: var(--surface) !important;
                 padding: 4px !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
@@ -1202,15 +1250,15 @@
     <div id="loginOverlay"
         style="position:fixed; inset:0; background:var(--bg); z-index:var(--z-modal); display:flex; flex-direction:column; justify-content:center; align-items:center;">
         <div
-            style="background:var(--surface); padding:40px; border-radius:24px; box-shadow:var(--shadow-md); border:1px solid var(--border); width:90%; max-width:400px; text-align:center;">
+            style="background:var(--surface); padding:40px; border-radius:var(--radius-xl); box-shadow:var(--shadow-md); border:1px solid var(--border); width:90%; max-width:400px; text-align:center;">
             <h3 style="font-family:'Geomini', 'Plus Jakarta Sans', sans-serif; color:var(--primary); margin-bottom:12px; font-size:18px;">Sales Analytic</h3>
             <p style="color:var(--muted); font-size:14px; margin-bottom:16px; font-weight:600;">Area Terbatas.
                 Masukkan Password.</p>
             <input type="password" id="pwdInput" autofocus aria-label="Password"
-                style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); background:var(--surface2); color:var(--text); margin-bottom:16px; font-weight:800; outline:none; text-align:center; box-sizing:border-box;"
+                style="width:100%; padding:12px; border-radius:var(--radius); border:1px solid var(--border); background:var(--surface2); color:var(--text); margin-bottom:16px; font-weight:800; outline:none; text-align:center; box-sizing:border-box;"
                 placeholder="Password">
             <button onclick="verifyPwd()"
-                style="width:100%; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px;">LOGIN</button>
+                style="width:100%; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:var(--radius); font-weight:800; cursor:pointer; font-size:13px;">LOGIN</button>
             <p id="pwdError" role="alert" aria-live="assertive"
                 style="color:var(--danger); font-size:12px; margin-top:10px; font-weight:800; display:none;">Password
                 Salah!</p>
@@ -1225,14 +1273,14 @@
         <p id="loadingErrorText"
             style="margin-top:8px; font-weight:800; font-size:11px; color:var(--danger); display:none; max-width:420px; text-align:center;"></p>
         <button id="loadingRetryBtn" onclick="location.reload()"
-            style="margin-top:14px; display:none; padding:10px 26px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:10px; font-weight:800; font-size:12px; cursor:pointer;">Coba Lagi</button>
+            style="margin-top:14px; display:none; padding:10px 26px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:var(--radius-sm); font-weight:800; font-size:12px; cursor:pointer;">Coba Lagi</button>
     </div>
 
     <!-- Processing / Syncing Overlay -->
     <div id="processingOverlay"
         style="display:none; position:fixed; inset:0; background:var(--overlay); backdrop-filter:blur(8px); z-index:var(--z-overlay); flex-direction:column; justify-content:center; align-items:center; transition: all 0.3s ease;">
         <div
-            style="background:var(--surface); padding:40px; border-radius:28px; border:1px solid var(--border); box-shadow:var(--shadow-lg); text-align:center; max-width:420px; width:90%; animation:scaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); position:relative;">
+            style="background:var(--surface); padding:40px; border-radius:var(--radius-full); border:1px solid var(--border); box-shadow:var(--shadow-lg); text-align:center; max-width:420px; width:90%; animation:scaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); position:relative;">
             <div id="processingVisual"
                 style="margin-bottom:24px; display:flex; justify-content:center; align-items:center; min-height:60px;">
             </div>
@@ -1244,9 +1292,9 @@
 
             <!-- Progress Bar & Persentase Visual -->
             <div id="processingProgressBarContainer"
-                style="display:none; width:100%; height:8px; background:var(--border); border-radius:4px; margin: 20px 0 8px; overflow:hidden;">
+                style="display:none; width:100%; height:8px; background:var(--border); border-radius:var(--radius-xs); margin: 20px 0 8px; overflow:hidden;">
                 <div id="processingProgressBarFill"
-                    style="height:100%; width:0%; background:var(--primary); border-radius:4px; transition: width 0.3s ease;">
+                    style="height:100%; width:0%; background:var(--primary); border-radius:var(--radius-xs); transition: width 0.3s ease;">
                 </div>
             </div>
             <div id="processingProgressText"
@@ -1254,7 +1302,7 @@
             </div>
 
             <button id="processingCloseBtn" onclick="hideProcessingOverlay()"
-                style="display:none; margin-top:20px; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px;">TUTUP</button>
+                style="display:none; margin-top:20px; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:var(--radius); font-weight:800; cursor:pointer; font-size:13px;">TUTUP</button>
         </div>
     </div>
 
@@ -1262,7 +1310,7 @@
     <div id="expenseModal" role="dialog" aria-modal="true" aria-labelledby="expenseModalTitle"
         style="display:none; position:fixed; inset:0; background:var(--overlay); z-index:var(--z-modal); flex-direction:column; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
         <div
-            style="background:var(--surface); padding:30px; border-radius:24px; box-shadow:var(--shadow-md); border:1px solid var(--border); width:90%; max-width:400px; position:relative; animation:fadeInUp 0.3s ease;">
+            style="background:var(--surface); padding:30px; border-radius:var(--radius-xl); box-shadow:var(--shadow-md); border:1px solid var(--border); width:90%; max-width:400px; position:relative; animation:fadeInUp 0.3s ease;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h3 id="expenseModalTitle" style="font-family:'Geomini', 'Plus Jakarta Sans', sans-serif; color:var(--text); margin:0; font-size:18px;">Catat
                     Pengeluaran (OPEX)</h3>
@@ -1278,7 +1326,7 @@
                     <label for="inputExpenseDate"
                         style="font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:6px; display:block;">Tanggal</label>
                     <input type="date" id="inputExpenseDate"
-                        style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-weight:700; outline:none; font-size:14px;">
+                        style="width:100%; padding:12px; border-radius:var(--radius); border:1px solid var(--border); background:var(--bg); color:var(--text); font-weight:700; outline:none; font-size:14px;">
                 </div>
                 <div>
                     <label for="inputExpenseCategory"
@@ -1286,7 +1334,7 @@
                         Biaya</label>
                     <input type="text" id="inputExpenseCategory" list="expenseCategories"
                         placeholder="Contoh: IKLAN, GAJI, ONGKIR, dll."
-                        style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-weight:700; outline:none; font-size:14px;">
+                        style="width:100%; padding:12px; border-radius:var(--radius); border:1px solid var(--border); background:var(--bg); color:var(--text); font-weight:700; outline:none; font-size:14px;">
                     <datalist id="expenseCategories">
                         <option value="IKLAN"></option>
                         <option value="GAJI"></option>
@@ -1300,12 +1348,12 @@
                         style="font-size:10px; font-weight:800; color:var(--muted); text-transform:uppercase; margin-bottom:6px; display:block;">Nominal
                         Biaya (Rp)</label>
                     <input type="number" id="inputExpenseAmount" placeholder="Contoh: 1500000"
-                        style="width:100%; padding:12px; border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text); font-weight:800; outline:none; font-size:14px;">
+                        style="width:100%; padding:12px; border-radius:var(--radius); border:1px solid var(--border); background:var(--bg); color:var(--text); font-weight:800; outline:none; font-size:14px;">
                 </div>
             </div>
 
             <button onclick="saveExpenseToGAS()" id="btnSaveExpense"
-                style="width:100%; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px; transition:0.2s;">CATAT
+                style="width:100%; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:var(--radius); font-weight:800; cursor:pointer; font-size:13px; transition:0.2s;">CATAT
                 PENGELUARAN</button>
         </div>
     </div>
@@ -1314,7 +1362,7 @@
     <div id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle"
         style="display:none; position:fixed; inset:0; background:var(--overlay); z-index:var(--z-modal); flex-direction:column; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
         <div
-            style="background:var(--surface); padding:30px; border-radius:24px; box-shadow:var(--shadow-md); border:1px solid var(--border); width:90%; max-width:400px; position:relative; animation:fadeInUp 0.3s ease;">
+            style="background:var(--surface); padding:30px; border-radius:var(--radius-xl); box-shadow:var(--shadow-md); border:1px solid var(--border); width:90%; max-width:400px; position:relative; animation:fadeInUp 0.3s ease;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h3 id="settingsModalTitle" style="font-family:'Geomini', 'Plus Jakarta Sans', sans-serif; color:var(--text); margin:0; font-size:18px;">Pengaturan
                     Target</h3>
@@ -1325,9 +1373,9 @@
             <p style="color:var(--muted); font-size:12px; margin-bottom:16px; font-weight:500;">Masukkan target
                 omzet bulan ini. Perubahan tersimpan otomatis.</p>
             <input type="number" id="inputTargetSales" placeholder="Contoh: 820000000" aria-label="Target omzet bulan ini"
-                style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text); margin-bottom:16px; font-weight:800; outline:none; font-size:16px;">
+                style="width:100%; padding:14px; border-radius:var(--radius); border:1px solid var(--border); background:var(--bg); color:var(--text); margin-bottom:16px; font-weight:800; outline:none; font-size:16px;">
             <button onclick="saveTargetToGAS()" id="btnSaveTarget"
-                style="width:100%; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px; transition:0.2s;">SIMPAN
+                style="width:100%; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:var(--radius); font-weight:800; cursor:pointer; font-size:13px; transition:0.2s;">SIMPAN
                 TARGET</button>
         </div>
     </div>
@@ -1368,7 +1416,7 @@
 
                 <!-- Dropzone -->
                 <div id="dropzone"
-                    style="border: 2px dashed var(--border); border-radius: 16px; padding: 40px 20px; text-align: center; background: var(--bg); cursor: pointer; transition: 0.2s;"
+                    style="border: 2px dashed var(--border); border-radius: var(--radius-lg); padding: 40px 20px; text-align: center; background: var(--bg); cursor: pointer; transition: 0.2s;"
                     onpointerover="this.style.borderColor='var(--primary)'"
                     onpointerout="this.style.borderColor='var(--border)'">
                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--muted)"
@@ -1386,7 +1434,7 @@
 
                 <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
                     <button onclick="closeUploadModal()"
-                        style="padding: 12px 20px; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px;">BATAL</button>
+                        style="padding: 12px 20px; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: var(--radius); font-weight: 800; cursor: pointer; font-size: 13px;">BATAL</button>
                 </div>
             </div>
 
@@ -1431,11 +1479,11 @@
                 <!-- Footer Buttons -->
                 <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
                     <button onclick="goToUploadStep(1)"
-                        style="padding: 12px 20px; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px;">
+                        style="padding: 12px 20px; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: var(--radius); font-weight: 800; cursor: pointer; font-size: 13px;">
                         HAPUS & UPLOAD ULANG
                     </button>
                     <button onclick="runDataAnalysis()" id="btnRunAnalysis"
-                        style="padding: 12px 20px; background: var(--primary-solid); color: var(--on-primary); border: none; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px; transition: 0.2s;">
+                        style="padding: 12px 20px; background: var(--primary-solid); color: var(--on-primary); border: none; border-radius: var(--radius); font-weight: 800; cursor: pointer; font-size: 13px; transition: 0.2s;">
                         LANJUT ANALISIS DATA
                     </button>
                 </div>
@@ -1446,34 +1494,34 @@
                 <!-- Preview Hasil -->
                 <div id="uploadPreviewBox" style="margin-top: 10px;">
                     <div
-                        style="background: var(--bg); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 20px;">
+                        style="background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 20px;">
                         <div
                             style="font-size: 11px; font-weight: 800; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Hasil Analisis Data:
                         </div>
                         <div style="display: flex; justify-content: space-between; gap: 10px; text-align: center;">
                             <div
-                                style="flex: 1; background: var(--surface2); padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border);">
+                                style="flex: 1; background: var(--surface2); padding: 12px 8px; border-radius: var(--radius); border: 1px solid var(--border);">
                                 <span style="display: block; font-size: 20px; font-weight: 900; color: var(--text);"
                                     id="previewTotalRows">0</span>
                                 <span style="font-size: 10px; font-weight: 800; color: var(--muted);">TOTAL
                                     BARIS</span>
                             </div>
                             <div
-                                style="flex: 1; background: var(--success-light); padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border);">
+                                style="flex: 1; background: var(--success-light); padding: 12px 8px; border-radius: var(--radius); border: 1px solid var(--border);">
                                 <span style="display: block; font-size: 20px; font-weight: 900; color: var(--success);"
                                     id="previewNewRows">0</span>
                                 <span style="font-size: 10px; font-weight: 800; color: var(--success);">BARIS BARU</span>
                             </div>
                             <div
-                                style="flex: 1; background: var(--warning-light); padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border);">
+                                style="flex: 1; background: var(--warning-light); padding: 12px 8px; border-radius: var(--radius); border: 1px solid var(--border);">
                                 <span style="display: block; font-size: 20px; font-weight: 900; color: var(--warning);"
                                     id="previewUpdateRows">0</span>
                                 <span style="font-size: 10px; font-weight: 800; color: var(--warning);">PERLU
                                     UPDATE</span>
                             </div>
                             <div
-                                style="flex: 1; background: var(--surface2); padding: 12px 8px; border-radius: 12px; border: 1px solid var(--border);">
+                                style="flex: 1; background: var(--surface2); padding: 12px 8px; border-radius: var(--radius); border: 1px solid var(--border);">
                                 <span
                                     style="display: block; font-size: 20px; font-weight: 900; color: var(--muted);"
                                     id="previewSkipRows">0</span>
@@ -1493,11 +1541,11 @@
                 <!-- Footer Buttons -->
                 <div style="display: flex; gap: 10px; margin-top: 25px; justify-content: flex-end;">
                     <button onclick="goToUploadStep(2)"
-                        style="padding: 12px 20px; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px;">
+                        style="padding: 12px 20px; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: var(--radius); font-weight: 800; cursor: pointer; font-size: 13px;">
                         KEMBALI KE PEMETAAN
                     </button>
                     <button onclick="sendExcelToGAS()" id="btnSubmitUpload" disabled
-                        style="padding: 12px 20px; background: var(--primary-solid); color: var(--on-primary); border: none; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px; opacity: 0.5; transition: 0.2s;">
+                        style="padding: 12px 20px; background: var(--primary-solid); color: var(--on-primary); border: none; border-radius: var(--radius); font-weight: 800; cursor: pointer; font-size: 13px; opacity: 0.5; transition: 0.2s;">
                         KIRIM DATA
                     </button>
                 </div>
@@ -1512,7 +1560,7 @@
             </svg> SAS - SALES ANALYTIC</h1>
         <div style="display:flex; align-items:center; gap:10px; margin-left: 20px; flex-wrap:wrap;">
             <div id="syncStatus" style="font-size: 11px; color: var(--muted); font-weight: 500;">Mengecek data...</div>
-            <button id="dqBadge" onclick="alert('Data Quality:\n- Tidak terklasifikasi: ' + (dqUnclassified||0) + '\n- HPP hilang (perkiraan): ' + (dqMissingHpp||0) + '\n- Retur tanpa kecocokan HPP (dibatasi): ' + (dqReturNoMatch||0))" style="display:none; padding:4px 10px; border-radius:999px; border:1px solid var(--warning); background:var(--warning-light); color:var(--warning-strong); font-size:10px; font-weight:800; cursor:pointer;">Data Quality</button>
+            <button id="dqBadge" onclick="alert('Data Quality:\n- Tidak terklasifikasi: ' + (dqUnclassified||0) + '\n- HPP hilang (perkiraan): ' + (dqMissingHpp||0) + '\n- Retur tanpa kecocokan HPP (dibatasi): ' + (dqReturNoMatch||0))" style="display:none; padding:4px 10px; border-radius:var(--radius-full); border:1px solid var(--warning); background:var(--warning-light); color:var(--warning-strong); font-size:10px; font-weight:800; cursor:pointer;">Data Quality</button>
         </div>
         <div class="nav-controls">
             <div class="nav-group">
@@ -1567,11 +1615,11 @@
             </div>
             <div class="nav-group">
                 <input type="text" id="reportrange" aria-label="Pilih rentang tanggal" title="Pilih rentang tanggal"
-                    style="background: var(--surface); color: var(--text); cursor: pointer; padding: 10px 15px; border: 1px solid var(--border); border-radius: 8px; width: 100%; min-width: 200px; font-weight: 700; font-size: 12px; outline:none; text-align:center;">
+                    style="background: var(--surface); color: var(--text); cursor: pointer; padding: 10px 15px; border: 1px solid var(--border); border-radius: var(--radius-sm); width: 100%; min-width: 200px; font-weight: 700; font-size: 12px; outline:none; text-align:center;">
                 <input type="hidden" id="startDate"><input type="hidden" id="endDate">
                 <input type="hidden" id="comparisonMode" value="rolling">
                 <button class="no-print" onclick="window.print()" title="Cetak / Export PDF (A4)"
-                    style="background: var(--primary-solid); color: var(--on-primary); cursor: pointer; padding: 8px 12px; border: none; border-radius: 8px; font-weight: 800; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
+                    style="background: var(--primary-solid); color: var(--on-primary); cursor: pointer; padding: 8px 12px; border: none; border-radius: var(--radius-sm); font-weight: 800; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                     Cetak
                 </button>
@@ -1587,7 +1635,7 @@
 
         <div class="bento-container" id="mainContainer">
             <div id="printRangeHeader" class="print-range-subheader" style="display:none;"></div>
-            <div id="emptyState" style="display:none; grid-column:1 / -1; box-sizing:border-box; background:var(--surface); border:1px dashed var(--border); border-radius:16px; padding:18px 20px; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+            <div id="emptyState" style="display:none; grid-column:1 / -1; box-sizing:border-box; background:var(--surface); border:1px dashed var(--border); border-radius:var(--radius-lg); padding:18px 20px; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
                 <div style="display:flex; align-items:center; gap:14px;">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
                     <div>
@@ -1597,9 +1645,9 @@
                 </div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     <button onclick="document.getElementById('uploadExcelModal').style.display='flex';"
-                        style="min-height:44px; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:12px; font-weight:800; font-size:13px; cursor:pointer;">Import Excel</button>
+                        style="min-height:44px; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:var(--radius); font-weight:800; font-size:13px; cursor:pointer;">Import Excel</button>
                     <button onclick="document.getElementById('emptyState').style.display='none';"
-                        style="min-height:44px; padding:12px 20px; background:var(--surface2); color:var(--muted); border:1px solid var(--border); border-radius:12px; font-weight:800; font-size:13px; cursor:pointer;">Tutup</button>
+                        style="min-height:44px; padding:12px 20px; background:var(--surface2); color:var(--muted); border:1px solid var(--border); border-radius:var(--radius); font-weight:800; font-size:13px; cursor:pointer;">Tutup</button>
                 </div>
             </div>
         <!-- ROW 1 -->
@@ -1774,11 +1822,11 @@
                 <div class="bento-title">TOP PRODUK & MOMENTUM</div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end;">
                     <select id="filterProdukKategori" onchange="onFilterProdukKategoriChange()" aria-label="Filter kategori produk"
-                        style="padding:6px 12px; font-size:11px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-weight:700; outline:none; max-width:200px;">
+                        style="padding:6px 12px; font-size:11px; border-radius:var(--radius-xs); border:1px solid var(--border); background:var(--surface2); color:var(--text); font-weight:700; outline:none; max-width:200px;">
                         <option value="ALL">SEMUA KATEGORI</option>
                     </select>
                     <select id="filterResellerPelanggan" onchange="jalankanProsesData_()" aria-label="Filter reseller atau pelanggan"
-                        style="display:none; padding:6px 12px; font-size:11px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--text); font-weight:700; outline:none; max-width:260px;">
+                        style="display:none; padding:6px 12px; font-size:11px; border-radius:var(--radius-xs); border:1px solid var(--border); background:var(--surface2); color:var(--text); font-weight:700; outline:none; max-width:260px;">
                         <option value="ALL">SEMUA RESELLER</option>
                     </select>
                 </div>
@@ -1850,7 +1898,7 @@
             <div id="localWarningBox" style="font-size:13px; line-height:1.6; color:var(--text); margin-bottom:16px;">
                 Menganalisis data...</div>
             <details id="mdPromptBox"
-                style="display:none; margin-bottom:16px; border:1px solid var(--border); border-radius:12px; background:var(--surface);">
+                style="display:none; margin-bottom:16px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface);">
                 <summary
                     style="cursor:pointer; padding:10px 14px; font-size:11px; font-weight:800; color:var(--muted);">
                     Prompt yang akan dikirim ke AI (dikirim hanya saat menekan Tanya Gemini)</summary>
@@ -1858,11 +1906,11 @@
                     style="margin:0; padding:12px 14px; font-size:11px; line-height:1.5; color:var(--text); background:var(--bg); border-top:1px solid var(--border); white-space:pre-wrap; word-break:break-word; max-height:280px; overflow:auto;"></pre>
             </details>
             <div id="aiResultBox"
-                style="display:none; background:var(--surface); color:var(--text); border-radius:12px; padding:20px; font-size:13px; line-height:1.6; margin-bottom:16px; border:1px solid var(--border); box-shadow:inset 0 2px 4px rgba(0,0,0,0.05);">
+                style="display:none; background:var(--surface); color:var(--text); border-radius:var(--radius); padding:20px; font-size:13px; line-height:1.6; margin-bottom:16px; border:1px solid var(--border); box-shadow:inset 0 2px 4px rgba(0,0,0,0.05);">
                 <div id="aiContent"></div>
             </div>
             <button onclick="mintaSaranAI()"
-                style="background:var(--primary-solid); color:var(--on-primary); border:none; padding:12px 20px; border-radius:12px; font-weight:800; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:auto; transition:0.2s;">
+                style="background:var(--primary-solid); color:var(--on-primary); border:none; padding:12px 20px; border-radius:var(--radius); font-weight:800; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:auto; transition:0.2s;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg> TANYA GEMINI
@@ -1881,7 +1929,7 @@
                 Unggah file Excel/CSV laporan biaya (format jurnal). Kolom dibaca: <b>No Bukti</b>, <b>Keterangan Jurnal</b>, <b>Debit</b> (Nominal), dan <b>Tanggal</b> (opsional).<br>
                 Jika kolom Tanggal kosong, tanggal diambil dari <b>No Bukti</b> (mis. <code>110202.2026.08.00008</code> → <code>2026-08-02</code>). Platform (TikTok/Shopee) &amp; Nama Toko (Supersub/KYX) otomatis ditandai dari Keterangan. Baris duplikat otomatis dilewati.
             </p>
-            <div id="biayaDropzone" style="border:2px dashed var(--border); border-radius:16px; padding:40px 20px; text-align:center; background:var(--bg); cursor:pointer; transition:0.2s;">
+            <div id="biayaDropzone" style="border:2px dashed var(--border); border-radius:var(--radius-lg); padding:40px 20px; text-align:center; background:var(--bg); cursor:pointer; transition:0.2s;">
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="margin-bottom:12px;">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
@@ -1893,11 +1941,11 @@
             </div>
             <input type="file" id="biayaFileInput" accept=".xlsx, .xls, .csv" style="display:none;">
             <div id="biayaPreviewBox" style="display:none; margin-top:15px;">
-                <div style="background:var(--bg); border:1px solid var(--border); border-radius:16px; padding:16px; text-align:center;">
+                <div style="background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px; text-align:center;">
                     <span style="font-size:22px; font-weight:900; color:var(--text);" id="biayaTotalRows">0</span>
                     <span style="font-size:11px; font-weight:800; color:var(--muted);"> BARIS VALID SIAP DIIMPORT</span>
                 </div>
-                <div style="margin-top:12px; max-height:220px; overflow:auto; border:1px solid var(--border); border-radius:12px;">
+                <div style="margin-top:12px; max-height:220px; overflow:auto; border:1px solid var(--border); border-radius:var(--radius);">
                     <table style="width:100%; font-size:11px; border-collapse:collapse;">
                         <thead style="position:sticky; top:0; background:var(--surface2);"><tr><th style="padding:8px; text-align:left; color:var(--muted);">No Bukti</th><th style="padding:8px; text-align:left; color:var(--muted);">Keterangan</th><th style="padding:8px; text-align:left; color:var(--muted);">Kategori →</th><th style="padding:8px; text-align:left; color:var(--muted);">Alasan</th><th style="padding:8px; text-align:right; color:var(--muted);">Nominal</th></tr></thead>
                         <tbody id="biayaPreviewTableBody"></tbody>
@@ -1905,21 +1953,21 @@
                 </div>
                 <div style="font-size:10px; color:var(--muted); margin-top:6px; text-align:center;" id="biayaPreviewInfo"></div>
             </div>
-            <div id="biayaMappingBox" style="display:none; margin-top:15px; background:var(--bg); border:1px solid var(--border); border-radius:16px; padding:16px;">
+            <div id="biayaMappingBox" style="display:none; margin-top:15px; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px;">
                 <div style="font-size:12px; font-weight:800; color:var(--danger); margin-bottom:10px;">Header tidak terdeteksi otomatis — pilih kolom manual:</div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <label style="font-size:11px; color:var(--text);">No Bukti <select id="mapNoBukti" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text);"></select></label>
-                    <label style="font-size:11px; color:var(--text);">Keterangan Jurnal <span style="color:var(--danger);">*</span> <select id="mapKeterangan" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text);"></select></label>
-                    <label style="font-size:11px; color:var(--text);">Debit/Nominal <span style="color:var(--danger);">*</span> <select id="mapDebit" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text);"></select></label>
-                    <label style="font-size:11px; color:var(--text);">Tanggal (opsional) <select id="mapTanggal" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text);"></select></label>
-                    <label style="font-size:11px; color:var(--text);">Kategori Biaya (opsional) <select id="mapKategori" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text);"></select></label>
+                    <label style="font-size:11px; color:var(--text);">No Bukti <select id="mapNoBukti" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text);"></select></label>
+                    <label style="font-size:11px; color:var(--text);">Keterangan Jurnal <span style="color:var(--danger);">*</span> <select id="mapKeterangan" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text);"></select></label>
+                    <label style="font-size:11px; color:var(--text);">Debit/Nominal <span style="color:var(--danger);">*</span> <select id="mapDebit" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text);"></select></label>
+                    <label style="font-size:11px; color:var(--text);">Tanggal (opsional) <select id="mapTanggal" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text);"></select></label>
+                    <label style="font-size:11px; color:var(--text);">Kategori Biaya (opsional) <select id="mapKategori" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text);"></select></label>
                 </div>
-                <button onclick="applyBiayaMapping()" style="margin-top:12px; width:100%; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px;">TERAPKAN PEMETAAN</button>
+                <button onclick="applyBiayaMapping()" style="margin-top:12px; width:100%; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:var(--radius); font-weight:800; cursor:pointer; font-size:13px;">TERAPKAN PEMETAAN</button>
                 <div style="font-size:10px; color:var(--muted); margin-top:6px; text-align:center;">Header terdeteksi: <span id="biayaDetectedHeaders"></span></div>
             </div>
             <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
-                <button onclick="closeBiayaUploadModal()" style="padding:12px 20px; background:none; border:1px solid var(--border); color:var(--muted); border-radius:12px; font-weight:800; cursor:pointer; font-size:13px;">BATAL</button>
-                <button onclick="sendBiayaToGAS()" id="btnSubmitBiayaUpload" disabled style="padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13px; opacity:0.5; transition:0.2s;">KIRIM DATA</button>
+                <button onclick="closeBiayaUploadModal()" style="padding:12px 20px; background:none; border:1px solid var(--border); color:var(--muted); border-radius:var(--radius); font-weight:800; cursor:pointer; font-size:13px;">BATAL</button>
+                <button onclick="sendBiayaToGAS()" id="btnSubmitBiayaUpload" disabled style="padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:var(--radius); font-weight:800; cursor:pointer; font-size:13px; opacity:0.5; transition:0.2s;">KIRIM DATA</button>
             </div>
         </div>
     </div>
@@ -1933,7 +1981,7 @@
             </div>
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <label style="font-size:11px; font-weight:700; color:var(--muted); display:flex; align-items:center; gap:6px;">Omzet:
-                    <select id="biayaOmzetMode" style="padding:6px 10px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text); font-weight:700; font-size:11px;">
+                    <select id="biayaOmzetMode" style="padding:6px 10px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text); font-weight:700; font-size:11px;">
                         <option value="bersih">Omzet Bersih</option>
                         <option value="kotor">Omzet Kotor</option>
                     </select>
@@ -1952,7 +2000,7 @@
         </div>
 
         <!-- ROW 0: PEMBERITAHUAN RENTANG KOSONG -->
-        <div id="biayaEmptyHint" style="display:none; grid-column:1 / -1; align-items:center; gap:8px; background:var(--warning-light); color:var(--warning-strong); border:1px solid var(--warning); border-radius:12px; padding:10px 14px; font-weight:700; font-size:12px;"></div>
+        <div id="biayaEmptyHint" style="display:none; grid-column:1 / -1; align-items:center; gap:8px; background:var(--warning-light); color:var(--warning-strong); border:1px solid var(--warning); border-radius:var(--radius); padding:10px 14px; font-weight:700; font-size:12px;"></div>
 
         <!-- ROW 1: KPI BIAYA -->
         <div id="cardBiayaTotal" class="bento-item col-span-3">
@@ -2095,7 +2143,7 @@
                 <div class="bento-title">RANKING KATEGORI <span class="help-icon" data-static-tooltip="Urutan kategori berdasarkan total biaya, dengan selisih terhadap periode sebelumnya.">?</span></div>
             </div>
             <div id="biayaRankList" style="display:flex; flex-direction:column; gap:8px;"></div>
-            <div style="font-size:10px; color:var(--muted); margin-top:10px; padding:8px; background:var(--surface2); border-radius:8px;">Lain-lain = Kategori kosong/LAIN* → derive dari Keterangan Jurnal hanya 5 frasa iklan (SHOPEE/TIKTOK/KYX/SUPERSUB/TOPUP), selain itu tetap Lain-lain.</div>
+            <div style="font-size:10px; color:var(--muted); margin-top:10px; padding:8px; background:var(--surface2); border-radius:var(--radius-sm);">Lain-lain = Kategori kosong/LAIN* → derive dari Keterangan Jurnal hanya 5 frasa iklan (SHOPEE/TIKTOK/KYX/SUPERSUB/TOPUP), selain itu tetap Lain-lain.</div>
         </div>
 
         <!-- ROW 4: TABEL PER-ENTRI -->
@@ -2391,7 +2439,7 @@
         function showRefreshToast() {
             const toast = document.createElement('div');
             toast.innerHTML = `${ICONS.warning}&nbsp; Data tersimpan. Dashboard perlu dimuat ulang. <a href="#" id="analyticReloadNotice" style="color:var(--primary);font-weight:700;">Refresh</a>`;
-            toast.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:var(--z-toast);background:var(--surface);border:1px solid var(--warning);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text);box-shadow:var(--shadow-md);max-width:300px;';
+            toast.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:var(--z-toast);background:var(--surface);border:1px solid var(--warning);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--text);box-shadow:var(--shadow-md);max-width:300px;';
             document.body.appendChild(toast);
             const btn = document.getElementById('analyticReloadNotice');
             if (btn) btn.onclick = (e) => { e.preventDefault(); location.reload(); };
@@ -2404,7 +2452,7 @@
             const toast = document.createElement('div');
             toast.setAttribute('role', 'status');
             toast.textContent = message;
-            toast.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:var(--z-toast);background:var(--surface);border:1px solid ' + accent + ';border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text);box-shadow:var(--shadow-md);max-width:320px;white-space:pre-line;cursor:pointer;';
+            toast.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:var(--z-toast);background:var(--surface);border:1px solid ' + accent + ';border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--text);box-shadow:var(--shadow-md);max-width:320px;white-space:pre-line;cursor:pointer;';
             toast.setAttribute('title', 'Klik untuk menutup');
             document.body.appendChild(toast);
             toast.onclick = () => toast.remove();
@@ -2419,7 +2467,7 @@
                 wrap.setAttribute('aria-modal', 'true');
                 wrap.style.cssText = 'position:fixed;inset:0;background:var(--overlay);backdrop-filter:blur(4px);z-index:calc(var(--z-overlay) + 50);display:flex;justify-content:center;align-items:center;';
                 const card = document.createElement('div');
-                card.style.cssText = 'background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow-lg);padding:24px;width:90%;max-width:380px;';
+                card.style.cssText = 'background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:24px;width:90%;max-width:380px;';
                 card.innerHTML = '<p style="margin:0 0 6px;font-weight:800;font-size:15px;color:var(--text);" id="confirmDialogTitle">Konfirmasi</p><p style="margin:0 0 18px;font-size:13px;color:var(--muted);line-height:1.5;" id="confirmDialogDesc"></p>';
                 card.querySelectorAll('p')[1].textContent = message;
                 wrap.setAttribute('aria-labelledby', 'confirmDialogTitle');
@@ -2427,10 +2475,10 @@
                 row.style.cssText = 'display:flex;gap:10px;justify-content:flex-end;';
                 const cancel = document.createElement('button');
                 cancel.textContent = 'Batal';
-                cancel.style.cssText = 'min-height:44px;padding:10px 16px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;';
+                cancel.style.cssText = 'min-height:44px;padding:10px 16px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);font-weight:800;font-size:13px;cursor:pointer;';
                 const ok = document.createElement('button');
                 ok.textContent = confirmLabel;
-                ok.style.cssText = 'min-height:44px;padding:10px 16px;background:var(--danger);color:var(--on-primary);border:none;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;';
+                ok.style.cssText = 'min-height:44px;padding:10px 16px;background:var(--danger);color:var(--on-primary);border:none;border-radius:var(--radius-sm);font-weight:800;font-size:13px;cursor:pointer;';
                 row.appendChild(cancel); row.appendChild(ok); card.appendChild(row); wrap.appendChild(card);
                 document.body.appendChild(wrap);
                 function done(val) { wrap.remove(); document.removeEventListener('keydown', onKey); resolve(val); }
@@ -2478,7 +2526,7 @@
                     const staleBanner = document.getElementById('aiStaleWarning');
                     if (!staleBanner) {
                         const bannerHtml = `
-                            <div id="aiStaleWarning" style="margin-bottom:15px; padding:10px 15px; background:var(--surface2); border:1px dashed var(--warning); border-radius:10px; font-size:12px; color:var(--text); font-weight:700; display:flex; align-items:center; gap:8px; animation:scaleUp 0.3s ease;">
+                            <div id="aiStaleWarning" style="margin-bottom:15px; padding:10px 15px; background:var(--surface2); border:1px dashed var(--warning); border-radius:var(--radius-sm); font-size:12px; color:var(--text); font-weight:700; display:flex; align-items:center; gap:8px; animation:scaleUp 0.3s ease;">
                                 ${ICONS.warning}
                                 <span>Rekomendasi di bawah mungkin usang karena data dashboard telah diperbarui. Silakan tanya kembali untuk strategi terbaru!</span>
                             </div>
@@ -2979,7 +3027,7 @@
             // Tombol trigger (mirip shadcn): ikon kalender + teks rentang
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.style.cssText = 'display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:10px 15px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text); cursor:pointer; font-weight:700; font-size:12px; outline:none;';
+            btn.style.cssText = 'display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:10px 15px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text); cursor:pointer; font-weight:700; font-size:12px; outline:none;';
             const icon = document.createElement('span');
             icon.style.cssText = 'display:inline-flex; flex-shrink:0;';
             icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
@@ -2990,7 +3038,7 @@
 
             // Popover
             const pop = document.createElement('div');
-            pop.style.cssText = 'position:absolute; top:calc(100% + 8px); right:0; z-index:var(--z-modal); display:none; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:0 12px 32px rgba(15,23,42,0.12); padding:16px; min-width:580px; max-width:94vw;';
+            pop.style.cssText = 'position:absolute; top:calc(100% + 8px); right:0; z-index:var(--z-modal); display:none; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:0 12px 32px rgba(15,23,42,0.12); padding:16px; min-width:580px; max-width:94vw;';
             pop.style.boxSizing = 'border-box';
 
             // Layout: preset selalu di kiri, kalender selalu di kanan (nowrap = tak pernah bertumpuk)
@@ -3005,7 +3053,7 @@
                 const b = document.createElement('button');
                 b.type = 'button';
                 b.textContent = p[0];
-                b.style.cssText = 'display:block; width:100%; text-align:left; padding:9px 12px; border:none; border-radius:8px; background:transparent; color:var(--text); cursor:pointer; font-weight:700; font-size:12px; transition:background 0.15s;';
+                b.style.cssText = 'display:block; width:100%; text-align:left; padding:9px 12px; border:none; border-radius:var(--radius-sm); background:transparent; color:var(--text); cursor:pointer; font-weight:700; font-size:12px; transition:background 0.15s;';
                 presetBtns[p[0]] = b;
                 b.addEventListener('click', function () { selectPreset(p[0]); });
                 presetList.appendChild(b);
@@ -3020,7 +3068,7 @@
             nav.style.cssText = 'display:flex; justify-content:space-between; margin-bottom:10px;';
             const navPrev = document.createElement('button'); navPrev.type = 'button'; navPrev.textContent = '‹';
             const navNext = document.createElement('button'); navNext.type = 'button'; navNext.textContent = '›';
-            const navStyle = 'padding:4px 12px; border:1px solid var(--border); border-radius:7px; background:transparent; color:var(--muted); cursor:pointer; font-weight:900; font-size:15px; line-height:1; transition:background 0.15s, color 0.15s;';
+            const navStyle = 'padding:4px 12px; border:1px solid var(--border); border-radius:var(--radius-xs); background:transparent; color:var(--muted); cursor:pointer; font-weight:900; font-size:15px; line-height:1; transition:background 0.15s, color 0.15s;';
             navPrev.style.cssText = navStyle;
             navNext.style.cssText = navStyle;
             nav.appendChild(navPrev);
@@ -3130,7 +3178,7 @@
                     const cell = document.createElement('button');
                     cell.type = 'button';
                     cell.textContent = i;
-                    let st = 'padding:5px 0; text-align:center; font-size:11px; font-weight:700; cursor:pointer; border:none; background:transparent; color:var(--text); border-radius:7px; transition:background 0.15s;';
+                    let st = 'padding:5px 0; text-align:center; font-size:11px; font-weight:700; cursor:pointer; border:none; background:transparent; color:var(--text); border-radius:var(--radius-xs); transition:background 0.15s;';
                     const inRange = selEnd && day.isSameOrAfter(selStart) && day.isSameOrBefore(selEnd);
                     const isStart = day.isSame(selStart, 'day');
                     const isEnd = selEnd && day.isSame(selEnd, 'day');
@@ -3184,7 +3232,7 @@
                 STAGES.forEach(function (name, i) {
                     if (i > 0) {
                         const line = document.createElement('div');
-                        line.style.cssText = 'width:56px; height:3px; border-radius:2px; background:var(--surface2); transition:background 0.3s;';
+                        line.style.cssText = 'width:56px; height:3px; border-radius:var(--radius-xs); background:var(--surface2); transition:background 0.3s;';
                         roadmapEl.appendChild(line);
                         lines.push(line);
                     }
@@ -3323,7 +3371,7 @@
                         const banner = document.createElement('div');
                         banner.id = 'cacheBanner';
                         banner.setAttribute('role', 'status');
-                        banner.style.cssText = 'display:flex; align-items:center; gap:8px; grid-column:1 / -1; box-sizing:border-box; background:var(--warning-light); color:var(--warning-strong); border:1px solid var(--warning); border-radius:12px; padding:10px 14px; font-weight:700; font-size:12px;';
+                        banner.style.cssText = 'display:flex; align-items:center; gap:8px; grid-column:1 / -1; box-sizing:border-box; background:var(--warning-light); color:var(--warning-strong); border:1px solid var(--warning); border-radius:var(--radius); padding:10px 14px; font-weight:700; font-size:12px;';
                         banner.textContent = 'Koneksi bermasalah — menampilkan data offline (cache lokal). Data terbaru akan dimuat saat koneksi pulih.';
                         document.getElementById('mainContainer').prepend(banner);
                         olahDataMentah(JSON.parse(memoriLama));
@@ -3853,7 +3901,7 @@
 
                 if (document.getElementById('basketIntel')) {
                     document.getElementById('basketIntel').innerHTML = `
-                    <div style="background:var(--primary-solid); color:var(--on-primary); padding:15px; border-radius:12px; display:flex; flex-direction:column; gap:12px;">
+                    <div style="background:var(--primary-solid); color:var(--on-primary); padding:15px; border-radius:var(--radius); display:flex; flex-direction:column; gap:12px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:12px;">
                             <div>
                                 <div style="font-size:10px; font-weight:800; color:rgba(255,255,255,0.75);">AVG: RESELLER</div>
@@ -3869,7 +3917,7 @@
                             <div style="font-size:14px; font-weight:900; color:var(--on-primary);">${UPT} <span style="font-size:10px;">pcs</span></div>
                         </div>
                     </div>
-                    <div style="background:var(--danger-light); padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; ">
+                    <div style="background:var(--danger-light); padding:10px; border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center; ">
                         <div style="font-size:10px; font-weight:800; color:var(--danger);">CAC (BIAYA AKUISISI)</div>
                         <div style="font-size:14px; font-weight:900; color:var(--danger);">${formatRp(CAC)}</div>
                     </div>
@@ -3895,7 +3943,7 @@
                     let badge = "";
                     if (daysAgo > 14) badge = `<span class="tag-warn" style="display:inline-block; margin-top:4px;">BERISIKO CHURN (${daysAgo}H)</span>`;
                     else if (f >= 3) badge = `<span class="tag-success" style="display:inline-flex; align-items:center; gap:4px; margin-top:4px; font-weight:900; color:var(--primary); background:var(--surface2);">${ICONS.crown} SETIA (${f}x)</span>`;
-                    else badge = `<span style="background:var(--surface2); color:var(--muted); padding:4px 8px; border-radius:6px; font-size:10px; font-weight:800; display:inline-block; margin-top:4px;">AKTIF</span>`;
+                    else badge = `<span style="background:var(--surface2); color:var(--muted); padding:4px 8px; border-radius:var(--radius-xs); font-size:10px; font-weight:800; display:inline-block; margin-top:4px;">AKTIF</span>`;
 
                     rfmHtml += `<div class="item-row" style="border-bottom:1px solid var(--border); padding:8px 0; display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; flex-direction:column; gap:2px; max-width:60%;">
@@ -3922,7 +3970,7 @@
                     let badge = "";
                     if (daysAgo > 14) badge = `<span class="tag-warn" style="display:inline-block; margin-top:4px;">BERISIKO CHURN (${daysAgo}H)</span>`;
                     else if (f >= 3) badge = `<span class="tag-success" style="display:inline-flex; align-items:center; gap:4px; margin-top:4px; font-weight:900; color:var(--primary); background:var(--surface2);">${ICONS.crown} SETIA (${f}x)</span>`;
-                    else badge = `<span style="background:var(--surface2); color:var(--muted); padding:4px 8px; border-radius:6px; font-size:10px; font-weight:800; display:inline-block; margin-top:4px;">AKTIF</span>`;
+                    else badge = `<span style="background:var(--surface2); color:var(--muted); padding:4px 8px; border-radius:var(--radius-xs); font-size:10px; font-weight:800; display:inline-block; margin-top:4px;">AKTIF</span>`;
 
                     rfmHtml += `<div class="item-row" style="border-bottom:1px solid var(--border); padding:8px 0; display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; flex-direction:column; gap:2px; max-width:60%;">
@@ -3950,7 +3998,7 @@
 
                 if (document.getElementById('vipInsight')) {
                     document.getElementById('vipInsight').innerHTML = `
-                    <div style="background:var(--danger-light);  padding:10px 12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="background:var(--danger-light);  padding:10px 12px; border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; flex-direction:column;">
                             <span style="font-size:10px; font-weight:800; color:var(--danger); display:inline-flex; align-items:center; gap:4px;">${ICONS.warning} RISIKO CHURN (>14 HARI)</span>
                             <span style="font-size:12px; font-weight:700; color:var(--text);">${totalKabur} Pelanggan Berisiko Churn</span>
@@ -4000,7 +4048,7 @@
                     let trHtml = `<tr>
                         <td style="font-weight:800;">${r + 1}</td>
                         <td style="font-weight:800; color:var(--text);">${prod}</td>
-                        <td data-order="${marginPct.toFixed(4)}"><span style="color:${marginColor}; font-weight:800; background:var(--surface2); padding:2px 6px; border-radius:4px; border:1px solid var(--border); font-size:10px;">${marginPct.toFixed(0)}%</span></td>
+                        <td data-order="${marginPct.toFixed(4)}"><span style="color:${marginColor}; font-weight:800; background:var(--surface2); padding:2px 6px; border-radius:var(--radius-xs); border:1px solid var(--border); font-size:10px;">${marginPct.toFixed(0)}%</span></td>
                         <td data-order="${returRate.toFixed(4)}">${returStr}</td>
                         <td data-order="${d.qty}" style="font-weight:900;">${d.qty}</td>
                         <td data-order="${momDff.toFixed(4)}" style="color:${momColor}; font-weight:800;">${momArrow} ${Math.abs(momDff).toFixed(0)}%</td>
@@ -4039,7 +4087,7 @@
             `;
             }
 
-            const warnaKategori = ['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6'];
+            const warnaKategori = chartColors_();
             const targetTabel = document.getElementById('tableKategori');
             if (targetTabel) {
                 targetTabel.innerHTML = Object.entries(rekapKat).sort((a, b) => b[1] - a[1]).map((item, index) => {
@@ -4050,13 +4098,13 @@
                     let momDff = vLalu > 0 ? (diff / vLalu) * 100 : (v > 0 ? 100 : 0);
                     let momArrow = diff > 0 ? '▲' : '▼';
                     let momColor = diff > 0 ? 'var(--success)' : 'var(--danger)';
-                    if (vLalu === 0 && v === 0) { momArrow = '-'; momColor = '#94a3b8'; }
+                    if (vLalu === 0 && v === 0) { momArrow = '-'; momColor = cssVar_('--muted'); }
                     let momentumHtml = `<span style="color:${momColor}; font-weight:800; font-size:10px;">${momArrow} ${Math.abs(momDff).toFixed(0)}% (${formatRp(Math.abs(diff))})</span>`;
 
                     let warnaTeks = warnaKategori[index % warnaKategori.length];
                     return `<div class="item-row" style="font-weight: 700; border-bottom: 1px solid var(--surface2); display: flex; justify-content: space-between; padding: 10px 12px; align-items: center;">
                             <div style="display:flex; flex-direction:column; gap:4px;">
-                                <div><span style="color: var(--text); background-color: ${warnaTeks}30; padding: 4px 10px; border-radius: 6px; display: inline-block; font-size: 11px;">${k}</span></div>
+                                <div><span style="color: var(--text); background-color: ${warnaTeks}30; padding: 4px 10px; border-radius: var(--radius-xs); display: inline-block; font-size: 11px;">${k}</span></div>
                                 ${momentumHtml}
                             </div>
                             <div style="text-align: right;">
@@ -4241,9 +4289,9 @@
                 data: {
                     labels: tA.map(x => x.label),
                     datasets: [
-                        { label: 'Periode Ini', data: tA.map(x => x.sales), borderColor: '#3b82f6', backgroundColor: gradTren, fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#ffffff', pointBorderColor: '#3b82f6', pointRadius: 4, pointHoverRadius: 6 },
-                        { label: 'Periode Pembanding', data: tA.map(x => x.salesLalu || 0), borderColor: '#94a3b8', borderDash: [5, 5], borderWidth: 2, tension: 0.4, pointRadius: 0, fill: false },
-                        { label: 'Retur', data: tA.map(x => x.retur), borderColor: '#ef4444', borderDash: [6, 6], borderWidth: 2, tension: 0.4, pointRadius: 0 }
+                        { label: 'Periode Ini', data: tA.map(x => x.sales), borderColor: cssVar_('--chart-1'), backgroundColor: gradTren, fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: cssVar_('--surface'), pointBorderColor: cssVar_('--chart-1'), pointRadius: 4, pointHoverRadius: 6 },
+                        { label: 'Periode Pembanding', data: tA.map(x => x.salesLalu || 0), borderColor: cssVar_('--muted'), borderDash: [5, 5], borderWidth: 2, tension: 0.4, pointRadius: 0, fill: false },
+                        { label: 'Retur', data: tA.map(x => x.retur), borderColor: cssVar_('--chart-1'), borderDash: [6, 6], borderWidth: 2, tension: 0.4, pointRadius: 0 }
                     ]
                 },
                 options: {
@@ -4290,7 +4338,7 @@
                                 return (di === 0 ? 'ini ' : 'lalu ') + (val / 1000000).toFixed(1) + 'M';
                             },
                             font: { size: 11, weight: 'bold', family: 'Inter, system-ui, sans-serif' },
-                            color: '#ffffff',
+                            color: cssVar_('--on-primary'),
                             backgroundColor: function (ctx) {
                                 return ctx.datasetIndex === 0 ? 'rgba(37,99,235,0.92)' : 'rgba(100,116,139,0.92)';
                             },
@@ -4307,7 +4355,7 @@
         }
 
         function renderCharts(tA, kat, prod, grossProfit, netProfit, totalBiaya, rekapHari) {
-            Chart.defaults.color = document.documentElement.getAttribute('data-theme') === 'dark' ? '#94a3b8' : '#64748b';
+            Chart.defaults.color = cssVar_('--muted');
             Chart.defaults.font.family = 'Plus Jakarta Sans';
 
             // 1. TREN CHART (LINE) - Exec Styling
@@ -4323,7 +4371,7 @@
 
                 charts['margin'] = new Chart(document.getElementById('chartMargin').getContext('2d'), {
                     type: 'doughnut',
-                    data: { labels: ['Net Profit', 'Beban OPEX'], datasets: [{ data: [actualNet, actualOpex], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 2, borderColor: cssVar_('--surface'), hoverOffset: 4 }] },
+                    data: { labels: ['Net Profit', 'Beban OPEX'], datasets: [{ data: [actualNet, actualOpex], backgroundColor: [cssVar_('--success'), cssVar_('--danger')], borderWidth: 2, borderColor: cssVar_('--surface'), hoverOffset: 4 }] },
                     options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
                 });
             }
@@ -4340,7 +4388,7 @@
                     labels: sortedKat.map(x => x[0]),
                     datasets: [{
                         data: sortedKat.map(x => x[1]),
-                        backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6'],
+                        backgroundColor: chartColors_(),
                         borderWidth: 3, borderColor: cssVar_('--surface'), hoverOffset: 5
                     }]
                 },
@@ -4361,8 +4409,8 @@
                         datasets: [{
                             label: 'Sales',
                             data: dat,
-                            backgroundColor: '#94a3b8',
-                            hoverBackgroundColor: '#3b82f6',
+                            backgroundColor: cssVar_('--muted'),
+                            hoverBackgroundColor: cssVar_('--chart-1'),
                             borderRadius: 6
                         }]
                     },
@@ -4401,19 +4449,19 @@
             // === CEK 1: TARGET PROJECTION ===
             if (proyPct < 100 && achPct < 100) {
                 let shortfall = TARGET_SALES - runRate;
-                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:10px 12px; background:var(--danger-light); border-radius:8px;  line-height:1.6;">${ICONS.alert} <b>WASPADA GAGAL TARGET:</b> Laju ${formatRp(dailyVelocity)}/hari hanya akan menghasilkan <b>${formatRp(runRate)}</b> di akhir periode. Shortfall: <b style="color:var(--danger);">-${formatRp(shortfall)}</b>. Segera Push Iklan & Follow-Up!</div>`);
+                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:10px 12px; background:var(--danger-light); border-radius:var(--radius-sm);  line-height:1.6;">${ICONS.alert} <b>WASPADA GAGAL TARGET:</b> Laju ${formatRp(dailyVelocity)}/hari hanya akan menghasilkan <b>${formatRp(runRate)}</b> di akhir periode. Shortfall: <b style="color:var(--danger);">-${formatRp(shortfall)}</b>. Segera Push Iklan & Follow-Up!</div>`);
             } else if (proyPct >= 100 && achPct < 100) {
-                warnings.push(`<div style="color:var(--success-strong); font-size:12px; padding:10px 12px; background:var(--success-light); border-radius:8px;  line-height:1.6;">${ICONS.star} <b>PROYEKSI AMAN:</b> Laju ${formatRp(dailyVelocity)}/hari, proyeksi ${formatRp(runRate)}. Pertahankan ritme!</div>`);
+                warnings.push(`<div style="color:var(--success-strong); font-size:12px; padding:10px 12px; background:var(--success-light); border-radius:var(--radius-sm);  line-height:1.6;">${ICONS.star} <b>PROYEKSI AMAN:</b> Laju ${formatRp(dailyVelocity)}/hari, proyeksi ${formatRp(runRate)}. Pertahankan ritme!</div>`);
             }
 
             // === CEK 2: RUGI ===
             if (netProfit < 0 && netSales > 0) {
-                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; "><b>RUGI BANDAR:</b> Biaya operasional menggerus laba. Net Margin: ${(netProfit / netSales * 100).toFixed(1)}%.</div>`);
+                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:var(--radius-sm); "><b>RUGI BANDAR:</b> Biaya operasional menggerus laba. Net Margin: ${(netProfit / netSales * 100).toFixed(1)}%.</div>`);
             }
 
             // === CEK 3: RETUR TINGGI ===
             if (lossRate > 5) {
-                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; "><b>RETUR KRITIS:</b> Loss rate ${lossRate.toFixed(1)}% — Di atas ambang 5%. Cek kualitas produk & packing!</div>`);
+                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:var(--radius-sm); "><b>RETUR KRITIS:</b> Loss rate ${lossRate.toFixed(1)}% — Di atas ambang 5%. Cek kualitas produk & packing!</div>`);
             }
 
             // === CEK 4: DOMINASI RESELLER TUNGGAL ===
@@ -4421,7 +4469,7 @@
             if (urRes.length > 0 && netSales > 0) {
                 let topResellerShare = (urRes[0][1] / netSales) * 100;
                 if (topResellerShare > 40) {
-                    warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; "><b>KONSENTRASI RISIKO:</b> ${topResellerShare.toFixed(1)}% omzet bergantung pada 1 reseller (<b>${urRes[0][0]}</b>). Diversifikasi segera!</div>`);
+                    warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:var(--radius-sm); "><b>KONSENTRASI RISIKO:</b> ${topResellerShare.toFixed(1)}% omzet bergantung pada 1 reseller (<b>${urRes[0][0]}</b>). Diversifikasi segera!</div>`);
                 }
             }
 
@@ -4431,11 +4479,11 @@
                 let qtyGrowth = (netQtySkrg - netQtyLalu) / netQtyLalu * 100;
                 let aovGrowth = aovLalu > 0 ? (aovSkrg - aovLalu) / aovLalu * 100 : 0;
                 if (salesGrowth > 0 && qtyGrowth < -5) {
-                    warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; "><b>VOLUME MENYUSUT:</b> Omzet naik ${salesGrowth.toFixed(1)}% tapi QTY turun ${Math.abs(qtyGrowth).toFixed(1)}%. Anda tertolong kenaikan harga rata-rata (AOV +${aovGrowth.toFixed(1)}%). Waspada — volume pelanggan sedang menipis!</div>`);
+                    warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:var(--radius-sm); "><b>VOLUME MENYUSUT:</b> Omzet naik ${salesGrowth.toFixed(1)}% tapi QTY turun ${Math.abs(qtyGrowth).toFixed(1)}%. Anda tertolong kenaikan harga rata-rata (AOV +${aovGrowth.toFixed(1)}%). Waspada — volume pelanggan sedang menipis!</div>`);
                 } else if (salesGrowth < -5 && qtyGrowth > 0) {
-                    warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; "><b>HARGA RATA-RATA TURUN:</b> QTY naik ${qtyGrowth.toFixed(1)}% tapi omzet turun ${Math.abs(salesGrowth).toFixed(1)}%. AOV drop ${Math.abs(aovGrowth).toFixed(1)}%. Cek apakah ada diskon berlebihan atau pergeseran ke produk murah!</div>`);
+                    warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:var(--radius-sm); "><b>HARGA RATA-RATA TURUN:</b> QTY naik ${qtyGrowth.toFixed(1)}% tapi omzet turun ${Math.abs(salesGrowth).toFixed(1)}%. AOV drop ${Math.abs(aovGrowth).toFixed(1)}%. Cek apakah ada diskon berlebihan atau pergeseran ke produk murah!</div>`);
                 } else if (salesGrowth < -5 && qtyGrowth < -5) {
-                    warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; "><b>DOUBLE DROP:</b> Omzet turun ${Math.abs(salesGrowth).toFixed(1)}% DAN QTY turun ${Math.abs(qtyGrowth).toFixed(1)}%. Ini sinyal perlambatan permintaan yang serius. Segera audit semua channel!</div>`);
+                    warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:var(--radius-sm); "><b>DOUBLE DROP:</b> Omzet turun ${Math.abs(salesGrowth).toFixed(1)}% DAN QTY turun ${Math.abs(qtyGrowth).toFixed(1)}%. Ini sinyal perlambatan permintaan yang serius. Segera audit semua channel!</div>`);
                 }
             }
 
@@ -4448,11 +4496,11 @@
                 let cac = totalOpex / totalCust;
                 let avgMarginPerCust = netProfit / totalCust;
                 if (cac > avgMarginPerCust && avgMarginPerCust > 0) {
-                    warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; "><b>IKLAN BERDARAH (CAC > MARGIN):</b> Biaya akuisisi ${formatRp(cac)}/pelanggan melampaui margin rata-rata ${formatRp(avgMarginPerCust)}/pelanggan. Evaluasi efisiensi iklan sekarang!</div>`);
+                    warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:var(--radius-sm); "><b>IKLAN BERDARAH (CAC > MARGIN):</b> Biaya akuisisi ${formatRp(cac)}/pelanggan melampaui margin rata-rata ${formatRp(avgMarginPerCust)}/pelanggan. Evaluasi efisiensi iklan sekarang!</div>`);
                 } else if (cac > 0 && avgMarginPerCust > 0) {
                     let cacRatio = (cac / avgMarginPerCust * 100).toFixed(0);
                     if (cacRatio > 60) {
-                        warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; "><b>CAC MENDEKATI KRITIS:</b> Biaya akuisisi ${formatRp(cac)}/pelanggan = ${cacRatio}% dari margin. Pantau ketat, jangan tambah spend iklan tanpa menaikkan konversi!</div>`);
+                        warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:var(--radius-sm); "><b>CAC MENDEKATI KRITIS:</b> Biaya akuisisi ${formatRp(cac)}/pelanggan = ${cacRatio}% dari margin. Pantau ketat, jangan tambah spend iklan tanpa menaikkan konversi!</div>`);
                     }
                 }
             }
@@ -4465,7 +4513,7 @@
                         let drop = (v - vLalu) / vLalu * 100;
                         if (drop < -25) {
                             let shareKat = (v / (netSales || 1) * 100).toFixed(1);
-                            warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; "><b>KATEGORI AMBLES — ${kat}:</b> Anjlok ${Math.abs(drop).toFixed(1)}% vs periode lalu (Porsi saat ini: ${shareKat}%). Segera investigasi: harga bersaing? Stok kosong? Kompetitor masuk?</div>`);
+                            warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:var(--radius-sm); "><b>KATEGORI AMBLES — ${kat}:</b> Anjlok ${Math.abs(drop).toFixed(1)}% vs periode lalu (Porsi saat ini: ${shareKat}%). Segera investigasi: harga bersaing? Stok kosong? Kompetitor masuk?</div>`);
                         }
                     }
                 });
@@ -4482,20 +4530,20 @@
                     let worstShare = (worstDay[1] / totalHariOmzet * 100).toFixed(1);
                     let expectedShare = (100 / 7).toFixed(1);
                     if (parseFloat(worstShare) < parseFloat(expectedShare) * 0.4) {
-                        warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; "><b>HARI MATI — ${worstDay[0]}:</b> Hanya menyumbang ${worstShare}% omzet (vs rata-rata ${expectedShare}%). Manfaatkan dengan flash sale / push notif khusus hari ${worstDay[0]}! Golden day: <b>${goldenDay[0]} (${goldenShare}%)</b>.</div>`);
+                        warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:var(--radius-sm); "><b>HARI MATI — ${worstDay[0]}:</b> Hanya menyumbang ${worstShare}% omzet (vs rata-rata ${expectedShare}%). Manfaatkan dengan flash sale / push notif khusus hari ${worstDay[0]}! Golden day: <b>${goldenDay[0]} (${goldenShare}%)</b>.</div>`);
                     }
                 }
             }
 
             // === CEK 9 (B4): CHURN VALUE ALERT ===
             if (churnCount > 3) {
-                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:8px; "><b>CHURN URGENT — ${churnCount} Pelanggan Hilang:</b> Potensi omzet tertahan <b>${formatRp(churnOmzet)}</b>. Hubungi mereka hari ini dengan penawaran eksklusif!</div>`);
+                warnings.push(`<div style="color:var(--danger); font-size:12px; padding:8px 12px; background:var(--danger-light); border-radius:var(--radius-sm); "><b>CHURN URGENT — ${churnCount} Pelanggan Hilang:</b> Potensi omzet tertahan <b>${formatRp(churnOmzet)}</b>. Hubungi mereka hari ini dengan penawaran eksklusif!</div>`);
             } else if (churnCount > 0) {
-                warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:8px; "><b>PANTAU CHURN — ${churnCount} Pelanggan >14 Hari:</b> Potensi omzet ${formatRp(churnOmzet)} sedang tidak aktif. Follow-up sebelum benar-benar berhenti!</div>`);
+                warnings.push(`<div style="color:var(--warning-strong); font-size:12px; padding:8px 12px; background:var(--warning-light); border-radius:var(--radius-sm); "><b>PANTAU CHURN — ${churnCount} Pelanggan >14 Hari:</b> Potensi omzet ${formatRp(churnOmzet)} sedang tidak aktif. Follow-up sebelum benar-benar berhenti!</div>`);
             }
 
             if (warnings.length === 0) {
-                warnings.push(`<div style="color:var(--success-strong); font-size:12px; padding:10px 12px; background:var(--success-light); border-radius:8px; ">${ICONS.check} <b>KONDISI SEHAT:</b> Tidak ada anomali kritis terdeteksi pada periode ini. Pertahankan performa!</div>`);
+                warnings.push(`<div style="color:var(--success-strong); font-size:12px; padding:10px 12px; background:var(--success-light); border-radius:var(--radius-sm); ">${ICONS.check} <b>KONDISI SEHAT:</b> Tidak ada anomali kritis terdeteksi pada periode ini. Pertahankan performa!</div>`);
             }
 
             document.getElementById('localWarningBox').innerHTML = `<div style="display:flex; flex-direction:column; gap:8px;">` + warnings.join('') + `</div>`;
@@ -4740,6 +4788,7 @@
                 if (window.parent === window) localStorage.setItem('theme', 'dark');
             }
             if (window.parent !== window) { securePostMessage('THEME_CHANGED', document.documentElement.getAttribute('data-theme')); }
+            refreshChartTheme();
             jalankanProsesData_();
             if (typeof isBiayaTabActive === 'function' && isBiayaTabActive() && typeof renderBiayaTab === 'function') renderBiayaTab();
         }
@@ -4755,7 +4804,7 @@
             const prev = document.documentElement.getAttribute('data-theme') || 'light';
             sessionStorage.setItem('printPrevTheme', prev);
             if (prev === 'dark') document.documentElement.setAttribute('data-theme', 'light');
-            Chart.defaults.color = '#334155';
+            Chart.defaults.color = cssVar_('--text');
             const all = [];
             if (Chart.instances) Object.values(Chart.instances).forEach(function (c) { all.push(c); });
             if (typeof charts !== 'undefined' && charts) Object.values(charts).forEach(function (c) { if (c) all.push(c); });
@@ -4766,12 +4815,12 @@
                 ['x', 'y'].forEach(function (ax) {
                     const s = c.options.scales && c.options.scales[ax];
                     if (s) {
-                        s.ticks = Object.assign({}, s.ticks, { color: '#334155' });
+                        s.ticks = Object.assign({}, s.ticks, { color: cssVar_('--text') });
                         if (s.grid) s.grid.color = '#e2e8f0';
                     }
                 });
                 if (c.options.plugins && c.options.plugins.legend && c.options.plugins.legend.labels) {
-                    c.options.plugins.legend.labels.color = '#334155';
+                    c.options.plugins.legend.labels.color = cssVar_('--text');
                 }
                 c._printMAR = c.options.maintainAspectRatio;
                 c.options.maintainAspectRatio = false;
@@ -4793,7 +4842,7 @@
         function restoreScreenTheme() {
             const prev = sessionStorage.getItem('printPrevTheme') || 'light';
             document.documentElement.setAttribute('data-theme', prev);
-            Chart.defaults.color = prev === 'dark' ? '#94a3b8' : '#64748b';
+            Chart.defaults.color = cssVar_('--muted');
             const all = [];
             if (Chart.instances) Object.values(Chart.instances).forEach(function (c) { all.push(c); });
             if (typeof charts !== 'undefined' && charts) Object.values(charts).forEach(function (c) { if (c) all.push(c); });
@@ -5851,7 +5900,7 @@
         let _biayaChartTren = null, _biayaChartKomposisi = null, _biayaDataTable = null;
         let _editBiayaId = null;
         let _biayaLatestIso = null; // tanggal biaya terakhir di DB (untuk hint empty-state)
-        const _BIYA_PALETTE = ['#a855f7', '#ef4444', '#f97316', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#64748b'];
+        const _BIYA_PALETTE = chartColors_();
         window.__lastNetSales = window.__lastNetSales || 0; window.__lastGrossSales = window.__lastGrossSales || 0; window.__lastCogs = window.__lastCogs || 0; window.__lastGrossCogs = window.__lastGrossCogs || 0; window.__lastNetProfit = window.__lastNetProfit || 0; window.__lastPiutang = window.__lastPiutang || 0; window.__lastLunas = window.__lastLunas || 0;
 
         function checkLogin() {
@@ -6427,8 +6476,8 @@
                 data: {
                     labels: tA.map(x => x.label),
                     datasets: [
-                        { label: 'Biaya', yAxisID: 'y', data: tA.map(x => x.biaya), borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)', fill: true, tension: 0.4, borderWidth: 3, pointRadius: 0, pointHoverRadius: 5 },
-                        { label: omzetLabel, yAxisID: 'y1', data: tA.map(x => x.omzet), borderColor: '#3b82f6', borderDash: [5, 5], borderWidth: 2, tension: 0.4, pointRadius: 0 }
+                        { label: 'Biaya', yAxisID: 'y', data: tA.map(x => x.biaya), borderColor: cssVar_('--chart-1'), backgroundColor: cssVar_('--primary-light'), fill: true, tension: 0.4, borderWidth: 3, pointRadius: 0, pointHoverRadius: 5 },
+                        { label: omzetLabel, yAxisID: 'y1', data: tA.map(x => x.omzet), borderColor: cssVar_('--chart-1'), borderDash: [5, 5], borderWidth: 2, tension: 0.4, pointRadius: 0 }
                     ]
                 },
                 options: {
@@ -6453,6 +6502,38 @@
 
         // ponytail: canvas (Chart.js) tidak bisa membaca var(); resolve ke nilai token aktual saat render.
         function cssVar_(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+        // Palet grafik dibaca dari token (tidak ada hex di logika render).
+        function chartColors_() { return ['--chart-1','--chart-2','--chart-3','--chart-4','--chart-5','--chart-6','--chart-7','--chart-8'].map(cssVar_); }
+
+        // Canvas tidak ikut berganti warna saat tema berubah: teks/label/warna seri/gridline harus
+        // dibaca ulang dari token lalu tiap grafik di-update, kalau tidak label tetap abu gelap di atas
+        // latar gelap dan palet kategori tetap memakai nilai tema lama.
+        function refreshChartTheme() {
+            if (typeof Chart === 'undefined') return;
+            var palet = chartColors_();
+            Chart.defaults.color = cssVar_('--muted');
+            var all = [];
+            if (Chart.instances) Object.keys(Chart.instances).forEach(function (k) { if (Chart.instances[k]) all.push(Chart.instances[k]); });
+            if (typeof charts !== 'undefined' && charts) Object.keys(charts).forEach(function (k) { if (charts[k]) all.push(charts[k]); });
+            if (typeof _biayaChartTren !== 'undefined' && _biayaChartTren) all.push(_biayaChartTren);
+            if (typeof _biayaChartKomposisi !== 'undefined' && _biayaChartKomposisi) all.push(_biayaChartKomposisi);
+            all.forEach(function (c) {
+                if (!c || typeof c.update !== 'function') return;
+                (c.data.datasets || []).forEach(function (ds) {
+                    // Hanya seri berwarna-banyak (array) yang dipetakan ulang per indeks; warna tunggal
+                    // sengaja dipertahankan karena membawa makna (mis. margin naik/turun).
+                    if (Array.isArray(ds.backgroundColor)) ds.backgroundColor = ds.backgroundColor.map(function (_, i) { return palet[i % palet.length]; });
+                    if (Array.isArray(ds.borderColor)) ds.borderColor = ds.borderColor.map(function (_, i) { return palet[i % palet.length]; });
+                });
+                var scales = (c.options && c.options.scales) || {};
+                Object.keys(scales).forEach(function (k) {
+                    var grid = scales[k] && scales[k].grid;
+                    if (grid && grid.color) grid.color = cssVar_('--border');
+                });
+                c.update('none');
+            });
+        }
 
         function renderBiayaKomposisi() {
             const el = document.getElementById('biayaChartKomposisi');
@@ -6518,8 +6599,8 @@
                             <span style="font-weight:800; color:var(--text); font-size:12px;">${k}</span>
                             <span style="font-weight:700; color:var(--muted); font-size:12px; white-space:nowrap;">${fmtRpBiaya(v)} <span style="color:var(--muted);">· ${share.toFixed(0)}%</span> ${d}</span>
                         </div>
-                        <div style="height:6px; background:var(--surface2); border-radius:99px; overflow:hidden;">
-                            <div style="height:100%; width:${Math.min(100, share)}%; background:${share >= 30 ? 'var(--danger)' : 'var(--warning)'}; border-radius:99px;"></div>
+                        <div style="height:6px; background:var(--surface2); border-radius:var(--radius-full); overflow:hidden;">
+                            <div style="height:100%; width:${Math.min(100, share)}%; background:${share >= 30 ? 'var(--danger)' : 'var(--warning)'}; border-radius:var(--radius-full);"></div>
                         </div>
                     </div>
                 </div>`;
@@ -6936,6 +7017,7 @@
         window.addEventListener('message', function(e) {
             if (e.data && e.data.type === 'SET_THEME' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
                 document.documentElement.setAttribute('data-theme', e.data.theme);
+                if (typeof refreshChartTheme === 'function') refreshChartTheme();
             }
         });
     </script>

@@ -161,3 +161,144 @@ Merah `#ff0000` hanya di outbond/Faktur/latch/Analytic-`--primary`. Sisanya: cri
 ---
 
 *Dokumen ini adalah hasil audit statis (read-only). Belum ada perubahan kode aplikatif yang dilakukan.*
+---
+
+## 8. Re-audit 2026-11-05 (setelah eksekusi Action Items)
+
+### 8.1 Yang dikerjakan
+
+| Tool | Perubahan | Bukti |
+|---|---|---|
+| `pdf-merger/PDFM_V2.html` | 19 aturan dark literal dihapus → override token root-only; palet Bootstrap (`#dc3545`/`#28a745`) → `--danger`/`--success`; gray/hex UI → token; `box-shadow` → `--shadow-md`; radius → `--radius-*` | hex di luar token: **39 → 2** |
+| `activity-tracker/tracking.html` | `tailwind.config` memetakan palet Tailwind ke token suite (slate→text/border, blue/indigo→merek, red→danger, emerald→success, amber→warning); `:root` kanonik + alias `--bg-color/--box-bg/...`; 55 grup hex diganti token; 38 aturan dark literal → 10 (sisanya hanya utility `bg-white` & toast); radius → token | hex di luar token: **124+ → 11** |
+| `analytic/Analytic.html` | Warna grafik dipindah ke token `--chart-1..8` + helper `chartColors_()`; `Chart.defaults.color` baca token; radius → token | hex di luar token: **22 → 7** |
+| `retur-track/retur-track.html` | `theme-toggle` memakai `--accent` (sebelumnya menunjuk `--primary` yang **tidak terdefinisi** di file ini); `#fff5f5` → `--accent-soft`; aturan dark literal dihapus; radius → token | hex di luar token: **29 → 12** |
+| `dak/form-dak.html` | `--dak-*` jadi alias token baku; `tools.css` di-link (font Plus Jakarta Sans sebelumnya **tidak pernah dimuat**); `#ef4444/#dc2626` → `--danger`; cetak memaksa token terang | hex di luar token: **9 → 4** |
+| `planner/taskschedule.html` | Aksen navy → merah merek; `--secondary` → slate; `--item-fallback` → `--accent`; radius → token (`--radius-xs` yang sebelumnya dipakai tapi belum didefinisikan kini ada) | aksen suite terpenuhi |
+| `faktur-penjualan`, `resi-generator`, `panduan-pengoperasian`, `outbound-track` | Radius mentah → `--radius-*`; `outbound-track` menambah `--primary-light` (sebelumnya kosong) | radius mentah: **0** |
+| `resi-generator` | `--success` sudah hijau (temuan lama `hitam` tidak lagi berlaku) | — |
+| `expense-tracker/index.html` | **File tidak ada di repo** — item ditutup sebagai N/A | `find -iname "*expense*"` → hanya `gas/code-expense-tracker.gs` |
+| `src/styles/components.css` | Sudah 0 hex / 0 radius mentah — temuan lama tidak lagi berlaku | — |
+
+### 8.2 Skor ulang (rubrik: 40 hex luar token, 20 dark literal, 20 radius mentah, 20 aksen merek)
+
+| Tool | Hex di luar token | Dark literal | Radius mentah | Aksen merek | Skor |
+|---|---|---|---|---|---|
+| Hub `index.html` | 0 | 0 | 0 | ya | **100** |
+| LATCH / admin | 0 | 0 | 0 | ya | **100** |
+| PDF Merger | 2 | 0 | 0 | ya | **96** |
+| Panduan Pengoperasian | 2 | 0 | 0 | ya | **96** |
+| Form DAK | 4 | 0 | 0 | navy (sengaja) | **92** |
+| Analytic | 7 | 15 | 0 | ya | **66** |
+| Faktur | 25 | 0 | 0 | ya | **60** |
+| Activity (tracking) | 11 | 10 | 0 | ya | **58** |
+| Retur | 12 | 13 | 0 | ya | **56** |
+| Planner | 165 | 3 | 0 | ya | **54** |
+| Outbond | 19 | 10 | 0 | ya | **42** |
+| Resi | 38 | 16 | 0 | ya | **40** |
+| RND (dist) | 40 | 0 | 0 | tidak (lab) | **40** |
+
+Rata-rata skor naik dari **≈ 40 (audit awal, sebelum perbaikan)** menjadi **≈ 72**.
+
+### 8.3 Catatan metrik (agar skor tidak menyesatkan)
+
+- Angka "hex di luar token" menghitung CSS + JS, **bukan** hanya tampilan. Pada Planner sebagian besar adalah **palet warna data** (`COLORS`, `TT_COLOR`, warna platform) dan template cetak timeline; pada Resi hampir semua `#000/#fff` berada di **template label cetak** yang memang hitam-putih. Keduanya bukan warna UI bertema.
+- "Dark literal" pada Resi/Analytic/Outbond adalah override komponen yang masih memakai token (bukan hex), jadi tidak merusak tema.
+- `RND (dist)` sengaja di luar aturan (lab Vite/shadcn) — lihat `docs/guidebook/design.md` Part VII.
+
+### 8.4 Sisa pekerjaan (belum dikerjakan)
+
+1. Planner: pindahkan `COLORS`/`TT_COLOR`/print-template hex ke token atau konstanta terdokumentasi.
+2. Resi & Outbond: bersihkan sisa hex UI (`#64748b`, `#f1f5f9`, `#334155`) di inline style.
+3. Analytic: 15 aturan `[data-theme="dark"]` komponen (daterangepicker) dirapikan jadi override token.
+4. Kerangka `.topbar` / `.tool-main` seragam + bottom-nav mobile untuk tool non-outbond (Fase D audit awal) belum disentuh.
+
+**Sudah diverifikasi 2026-11-05 (bukan lagi utang):** `node --check` seluruh blok script inline 10 tool (0 gagal), keseimbangan brace CSS, `node --test "tests/*.test.js"` (10 pass / 0 fail), serta pemeriksaan browser pada hub + 11 halaman tool termasuk sinkronisasi tema hub→iframe. Panduan uji manual yang butuh GAS ada di §9.
+
+### 8.5 Perbaikan kosmetik lanjutan (2026-11-05)
+
+| File:baris | Masalah | Perbaikan | Bukti |
+|---|---|---|---|
+| `planner/taskschedule.html:2280` | `<svg>` di dalam `<option>` Prioritas — HTML tidak sah, browser membuang ikonnya | SVG dihapus, label teks murni + komentar penanda | `options` = `high=Tinggi, medium=Sedang, low=Rendah`, 0 `<svg>` di dalam select |
+| `faktur-penjualan/Index.html:666` | `products.json` dicoba di folder faktur (tidak ada) → 404 tetap di konsol | Urutan sumber dibalik: `../resi-generator/products.json` dulu, salinan lokal cadangan | 1 fetch, status 200, `productDatabase` 390 produk, 0 resource gagal |
+| `analytic/Analytic.html` | Label grafik tertahan `#666` di tema gelap dan warna seri tidak ikut tema | `refreshChartTheme()`: baca ulang `--muted`, remap palet seri bertipe array, segarkan `grid.color` dari `--border`, lalu `update('none')`; dipanggil dari `toggleTheme()` dan `SET_THEME` hub | grafik uji: palet `#ff3b3b,#fbbf24,#34d399` → `#ff0000,#f59e0b,#10b981`, canvas repaint `true`, `Chart.defaults.color` ikut berubah, konsol bersih |
+
+## 9. Pengujian manual yang butuh GAS
+
+Bagian ini untuk hal yang **tidak bisa** diverifikasi dari lokal karena jalur Google Apps Script terblokir. Data agregat dashboard memakai Supabase (`DATA_SOURCE = 'supabase'`, `Analytic.html:2543`), jadi KPI/tabel tetap bisa diuji tanpa GAS — hanya AI, upload, dan mode rollback yang butuh GAS.
+
+### 9.1 Cakupan yang belum teruji
+
+| Fitur | Jalur | Alasan |
+|---|---|---|
+| Analisis AI (`mintaSaranAI()`) | `POST` `action: 'getAnalysis'` → Gemini | Butuh GAS + kunci Gemini server |
+| Upload Excel transaksi / biaya | `action: 'bulkUpsertTransactions'` / `'bulkUpsertBiaya'` | Menulis ke sheet |
+| Mode rollback GAS (`DATA_SOURCE = 'gas'`) | `GET ?action=getSalesData` | Hanya aktif bila konstanta diubah |
+| Grafik & cetak dengan data asli | RPC `rekap_dashboard` rentang berisi data | Data uji lokal kosong |
+
+### 9.2 Persiapan
+
+1. Buka lewat `http(s)` atau domain resmi (`reynahub.pages.dev`, `reynahub.id`, dst.) — **bukan** `file://`, karena ada whitelist origin (`ALLOWED_ORIGINS`, sekitar baris 2190).
+2. DevTools → Console + Network; filter `rekap_dashboard|getSalesData|getAnalysis|bulkUpsert`.
+3. Catat rentang tanggal dan mode banding yang dipakai.
+
+### 9.3 Langkah & harapan
+
+| # | Uji | Harapan |
+|---|---|---|
+| 1 | Data & KPI | `POST /rest/v1/rpc/rekap_dashboard` 200, tanpa overlay "Data Gagal Dimuat", KPI terisi wajar, relasi **Lunas = Omzet − Piutang − Retur** terpenuhi |
+| 2 | Ganti rentang | Semua angka berubah, tidak menyisakan data rentang lama (anti-race `prosesSeqCounter`) |
+| 3 | Grafik | `chartTren`, `chartMargin`, `chartKategori`, `chartHari` terisi; label & palet ikut tema tanpa reload |
+| 4 | Kotak temuan | `#localWarningBox` relevan, atau "KONDISI SEHAT". Ambang: retur >5%, CAC >60% margin, kategori turun <−25%, churn >14 hari |
+| 5 | Analisis AI | `action: "getAnalysis"` 200, teks muncul di `#aiContent`; setelah data di-refresh muncul banner `#aiStaleWarning` |
+| 6 | Upload Excel | `KIRIM DATA` aktif setelah file terbaca, 200, baris masuk dashboard **dan** sheet, upload ulang tidak menduplikasi |
+| 7 | Mode rollback GAS | Dengan `DATA_SOURCE='gas'`: `getSalesData` 200 dan KPI sama dengan mode Supabase |
+| 8 | Cetak/PDF | Tema dipaksa terang (`applyPrintTheme`), KPI + grafik + tabel inti tercetak, tidak ada kolom terpotong |
+
+### 9.4 Kriteria lulus
+
+**Lulus** bila: tanpa error merah di Console, RPC 200, KPI masuk akal, 4 grafik terisi, ganti rentang mengubah semua angka, tema mengubah label grafik, temuan relevan, AI/upload 200 dan hasilnya terlihat, cetak rapi.
+
+**Perlu dilaporkan** bila: angka 0 padahal rentang berisi data; angka tidak berubah saat rentang diganti; overlay error / 4xx-5xx / CORS; label grafik gelap di tema gelap atau kanvas kosong; teks temuan salah hitung; AI error/kosong; upload sukses di layar tapi tidak masuk sheet atau dobel; cetak terpotong.
+
+### 9.5 Format laporan ke developer
+
+1. Tanggal, jam, rentang tanggal, mode banding.
+2. Langkah persis (klik apa, urutan).
+3. Hasil yang terlihat vs yang diharapkan — angka asli, bukan "aneh".
+4. Teks error Console (Copy message) + satu baris Network: URL, status, potongan Response.
+5. Screenshot layar penuh, sertakan tema dan mode (standalone / lewat hub).
+6. Apakah cache sudah dihapus sebelum reproduksi.
+
+### 9.6 Reset cache
+
+```
+localStorage.removeItem('intel_pro_cache_v3');   // jalur GAS
+localStorage.removeItem('intel_pro_cache_v4');   // jalur RPC Supabase
+location.reload();
+```
+
+Ambang aturan (retur 5%, CAC 60%, kategori −25%, churn 14 hari) berada di satu tempat pada `prosesData()`, jadi mudah disesuaikan bila terlalu sensitif untuk bisnis.
+
+## 10. Inventaris responsif (2026-11-05)
+
+**Metode.** Halaman harness lokal (sementara, sudah dihapus) memuat 16 tool dalam iframe selebar 320 / 360 / 414 / 768 / 1024 / 1440 px, lalu mengukur `documentElement.scrollWidth − clientWidth` dan mencatat elemen terlebar. Ditambah pemindaian statis: meta viewport, breakpoint `@media`, `min-width` ≥ 400px, dan `100vh`.
+
+**Temuan & perbaikan (luapan horizontal, sebelum → sesudah 0):**
+
+| Tool | 320 | 360 | 414 | 768 | Akar masalah & perbaikan |
+|---|---|---|---|---|---|
+| Analytic | +57 | +17 | ok | ok | `html` **dan** `body` dipaku `min-width: 360px` sehingga layar 320–359 tetap 360px → keduanya dilepas (`min-width: 0`) di ≤640; track grid jadi `repeat(12, minmax(0,1fr))`; `table#dtProduk` (472px) kini menggulir di dalam kartunya; `canvas` chart yang masih selebar layout lama dipotong `.chart-box` (`max-width:100%; overflow:hidden`) |
+| Activity (tracking) | ok* | ok* | ok* | ok* | **Tidak punya `<meta viewport>`** — di HP layout memakai 980px lalu diperkecil. Meta viewport ditambahkan |
+| Resi | +109 | +69 | +15 | ok | Topbar kaku: chip versi + judul `nowrap` + tombol 44px. Di ≤520 chip disembunyikan, judul dipotong elips, padding 24→14px |
+| Outbond | ok | ok | ok | +56 | Di ≥768 nav berubah jadi baris tombol berlabel; total melebihi 768. Padding 16→12px, `gap` 10→6px |
+| Faktur | +7 | ok | ok | ok | Tabel item 116px lebih lebar dari layar; ditambah `overflow-x: clip` di root + `max-width: 100%` pada `.items-scroll` |
+| LATCH | +36 | ok | ok | ok | Drawer tertutup digeser `translateX(100%)` tapi tetap menambah `scrollWidth` → `overflow-x: clip` |
+| Planner, PDF Merger, Form DAK, Panduan, Hub, LATCH admin, SPPD, Meta Insight, RND dist | ok | ok | ok | ok | Tidak ada luapan pada semua lebar uji |
+
+**Sisa / belum disentuh:**
+
+1. `Productive/ArchiveDoc/check11.html` dan `ArchiveDoc/Draft_UPD/…/SPPD Generator…html` belum punya meta viewport (file coretan/draft, bukan tool terdaftar).
+2. Subhalaman `pdf-merger` (ANNOTATE, COMPRESS, CROP, NUP, SPLIT, STAMP, WORKFLOW, KONVERTER, OFFICE, OPERASI) tidak punya media query sama sekali; terukur aman karena alurnya satu kolom, tapi belum ada penyesuaian khusus layar kecil.
+3. `100vh` dipakai di planner (3×), retur (2×), resi (2×), faktur (1×) — di browser mobile dengan URL bar dinamis tinggi layar bisa berubah; belum diuji di perangkat nyata.
+4. Uji dilakukan pada lebar viewport, bukan perangkat fisik: `hover`, `safe-area-inset`, dan orientasi landscape belum diverifikasi.

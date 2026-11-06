@@ -14,14 +14,28 @@
 
     <style>
         :root {
+            /* Token kanonik suite — lihat docs/guidebook/design.md */
             --primary: #ff0000;
             --primary-hover: #cc0000;
-            --danger: #dc3545;
-            --success: #28a745;
-            --bg: #eef0f4;
+            --primary-glow: rgba(255,0,0,0.08);
+            --primary-light: #ff7b7b;
+            --primary-soft: color-mix(in srgb, var(--primary) 10%, transparent);
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
             --surface: #ffffff;
-            --border: #d5d9e2;
-            --radius: 8px;
+            --surface2: #f1f5f9;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --radius-sm: 8px;
+            --radius: 12px;
+            --radius-lg: 18px;
+            --radius-xs: 6px;
+            --shadow-sm: 0 1px 2px rgba(15,23,42,.06);
+            --shadow-md: 0 4px 12px rgba(15,23,42,.08);
+            --focus-ring: 0 0 0 3px var(--primary-glow);
         }
 
         body {
@@ -37,15 +51,15 @@
             background: var(--surface);
             width: 100%;
             max-width: 900px;
-            border-radius: 14px;
+            border-radius: var(--radius);
             border: 1px solid var(--border);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.06);
+            box-shadow: var(--shadow-md);
             padding: 2rem;
         }
 
         .hidden { display: none !important; }
         h1 { font-size: 1.5rem; margin-bottom: 0.25rem; }
-        .subtitle { font-size: 0.9rem; color: #94a3b8; margin-bottom: 1.5rem; }
+        .subtitle { font-size: 0.9rem; color: var(--muted); margin-bottom: 1.5rem; }
 
         #dropzone {
             border: 2px dashed var(--border);
@@ -56,9 +70,9 @@
             cursor: pointer;
             transition: 0.2s;
             margin-bottom: 1.25rem;
-            color: var(--text, #475569);
+            color: var(--text);
         }
-        #dropzone.dragover { background: #e0efff; border-color: var(--primary); }
+        #dropzone.dragover { background: var(--primary-soft); border-color: var(--primary); }
         #file-input { display: none; }
 
         .file-list-header {
@@ -83,7 +97,7 @@
             border-bottom: 1px solid var(--border);
             cursor: grab;
         }
-        #file-list li .handle { margin-right: 0.5rem; color: #999; cursor: grab; user-select: none; }
+        #file-list li .handle { margin-right: 0.5rem; color: var(--muted); cursor: grab; user-select: none; }
         #file-list li .name { flex: 1; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem; white-space: nowrap; }
         #file-list li .remove-btn {
             background: none; border: none; color: var(--danger); font-size: 1.2rem;
@@ -93,13 +107,13 @@
 
         .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
         .btn {
-            padding: 0.6rem 1.2rem; font-size: 0.9rem; border: none; border-radius: 6px;
+            padding: 0.6rem 1.2rem; font-size: 0.9rem; border: none; border-radius: var(--radius-xs);
             cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 0.3rem;
             transition: 0.2s;
         }
         .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
-        .btn-outline { background: var(--bg); border: 1px solid var(--border); color: var(--text, #1e293b); }
-        .btn-outline:hover { background: #f1f1f1; }
+        .btn-outline { background: var(--bg); border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { background: var(--surface2); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         #status { text-align: center; min-height: 1.5em; font-size: 0.9rem; margin-top: 0.5rem; }
@@ -114,18 +128,18 @@
         .summary h2 { font-size: 1.1rem; margin-bottom: 0.75rem; }
         .summary-stats { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
         .stat-card {
-            background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xs);
             padding: 0.5rem 1rem; min-width: 100px;
         }
-        .stat-card .label { font-size: 0.8rem; color: #94a3b8; }
+        .stat-card .label { font-size: 0.8rem; color: var(--muted); }
         .stat-card .value { font-size: 1.2rem; font-weight: bold; }
 
         .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 0.5rem; }
         .data-table th, .data-table td {
             border: 1px solid var(--border); padding: 0.4rem 0.6rem; text-align: left;
         }
-        .data-table th { background: #f1f1f1; color: #1e293b; }
-        .duplicate { background: #fff3cd !important; }
+        .data-table th { background: var(--surface2); color: var(--text); }
+        .duplicate { background: color-mix(in srgb, var(--warning) 18%, var(--surface)) !important; }
 
         @media (max-width: 600px) {
             .container { padding: 1rem; }
@@ -148,11 +162,11 @@
         }
 
         .theme-toggle {
-            background: var(--bg, #f8fafc);
-            border: 1px solid var(--border, #e2e8f0);
-            color: var(--text, #0f172a);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
             padding: 8px 14px;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             font-family: 'Plus Jakarta Sans';
             font-weight: 600;
             font-size: 13px;
@@ -163,41 +177,31 @@
             transition: all 0.25s ease;
         }
         .theme-toggle:hover {
-            background: var(--primary-light, rgba(255,0,0,0.08));
-            color: var(--primary, #ff0000);
-            border-color: var(--primary, #ff0000);
+            background: var(--primary-soft);
+            color: var(--primary);
+            border-color: var(--primary);
         }
         .theme-toggle svg { width: 16px; height: 16px; }
 
+        /* Dark mode = override token saja (root-only), tanpa aturan per-elemen literal. */
         [data-theme="dark"] {
             --primary: #ff3b3b;
             --primary-hover: #ff5c5c;
+            --primary-glow: rgba(255,59,59,0.15);
+            --primary-light: #ff6b6b;
             --danger: #f87171;
             --success: #34d399;
-            --bg: #0b0f1a;
-            --surface: #131825;
-            --border: #252d3d;
+            --warning: #fbbf24;
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --surface2: #243044;
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+            --border: #334155;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+            --shadow-md: 0 4px 12px rgba(0,0,0,.45);
         }
-        [data-theme="dark"] body { background: var(--bg); color: #f1f5f9; }
-        [data-theme="dark"] .container { background: var(--surface); border-color: var(--border); }
-        [data-theme="dark"] input, [data-theme="dark"] select {
-            background: var(--surface); border-color: var(--border); color: #f1f5f9;
-        }
-        [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3 { color: #f1f5f9; }
-        [data-theme="dark"] #dropzone { border-color: #475569; color: #94a3b8; background: var(--bg); }
-        [data-theme="dark"] .data-table th { background: var(--surface); color: #f1f5f9; border-color: var(--border); }
-        [data-theme="dark"] .btn-outline { color: #f1f5f9; border-color: var(--border); }
-        [data-theme="dark"] .btn-outline:hover { background: var(--surface); }
-        [data-theme="dark"] .btn-primary { background: var(--primary); color: #fff; }
-        [data-theme="dark"] #file-list li { background: var(--surface); border-color: var(--border); color: #f1f5f9; }
-        [data-theme="dark"] .stat-card { background: var(--surface); border-color: var(--border); color: #f1f5f9; }
-        [data-theme="dark"] .stat-card .label { color: #94a3b8; }
-        [data-theme="dark"] .stat-card .value { color: #f1f5f9; }
-        [data-theme="dark"] .subtitle { color: #94a3b8; }
-        [data-theme="dark"] .duplicate { background: #422006 !important; }
-        [data-theme="dark"] .empty-message { color: #64748b; }
-        [data-theme="dark"] #file-list li .name { color: #f1f5f9; }
-        [data-theme="dark"] #file-list li .handle { color: #64748b; }
+        body { background: var(--bg); color: var(--text); }
 
         /* Strip nav suite — penambahan murni; tautan fitur ditambah saat selesai. */
         .suite-nav {
@@ -209,19 +213,16 @@
         .suite-nav a {
             font-size: 0.85rem;
             padding: 0.35rem 0.8rem;
-            border-radius: 999px;
+            border-radius: var(--radius-xl);
             border: 1px solid var(--border);
             background: var(--bg);
-            color: var(--text, #1e293b);
+            color: var(--text);
             text-decoration: none;
             transition: 0.2s;
         }
         .suite-nav a:hover { border-color: var(--primary); color: var(--primary); }
         .suite-nav a.active { background: var(--primary); border-color: var(--primary); color: #fff; }
         .suite-nav a.active:hover { background: var(--primary-hover); color: #fff; }
-        [data-theme="dark"] .suite-nav a { color: #f1f5f9; }
-        [data-theme="dark"] .suite-nav a:hover { color: var(--primary); }
-        [data-theme="dark"] .suite-nav a.active { color: #fff; }
     </style>
 </head>
 <body>

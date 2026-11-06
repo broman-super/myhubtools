@@ -96,6 +96,13 @@ var ToolCard = {
       title: 'Activity Tracker',
       desc: 'Pencatatan dan pemantauan performa progres kerja harian seluruh anggota tim.',
       search: 'activity tracker pencatatan aktivitas pekerjaan tim'
+    },
+    {
+      group: 'tim',
+      hash: '#productive/self-management',
+      title: 'Self Management',
+      desc: 'Pengelolaan diri harian: tugas & target harian, karya mingguan, jadwal, catatan, dan keuangan (pemasukan, pengeluaran, tabungan).',
+      search: 'self management manajemen diri tugas harian target karya mingguan jadwal catatan keuangan tabungan pengeluaran pemasukan'
     }
   ],
 

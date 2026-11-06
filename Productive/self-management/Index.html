@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <script>
+    // ANTI-FLASH: terapkan tema sedini mungkin (standalone). Embedded di-set hub.
+    (function () {
+      if (window.self !== window.top) return;
+      var s = localStorage.getItem('reynahub-theme') || 'system';
+      var d = s === 'dark' ? 'dark' : s === 'light' ? 'light'
+            : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', d);
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Self Management — REYNAHUB</title>
+  <link rel="stylesheet" href="../../src/styles/tools.css">
+  <style>
+    /* Palet mengikuti visual aplikasi acuan (tema indigo yang tenang).
+       Penyimpangan dari merah merek dicatat di docs/guidebook/design.md Part VII. */
+    :root {
+      --bg:#eef2f6; --surface:#ffffff; --surface2:#f4f6fa;
+      --text:#0f172c; --muted:#64748b; --border:#e2e8f1;
+      --primary:#4f39f6; --primary-light:#6f5cfa;
+      --primary-soft: color-mix(in srgb, #4f39f6 10%, transparent);
+      --info:#3198d6; --danger:#ef4444; --success:#16a34a; --warning:#f09c17;
+      --on-primary:#ffffff; --overlay:rgba(15,23,44,.55);
+      --radius-sm:12px; --radius-md:10px; --radius-bento:16px;
+      --shadow-sm:0 1px 2px rgba(15,23,44,.05);
+      --shadow-md:0 1px 2px rgba(15,23,44,.05), 0 10px 24px -14px rgba(15,23,44,.28);
+      --focus-ring:0 0 0 3px color-mix(in srgb, #4f39f6 22%, transparent);
+    }
+    [data-theme="dark"] {
+      --bg:#0f172c; --surface:#1a2138; --surface2:#222b45;
+      --text:#f1f5f9; --muted:#94a3b8; --border:rgba(255,255,255,.09);
+      --primary:#8b7cff; --primary-light:#a496ff;
+      --primary-soft: color-mix(in srgb, #8b7cff 20%, transparent);
+      --info:#5bb3e8; --success:#22c55e; --danger:#f87171; --warning:#fbbf24;
+      --on-primary:#ffffff; --overlay:rgba(3,7,18,.7);
+      --shadow-sm:0 1px 2px rgba(0,0,0,.3);
+      --shadow-md:0 1px 2px rgba(0,0,0,.35), 0 10px 24px -14px rgba(0,0,0,.8);
+      --focus-ring:0 0 0 3px color-mix(in srgb, #8b7cff 30%, transparent);
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body {
+      font-family:'Plus Jakarta Sans', sans-serif;
+      background:var(--bg); color:var(--text);
+      height:100vh; height:100dvh; display:flex; flex-direction:column;
+      -webkit-text-size-adjust:100%;
+    }
+    .is-embedded body, body.is-embedded { height:100%; overflow:hidden; }
+    .topbar {
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:10px 16px; background:var(--surface); border-bottom:1px solid var(--border);
+      padding-top:calc(10px + env(safe-area-inset-top)); box-shadow:var(--shadow-sm);
+    }
+    .topbar-brand { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700; }
+    .topbar-brand span { white-space:nowrap; }
+    .topbar-actions { display:flex; align-items:center; gap:12px; flex:0 0 auto; }
+    .topbar-actions a { font-size:13px; color:var(--muted); text-decoration:none; white-space:nowrap; }
+    .lbl-short { display:none; }
+    .topbar-actions a:hover { color:var(--primary); }
+    .topbar-actions a.topbar-link-primary {
+      display:inline-flex; align-items:center; gap:4px;
+      background:var(--primary-soft); color:var(--primary);
+      border-radius:999px; padding:6px 12px; font-size:12px; font-weight:700;
+    }
+    .topbar-actions a.topbar-link-primary:hover { background:var(--primary); color:var(--on-primary); }
+    .theme-toggle {
+      background:var(--surface2); border:1px solid var(--border); color:var(--text);
+      width:36px; height:36px; border-radius:var(--radius-sm); cursor:pointer; font-size:15px;
+    }
+    .is-embedded .topbar { display:none !important; }
+    .tool-main { flex:1; overflow-y:auto; padding:16px; padding-bottom:calc(16px + env(safe-area-inset-bottom)); }
+    .tabs {
+      display:inline-flex; max-width:100%; gap:4px; overflow-x:auto; margin-bottom:16px;
+      padding:5px; background:var(--surface); border:1px solid var(--border);
+      border-radius:14px; box-shadow:var(--shadow-sm); scrollbar-width:none;
+    }
+    .tabs::-webkit-scrollbar { display:none; }
+    .tab {
+      flex:0 0 auto; background:transparent; color:var(--muted);
+      border:0; border-radius:10px; padding:8px 14px;
+      font:inherit; font-size:13px; font-weight:600; cursor:pointer; min-height:36px;
+      display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+    }
+    .tab:hover { color:var(--text); background:var(--surface2); }
+    .tab[aria-selected="true"] { background:var(--primary); color:var(--on-primary); box-shadow:var(--shadow-sm); }
+    .tab[aria-selected="true"]:hover { background:var(--primary); color:var(--on-primary); }
+    .panel[hidden] { display:none; }
+    .panel-head { display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+    .panel-head h2 { font-size:20px; font-weight:800; letter-spacing:-.3px; }
+    .panel-head p { font-size:12px; color:var(--muted); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px; }
+    .grid-stats { grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); }
+    .card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-bento);
+      padding:18px; box-shadow:var(--shadow-md);
+    }
+    .card h3 { font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; }
+    .stat-value { font-size:24px; font-weight:800; line-height:1.25; letter-spacing:-.4px; white-space:nowrap; }
+    .stat-sub { font-size:12px; color:var(--muted); margin-top:4px; }
+    .form-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; align-items:end; margin-bottom:14px; }
+    .field { display:flex; flex-direction:column; gap:5px; }
+    .field > span { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+    .field-wide { grid-column:1 / -1; }
+    input, select, textarea {
+      font:inherit; font-size:16px; color:var(--text); background:var(--surface);
+      border:1px solid var(--border); border-radius:var(--radius-md);
+      padding:9px 11px; width:100%; min-height:42px;
+    }
+    textarea { min-height:72px; resize:vertical; }
+    input:focus, select:focus, textarea:focus { outline:2px solid var(--primary); outline-offset:1px; }
+    .btn {
+      font:inherit; font-size:14px; font-weight:600; cursor:pointer; border-radius:var(--radius-md);
+      border:1px solid var(--border); background:var(--surface); color:var(--text);
+      padding:10px 16px; min-height:42px; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+      box-shadow:var(--shadow-sm);
+    }
+    .btn:hover { border-color:var(--primary-light); color:var(--primary); }
+    .btn-primary { background:var(--primary); border-color:var(--primary); color:var(--on-primary); }
+    .btn-primary:hover { background:var(--primary-light); border-color:var(--primary-light); color:var(--on-primary); }
+    .btn-primary:active { transform:scale(.98); }
+    .btn-ghost { background:transparent; color:var(--primary); border-color:transparent; }
+    .btn-danger { background:transparent; color:var(--danger); border-color:transparent; }
+    .btn[hidden] { display:none; }
+    .btn-icon {
+      width:34px; height:34px; min-height:34px; padding:0;
+      background:transparent; border-color:transparent; color:var(--muted);
+      box-shadow:none;
+    }
+    .toolbar { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+    .toolbar .btn { font-size:13px; min-height:38px; padding:8px 14px; }
+    .site-footer {
+      display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px;
+      margin-top:22px; padding-top:14px; border-top:1px solid var(--border);
+      font-size:12px; color:var(--muted);
+    }
+    .site-footer p { margin:0; }
+    .btn-link {
+      font:inherit; font-size:12px; font-weight:700; color:var(--primary);
+      background:transparent; border:0; padding:6px 2px; cursor:pointer;
+      text-decoration:underline; text-underline-offset:3px; min-height:32px;
+    }
+    .modal-overlay {
+      position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center;
+      padding:20px; background:var(--overlay);
+    }
+    .modal-overlay[hidden] { display:none; }
+    .modal-card {
+      width:100%; max-width:520px; max-height:calc(100dvh - 40px); overflow-y:auto;
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-bento);
+      box-shadow:var(--shadow-md); padding:22px;
+    }
+    .modal-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:10px; }
+    .modal-head h2 { font-size:18px; font-weight:800; letter-spacing:-.3px; }
+    .modal-body p { font-size:14px; line-height:1.65; color:var(--text); margin-bottom:10px; }
+    .modal-body p:last-child { margin-bottom:0; }
+    .modal-body .muted { color:var(--muted); font-size:13px; }
+    .modal-foot { display:flex; justify-content:flex-end; margin-top:16px; }
+    .cal-head { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+    .cal-nav { display:inline-flex; align-items:center; gap:6px; }
+    .cal-nav .btn { min-height:36px; padding:6px 12px; font-size:13px; }
+    .cal-head strong { font-size:15px; font-weight:800; }
+    .cal-legend { display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); }
+    .cal-grid { display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:6px; }
+    .cal-dow { font-size:11px; font-weight:700; color:var(--muted); text-align:center; padding:4px 0; text-transform:uppercase; letter-spacing:.4px; }
+    .cal-day {
+      min-height:64px; display:flex; flex-direction:column; align-items:flex-start; gap:3px;
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm);
+      padding:6px; font:inherit; color:var(--text); text-align:left; cursor:pointer; min-width:0;
+    }
+    .cal-day:hover { border-color:var(--primary-light); }
+    .cal-day.blank { background:transparent; border-color:transparent; cursor:default; }
+    .cal-day.today { border-color:var(--primary); }
+    .cal-day.selected { background:var(--primary-soft); border-color:var(--primary); }
+    .cal-num { font-size:12px; font-weight:700; }
+    .cal-day.selected .cal-num { color:var(--primary); }
+    .cal-chip {
+      display:inline-block; max-width:100%; font-size:10px; font-weight:700; line-height:1.5;
+      padding:0 5px; border-radius:999px; background:var(--surface2); color:var(--muted);
+    }
+    .cal-chip.tugas { background:var(--primary-soft); color:var(--primary); }
+    .cal-chip.tugas.ok { background:color-mix(in srgb, var(--success) 16%, transparent); color:var(--success); }
+    .cal-chip.jadwal { background:color-mix(in srgb, var(--info) 16%, transparent); color:var(--info); }
+    .btn-icon:hover { color:var(--text); background:var(--surface2); }
+    .btn-icon.danger:hover { color:var(--danger); }
+    .list { display:flex; flex-direction:column; gap:8px; }
+    .row {
+      display:flex; align-items:flex-start; gap:10px; padding:12px 14px;
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm);
+      box-shadow:var(--shadow-sm);
+    }
+    .row-main { flex:1; min-width:0; }
+    .row-title { font-size:14px; font-weight:600; word-break:break-word; }
+    .row-title.done { text-decoration:line-through; color:var(--muted); }
+    .row-meta { display:flex; flex-wrap:wrap; gap:6px; margin-top:5px; font-size:11px; color:var(--muted); }
+    .row-actions { display:flex; gap:2px; flex:0 0 auto; }
+    .badge {
+      display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700;
+      padding:2px 8px; border-radius:999px; background:var(--surface2); color:var(--muted);
+      border:1px solid var(--border);
+    }
+    .badge-prio-tinggi { background:color-mix(in srgb, var(--danger) 14%, transparent); color:var(--danger); border-color:transparent; }
+    .badge-prio-sedang { background:color-mix(in srgb, var(--warning) 16%, transparent); color:var(--warning); border-color:transparent; }
+    .badge-prio-rendah { background:color-mix(in srgb, var(--success) 16%, transparent); color:var(--success); border-color:transparent; }
+    .badge-ok { background:color-mix(in srgb, var(--success) 16%, transparent); color:var(--success); border-color:transparent; }
+    .badge-warn { background:color-mix(in srgb, var(--danger) 14%, transparent); color:var(--danger); border-color:transparent; }
+    .check {
+      appearance:none; -webkit-appearance:none; width:20px; height:20px; min-height:20px; flex:0 0 auto;
+      border:2px solid var(--border); border-radius:6px; background:var(--surface); cursor:pointer; margin-top:2px;
+      position:relative;
+    }
+    .check:checked { background:var(--success); border-color:var(--success); }
+    .check:checked::after {
+      content:""; position:absolute; left:5px; top:1px; width:5px; height:10px;
+      border:solid var(--on-primary); border-width:0 2px 2px 0; transform:rotate(45deg);
+    }
+    .progress { height:8px; border-radius:999px; background:var(--surface2); overflow:hidden; margin-top:6px; }
+    .progress > i { display:block; height:100%; background:var(--primary); border-radius:999px; }
+    .progress > i.ok { background:var(--success); }
+    .empty { font-size:13px; color:var(--muted); text-align:center; padding:18px 8px; }
+    .money-in { color:var(--success); font-weight:700; }
+    .money-out { color:var(--danger); font-weight:700; }
+    .money-row { display:flex; justify-content:space-between; gap:12px; font-size:13px; }
+    .row-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+    .stack { display:flex; flex-direction:column; gap:14px; }
+    .note { font-size:12px; color:var(--muted); margin-bottom:10px; }
+    .target-item { display:flex; flex-direction:column; gap:6px; padding:14px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); box-shadow:var(--shadow-sm); }
+    .target-top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .target-name { font-size:14px; font-weight:700; }
+    .stepper { display:inline-flex; align-items:center; gap:6px; }
+    .stepper button { width:30px; height:30px; min-height:30px; padding:0; font-size:16px; line-height:1; }
+    :focus-visible { outline:var(--focus-ring); outline-offset:2px; }
+    @media (max-width:480px) {
+      .topbar { padding:8px 10px; gap:8px; }
+      .topbar-brand span { display:none; }
+      .topbar-actions { gap:8px; }
+      .lbl-full { display:none; }
+      .lbl-short { display:inline; }
+      .topbar-actions a.topbar-link-primary { font-size:11px; padding:6px 10px; }
+      .theme-toggle { flex:0 0 auto; }
+    }
+    @media (max-width:560px) {
+      .tool-main { padding:12px; }
+      .stat-value { font-size:22px; }
+      .panel-head h2 { font-size:18px; }
+      #panel-kalender .card { padding:12px; }
+      .cal-grid { gap:4px; }
+      .cal-day { padding:5px 4px; min-height:58px; }
+      .cal-num { font-size:11px; }
+      .cal-head { gap:6px; }
+      .cal-nav .btn { min-height:34px; padding:5px 10px; font-size:12px; }
+      .cal-head strong { font-size:14px; }
+      .form-grid { grid-template-columns:1fr; }
+      .grid { grid-template-columns:1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition:none !important; animation:none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <span>Self Management</span>
+    </div>
+    <div class="topbar-actions">
+      <a class="no-print" href="../../index.html"><span class="lbl-full">⤴ Kembali ke Hub</span><span class="lbl-short">⤴ Hub</span></a>
+      <a class="topbar-link-primary no-print" href="https://self-management-app-rho.vercel.app" target="_blank" rel="noopener noreferrer" title="Buka aplikasi acuan di tab baru">Buka versi final ↗</a>
+      <button class="theme-toggle" id="theme-toggle" title="Ubah tema" aria-label="Ubah tema">◐</button>
+    </div>
+  </header>
+
+  <main class="tool-main">
+    <nav class="tabs" role="tablist" aria-label="Modul Self Management">
+      <button class="tab" role="tab" aria-selected="true" data-panel="ringkasan">Ringkasan</button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="tugas">Tugas Harian</button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="karya">Karya Mingguan</button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="jadwal">Jadwal</button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="kalender">Kalender</button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="catatan">Catatan</button>
+      <button class="tab" role="tab" aria-selected="false" data-panel="keuangan">Keuangan</button>
+    </nav>
+
+    <!-- RINGKASAN -->
+    <section class="panel" id="panel-ringkasan" role="tabpanel">
+      <div class="panel-head">
+        <h2 id="ringkasan-greeting">Ringkasan</h2>
+        <p id="ringkasan-tanggal">—</p>
+      </div>
+      <p class="note">Data disimpan di perangkat ini (localStorage). Belum tersambung ke database, jadi tidak tersinkron antar-perangkat. Saat pertama dibuka, tool diisi data contoh supaya alurnya terlihat.</p>
+      <div class="toolbar no-print">
+        <button class="btn" type="button" id="btn-contoh">Muat data contoh</button>
+        <button class="btn" type="button" id="btn-ekspor">Ekspor JSON</button>
+        <button class="btn" type="button" id="btn-impor">Impor JSON</button>
+        <input type="file" id="file-impor" accept="application/json,.json" hidden>
+        <button class="btn btn-danger" type="button" id="btn-kosongkan">Kosongkan data</button>
+      </div>
+      <div class="grid grid-stats" style="margin-bottom:14px">
+        <div class="card">
+          <h3>Target Harian</h3>
+          <div class="stat-value" id="stat-tugas">0 / 0</div>
+          <div class="progress"><i id="bar-tugas" style="width:0%"></i></div>
+          <div class="stat-sub" id="stat-tugas-sub">0 tugas selesai hari ini</div>
+        </div>
+        <div class="card">
+          <h3>Karya Mingguan</h3>
+          <div class="stat-value" id="stat-karya">0%</div>
+          <div class="progress"><i id="bar-karya" style="width:0%"></i></div>
+          <div class="stat-sub" id="stat-karya-sub">Belum ada karya minggu ini</div>
+        </div>
+        <div class="card">
+          <h3>Keuangan Bulan Ini</h3>
+          <div class="stat-value" id="stat-saldo">Rp 0</div>
+          <div class="stat-sub" id="stat-saldo-sub">Belum ada transaksi</div>
+        </div>
+        <div class="card">
+          <h3>Total Tabungan</h3>
+          <div class="stat-value" id="stat-tabungan">Rp 0</div>
+          <div class="stat-sub" id="stat-tabungan-sub">Belum ada setoran</div>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h3>Tugas Hari Ini</h3>
+          <div class="list" id="ringkasan-tugas"></div>
+        </div>
+        <div class="card">
+          <h3>Jadwal Hari Ini</h3>
+          <div class="list" id="ringkasan-jadwal"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TUGAS -->
+    <section class="panel" id="panel-tugas" role="tabpanel" hidden>
+      <div class="panel-head">
+        <h2>Tugas Harian</h2>
+        <p>Target harian: <strong id="label-target-harian">5</strong> tugas</p>
+      </div>
+      <form class="card form-grid" id="form-tugas">
+        <label class="field"><span>Tanggal</span><input type="date" id="tugas-tanggal" required></label>
+        <label class="field"><span>Judul tugas</span><input type="text" id="tugas-judul" placeholder="Mis. Follow up vendor" required maxlength="120"></label>
+        <label class="field"><span>Kategori</span><select id="tugas-kategori"></select></label>
+        <label class="field"><span>Prioritas</span>
+          <select id="tugas-prioritas">
+            <option value="tinggi">Tinggi</option>
+            <option value="sedang" selected>Sedang</option>
+            <option value="rendah">Rendah</option>
+          </select>
+        </label>
+        <label class="field"><span>Mulai</span><input type="time" id="tugas-mulai"></label>
+        <label class="field"><span>Selesai</span><input type="time" id="tugas-selesai"></label>
+        <label class="field field-wide"><span>Catatan (opsional)</span><textarea id="tugas-catatan" rows="2" maxlength="500"></textarea></label>
+        <label class="field"><span>Target harian</span><input type="number" id="target-harian" min="1" max="50" step="1"></label>
+        <div style="display:flex; gap:8px; grid-column:1 / -1">
+          <button class="btn btn-primary" type="submit" id="tugas-submit">Tambah Tugas</button>
+          <button class="btn" type="button" id="tugas-batal" hidden>Batal edit</button>
+        </div>
+      </form>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px">
+        <select id="tugas-filter" style="max-width:220px">
+          <option value="hari-ini" selected>Hari ini</option>
+          <option value="minggu">Minggu ini</option>
+          <option value="mendatang">Hari ini &amp; ke depan</option>
+          <option value="semua">Semua</option>
+        </select>
+        <button class="btn" type="button" id="tugas-hapus-selesai">Hapus yang selesai</button>
+      </div>
+      <div class="list" id="daftar-tugas"></div>
+    </section>
+
+    <!-- KARYA MINGGUAN -->
+    <section class="panel" id="panel-karya" role="tabpanel" hidden>
+      <div class="panel-head">
+        <h2>Karya Mingguan</h2>
+        <p>Progress per kategori, pekan <span id="karya-pekan">—</span></p>
+      </div>
+      <form class="card form-grid" id="form-karya">
+        <label class="field"><span>Kategori</span><select id="karya-kategori"></select></label>
+        <label class="field"><span>Nama karya</span><input type="text" id="karya-judul" placeholder="Mis. 3 artikel" required maxlength="120"></label>
+        <label class="field"><span>Target (kali)</span><input type="number" id="karya-target" min="1" max="99" step="1" value="1" required></label>
+        <div><button class="btn btn-primary" type="submit" id="karya-submit">Tambah Karya</button></div>
+      </form>
+      <div class="list" id="daftar-karya"></div>
+    </section>
+
+    <!-- JADWAL -->
+    <section class="panel" id="panel-jadwal" role="tabpanel" hidden>
+      <div class="panel-head">
+        <h2>Kelola Jadwal</h2>
+        <p>Agenda dengan jam mulai dan selesai</p>
+      </div>
+      <form class="card form-grid" id="form-jadwal">
+        <label class="field"><span>Tanggal</span><input type="date" id="jadwal-tanggal" required></label>
+        <label class="field"><span>Agenda</span><input type="text" id="jadwal-judul" placeholder="Mis. Rapat mingguan" required maxlength="120"></label>
+        <label class="field"><span>Mulai</span><input type="time" id="jadwal-mulai" required></label>
+        <label class="field"><span>Selesai</span><input type="time" id="jadwal-selesai"></label>
+        <label class="field"><span>Kategori</span><select id="jadwal-kategori"></select></label>
+        <div style="display:flex; gap:8px">
+          <button class="btn btn-primary" type="submit" id="jadwal-submit">Tambah Jadwal</button>
+          <button class="btn" type="button" id="jadwal-batal" hidden>Batal</button>
+        </div>
+      </form>
+      <div class="list" id="daftar-jadwal"></div>
+    </section>
+
+    <!-- KALENDER -->
+    <section class="panel" id="panel-kalender" role="tabpanel" hidden>
+      <div class="panel-head">
+        <h2>Kalender Bulanan</h2>
+        <p>Tugas dan jadwal dalam satu tampilan bulan</p>
+      </div>
+      <div class="card">
+        <div class="cal-head">
+          <div class="cal-nav">
+            <button class="btn btn-icon" type="button" id="kal-prev" title="Bulan sebelumnya" aria-label="Bulan sebelumnya">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button class="btn btn-icon" type="button" id="kal-next" title="Bulan berikutnya" aria-label="Bulan berikutnya">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <button class="btn" type="button" id="kal-hari-ini">Hari ini</button>
+          </div>
+          <strong id="kal-judul">—</strong>
+          <div class="cal-legend"><span class="cal-chip tugas">T</span> tugas <span class="cal-chip jadwal">J</span> jadwal</div>
+        </div>
+        <div class="cal-grid" id="kal-grid"></div>
+      </div>
+      <div class="card" style="margin-top:12px">
+        <h3 id="kal-hari-judul">—</h3>
+        <div class="list" id="kal-detail"></div>
+      </div>
+    </section>
+
+    <!-- CATATAN -->
+    <section class="panel" id="panel-catatan" role="tabpanel" hidden>
+      <div class="panel-head">
+        <h2>Catatan</h2>
+        <p>Catatan harian, evaluasi, dan ide</p>
+      </div>
+      <form class="card form-grid" id="form-catatan">
+        <label class="field"><span>Tanggal</span><input type="date" id="catatan-tanggal" required></label>
+        <label class="field"><span>Judul</span><input type="text" id="catatan-judul" placeholder="Judul catatan" required maxlength="120"></label>
+        <label class="field field-wide"><span>Isi</span><textarea id="catatan-isi" rows="4" placeholder="Tulis catatan…" maxlength="4000"></textarea></label>
+        <div style="display:flex; gap:8px; grid-column:1 / -1">
+          <button class="btn btn-primary" type="submit" id="catatan-submit">Simpan Catatan</button>
+          <button class="btn" type="button" id="catatan-batal" hidden>Batal edit</button>
+        </div>
+      </form>
+      <div class="list" id="daftar-catatan"></div>
+    </section>
+
+    <!-- KEUANGAN -->
+    <section class="panel" id="panel-keuangan" role="tabpanel" hidden>
+      <div class="panel-head">
+        <h2>Keuangan</h2>
+        <p>Pemasukan, pengeluaran, dan tabungan</p>
+      </div>
+      <div class="grid" style="margin-bottom:14px">
+        <div class="card">
+          <h3>Pemasukan Bulan Ini</h3>
+          <div class="stat-value money-in" id="keu-masuk">Rp 0</div>
+          <div class="stat-sub" id="keu-masuk-sub">—</div>
+        </div>
+        <div class="card">
+          <h3>Pengeluaran Bulan Ini</h3>
+          <div class="stat-value money-out" id="keu-keluar">Rp 0</div>
+          <div class="stat-sub" id="keu-keluar-sub">—</div>
+        </div>
+        <div class="card">
+          <h3>Sisa Bulan Ini</h3>
+          <div class="stat-value" id="keu-sisa">Rp 0</div>
+          <div class="stat-sub" id="keu-status">—</div>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-bottom:14px">
+        <form class="card form-grid" id="form-pemasukan" style="grid-column:span 1">
+          <label class="field"><span>Tanggal</span><input type="date" id="masuk-tanggal" required></label>
+          <label class="field"><span>Sumber</span><input type="text" id="masuk-sumber" placeholder="Mis. Gaji, Penjualan" required maxlength="80"></label>
+          <label class="field"><span>Jumlah (Rp)</span><input type="number" id="masuk-jumlah" min="0" step="1" required></label>
+          <div><button class="btn btn-primary" type="submit">Tambah Pemasukan</button></div>
+        </form>
+        <form class="card form-grid" id="form-pengeluaran" style="grid-column:span 1">
+          <label class="field"><span>Tanggal</span><input type="date" id="keluar-tanggal" required></label>
+          <label class="field"><span>Kategori</span><input type="text" id="keluar-kategori" placeholder="Mis. Transport, Makan" required maxlength="80"></label>
+          <label class="field"><span>Jumlah (Rp)</span><input type="number" id="keluar-jumlah" min="0" step="1" required></label>
+          <label class="field"><span>Keterangan</span><input type="text" id="keluar-ket" maxlength="120"></label>
+          <div><button class="btn btn-primary" type="submit">Tambah Pengeluaran</button></div>
+        </form>
+        <form class="card form-grid" id="form-tabungan" style="grid-column:span 1">
+          <label class="field"><span>Tanggal</span><input type="date" id="tabungan-tanggal" required></label>
+          <label class="field"><span>Jenis</span>
+            <select id="tabungan-jenis">
+              <option value="setor" selected>Setor</option>
+              <option value="tarik">Tarik</option>
+            </select>
+          </label>
+          <label class="field"><span>Tujuan</span><select id="tabungan-tujuan"></select></label>
+          <label class="field"><span>Jumlah (Rp)</span><input type="number" id="tabungan-jumlah" min="0" step="1" required></label>
+          <div><button class="btn btn-primary" type="submit">Simpan Transaksi</button></div>
+        </form>
+      </div>
+
+      <div class="stack">
+        <div class="card">
+          <h3>Target Tabungan</h3>
+          <form class="form-grid" id="form-target-tabungan" style="margin-bottom:12px">
+            <label class="field"><span>Nama target</span><input type="text" id="target-nama" placeholder="Mis. Dana Darurat" required maxlength="60"></label>
+            <label class="field"><span>Nominal target (Rp)</span><input type="number" id="target-nominal" min="0" step="1" value="0"></label>
+            <div><button class="btn" type="submit">Tambah Target</button></div>
+          </form>
+          <div class="list" id="daftar-target-tabungan"></div>
+        </div>
+        <div class="card">
+          <h3>Riwayat Tabungan</h3>
+          <div class="list" id="daftar-tabungan"></div>
+        </div>
+        <div class="card">
+          <h3>Riwayat Pemasukan</h3>
+          <div class="list" id="daftar-pemasukan"></div>
+        </div>
+        <div class="card">
+          <h3>Riwayat Pengeluaran</h3>
+          <div class="list" id="daftar-pengeluaran"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="site-footer no-print">
+      <p>&copy; <span id="tahun-footer">2026</span> Copyright Muhammad Alfathan</p>
+      <button class="btn-link" type="button" id="btn-tentang">Tentang web ini</button>
+    </footer>
+  </main>
+
+  <div class="modal-overlay" id="modal-tentang" hidden role="dialog" aria-modal="true" aria-labelledby="judul-tentang">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="judul-tentang">Tentang web ini</h2>
+        <button class="btn btn-icon" type="button" id="tutup-tentang" title="Tutup" aria-label="Tutup penjelasan">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Self Management dibangun sebagai langkah awal untuk memperbaiki struktur dan sistem manajemen di <strong>PT Elfiqa Karya Triangga</strong>.</p>
+        <p>Selama ini tugas, jadwal, catatan, dan catatan keuangan tersebar di banyak tempat: ada yang di buku, ada yang di grup chat, ada yang hanya diingat. Web ini menyatukannya dalam satu tempat yang rapi, sehingga pekerjaan lebih mudah dipantau, prioritas lebih jelas, dan keputusan bisa diambil lebih cepat.</p>
+        <p>Perbaikan struktur tidak berhenti di tampilan. Yang sedang dibangun adalah kebiasaan kerja yang terukur — target harian yang bisa dievaluasi, karya mingguan yang terlihat progresnya, dan keuangan yang tercatat tanpa perlu menghitung ulang.</p>
+        <p class="muted">Versi ini masih berjalan di perangkat sendiri dan belum tersambung ke database. Penyempurnaan berikutnya akan mengarah ke sana.</p>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" type="button" id="ok-tentang">Mengerti</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.body.classList.toggle('is-embedded', window.self !== window.top);
+  </script>
+  <script>
+    // Bridge tema dual-mode (listener dulu, baru request-theme)
+    (function () {
+      var root = document.documentElement;
+      var isEmbedded = window.self !== window.top;
+      function apply(theme) { root.setAttribute('data-theme', theme); }
+      function current() { return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; }
+
+      if (isEmbedded) {
+        window.addEventListener('message', function (e) {
+          if (!e.data) return;
+          if (e.data.type === 'SET_THEME' && (e.data.theme === 'dark' || e.data.theme === 'light')) apply(e.data.theme);
+        });
+        window.parent.postMessage({ type: 'request-theme' }, '*');
+      } else {
+        apply(localStorage.getItem('reynahub-theme') === 'dark' ? 'dark' : 'light');
+      }
+
+      var btn = document.getElementById('theme-toggle');
+      if (btn) btn.addEventListener('click', function () {
+        var next = current() === 'dark' ? 'light' : 'dark';
+        apply(next);
+        if (isEmbedded) window.parent.postMessage({ type: 'THEME_CHANGED', theme: next }, '*');
+        else localStorage.setItem('reynahub-theme', next);
+      });
+    })();
+  </script>
+  <script>
+  (function () {
+    'use strict';
+
+    var KEY = 'reynahub-self-mgmt-v1';
+    var KATEGORI = ['Pekerjaan', 'Pribadi', 'Belajar', 'Kesehatan'];
+    var GOAL_UMUM = 'goal-tabungan-umum';
+
+    function clone(o) { return JSON.parse(JSON.stringify(o)); }
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+    function uid(p) { return (p || 'id') + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+    function num(v) { var n = Number(v); return isFinite(n) ? n : 0; }
+    function rp(n) { return 'Rp ' + num(n).toLocaleString('id-ID'); }
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+    function parseDate(s) {
+      var p = String(s || '').split('-');
+      return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+    }
+    function fmtTanggal(s) {
+      if (!s) return '—';
+      try {
+        return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(parseDate(s));
+      } catch (e) { return s; }
+    }
+    function fmtTanggalPendek(s) {
+      if (!s) return '—';
+      try {
+        return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(parseDate(s));
+      } catch (e) { return s; }
+    }
+    function weekRange(dateStr) {
+      var d = parseDate(dateStr || todayStr());
+      var offset = (d.getDay() + 6) % 7; // Senin = awal pekan
+      var start = new Date(d.getFullYear(), d.getMonth(), d.getDate() - offset);
+      var end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
+      function f(x) { return x.getFullYear() + '-' + pad(x.getMonth() + 1) + '-' + pad(x.getDate()); }
+      return [f(start), f(end)];
+    }
+    function bulanDari(dateStr) { return String(dateStr || todayStr()).slice(0, 7); }
+    function inRentang(tanggal, awal, akhir) { return tanggal >= awal && tanggal <= akhir; }
+
+    function buatStateAwal() {
+      return {
+        targetHarian: 5,
+        tugas: [],
+        karya: [],
+        jadwal: [],
+        catatan: [],
+        pemasukan: [],
+        pengeluaran: [],
+        tabungan: [],
+        targetTabungan: [{ id: GOAL_UMUM, nama: 'Tabungan Umum', nominal: 0 }]
+      };
+    }
+
+    function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+    function geserHari(n) { var d = new Date(); d.setDate(d.getDate() + n); return ymd(d); }
+
+    // Data contoh (dummy) — dipakai saat tool pertama kali dibuka & tombol "Muat data contoh".
+    function buatDataContoh() {
+      var t = todayStr();
+      var pekan = weekRange(t)[0];
+      var awalBulan = t.slice(0, 8) + '01';
+      return {
+        targetHarian: 5,
+        tugas: [
+          { id: 'contoh-tugas-1', tanggal: t, judul: 'Review laporan penjualan pekan lalu', kategori: 'Pekerjaan', prioritas: 'tinggi', mulai: '08:30', selesai: '09:30', catatan: 'Fokus selisih stok gudang B', done: true },
+          { id: 'contoh-tugas-2', tanggal: t, judul: 'Follow up vendor kemasan', kategori: 'Pekerjaan', prioritas: 'tinggi', mulai: '10:00', selesai: '11:00', catatan: '', done: false },
+          { id: 'contoh-tugas-3', tanggal: t, judul: 'Olahraga 30 menit', kategori: 'Kesehatan', prioritas: 'rendah', mulai: '17:30', selesai: '18:00', catatan: '', done: true },
+          { id: 'contoh-tugas-4', tanggal: t, judul: 'Baca 1 bab buku manajemen', kategori: 'Belajar', prioritas: 'sedang', mulai: '20:00', selesai: '21:00', catatan: '', done: false },
+          { id: 'contoh-tugas-5', tanggal: geserHari(1), judul: 'Susun draft SOP gudang', kategori: 'Pekerjaan', prioritas: 'sedang', mulai: '09:00', selesai: '11:00', catatan: 'Bawa data stok 3 bulan', done: false },
+          { id: 'contoh-tugas-6', tanggal: geserHari(1), judul: 'Bayar tagihan listrik', kategori: 'Pribadi', prioritas: 'rendah', mulai: '', selesai: '', catatan: '', done: false },
+          { id: 'contoh-tugas-7', tanggal: geserHari(-1), judul: 'Rekap absensi tim', kategori: 'Pekerjaan', prioritas: 'sedang', mulai: '14:00', selesai: '15:00', catatan: '', done: true },
+          { id: 'contoh-tugas-8', tanggal: geserHari(-6), judul: 'Rekap keuangan mingguan', kategori: 'Pekerjaan', prioritas: 'sedang', mulai: '15:00', selesai: '16:00', catatan: '', done: true },
+          { id: 'contoh-tugas-9', tanggal: geserHari(-3), judul: 'Cek stok gudang B', kategori: 'Pekerjaan', prioritas: 'rendah', mulai: '13:00', selesai: '14:30', catatan: '', done: true },
+          { id: 'contoh-tugas-10', tanggal: geserHari(3), judul: 'Presentasi progres ke owner', kategori: 'Pekerjaan', prioritas: 'tinggi', mulai: '10:00', selesai: '11:30', catatan: 'Siapkan slide 5 halaman', done: false },
+          { id: 'contoh-tugas-11', tanggal: geserHari(6), judul: 'Review SOP gudang final', kategori: 'Pekerjaan', prioritas: 'sedang', mulai: '09:00', selesai: '10:00', catatan: '', done: false }
+        ],
+        karya: [
+          { id: 'contoh-karya-1', pekan: pekan, kategori: 'Pekerjaan', judul: 'Susun SOP gudang', target: 3, selesai: 2 },
+          { id: 'contoh-karya-2', pekan: pekan, kategori: 'Belajar', judul: 'Baca 2 bab buku', target: 2, selesai: 1 },
+          { id: 'contoh-karya-3', pekan: pekan, kategori: 'Kesehatan', judul: 'Olahraga 3x', target: 3, selesai: 3 }
+        ],
+        jadwal: [
+          { id: 'contoh-jadwal-1', tanggal: t, judul: 'Rapat koordinasi tim', mulai: '13:00', selesai: '14:00', kategori: 'Pekerjaan' },
+          { id: 'contoh-jadwal-2', tanggal: geserHari(1), judul: 'Review vendor kemasan', mulai: '09:00', selesai: '10:00', kategori: 'Pekerjaan' },
+          { id: 'contoh-jadwal-3', tanggal: geserHari(2), judul: 'Evaluasi target bulanan', mulai: '16:00', selesai: '17:00', kategori: 'Pekerjaan' },
+          { id: 'contoh-jadwal-4', tanggal: geserHari(-5), judul: 'Kunjungan supplier kemasan', mulai: '10:00', selesai: '12:00', kategori: 'Pekerjaan' },
+          { id: 'contoh-jadwal-5', tanggal: geserHari(4), judul: 'Sesi foto produk baru', mulai: '13:00', selesai: '15:00', kategori: 'Pekerjaan' },
+          { id: 'contoh-jadwal-6', tanggal: geserHari(7), judul: 'Cek kesehatan rutin', mulai: '08:00', selesai: '09:00', kategori: 'Kesehatan' }
+        ],
+        catatan: [
+          { id: 'contoh-catatan-1', tanggal: t, judul: 'Evaluasi pekan ini', isi: 'Yang jalan: SOP gudang 2/3, olahraga penuh.\nYang perlu diperbaiki: follow up vendor sering mundur karena menunggu harga.' },
+          { id: 'contoh-catatan-2', tanggal: geserHari(-2), judul: 'Ide perbaikan stok', isi: 'Gunakan barcode scanner di gudang B agar selisih stok cepat ketahuan.' }
+        ],
+        pemasukan: [
+          { id: 'contoh-masuk-1', tanggal: awalBulan, sumber: 'Gaji', jumlah: 6500000 },
+          { id: 'contoh-masuk-2', tanggal: geserHari(-5), sumber: 'Penjualan marketplace', jumlah: 1250000 }
+        ],
+        pengeluaran: [
+          { id: 'contoh-keluar-1', tanggal: geserHari(-6), kategori: 'Transport', jumlah: 350000, ket: 'Bensin + tol' },
+          { id: 'contoh-keluar-2', tanggal: geserHari(-3), kategori: 'Makan', jumlah: 820000, ket: 'Belanja bulanan' },
+          { id: 'contoh-keluar-3', tanggal: geserHari(-1), kategori: 'Listrik', jumlah: 425000, ket: 'Tagihan rumah' }
+        ],
+        tabungan: [
+          { id: 'contoh-tab-1', tanggal: awalBulan, jenis: 'setor', targetId: GOAL_UMUM, jumlah: 1000000 },
+          { id: 'contoh-tab-2', tanggal: geserHari(-4), jenis: 'setor', targetId: 'goal-dana-darurat', jumlah: 500000 },
+          { id: 'contoh-tab-3', tanggal: geserHari(-2), jenis: 'tarik', targetId: GOAL_UMUM, jumlah: 150000 }
+        ],
+        targetTabungan: [
+          { id: GOAL_UMUM, nama: 'Tabungan Umum', nominal: 10000000 },
+          { id: 'goal-dana-darurat', nama: 'Dana Darurat', nominal: 5000000 }
+        ]
+      };
+    }
+
+    var state = buatStateAwal();
+    var perluSimpanAwal = false;
+
+    function muat() {
+      var dasar = buatStateAwal();
+      var raw = null;
+      try { raw = localStorage.getItem(KEY); } catch (e) { raw = null; }
+      if (!raw) { perluSimpanAwal = true; return buatDataContoh(); }
+      var data;
+      try { data = JSON.parse(raw); } catch (e) { return dasar; }
+      if (!data || typeof data !== 'object') return dasar;
+      Object.keys(dasar).forEach(function (k) {
+        if (Array.isArray(dasar[k])) {
+          if (!Array.isArray(data[k])) data[k] = dasar[k];
+        } else if (typeof data[k] !== typeof dasar[k]) {
+          data[k] = dasar[k];
+        }
+      });
+      if (!Array.isArray(data.targetTabungan) || !data.targetTabungan.length) data.targetTabungan = dasar.targetTabungan;
+      return data;
+    }
+
+    function simpan() {
+      try { localStorage.setItem(KEY, JSON.stringify(state)); }
+      catch (e) { console.error('[self-mgmt] gagal menyimpan data', e); }
+    }
+
+    function $(id) { return document.getElementById(id); }
+
+    /* ---------- Kategori helper ---------- */
+    function kategoriTugas() {
+      var set = KATEGORI.slice();
+      state.tugas.forEach(function (t) { if (t.kategori && set.indexOf(t.kategori) < 0) set.push(t.kategori); });
+      return set;
+    }
+    function isiSelect(sel, items, nilai) {
+      if (!sel) return;
+      var lama = nilai != null ? nilai : sel.value;
+      sel.innerHTML = items.map(function (v) { return '<option value="' + esc(v) + '">' + esc(v) + '</option>'; }).join('');
+      if (lama && items.indexOf(lama) >= 0) sel.value = lama;
+    }
+
+    /* ---------- Perhitungan ---------- */
+    function tugasHariIni(tgl) {
+      var d = tgl || todayStr();
+      return state.tugas.filter(function (t) { return t.tanggal === d; })
+        .sort(urutTugas);
+    }
+    function urutTugas(a, b) {
+      var bobot = { tinggi: 0, sedang: 1, rendah: 2 };
+      var pa = bobot[a.prioritas] != null ? bobot[a.prioritas] : 1;
+      var pb = bobot[b.prioritas] != null ? bobot[b.prioritas] : 1;
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      if (pa !== pb) return pa - pb;
+      return String(a.mulai || '99:99').localeCompare(String(b.mulai || '99:99'));
+    }
+    function totalTabungan(targetId) {
+      return state.tabungan.reduce(function (acc, t) {
+        if (targetId && t.targetId !== targetId) return acc;
+        return acc + (t.jenis === 'tarik' ? -num(t.jumlah) : num(t.jumlah));
+      }, 0);
+    }
+    function totalTabunganSemua() {
+      return state.tabungan.reduce(function (acc, t) {
+        return acc + (t.jenis === 'tarik' ? -num(t.jumlah) : num(t.jumlah));
+      }, 0);
+    }
+    function keuanganBulan(bulan) {
+      var b = bulan || bulanDari(todayStr());
+      var masuk = state.pemasukan.filter(function (x) { return bulanDari(x.tanggal) === b; })
+        .reduce(function (a, x) { return a + num(x.jumlah); }, 0);
+      var keluar = state.pengeluaran.filter(function (x) { return bulanDari(x.tanggal) === b; })
+        .reduce(function (a, x) { return a + num(x.jumlah); }, 0);
+      return { masuk: masuk, keluar: keluar, sisa: masuk - keluar };
+    }
+    function karyaPekan(awal, akhir) {
+      return state.karya.filter(function (k) { return inRentang(k.pekan || awal, awal, akhir); });
+    }
+
+    /* ---------- RENDER: Ringkasan ---------- */
+    function renderRingkasan() {
+      var tgl = todayStr();
+      var jam = new Date().getHours();
+      var salam = jam < 11 ? 'Selamat pagi' : jam < 15 ? 'Selamat siang' : jam < 19 ? 'Selamat sore' : 'Selamat malam';
+      $('ringkasan-greeting').textContent = salam;
+      $('ringkasan-tanggal').textContent = fmtTanggal(tgl);
+
+      var hariIni = tugasHariIni(tgl);
+      var selesai = hariIni.filter(function (t) { return t.done; }).length;
+      var target = Math.max(1, num(state.targetHarian) || 1);
+      $('stat-tugas').textContent = selesai + ' / ' + target;
+      var persenTugas = Math.min(100, Math.round((selesai / target) * 100));
+      var barTugas = $('bar-tugas');
+      barTugas.style.width = persenTugas + '%';
+      barTugas.className = persenTugas >= 100 ? 'ok' : '';
+      $('stat-tugas-sub').textContent = hariIni.length + ' tugas terjadwal, ' + (hariIni.length - selesai) + ' belum selesai';
+
+      var pekan = weekRange(tgl);
+      var karya = karyaPekan(pekan[0], pekan[1]);
+      var totalTarget = karya.reduce(function (a, k) { return a + Math.max(1, num(k.target)); }, 0);
+      var totalSelesai = karya.reduce(function (a, k) { return a + Math.min(Math.max(1, num(k.target)), num(k.selesai)); }, 0);
+      var persenKarya = totalTarget ? Math.round((totalSelesai / totalTarget) * 100) : 0;
+      $('stat-karya').textContent = persenKarya + '%';
+      var barKarya = $('bar-karya');
+      barKarya.style.width = persenKarya + '%';
+      barKarya.className = persenKarya >= 100 ? 'ok' : '';
+      $('stat-karya-sub').textContent = totalTarget
+        ? totalSelesai + ' dari ' + totalTarget + ' target tercapai'
+        : 'Belum ada karya minggu ini';
+
+      var keu = keuanganBulan(bulanDari(tgl));
+      $('stat-saldo').textContent = rp(keu.sisa);
+      $('stat-saldo-sub').textContent = 'Masuk ' + rp(keu.masuk) + ' · keluar ' + rp(keu.keluar);
+
+      var tab = totalTabunganSemua();
+      $('stat-tabungan').textContent = rp(tab);
+      var jumlahSetoran = state.tabungan.filter(function (t) { return t.jenis !== 'tarik'; }).length;
+      $('stat-tabungan-sub').textContent = jumlahSetoran ? jumlahSetoran + ' transaksi setor' : 'Belum ada setoran';
+
+      var listTugas = $('ringkasan-tugas');
+      if (!hariIni.length) {
+        listTugas.innerHTML = '<p class="empty">Belum ada tugas hari ini.</p>';
+      } else {
+        listTugas.innerHTML = hariIni.slice(0, 6).map(function (t) {
+          return '<div class="row"><div class="row-main">' +
+            '<div class="row-title' + (t.done ? ' done' : '') + '">' + esc(t.judul) + '</div>' +
+            '<div class="row-meta"><span class="badge">' + esc(t.kategori || 'Umum') + '</span>' +
+            (t.mulai ? '<span>' + esc(t.mulai) + (t.selesai ? '–' + esc(t.selesai) : '') + '</span>' : '') +
+            (t.done ? '<span class="badge badge-ok">Selesai</span>' : '') +
+            '</div></div></div>';
+        }).join('');
+      }
+
+      var jadwalHariIni = state.jadwal.filter(function (j) { return j.tanggal === tgl; })
+        .sort(function (a, b) { return String(a.mulai).localeCompare(String(b.mulai)); });
+      var listJadwal = $('ringkasan-jadwal');
+      if (!jadwalHariIni.length) {
+        listJadwal.innerHTML = '<p class="empty">Tidak ada agenda hari ini.</p>';
+      } else {
+        listJadwal.innerHTML = jadwalHariIni.map(function (j) {
+          return '<div class="row"><div class="row-main">' +
+            '<div class="row-title">' + esc(j.judul) + '</div>' +
+            '<div class="row-meta"><span>' + esc(j.mulai) + (j.selesai ? '–' + esc(j.selesai) : '') + '</span>' +
+            (j.kategori ? '<span class="badge">' + esc(j.kategori) + '</span>' : '') +
+            '</div></div></div>';
+        }).join('');
+      }
+    }
+
+    /* ---------- RENDER: Tugas ---------- */
+    var editTugas = null;
+
+    function renderTugas() {
+      isiSelect($('tugas-kategori'), kategoriTugas());
+      $('target-harian').value = num(state.targetHarian) || 5;
+      $('label-target-harian').textContent = num(state.targetHarian) || 5;
+
+      var filter = $('tugas-filter').value || 'hari-ini';
+      var tgl = todayStr();
+      var pekan = weekRange(tgl);
+      var data = state.tugas.slice().sort(urutTugas);
+      if (filter === 'hari-ini') data = data.filter(function (t) { return t.tanggal === tgl; });
+      else if (filter === 'minggu') data = data.filter(function (t) { return inRentang(t.tanggal, pekan[0], pekan[1]); });
+      else if (filter === 'mendatang') data = data.filter(function (t) { return t.tanggal >= tgl; });
+
+      var list = $('daftar-tugas');
+      if (!data.length) {
+        list.innerHTML = '<p class="empty">Belum ada tugas pada rentang ini.</p>';
+        return;
+      }
+      var hariIni = totalTugasHariIni(tgl);
+      list.innerHTML = data.map(function (t) {
+        var id = esc(t.id);
+        var prio = t.prioritas || 'sedang';
+        return '<div class="row">' +
+          '<input class="check" type="checkbox" data-aksi="toggle-tugas" data-id="' + id + '"' + (t.done ? ' checked' : '') +
+          ' aria-label="Tandai selesai: ' + esc(t.judul) + '">' +
+          '<div class="row-main">' +
+            '<div class="row-title' + (t.done ? ' done' : '') + '">' + esc(t.judul) + '</div>' +
+            '<div class="row-meta">' +
+              '<span>' + esc(fmtTanggalPendek(t.tanggal)) + '</span>' +
+              '<span class="badge">' + esc(t.kategori || 'Umum') + '</span>' +
+              '<span class="badge badge-prio-' + esc(prio) + '">' + esc(prio) + '</span>' +
+              (t.mulai ? '<span>' + esc(t.mulai) + (t.selesai ? '–' + esc(t.selesai) : '') + '</span>' : '') +
+              (t.tanggal === hariIni ? '<span>hari ini</span>' : '') +
+              (t.catatan ? '<span>· ' + esc(t.catatan) + '</span>' : '') +
+            '</div>' +
+          '</div>' +
+          '<div class="row-actions">' +
+            '<button class="btn btn-icon" type="button" data-aksi="edit-tugas" data-id="' + id + '" title="Edit tugas" aria-label="Edit tugas">' +
+              '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>' +
+            '</button>' +
+            '<button class="btn btn-icon danger" type="button" data-aksi="hapus-tugas" data-id="' + id + '" title="Hapus tugas" aria-label="Hapus tugas">' +
+              '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+    function totalTugasHariIni() { return todayStr(); }
+
+    function resetFormTugas() {
+      editTugas = null;
+      $('form-tugas').reset();
+      $('tugas-tanggal').value = todayStr();
+      $('tugas-prioritas').value = 'sedang';
+      $('target-harian').value = num(state.targetHarian) || 5;
+      $('tugas-submit').textContent = 'Tambah Tugas';
+      $('tugas-batal').hidden = true;
+    }
+
+    /* ---------- RENDER: Karya ---------- */
+    function renderKarya() {
+      isiSelect($('karya-kategori'), KATEGORI);
+      var pekan = weekRange(todayStr());
+      $('karya-pekan').textContent = fmtTanggalPendek(pekan[0]) + ' – ' + fmtTanggalPendek(pekan[1]);
+      var karya = karyaPekan(pekan[0], pekan[1]).sort(function (a, b) {
+        if (a.kategori === b.kategori) return 0;
+        return String(a.kategori).localeCompare(String(b.kategori));
+      });
+      var list = $('daftar-karya');
+      if (!karya.length) {
+        list.innerHTML = '<p class="empty">Belum ada karya mingguan. Tambahkan target di atas.</p>';
+        return;
+      }
+      list.innerHTML = karya.map(function (k) {
+        var id = esc(k.id);
+        var target = Math.max(1, num(k.target));
+        var selesai = Math.max(0, Math.min(target, num(k.selesai)));
+        var persen = Math.round((selesai / target) * 100);
+        return '<div class="target-item">' +
+          '<div class="target-top">' +
+            '<div><div class="target-name">' + esc(k.judul) + '</div>' +
+            '<div class="row-sub"><span class="badge">' + esc(k.kategori) + '</span> ' + selesai + ' / ' + target + '</div></div>' +
+            '<div class="stepper">' +
+              '<button class="btn btn-icon" type="button" data-aksi="karya-kurang" data-id="' + id + '" title="Kurangi progres" aria-label="Kurangi progres">−</button>' +
+              '<button class="btn btn-icon" type="button" data-aksi="karya-tambah" data-id="' + id + '" title="Tambah progres" aria-label="Tambah progres">+</button>' +
+              '<button class="btn btn-icon danger" type="button" data-aksi="hapus-karya" data-id="' + id + '" title="Hapus karya" aria-label="Hapus karya">' +
+                '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="progress"><i class="' + (persen >= 100 ? 'ok' : '') + '" style="width:' + persen + '%"></i></div>' +
+        '</div>';
+      }).join('');
+    }
+
+    /* ---------- RENDER: Jadwal ---------- */
+    var editJadwal = null;
+
+    function renderJadwal() {
+      isiSelect($('jadwal-kategori'), KATEGORI);
+      var tgl = todayStr();
+      var data = state.jadwal.slice()
+        .filter(function (j) { return j.tanggal >= tgl; })
+        .sort(function (a, b) {
+          if (a.tanggal !== b.tanggal) return String(a.tanggal).localeCompare(String(b.tanggal));
+          return String(a.mulai).localeCompare(String(b.mulai));
+        });
+      var list = $('daftar-jadwal');
+      if (!data.length) {
+        list.innerHTML = '<p class="empty">Belum ada jadwal mendatang.</p>';
+        return;
+      }
+      var grup = {};
+      data.forEach(function (j) {
+        if (!grup[j.tanggal]) grup[j.tanggal] = [];
+        grup[j.tanggal].push(j);
+      });
+      list.innerHTML = Object.keys(grup).map(function (tglKey) {
+        var isi = grup[tglKey].map(function (j) {
+          var id = esc(j.id);
+          return '<div class="row">' +
+            '<div class="row-main">' +
+              '<div class="row-title">' + esc(j.judul) + '</div>' +
+              '<div class="row-meta">' +
+                '<span>' + esc(j.mulai) + (j.selesai ? '–' + esc(j.selesai) : '') + '</span>' +
+                (j.kategori ? '<span class="badge">' + esc(j.kategori) + '</span>' : '') +
+              '</div>' +
+            '</div>' +
+            '<div class="row-actions">' +
+              '<button class="btn btn-icon" type="button" data-aksi="edit-jadwal" data-id="' + id + '" title="Edit jadwal" aria-label="Edit jadwal">' +
+                '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>' +
+              '</button>' +
+              '<button class="btn btn-icon danger" type="button" data-aksi="hapus-jadwal" data-id="' + id + '" title="Hapus jadwal" aria-label="Hapus jadwal">' +
+                '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>' +
+              '</button>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+        return '<div class="card"><h3>' + esc(fmtTanggal(tglKey)) + '</h3><div class="list">' + isi + '</div></div>';
+      }).join('');
+    }
+
+    function resetFormJadwal() {
+      editJadwal = null;
+      $('form-jadwal').reset();
+      $('jadwal-tanggal').value = todayStr();
+      $('jadwal-submit').textContent = 'Tambah Jadwal';
+      $('jadwal-batal').hidden = true;
+    }
+
+    /* ---------- RENDER: Kalender ---------- */
+    var kalBulan = '';
+    var kalTerpilih = '';
+
+    function bulanKeStr(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
+    function geserBulan(str, delta) {
+      var p = String(str || bulanDari(todayStr())).split('-');
+      return bulanKeStr(new Date(Number(p[0]), Number(p[1]) - 1 + delta, 1));
+    }
+    function namaBulan(str) {
+      var p = String(str).split('-');
+      try {
+        return new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' })
+          .format(new Date(Number(p[0]), Number(p[1]) - 1, 1));
+      } catch (e) { return str; }
+    }
+    function tanggalDiBulan(bulan, day) { var p = String(bulan).split('-'); return p[0] + '-' + p[1] + '-' + pad(day); }
+    function hariDalamBulan(bulan) { var p = String(bulan).split('-'); return new Date(Number(p[0]), Number(p[1]), 0).getDate(); }
+    function offsetSenin(bulan) { var p = String(bulan).split('-'); return (new Date(Number(p[0]), Number(p[1]) - 1, 1).getDay() + 6) % 7; }
+
+    function renderKalender() {
+      if (!kalBulan) kalBulan = bulanDari(todayStr());
+      if (!kalTerpilih) kalTerpilih = todayStr();
+      var judul = $('kal-judul');
+      var grid = $('kal-grid');
+      if (!judul || !grid) return;
+      judul.textContent = namaBulan(kalBulan);
+
+      var total = hariDalamBulan(kalBulan);
+      var offset = offsetSenin(kalBulan);
+      var tglIni = todayStr();
+
+      var petaTugas = {};
+      state.tugas.forEach(function (t) {
+        var m = petaTugas[t.tanggal] || (petaTugas[t.tanggal] = { total: 0, done: 0 });
+        m.total++;
+        if (t.done) m.done++;
+      });
+      var petaJadwal = {};
+      state.jadwal.forEach(function (j) {
+        var m = petaJadwal[j.tanggal] || (petaJadwal[j.tanggal] = { total: 0 });
+        m.total++;
+      });
+
+      var html = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map(function (d) {
+        return '<div class="cal-dow">' + d + '</div>';
+      }).join('');
+      for (var i = 0; i < offset; i++) html += '<div class="cal-day blank" aria-hidden="true"></div>';
+      for (var day = 1; day <= total; day++) {
+        var tgl = tanggalDiBulan(kalBulan, day);
+        var t = petaTugas[tgl];
+        var j = petaJadwal[tgl];
+        var cls = 'cal-day' + (tgl === tglIni ? ' today' : '') + (tgl === kalTerpilih ? ' selected' : '');
+        html += '<button type="button" class="' + cls + '" data-aksi="pilih-hari" data-tanggal="' + esc(tgl) + '" aria-label="' + esc(fmtTanggal(tgl)) + '" aria-pressed="' + (tgl === kalTerpilih ? 'true' : 'false') + '">' +
+          '<span class="cal-num">' + day + '</span>' +
+          (t ? '<span class="cal-chip tugas' + (t.done === t.total ? ' ok' : '') + '" title="' + t.done + ' dari ' + t.total + ' tugas selesai">T' + t.total + '</span>' : '') +
+          (j ? '<span class="cal-chip jadwal" title="' + j.total + ' jadwal">J' + j.total + '</span>' : '') +
+        '</button>';
+      }
+      grid.innerHTML = html;
+      renderKalenderDetail();
+    }
+
+    function renderKalenderDetail() {
+      var judul = $('kal-hari-judul');
+      var list = $('kal-detail');
+      if (!judul || !list) return;
+      var tgl = kalTerpilih || todayStr();
+      judul.textContent = fmtTanggal(tgl);
+
+      var tugas = state.tugas.filter(function (t) { return t.tanggal === tgl; }).sort(urutTugas);
+      var jadwal = state.jadwal.filter(function (j) { return j.tanggal === tgl; })
+        .sort(function (a, b) { return String(a.mulai || '99:99').localeCompare(String(b.mulai || '99:99')); });
+
+      var html = '';
+      jadwal.forEach(function (j) {
+        html += '<div class="row"><div class="row-main">' +
+          '<div class="row-title">' + esc(j.judul) + '</div>' +
+          '<div class="row-meta"><span>' + esc(j.mulai) + (j.selesai ? '–' + esc(j.selesai) : '') + '</span>' +
+          '<span class="cal-chip jadwal">jadwal</span>' +
+          (j.kategori ? '<span class="badge">' + esc(j.kategori) + '</span>' : '') +
+          '</div></div></div>';
+      });
+      tugas.forEach(function (t) {
+        html += '<div class="row">' +
+          '<input class="check" type="checkbox" data-aksi="toggle-tugas" data-id="' + esc(t.id) + '"' + (t.done ? ' checked' : '') +
+          ' aria-label="Tandai selesai: ' + esc(t.judul) + '">' +
+          '<div class="row-main">' +
+            '<div class="row-title' + (t.done ? ' done' : '') + '">' + esc(t.judul) + '</div>' +
+            '<div class="row-meta"><span class="cal-chip tugas' + (t.done ? ' ok' : '') + '">tugas</span>' +
+              '<span class="badge">' + esc(t.kategori || 'Umum') + '</span>' +
+              (t.mulai ? '<span>' + esc(t.mulai) + (t.selesai ? '–' + esc(t.selesai) : '') + '</span>' : '') +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      });
+      list.innerHTML = html || '<p class="empty">Tidak ada tugas atau jadwal pada tanggal ini.</p>';
+    }
+
+    function pasangKalender() {
+      var prev = $('kal-prev');
+      var next = $('kal-next');
+      var ini = $('kal-hari-ini');
+      if (!prev || !next || !ini) return;
+      prev.addEventListener('click', function () {
+        kalBulan = geserBulan(kalBulan || bulanDari(todayStr()), -1);
+        renderKalender();
+      });
+      next.addEventListener('click', function () {
+        kalBulan = geserBulan(kalBulan || bulanDari(todayStr()), 1);
+        renderKalender();
+      });
+      ini.addEventListener('click', function () {
+        kalBulan = bulanDari(todayStr());
+        kalTerpilih = todayStr();
+        renderKalender();
+      });
+    }
+
+    /* ---------- RENDER: Catatan ---------- */
+    var editCatatan = null;
+
+    function renderCatatan() {
+      var data = state.catatan.slice().sort(function (a, b) {
+        if (a.tanggal !== b.tanggal) return String(b.tanggal).localeCompare(String(a.tanggal));
+        return String(b.id).localeCompare(String(a.id));
+      });
+      var list = $('daftar-catatan');
+      if (!data.length) {
+        list.innerHTML = '<p class="empty">Belum ada catatan.</p>';
+        return;
+      }
+      list.innerHTML = data.map(function (c) {
+        var id = esc(c.id);
+        return '<div class="card">' +
+          '<div class="target-top">' +
+            '<div>' +
+              '<div class="target-name">' + esc(c.judul) + '</div>' +
+              '<div class="row-sub">' + esc(fmtTanggal(c.tanggal)) + '</div>' +
+            '</div>' +
+            '<div class="stepper">' +
+              '<button class="btn btn-icon" type="button" data-aksi="edit-catatan" data-id="' + id + '" title="Edit catatan" aria-label="Edit catatan">' +
+                '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>' +
+              '</button>' +
+              '<button class="btn btn-icon danger" type="button" data-aksi="hapus-catatan" data-id="' + id + '" title="Hapus catatan" aria-label="Hapus catatan">' +
+                '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+          (c.isi ? '<p class="row-sub" style="white-space:pre-wrap; margin-top:8px">' + esc(c.isi) + '</p>' : '') +
+        '</div>';
+      }).join('');
+    }
+
+    function resetFormCatatan() {
+      editCatatan = null;
+      $('form-catatan').reset();
+      $('catatan-tanggal').value = todayStr();
+      $('catatan-submit').textContent = 'Simpan Catatan';
+      $('catatan-batal').hidden = true;
+    }
+
+    /* ---------- RENDER: Keuangan ---------- */
+    function renderKeuangan() {
+      var bulan = bulanDari(todayStr());
+      var keu = keuanganBulan(bulan);
+      $('keu-masuk').textContent = rp(keu.masuk);
+      $('keu-keluar').textContent = rp(keu.keluar);
+      $('keu-sisa').textContent = rp(keu.sisa);
+      var nMasuk = state.pemasukan.filter(function (x) { return bulanDari(x.tanggal) === bulan; }).length;
+      var nKeluar = state.pengeluaran.filter(function (x) { return bulanDari(x.tanggal) === bulan; }).length;
+      $('keu-masuk-sub').textContent = nMasuk ? nMasuk + ' transaksi' : 'Belum ada pemasukan';
+      $('keu-keluar-sub').textContent = nKeluar ? nKeluar + ' transaksi' : 'Belum ada pengeluaran';
+      var status = $('keu-status');
+      if (!nMasuk && !nKeluar) {
+        status.textContent = 'Belum ada transaksi bulan ini';
+        status.className = 'stat-sub';
+      } else if (keu.sisa >= 0) {
+        status.textContent = 'Semua aman. Keuangan sehat!';
+        status.className = 'stat-sub';
+      } else {
+        status.textContent = 'Pengeluaran melebihi pemasukan bulan ini';
+        status.className = 'stat-sub badge-warn';
+      }
+
+      // select tujuan tabungan
+      var tujuan = $('tabungan-tujuan');
+      var pilih = tujuan.value;
+      tujuan.innerHTML = state.targetTabungan.map(function (g) {
+        return '<option value="' + esc(g.id) + '">' + esc(g.nama) + '</option>';
+      }).join('');
+      if (pilih && state.targetTabungan.some(function (g) { return g.id === pilih; })) tujuan.value = pilih;
+
+      // daftar target tabungan
+      var listTarget = $('daftar-target-tabungan');
+      listTarget.innerHTML = state.targetTabungan.map(function (g) {
+        var id = esc(g.id);
+        var tersimpan = totalTabungan(g.id);
+        var nominal = num(g.nominal);
+        var persen = nominal > 0 ? Math.max(0, Math.min(100, Math.round((tersimpan / nominal) * 100))) : 0;
+        return '<div class="target-item">' +
+          '<div class="target-top">' +
+            '<div>' +
+              '<div class="target-name">' + esc(g.nama) + '</div>' +
+              '<div class="row-sub">Tersimpan ' + rp(tersimpan) + (nominal > 0 ? ' dari ' + rp(nominal) : ' · target belum ditetapkan') + '</div>' +
+            '</div>' +
+            '<div class="stepper">' +
+              '<button class="btn" type="button" data-aksi="setor-cepat" data-id="' + id + '">Setor</button>' +
+              '<button class="btn btn-icon" type="button" data-aksi="edit-target" data-id="' + id + '" title="Ubah nominal target" aria-label="Ubah nominal target">' +
+                '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>' +
+              '</button>' +
+              (g.id === GOAL_UMUM ? '' :
+                '<button class="btn btn-icon danger" type="button" data-aksi="hapus-target" data-id="' + id + '" title="Hapus target" aria-label="Hapus target">' +
+                  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>' +
+                '</button>') +
+            '</div>' +
+          '</div>' +
+          (nominal > 0 ? '<div class="progress"><i class="' + (persen >= 100 ? 'ok' : '') + '" style="width:' + persen + '%"></i></div>' : '') +
+        '</div>';
+      }).join('');
+
+      // riwayat tabungan
+      var tab = state.tabungan.slice().sort(function (a, b) { return String(b.tanggal).localeCompare(String(a.tanggal)); });
+      $('daftar-tabungan').innerHTML = tab.length ? tab.slice(0, 50).map(function (t) {
+        var namaTarget = (state.targetTabungan.filter(function (g) { return g.id === t.targetId; })[0] || {}).nama || 'Tabungan';
+        var masuk = t.jenis !== 'tarik';
+        return '<div class="row"><div class="row-main">' +
+          '<div class="row-title">' + esc(namaTarget) + ' · <span class="' + (masuk ? 'money-in' : 'money-out') + '">' + (masuk ? '+' : '−') + rp(t.jumlah) + '</span></div>' +
+          '<div class="row-meta"><span>' + esc(fmtTanggalPendek(t.tanggal)) + '</span><span class="badge">' + (masuk ? 'setor' : 'tarik') + '</span>' +
+          (t.ket ? '<span>· ' + esc(t.ket) + '</span>' : '') + '</div>' +
+        '</div>' +
+        '<div class="row-actions"><button class="btn btn-icon danger" type="button" data-aksi="hapus-tabungan" data-id="' + esc(t.id) + '" title="Hapus transaksi" aria-label="Hapus transaksi">' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>' +
+        '</button></div></div>';
+      }).join('') : '<p class="empty">Belum ada riwayat tabungan.</p>';
+
+      // pemasukan
+      var masukList = state.pemasukan.slice().sort(function (a, b) { return String(b.tanggal).localeCompare(String(a.tanggal)); });
+      $('daftar-pemasukan').innerHTML = masukList.length ? masukList.slice(0, 50).map(function (m) {
+        return '<div class="row"><div class="row-main">' +
+          '<div class="money-row"><span class="row-title">' + esc(m.sumber) + '</span><span class="money-in">' + rp(m.jumlah) + '</span></div>' +
+          '<div class="row-meta"><span>' + esc(fmtTanggalPendek(m.tanggal)) + '</span></div>' +
+        '</div>' +
+        '<div class="row-actions"><button class="btn btn-icon danger" type="button" data-aksi="hapus-pemasukan" data-id="' + esc(m.id) + '" title="Hapus pemasukan" aria-label="Hapus pemasukan">' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>' +
+        '</button></div></div>';
+      }).join('') : '<p class="empty">Belum ada pemasukan.</p>';
+
+      // pengeluaran
+      var keluarList = state.pengeluaran.slice().sort(function (a, b) { return String(b.tanggal).localeCompare(String(a.tanggal)); });
+      $('daftar-pengeluaran').innerHTML = keluarList.length ? keluarList.slice(0, 50).map(function (p) {
+        return '<div class="row"><div class="row-main">' +
+          '<div class="money-row"><span class="row-title">' + esc(p.kategori) + (p.ket ? ' · ' + esc(p.ket) : '') + '</span><span class="money-out">' + rp(p.jumlah) + '</span></div>' +
+          '<div class="row-meta"><span>' + esc(fmtTanggalPendek(p.tanggal)) + '</span></div>' +
+        '</div>' +
+        '<div class="row-actions"><button class="btn btn-icon danger" type="button" data-aksi="hapus-pengeluaran" data-id="' + esc(p.id) + '" title="Hapus pengeluaran" aria-label="Hapus pengeluaran">' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>' +
+        '</button></div></div>';
+      }).join('') : '<p class="empty">Belum ada pengeluaran.</p>';
+    }
+
+    /* ---------- RENDER utama ---------- */
+    function renderSemua() {
+      renderRingkasan();
+      renderTugas();
+      renderKarya();
+      renderJadwal();
+      renderKalender();
+      renderCatatan();
+      renderKeuangan();
+    }
+
+    function renderPanelAktif() {
+      var aktif = document.querySelector('.tab[aria-selected="true"]');
+      var nama = aktif ? aktif.getAttribute('data-panel') : 'ringkasan';
+      if (nama === 'ringkasan') renderRingkasan();
+      else if (nama === 'tugas') renderTugas();
+      else if (nama === 'karya') renderKarya();
+      else if (nama === 'jadwal') renderJadwal();
+      else if (nama === 'kalender') renderKalender();
+      else if (nama === 'catatan') renderCatatan();
+      else if (nama === 'keuangan') renderKeuangan();
+    }
+
+    /* ---------- TAB ---------- */
+    function pasangTabs() {
+      var tabs = document.querySelectorAll('.tab');
+      Array.prototype.forEach.call(tabs, function (btn) {
+        btn.addEventListener('click', function () {
+          Array.prototype.forEach.call(tabs, function (b) { b.setAttribute('aria-selected', 'false'); });
+          btn.setAttribute('aria-selected', 'true');
+          Array.prototype.forEach.call(document.querySelectorAll('.panel'), function (p) { p.hidden = true; });
+          var panel = $('panel-' + btn.getAttribute('data-panel'));
+          if (panel) panel.hidden = false;
+          renderPanelAktif();
+        });
+      });
+    }
+
+    /* ---------- FORM: Tugas ---------- */
+    function pasangFormTugas() {
+      $('form-tugas').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var data = {
+          tanggal: $('tugas-tanggal').value || todayStr(),
+          judul: $('tugas-judul').value.trim(),
+          kategori: $('tugas-kategori').value || 'Pekerjaan',
+          prioritas: $('tugas-prioritas').value || 'sedang',
+          mulai: $('tugas-mulai').value,
+          selesai: $('tugas-selesai').value,
+          catatan: $('tugas-catatan').value.trim()
+        };
+        if (!data.judul) return;
+        if (editTugas) {
+          var idx = state.tugas.findIndex(function (t) { return t.id === editTugas; });
+          if (idx >= 0) state.tugas[idx] = Object.assign({}, state.tugas[idx], data);
+        } else {
+          data.id = uid('tugas');
+          data.done = false;
+          state.tugas.push(data);
+        }
+        var target = num($('target-harian').value);
+        if (target > 0) state.targetHarian = Math.min(50, Math.max(1, Math.round(target)));
+        simpan();
+        resetFormTugas();
+        renderSemua();
+      });
+
+      $('tugas-batal').addEventListener('click', function () { resetFormTugas(); });
+
+      $('target-harian').addEventListener('change', function () {
+        var target = Math.min(50, Math.max(1, Math.round(num(this.value) || 5)));
+        state.targetHarian = target;
+        this.value = target;
+        simpan();
+        renderRingkasan();
+        renderTugas();
+      });
+
+      $('tugas-filter').addEventListener('change', renderTugas);
+
+      $('tugas-hapus-selesai').addEventListener('click', function () {
+        var sisa = state.tugas.filter(function (t) { return !t.done; });
+        if (sisa.length === state.tugas.length) return;
+        if (!confirm('Hapus semua tugas yang sudah selesai?')) return;
+        state.tugas = sisa;
+        simpan();
+        renderSemua();
+      });
+    }
+
+    /* ---------- FORM: Karya ---------- */
+    function pasangFormKarya() {
+      $('form-karya').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var judul = $('karya-judul').value.trim();
+        if (!judul) return;
+        var pekan = weekRange(todayStr());
+        state.karya.push({
+          id: uid('karya'),
+          pekan: pekan[0],
+          kategori: $('karya-kategori').value || 'Pekerjaan',
+          judul: judul,
+          target: Math.max(1, Math.round(num($('karya-target').value) || 1)),
+          selesai: 0
+        });
+        simpan();
+        $('karya-judul').value = '';
+        $('karya-target').value = 1;
+        renderSemua();
+      });
+    }
+
+    /* ---------- FORM: Jadwal ---------- */
+    function pasangFormJadwal() {
+      $('form-jadwal').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var data = {
+          tanggal: $('jadwal-tanggal').value || todayStr(),
+          judul: $('jadwal-judul').value.trim(),
+          mulai: $('jadwal-mulai').value,
+          selesai: $('jadwal-selesai').value,
+          kategori: $('jadwal-kategori').value || ''
+        };
+        if (!data.judul || !data.mulai) return;
+        if (editJadwal) {
+          var idx = state.jadwal.findIndex(function (j) { return j.id === editJadwal; });
+          if (idx >= 0) state.jadwal[idx] = Object.assign({}, state.jadwal[idx], data);
+        } else {
+          data.id = uid('jadwal');
+          state.jadwal.push(data);
+        }
+        simpan();
+        resetFormJadwal();
+        renderSemua();
+      });
+      $('jadwal-batal').addEventListener('click', function () { resetFormJadwal(); });
+    }
+
+    /* ---------- FORM: Catatan ---------- */
+    function pasangFormCatatan() {
+      $('form-catatan').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var data = {
+          tanggal: $('catatan-tanggal').value || todayStr(),
+          judul: $('catatan-judul').value.trim(),
+          isi: $('catatan-isi').value.trim()
+        };
+        if (!data.judul) return;
+        if (editCatatan) {
+          var idx = state.catatan.findIndex(function (c) { return c.id === editCatatan; });
+          if (idx >= 0) state.catatan[idx] = Object.assign({}, state.catatan[idx], data);
+        } else {
+          data.id = uid('catatan');
+          state.catatan.push(data);
+        }
+        simpan();
+        resetFormCatatan();
+        renderSemua();
+      });
+      $('catatan-batal').addEventListener('click', function () { resetFormCatatan(); });
+    }
+
+    /* ---------- FORM: Keuangan ---------- */
+    function pasangFormKeuangan() {
+      $('form-pemasukan').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var jumlah = num($('masuk-jumlah').value);
+        var sumber = $('masuk-sumber').value.trim();
+        if (!sumber || jumlah <= 0) return;
+        state.pemasukan.push({
+          id: uid('masuk'),
+          tanggal: $('masuk-tanggal').value || todayStr(),
+          sumber: sumber,
+          jumlah: jumlah
+        });
+        simpan();
+        $('masuk-sumber').value = '';
+        $('masuk-jumlah').value = '';
+        renderSemua();
+      });
+
+      $('form-pengeluaran').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var jumlah = num($('keluar-jumlah').value);
+        var kategori = $('keluar-kategori').value.trim();
+        if (!kategori || jumlah <= 0) return;
+        state.pengeluaran.push({
+          id: uid('keluar'),
+          tanggal: $('keluar-tanggal').value || todayStr(),
+          kategori: kategori,
+          jumlah: jumlah,
+          ket: $('keluar-ket').value.trim()
+        });
+        simpan();
+        $('keluar-kategori').value = '';
+        $('keluar-jumlah').value = '';
+        $('keluar-ket').value = '';
+        renderSemua();
+      });
+
+      $('form-tabungan').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var jumlah = num($('tabungan-jumlah').value);
+        if (jumlah <= 0) return;
+        state.tabungan.push({
+          id: uid('tab'),
+          tanggal: $('tabungan-tanggal').value || todayStr(),
+          jenis: $('tabungan-jenis').value === 'tarik' ? 'tarik' : 'setor',
+          targetId: $('tabungan-tujuan').value || GOAL_UMUM,
+          jumlah: jumlah
+        });
+        simpan();
+        $('tabungan-jumlah').value = '';
+        renderSemua();
+      });
+
+      $('form-target-tabungan').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var nama = $('target-nama').value.trim();
+        if (!nama) return;
+        state.targetTabungan.push({
+          id: uid('goal'),
+          nama: nama,
+          nominal: Math.max(0, num($('target-nominal').value))
+        });
+        simpan();
+        $('target-nama').value = '';
+        $('target-nominal').value = '0';
+        renderSemua();
+      });
+    }
+
+    /* ---------- Aksi baris (delegasi) ---------- */
+    function pasangAksi() {
+      document.addEventListener('click', function (e) {
+        var el = e.target.closest ? e.target.closest('[data-aksi]') : null;
+        if (!el) return;
+        var aksi = el.getAttribute('data-aksi');
+        var id = el.getAttribute('data-id');
+
+        if (aksi === 'edit-tugas') {
+          var t = state.tugas.filter(function (x) { return x.id === id; })[0];
+          if (!t) return;
+          editTugas = id;
+          $('tugas-tanggal').value = t.tanggal;
+          $('tugas-judul').value = t.judul;
+          isiSelect($('tugas-kategori'), kategoriTugas(), t.kategori);
+          $('tugas-prioritas').value = t.prioritas || 'sedang';
+          $('tugas-mulai').value = t.mulai || '';
+          $('tugas-selesai').value = t.selesai || '';
+          $('tugas-catatan').value = t.catatan || '';
+          $('tugas-submit').textContent = 'Simpan Perubahan';
+          $('tugas-batal').hidden = false;
+          $('tugas-judul').focus();
+          return;
+        }
+        if (aksi === 'hapus-tugas') {
+          if (!confirm('Hapus tugas ini?')) return;
+          state.tugas = state.tugas.filter(function (x) { return x.id !== id; });
+          simpan(); renderSemua(); return;
+        }
+        if (aksi === 'karya-tambah' || aksi === 'karya-kurang') {
+          var k = state.karya.filter(function (x) { return x.id === id; })[0];
+          if (!k) return;
+          var target = Math.max(1, num(k.target));
+          k.selesai = Math.max(0, Math.min(target, num(k.selesai) + (aksi === 'karya-tambah' ? 1 : -1)));
+          simpan(); renderSemua(); return;
+        }
+        if (aksi === 'hapus-karya') {
+          if (!confirm('Hapus karya mingguan ini?')) return;
+          state.karya = state.karya.filter(function (x) { return x.id !== id; });
+          simpan(); renderSemua(); return;
+        }
+        if (aksi === 'pilih-hari') {
+          kalTerpilih = el.getAttribute('data-tanggal') || todayStr();
+          renderKalender();
+          return;
+        }
+        if (aksi === 'edit-jadwal') {
+          var j = state.jadwal.filter(function (x) { return x.id === id; })[0];
+          if (!j) return;
+          editJadwal = id;
+          $('jadwal-tanggal').value = j.tanggal;
+          $('jadwal-judul').value = j.judul;
+          $('jadwal-mulai').value = j.mulai || '';
+          $('jadwal-selesai').value = j.selesai || '';
+          isiSelect($('jadwal-kategori'), KATEGORI, j.kategori);
+          $('jadwal-submit').textContent = 'Simpan Perubahan';
+          $('jadwal-batal').hidden = false;
+          $('jadwal-judul').focus();
+          return;
+        }
+        if (aksi === 'hapus-jadwal') {
+          if (!confirm('Hapus jadwal ini?')) return;
+          state.jadwal = state.jadwal.filter(function (x) { return x.id !== id; });
+          simpan(); renderSemua(); return;
+        }
+        if (aksi === 'edit-catatan') {
+          var c = state.catatan.filter(function (x) { return x.id === id; })[0];
+          if (!c) return;
+          editCatatan = id;
+          $('catatan-tanggal').value = c.tanggal;
+          $('catatan-judul').value = c.judul;
+          $('catatan-isi').value = c.isi || '';
+          $('catatan-submit').textContent = 'Simpan Perubahan';
+          $('catatan-batal').hidden = false;
+          $('catatan-judul').focus();
+          return;
+        }
+        if (aksi === 'hapus-catatan') {
+          if (!confirm('Hapus catatan ini?')) return;
+          state.catatan = state.catatan.filter(function (x) { return x.id !== id; });
+          simpan(); renderSemua(); return;
+        }
+        if (aksi === 'setor-cepat') {
+          var nominal = 0;
+          var teks = window.prompt('Jumlah setoran ke target ini (Rp):', '');
+          if (teks === null) return;
+          nominal = num(String(teks).replace(/[^0-9]/g, ''));
+          if (nominal <= 0) return;
+          state.tabungan.push({
+            id: uid('tab'),
+            tanggal: todayStr(),
+            jenis: 'setor',
+            targetId: id,
+            jumlah: nominal
+          });
+          simpan(); renderSemua(); return;
+        }
+        if (aksi === 'edit-target') {
+          var g = state.targetTabungan.filter(function (x) { return x.id === id; })[0];
+          if (!g) return;
+          var isi = window.prompt('Nominal target "' + g.nama + '" (Rp):', String(num(g.nominal)));
+          if (isi === null) return;
+          g.nominal = Math.max(0, num(String(isi).replace(/[^0-9]/g, '')));
+          simpan(); renderSemua(); return;
+        }
+        if (aksi === 'hapus-target') {
+          if (!confirm('Hapus target tabungan ini? Riwayat transaksinya tetap ada.')) return;
+          state.targetTabungan = state.targetTabungan.filter(function (x) { return x.id !== id; });
+          simpan(); renderSemua(); return;
+        }
+        if (aksi === 'hapus-tabungan') {
+          if (!confirm('Hapus transaksi tabungan ini?')) return;
+          state.tabungan = state.tabungan.filter(function (x) { return x.id !== id; });
+          simpan(); renderSemua(); return;
+        }
+        if (aksi === 'hapus-pemasukan') {
+          if (!confirm('Hapus pemasukan ini?')) return;
+          state.pemasukan = state.pemasukan.filter(function (x) { return x.id !== id; });
+          simpan(); renderSemua(); return;
+        }
+        if (aksi === 'hapus-pengeluaran') {
+          if (!confirm('Hapus pengeluaran ini?')) return;
+          state.pengeluaran = state.pengeluaran.filter(function (x) { return x.id !== id; });
+          simpan(); renderSemua(); return;
+        }
+      });
+
+      document.addEventListener('change', function (e) {
+        var el = e.target;
+        if (!el || el.getAttribute('data-aksi') !== 'toggle-tugas') return;
+        var id = el.getAttribute('data-id');
+        var t = state.tugas.filter(function (x) { return x.id === id; })[0];
+        if (!t) return;
+        t.done = !!el.checked;
+        simpan();
+        renderSemua();
+      });
+    }
+
+    /* ---------- INIT ---------- */
+    function pasangAksiData() {
+      var btnContoh = $('btn-contoh');
+      if (btnContoh) btnContoh.addEventListener('click', function () {
+        if (!confirm('Ganti seluruh data sekarang dengan data contoh?')) return;
+        state = buatDataContoh();
+        simpan();
+        renderSemua();
+      });
+
+      var btnEkspor = $('btn-ekspor');
+      if (btnEkspor) btnEkspor.addEventListener('click', function () {
+        var isi = JSON.stringify(state, null, 2);
+        var blob = new Blob([isi], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'self-management-' + todayStr() + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      });
+
+      var fileImpor = $('file-impor');
+      var btnImpor = $('btn-impor');
+      if (btnImpor && fileImpor) {
+        btnImpor.addEventListener('click', function () { fileImpor.click(); });
+        fileImpor.addEventListener('change', function () {
+          var file = fileImpor.files && fileImpor.files[0];
+          if (!file) return;
+          var reader = new FileReader();
+          reader.onload = function () {
+            var data = null;
+            try { data = JSON.parse(String(reader.result)); } catch (e) { data = null; }
+            if (!data || typeof data !== 'object' || !Array.isArray(data.tugas)) {
+              alert('Berkas tidak dikenali. Pilih hasil ekspor dari tool ini.');
+              fileImpor.value = '';
+              return;
+            }
+            if (!confirm('Ganti seluruh data sekarang dengan isi berkas ini?')) { fileImpor.value = ''; return; }
+            var dasar = buatStateAwal();
+            Object.keys(dasar).forEach(function (k) {
+              if (Array.isArray(dasar[k])) { if (!Array.isArray(data[k])) data[k] = dasar[k]; }
+              else if (typeof data[k] !== typeof dasar[k]) data[k] = dasar[k];
+            });
+            if (!Array.isArray(data.targetTabungan) || !data.targetTabungan.length) data.targetTabungan = dasar.targetTabungan;
+            state = data;
+            simpan();
+            renderSemua();
+            fileImpor.value = '';
+            alert('Data berhasil dipulihkan.');
+          };
+          reader.onerror = function () {
+            alert('Gagal membaca berkas.');
+            fileImpor.value = '';
+          };
+          reader.readAsText(file);
+        });
+      }
+
+      var btnKosongkan = $('btn-kosongkan');
+      if (btnKosongkan) btnKosongkan.addEventListener('click', function () {
+        if (!confirm('Hapus semua data di perangkat ini? Tindakan ini tidak bisa dibatalkan.')) return;
+        state = buatStateAwal();
+        simpan();
+        renderSemua();
+      });
+    }
+
+    function pasangModalTentang() {
+      var modal = $('modal-tentang');
+      var pemicu = $('btn-tentang');
+      if (!modal || !pemicu) return;
+      var fokusSebelumnya = null;
+
+      function buka() {
+        fokusSebelumnya = document.activeElement;
+        modal.hidden = false;
+        var ok = $('ok-tentang');
+        if (ok) ok.focus();
+      }
+      function tutup() {
+        if (modal.hidden) return;
+        modal.hidden = true;
+        if (fokusSebelumnya && fokusSebelumnya.focus) fokusSebelumnya.focus();
+      }
+
+      pemicu.addEventListener('click', buka);
+      var tutupBtn = $('tutup-tentang');
+      if (tutupBtn) tutupBtn.addEventListener('click', tutup);
+      var okBtn = $('ok-tentang');
+      if (okBtn) okBtn.addEventListener('click', tutup);
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) tutup();
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') tutup();
+      });
+    }
+
+    function initTahunFooter() {
+      var el = $('tahun-footer');
+      if (el) el.textContent = String(new Date().getFullYear());
+    }
+
+    function init() {
+      state = muat();
+      if (perluSimpanAwal) simpan();
+      ['tugas-tanggal', 'jadwal-tanggal', 'catatan-tanggal', 'masuk-tanggal', 'keluar-tanggal', 'tabungan-tanggal'].forEach(function (id) {
+        var el = $(id);
+        if (el) el.value = todayStr();
+      });
+      isiSelect($('tugas-kategori'), kategoriTugas());
+      isiSelect($('jadwal-kategori'), KATEGORI);
+      isiSelect($('karya-kategori'), KATEGORI);
+      $('target-harian').value = num(state.targetHarian) || 5;
+
+      pasangTabs();
+      pasangFormTugas();
+      pasangFormKarya();
+      pasangFormJadwal();
+      pasangKalender();
+      pasangFormCatatan();
+      pasangFormKeuangan();
+      pasangAksiData();
+      pasangAksi();
+      pasangModalTentang();
+      initTahunFooter();
+      renderSemua();
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+  })();
+  </script>
+</body>
+</html>

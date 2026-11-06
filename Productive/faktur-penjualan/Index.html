@@ -27,6 +27,8 @@
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-full: 9999px;
+  --radius-xs: 6px;
+  --radius-lg: 18px;
   --focus-ring: 0 0 0 3px rgba(255, 0, 0, 0.08);
   --shadow-md: 0 12px 24px -10px rgba(0, 0, 0, 0.06);
 }
@@ -55,7 +57,9 @@ body {
   color: var(--text-main);
   margin: 0;
   padding: 20px;
+  /* dvh: URL bar mobile menyusut/menebar tidak memaksa tinggi 100vh yang lebih besar. */
   min-height: 100vh;
+  min-height: 100dvh;
 }
 body, button, input, select, textarea { font-family: var(--font-sans), sans-serif; }
 
@@ -133,7 +137,7 @@ html.embedded-in-hub .topbar {
   height: 24px;
   background: var(--primary-soft);
   color: var(--accent);
-  border-radius: 7px;
+  border-radius: var(--radius-xs);
   flex-shrink: 0;
 }
 .card-title .ico svg {
@@ -172,7 +176,9 @@ html.embedded-in-hub .topbar {
 }
 
 /* ── Tabel item ── */
-.items-scroll { overflow-x: auto; width: 100%; }
+/* Gulir horizontal hanya di dalam kartu item; halaman tidak ikut bergeser ke samping. */
+html, body { overflow-x: clip; }
+.items-scroll { overflow-x: auto; width: 100%; max-width: 100%; }
 .items-table {
   width: 100%;
   table-layout: fixed;
@@ -247,7 +253,7 @@ html.embedded-in-hub .topbar {
   font-size: 11px;
   color: var(--accent);
   background: var(--primary-soft);
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
   padding: 2px 7px;
   max-width: calc(100% - 12px);
   overflow: hidden;
@@ -381,7 +387,7 @@ html.embedded-in-hub .topbar {
 
 /* ── Logo kop (opsional) ─────────────────────────────── */
 .logo-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-.logo-row img { width: 36px; height: 36px; object-fit: contain; border: 1px solid var(--border); border-radius: 8px; padding: 2px; background: var(--bg-primary); }
+.logo-row img { width: 36px; height: 36px; object-fit: contain; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 2px; background: var(--bg-primary); }
 .logo-row .btn-ghost { padding: 6px 10px; font-size: 12px; }
 
 /* ── Riwayat faktur ──────────────────────────────────── */
@@ -411,7 +417,7 @@ html.embedded-in-hub .topbar {
 .db-badge.off { color: var(--danger); border-color: rgba(239,68,68,.4); }
 
 .bulk-hint { font-size: 12px; color: var(--muted); margin: 0 0 10px; line-height: 1.5; }
-.bulk-hint code { background: var(--surface2); border-radius: 4px; padding: 1px 5px; font-size: 12px; }
+.bulk-hint code { background: var(--surface2); border-radius: var(--radius-xs); padding: 1px 5px; font-size: 12px; }
 #bulkInput {
   width: 100%; min-height: 180px; padding: 10px 12px; resize: vertical;
   border: 1px solid var(--border); border-radius: var(--radius-sm);
@@ -420,7 +426,7 @@ html.embedded-in-hub .topbar {
 #bulkInput:focus { outline: none; border-color: var(--accent); box-shadow: var(--focus-ring); }
 .field-inline { display: flex; gap: 6px; }
 .field-inline input { flex: 1; }
-.btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+.btn-sm { padding: 4px 10px; font-size: 12px; border-radius: var(--radius-xs); }
 
 /* ── Modal kelola harga produk ───────────────────────── */
 .modal-overlay {
@@ -660,8 +666,9 @@ var productDatabase = [];
 function loadProductDatabase() {
   productDatabase = EMBEDDED_PRODUCTS.slice();
   fillDatalist(); // selalu tampil dulu (embedded), diperbarui oleh fetch / Supabase
-  // Prioritas: salinan lokal bila ada → sumber asli Resi-Generator.
-  var sources = ['products.json', '../resi-generator/products.json'];
+  // Prioritas: sumber asli Resi-Generator → salinan lokal bila ada.
+  // (Urutan ini menghindari 404 tetap di folder faktur, yang tidak punya products.json.)
+  var sources = ['../resi-generator/products.json', 'products.json'];
   (function tryLoad(i) {
     if (i >= sources.length) return;
     fetch(sources[i])

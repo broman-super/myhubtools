@@ -102,14 +102,18 @@ test('toggle tema dari system + OS gelap berubah ke terang', () => {
   assert.strictEqual(tm.getEffectiveTheme(), false);
 });
 
-test('shell punya landmark, wordmark tombol, dan jalur kembali iframe', () => {
+test('shell punya landmark, wordmark tombol, dan jalur kembali lewat sidebar', () => {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   assert.match(html, /<a class="skip-link" href="#workspace-main">/);
   assert.match(html, /<nav class="nav-list" aria-label="Grup modul">/);
   assert.match(html, /id="aside-logo"[^>]*aria-label="REYNAHUB, beranda workspace"/);
   assert.match(html, /<button type="button" class="aside-logo" id="aside-logo"/);
-  assert.match(html, /id="hub-back"/);
-  assert.match(html, /Kembali ke workspace/);
+  // Kembali ke workspace hanya lewat aside-logo di sidebar; strip hub-back sudah dihapus.
+  assert.doesNotMatch(html, /id="hub-back"/);
+  assert.doesNotMatch(html, /class="hub-back"/);
+  assert.doesNotMatch(html, /Kembali ke workspace<\/button>/);
+  // Layar sempit tidak menampilkan logo, jadi ada tombol kembali di kapsul sidebar.
+  assert.match(html, /id="sidebar-back"/);
   assert.match(html, /aria-pressed="true"/);
   assert.match(html, /id="workspace-main"/);
   assert.match(html, /<h1>Workspace<\/h1>/);
@@ -133,6 +137,7 @@ test('app.js mengunci latar dialog dan menandai grup aktif', () => {
   assert.match(src, /restoreBackgroundInert/);
   assert.match(src, /setAttribute\('aria-pressed'/);
   assert.match(src, /setToolOpen\(true\)/);
-  assert.match(src, /hubBack/);
+  assert.doesNotMatch(src, /hubBack/);
+  assert.match(src, /ui\.asideLogo\.addEventListener\('click', goHome\)/);
   assert.match(src, /classList\.contains\('is-open'\)/);
 });

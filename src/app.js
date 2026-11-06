@@ -37,7 +37,7 @@
       themeBtn: document.getElementById('theme-btn'),
       aboutBtn: document.getElementById('about-btn'),
       asideLogo: document.getElementById('aside-logo'),
-      hubBack: document.getElementById('hub-back'),
+      sidebarBack: document.getElementById('sidebar-back'),
       modalClose: document.getElementById('modal-close-btn')
     };
 
@@ -117,7 +117,7 @@
     // Event listeners
     ui.enterBtn.addEventListener('click', enterWorkspace);
     ui.asideLogo.addEventListener('click', goHome);
-    if (ui.hubBack) ui.hubBack.addEventListener('click', goHome);
+    if (ui.sidebarBack) ui.sidebarBack.addEventListener('click', goHome);
     ui.themeBtn.addEventListener('click', function() { themeManager.toggle(); });
     syncShellChrome();
     // Modal: satu jalur buka/tutup dengan manajemen fokus (dialog semantics)

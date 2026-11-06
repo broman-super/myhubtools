@@ -11,8 +11,12 @@
       margin: 0;
       font-family: var(--font-sans, 'Plus Jakarta Sans'), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       color: var(--text); background: var(--bg);
-      /* 100dvh, bukan 100vh: address-bar mobile tidak memotong panel saat hide/show */
-      height: 100dvh; min-height: 100vh; overflow: hidden; display: flex;
+      /* 100dvh, bukan 100vh: address-bar mobile tidak memotong panel saat hide/show.
+         100vh ditulis lebih dulu sebagai cadangan browser lama; min-height juga dvh,
+         kalau masih 100vh nilainya menang dan panel kembali terpotong. */
+      height: 100vh; height: 100dvh;
+      min-height: 100vh; min-height: 100dvh;
+      overflow: hidden; display: flex;
       padding-left: env(safe-area-inset-left);
       padding-right: env(safe-area-inset-right);
       -webkit-font-smoothing: antialiased;
@@ -20,7 +24,7 @@
 
     *, *::before, *::after { box-sizing: border-box; }
 
-    ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: var(--radius-xs); }
 
     h2 {
       font-size: 11px; font-weight: 600; margin-bottom: 14px;
@@ -48,7 +52,7 @@
     .search-box {
       width: 100%; padding: 8px 14px; font-size: 13px;
       color: var(--text); background: var(--surface); border: 1px solid var(--border);
-      border-radius: 8px; outline: none; margin-bottom: 14px;
+      border-radius: var(--radius-sm); outline: none; margin-bottom: 14px;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
 
@@ -63,7 +67,7 @@
       width: 100%; padding: 16px 20px; font-size: 20px; font-weight: 600;
       color: var(--text); letter-spacing: 0.5px;
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; outline: none;
+      border-radius: var(--radius-sm); outline: none;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
 
@@ -77,7 +81,7 @@
     /* ---- TABLE ---- */
     .table-wrap {
       flex-grow: 1; overflow: hidden; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 10px;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
       display: flex; flex-direction: column;
     }
 
@@ -111,7 +115,7 @@
     }
 
     .table-empty-icon {
-      width: 48px; height: 48px; border-radius: 12px;
+      width: 48px; height: 48px; border-radius: var(--radius);
       background: var(--surface); border: 1px dashed var(--border);
       display: flex; align-items: center; justify-content: center;
       font-size: 20px; color: var(--text-muted); margin-bottom: 12px;
@@ -122,7 +126,7 @@
     /* ---- SELECT ---- */
     select {
       background: var(--surface); color: var(--text); border: 1px solid var(--border);
-      border-radius: 6px; padding: 7px 28px 7px 10px; font-size: 13px; font-weight: 500;
+      border-radius: var(--radius-xs); padding: 7px 28px 7px 10px; font-size: 13px; font-weight: 500;
       outline: none; cursor: pointer; transition: 0.15s;
       -webkit-appearance: none; -moz-appearance: none; appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
@@ -136,7 +140,7 @@
     .manual-exp-input {
       width: 100%; padding: 6px 8px; font-size: 16px; font-weight: 500;
       color: var(--text); background: var(--surface); border: 1px solid var(--border);
-      border-radius: 6px; outline: none; margin-top: 4px; box-sizing: border-box;
+      border-radius: var(--radius-xs); outline: none; margin-top: 4px; box-sizing: border-box;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
     .manual-exp-input::placeholder { color: var(--text-muted); font-weight: 400; }
@@ -149,7 +153,7 @@
     /* ---- COPY BUTTON ---- */
     .btn-copy {
       background: transparent; color: var(--text-muted); border: none;
-      padding: 2px 4px; cursor: pointer; border-radius: 4px;
+      padding: 2px 4px; cursor: pointer; border-radius: var(--radius-xs);
       transition: 0.15s; margin-left: 4px; vertical-align: middle;
       display: inline-flex; align-items: center; justify-content: center;
     }
@@ -161,7 +165,7 @@
     /* ---- BUTTON DELETE ---- */
     .btn-del {
       width: 44px; height: 44px; background: transparent; color: var(--text-muted);
-      border: 1px solid transparent; border-radius: 6px;
+      border: 1px solid transparent; border-radius: var(--radius-xs);
       cursor: pointer; font-size: 16px; font-weight: 300;
       display: inline-flex; align-items: center; justify-content: center;
       transition: 0.15s;
@@ -186,7 +190,7 @@
     button.primary {
       background: var(--accent); color: #fff; border: none;
       padding: 12px 28px; font-size: 13px; font-weight: 600;
-      border-radius: 8px; cursor: pointer; text-transform: uppercase;
+      border-radius: var(--radius-sm); cursor: pointer; text-transform: uppercase;
       letter-spacing: 0.8px; transition: background 0.15s, transform 0.1s;
     }
 
@@ -197,7 +201,7 @@
     .unknown td:first-child { position: relative; }
     .unknown td:first-child::before {
       content: ''; position: absolute; left: 0; top: 20%; height: 60%; width: 3px;
-      background: var(--accent); border-radius: 2px;
+      background: var(--accent); border-radius: var(--radius-xs);
     }
 
     /* ==========================================================
@@ -212,7 +216,7 @@
 
     .filter-btn {
       background: var(--surface); color: var(--text-muted); border: 1px solid var(--border);
-      padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 500;
+      padding: 6px 14px; border-radius: var(--radius-xs); font-size: 12px; font-weight: 500;
       cursor: pointer; transition: 0.15s; min-height: 44px; display: inline-flex; align-items: center;
     }
 
@@ -228,7 +232,7 @@
 
     /* ---- PENDING BADGE ---- */
     .pending-badge {
-      display: inline-block; padding: 3px 10px; border-radius: 12px;
+      display: inline-block; padding: 3px 10px; border-radius: var(--radius);
       font-size: 11px; font-weight: 600; background: var(--accent); color: #fff;
       margin-bottom: 14px; white-space: nowrap;
     }
@@ -252,14 +256,14 @@
     .history-header {
       display: flex; align-items: center; gap: 8px;
       padding: 12px 14px; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 8px;
+      border: 1px solid var(--border); border-radius: var(--radius-sm);
       cursor: pointer; transition: 0.15s; user-select: none;
     }
 
     .history-header:hover { background: var(--surface2); }
 
     .history-header.open {
-      border-radius: 8px 8px 0 0;
+      border-radius: var(--radius-sm) 8px 0 0;
       border-bottom-color: transparent;
     }
 
@@ -274,7 +278,7 @@
 
     .history-tag {
       font-size: 10px; font-weight: 600; padding: 2px 7px;
-      border-radius: 4px; background: var(--surface); color: var(--text-muted);
+      border-radius: var(--radius-xs); background: var(--surface); color: var(--text-muted);
       white-space: nowrap;
     }
 
@@ -332,7 +336,7 @@
 
     .item-operator {
       font-size: 12px; color: var(--text); white-space: nowrap;
-      font-weight: 500; background: var(--surface); padding: 2px 8px; border-radius: 4px;
+      font-weight: 500; background: var(--surface); padding: 2px 8px; border-radius: var(--radius-xs);
     }
 
     .item-actions {
@@ -340,7 +344,7 @@
     }
 
     .btn-status {
-      width: 44px; height: 44px; border-radius: 8px;
+      width: 44px; height: 44px; border-radius: var(--radius-sm);
       border: 1px solid var(--border); background: var(--surface);
       cursor: pointer; font-size: 12px; font-weight: 700;
       display: inline-flex; align-items: center; justify-content: center;
@@ -352,7 +356,7 @@
     .btn-done.active { color: #fff; background: var(--success); border-color: var(--success); }
 
     .btn-err { color: var(--text-muted); }
-    .btn-err:hover { color: var(--accent); background: #fff5f5; border-color: var(--accent); }
+    .btn-err:hover { color: var(--accent); background: var(--accent-soft); border-color: var(--accent); }
     .btn-err.active { color: #fff; background: var(--accent); border-color: var(--accent); }
 
     /* State proses DB: tombol redup + spinner kecil dalam tombol */
@@ -456,7 +460,7 @@
       .mtab-btn {
         flex: 1; min-height: 44px; border: 1px solid var(--border);
         background: var(--surface); color: var(--text-muted);
-        font-weight: 600; font-size: 14px; border-radius: 9px;
+        font-weight: 600; font-size: 14px; border-radius: var(--radius-sm);
         cursor: pointer; font-family: inherit;
       }
       .mtab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
@@ -490,11 +494,11 @@
     }
 
     .theme-toggle {
-      background: var(--bg, #f8fafc);
-      border: 1px solid var(--border, #e2e8f0);
-      color: var(--text, #0f172a);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
       padding: 8px 14px;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       font-family: var(--font-sans, 'Plus Jakarta Sans'), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-weight: 600;
       font-size: 13px;
@@ -505,9 +509,9 @@
       transition: all 0.25s ease;
     }
     .theme-toggle:hover {
-      background: var(--primary-light, rgba(255,0,0,0.08));
-      color: var(--primary, #ff0000);
-      border-color: var(--primary, #ff0000);
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: var(--accent);
     }
     .theme-toggle svg { width: 16px; height: 16px; }
 
@@ -534,6 +538,8 @@
         --radius-sm: 8px;
         --radius-md: 12px;
         --radius-full: 9999px;
+        --radius-xs: 6px;
+        --radius-lg: 18px;
         --shadow-md: 0 12px 24px -10px rgba(0, 0, 0, 0.06);
     }
     [data-theme="dark"] {
@@ -554,14 +560,7 @@
         --focus-ring: 0 0 0 3px rgba(255, 59, 59, 0.15);
         --shadow-md: 0 12px 24px -10px rgba(0, 0, 0, 0.5);
     }
-    [data-theme="dark"] body { background: var(--bg); color: var(--text); }
-    [data-theme="dark"] .card, [data-theme="dark"] .scan-area, [data-theme="dark"] .result-area {
-        background: var(--surface); border-color: var(--border); color: var(--text);
-    }
-    [data-theme="dark"] input, [data-theme="dark"] select {
-        background: var(--surface); border-color: var(--border); color: var(--text);
-    }
-    [data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3 { color: var(--text); }
+    /* Dark mode = override token saja; tidak ada aturan per-elemen literal. */
 
     /* status buttons */
     [data-theme="dark"] .btn-done { color: var(--text-muted); }

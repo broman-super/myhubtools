@@ -4,29 +4,99 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <link rel="stylesheet" href="../../src/styles/tools.css">
   <title>SUPERSUB Ops - Tracker</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
+    /* Palet Tailwind dipetakan ke token suite, bukan nilai mentah: utility di markup
+       (text-slate-400, bg-white, from-blue-700, dst.) otomatis ikut tema & merek. */
     tailwind.config = {
       corePlugins: {
         preflight: false,
-      }
-    }
+      },
+      theme: {
+        extend: {
+          colors: {
+            slate: {
+              50: 'var(--bg-color)',
+              100: 'var(--border-color)',
+              200: 'var(--border-color)',
+              300: 'var(--border-color)',
+              400: 'var(--text-secondary)',
+              500: 'var(--text-secondary)',
+              600: 'var(--text-secondary)',
+              700: 'var(--text-secondary)',
+              800: 'var(--text-primary)',
+              900: 'var(--text-primary)',
+            },
+            blue: {
+              50: 'var(--primary-light)',
+              100: 'var(--primary-light)',
+              200: 'color-mix(in srgb, var(--cta-color) 30%, var(--box-bg))',
+              500: 'var(--cta-color)',
+              600: 'var(--cta-color)',
+              700: 'var(--cta-color)',
+              800: 'var(--cta-hover)',
+            },
+            indigo: {
+              500: 'var(--cta-color)',
+              600: 'var(--cta-color)',
+              700: 'var(--cta-hover)',
+              800: 'var(--cta-hover)',
+            },
+            emerald: { 500: 'var(--success)', 600: 'var(--success)' },
+            amber: { 500: 'var(--warning)', 600: 'var(--warning)' },
+            red: {
+              50: 'var(--danger-light)',
+              100: 'var(--danger-light)',
+              200: 'var(--danger-light)',
+              500: 'var(--danger)',
+              600: 'var(--danger)',
+              700: 'var(--danger-strong)',
+            },
+          },
+        },
+      },
+    };
   </script>
   <style>
-    /* CSS Variabel untuk konsistensi Bento Style */
+    /* Token kanonik suite + alias lama (--bg-color dll) agar aturan CSS yang ada tetap jalan. */
     :root {
-      --bg-color: #F8FAFC;
-      --box-bg: #FFFFFF;
-      --border-color: #E2E8F0;
-      --text-primary: #0F172A;
-      --text-secondary: #64748B;
-      --cta-color: #2563EB;
-      --cta-hover: #1D4ED8;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface2: #f1f5f9;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #ff0000;
+      --primary-hover: #cc0000;
+      --primary-light: rgba(255,0,0,0.08);
+      --primary-soft: color-mix(in srgb, var(--primary) 10%, transparent);
+      --danger: #ef4444;
+      --danger-strong: #b91c1c;
+      --danger-light: #fee2e2;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --on-primary: #ffffff;
       --radius: 12px;
+      --radius-sm: 8px;
+      --radius-lg: 18px;
+      --radius-xs: 6px;
+      --shadow-sm: 0 1px 3px rgba(15,23,42,.06);
+      --shadow-md: 0 10px 15px -3px rgba(0,0,0,.1);
+      --focus-ring: 0 0 0 3px var(--primary-light);
       --gutter: 16px;
       --padding-inner: 24px;
+
+      /* Alias lama: dipakai aturan CSS yang sudah ada. */
+      --bg-color: var(--bg);
+      --box-bg: var(--surface);
+      --border-color: var(--border);
+      --text-primary: var(--text);
+      --text-secondary: var(--muted);
+      --cta-color: var(--primary);
+      --cta-hover: var(--primary-hover);
     }
 
     body {
@@ -110,7 +180,7 @@
       width: 100%;
       padding: 12px 16px;
       border: 1px solid var(--border-color);
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       margin-bottom: 16px;
       font-size: 14px;
       transition: border 0.2s ease;
@@ -134,7 +204,7 @@
       color: white;
       border: none;
       padding: 14px 24px;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
@@ -219,7 +289,7 @@
 
     #global-progress-bar .bar {
       height: 100%;
-      background: linear-gradient(90deg, #2563EB, #7C3AED, #10B981);
+      background: linear-gradient(90deg, var(--cta-color), var(--cta-color), var(--success));
       border-radius: 0 2px 2px 0;
       width: 0%;
       transition: width 0.3s ease;
@@ -270,7 +340,7 @@
       align-items: flex-start;
       gap: 12px;
       padding: 14px 18px;
-      border-radius: 14px;
+      border-radius: var(--radius);
       min-width: 280px;
       max-width: 380px;
       pointer-events: all;
@@ -298,49 +368,49 @@
     }
 
     .toast-success {
-      background: linear-gradient(135deg, #ECFDF5, #F0FDF4);
-      border-color: #A7F3D0;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--success) 10%, var(--box-bg)), color-mix(in srgb, var(--success) 10%, var(--box-bg)));
+      border-color: color-mix(in srgb, var(--success) 30%, var(--box-bg));
     }
 
     .toast-success::before {
-      background: linear-gradient(90deg, #10B981, #059669);
+      background: linear-gradient(90deg, var(--success), var(--success));
       animation-duration: 4s;
     }
 
     .toast-error {
-      background: linear-gradient(135deg, #FEF2F2, #FFF5F5);
-      border-color: #FECACA;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--danger) 10%, var(--box-bg)), color-mix(in srgb, var(--danger) 8%, var(--box-bg)));
+      border-color: color-mix(in srgb, var(--danger) 30%, var(--box-bg));
     }
 
     .toast-error::before {
-      background: linear-gradient(90deg, #EF4444, #DC2626);
+      background: linear-gradient(90deg, var(--danger), var(--danger));
       animation-duration: 5s;
     }
 
     .toast-warning {
-      background: linear-gradient(135deg, #FFFBEB, #FEFCE8);
-      border-color: #FDE68A;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--warning) 12%, var(--box-bg)), color-mix(in srgb, var(--warning) 12%, var(--box-bg)));
+      border-color: color-mix(in srgb, var(--warning) 35%, var(--box-bg));
     }
 
     .toast-warning::before {
-      background: linear-gradient(90deg, #F59E0B, #D97706);
+      background: linear-gradient(90deg, var(--warning), var(--warning));
       animation-duration: 4.5s;
     }
 
     .toast-info {
-      background: linear-gradient(135deg, #EFF6FF, #F0F9FF);
-      border-color: #BAE6FD;
+      background: linear-gradient(135deg, var(--primary-light), var(--primary-light));
+      border-color: color-mix(in srgb, var(--cta-color) 30%, var(--box-bg));
     }
 
     .toast-info::before {
-      background: linear-gradient(90deg, #2563EB, #0EA5E9);
+      background: linear-gradient(90deg, var(--cta-color), var(--cta-color));
       animation-duration: 4s;
     }
 
     .toast-icon {
       width: 32px;
       height: 32px;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -349,22 +419,22 @@
     }
 
     .toast-success .toast-icon {
-      background: #D1FAE5;
-      color: #059669;
+      background: color-mix(in srgb, var(--success) 18%, var(--box-bg));
+      color: var(--success);
     }
 
     .toast-error .toast-icon {
-      background: #FEE2E2;
-      color: #DC2626;
+      background: var(--danger-light);
+      color: var(--danger);
     }
 
     .toast-warning .toast-icon {
-      background: #FEF3C7;
-      color: #D97706;
+      background: color-mix(in srgb, var(--warning) 20%, var(--box-bg));
+      color: var(--warning);
     }
 
     .toast-info .toast-icon {
-      background: #DBEAFE;
+      background: color-mix(in srgb, var(--cta-color) 16%, var(--box-bg));
       color: var(--cta-color);
     }
 
@@ -381,19 +451,19 @@
     }
 
     .toast-success .toast-title {
-      color: #065F46;
+      color: color-mix(in srgb, var(--success) 75%, #000);
     }
 
     .toast-error .toast-title {
-      color: #991B1B;
+      color: color-mix(in srgb, var(--danger) 75%, #000);
     }
 
     .toast-warning .toast-title {
-      color: #92400E;
+      color: color-mix(in srgb, var(--warning) 75%, #000);
     }
 
     .toast-info .toast-title {
-      color: #1E40AF;
+      color: var(--cta-color);
     }
 
     .toast-message {
@@ -413,7 +483,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 4px;
+      border-radius: var(--radius-xs);
       transition: color 0.2s;
       min-height: unset;
       font-size: 14px;
@@ -503,7 +573,7 @@
 
     .daterange-modal {
       background: var(--box-bg);
-      border-radius: 28px;
+      border-radius: var(--radius-xl);
       box-shadow:
         0 40px 80px rgba(15, 23, 42, 0.18),
         0 12px 30px rgba(15, 23, 42, 0.10),
@@ -523,7 +593,7 @@
     /* Left Sidebar Presets */
     .daterange-sidebar {
       width: 178px;
-      background: linear-gradient(180deg, var(--bg-color) 0%, #F1F5F9 100%);
+      background: linear-gradient(180deg, var(--bg-color) 0%, var(--bg-color) 100%);
       border-right: 1px solid var(--box-bg);
       padding: 20px 10px;
       display: flex;
@@ -545,7 +615,7 @@
     .sidebar-preset-btn {
       width: 100%;
       padding: 9px 14px;
-      border-radius: 12px;
+      border-radius: var(--radius);
       background: transparent;
       border: none;
       color: var(--text-secondary);
@@ -566,7 +636,7 @@
       content: '';
       position: absolute;
       inset: 0;
-      border-radius: 12px;
+      border-radius: var(--radius);
       background: transparent;
       transition: background 0.18s ease;
     }
@@ -581,7 +651,7 @@
     }
 
     .sidebar-preset-btn.active {
-      background: linear-gradient(135deg, var(--box-bg), #E0E7FF);
+      background: linear-gradient(135deg, var(--box-bg), var(--primary-light));
       color: var(--cta-color);
       font-weight: 800;
       box-shadow: 0 0 0 1.5px rgba(79, 70, 229, 0.25),
@@ -629,7 +699,7 @@
     .cal-nav-btn {
       width: 28px;
       height: 28px;
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       background: var(--bg-color);
       border: 1.5px solid var(--border-color);
       color: var(--text-secondary);
@@ -741,7 +811,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #6366F1, #4F46E5);
+      background: linear-gradient(135deg, var(--cta-color), var(--cta-hover));
       border-radius: 50%;
       color: var(--box-bg);
       font-weight: 900;
@@ -775,7 +845,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #6366F1, #4F46E5);
+      background: linear-gradient(135deg, var(--cta-color), var(--cta-hover));
       border-radius: 50%;
       color: var(--box-bg);
       font-weight: 900;
@@ -822,7 +892,7 @@
     .daterange-footer-premium {
       border-top: 1px solid var(--box-bg);
       padding: 14px 24px;
-      background: linear-gradient(180deg, var(--bg-color), #F5F7FF);
+      background: linear-gradient(180deg, var(--bg-color), var(--primary-light));
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -839,7 +909,7 @@
       width: 110px;
       padding: 8px 12px;
       border: 1.5px solid var(--border-color);
-      border-radius: 12px;
+      border-radius: var(--radius);
       font-size: 11px;
       font-weight: 700;
       color: var(--text-primary);
@@ -854,7 +924,7 @@
 
     .footer-date-input.active {
       border-color: var(--cta-color);
-      background: #F5F3FF;
+      background: var(--primary-light);
       color: var(--cta-color);
       box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18),
                   0 2px 8px rgba(99, 102, 241, 0.1);
@@ -875,7 +945,7 @@
 
     .daterange-footer-premium .btn-cancel {
       padding: 9px 18px;
-      border-radius: 12px;
+      border-radius: var(--radius);
       border: 1.5px solid var(--border-color);
       background: var(--box-bg);
       color: var(--text-secondary);
@@ -897,8 +967,8 @@
 
     .daterange-footer-premium .btn-apply {
       padding: 9px 22px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #6366F1, #4F46E5);
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, var(--cta-color), var(--cta-hover));
       color: var(--box-bg);
       font-size: 11px;
       font-weight: 800;
@@ -913,7 +983,7 @@
     }
 
     .daterange-footer-premium .btn-apply:hover {
-      background: linear-gradient(135deg, #4F46E5, #4338CA);
+      background: linear-gradient(135deg, var(--cta-hover), var(--cta-hover));
       box-shadow: 0 6px 20px rgba(79, 70, 229, 0.45),
                   0 2px 6px rgba(79, 70, 229, 0.25);
       transform: translateY(-1px);
@@ -938,7 +1008,7 @@
 
     .timepicker-card {
       background: var(--box-bg);
-      border-radius: 32px;
+      border-radius: var(--radius-xl);
       box-shadow:
         0 40px 80px rgba(15, 23, 42, 0.20),
         0 12px 30px rgba(15, 23, 42, 0.10),
@@ -961,8 +1031,8 @@
       left: 0;
       right: 0;
       height: 3px;
-      background: linear-gradient(90deg, #6366F1, #3B82F6, #06B6D4);
-      border-radius: 32px 32px 0 0;
+      background: linear-gradient(90deg, var(--cta-color), var(--cta-color), var(--cta-color));
+      border-radius: var(--radius-xl) 32px 0 0;
     }
 
     .tp-select-label {
@@ -983,7 +1053,7 @@
       margin-bottom: 20px;
       background: var(--bg-color);
       padding: 8px 16px;
-      border-radius: 20px;
+      border-radius: var(--radius-lg);
       border: 1.5px solid var(--box-bg);
     }
 
@@ -991,7 +1061,7 @@
       padding: 10px 20px;
       border: 2px solid transparent;
       background: transparent;
-      border-radius: 14px;
+      border-radius: var(--radius);
       font-size: 42px;
       font-weight: 900;
       color: var(--text-secondary);
@@ -1012,7 +1082,7 @@
     }
 
     .tp-time-card.active {
-      background: linear-gradient(135deg, var(--box-bg), #E0E7FF);
+      background: linear-gradient(135deg, var(--box-bg), var(--primary-light));
       color: var(--cta-color);
       border-color: rgba(99, 102, 241, 0.3);
       box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12),
@@ -1076,7 +1146,7 @@
       z-index: 10;
       transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
                   height 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      border-radius: 1px 1px 0 0;
+      border-radius: var(--radius-xs) 1px 0 0;
     }
 
     /* Hand tip selector circle */
@@ -1086,7 +1156,7 @@
       left: -12px;
       width: 26px;
       height: 26px;
-      background: linear-gradient(135deg, #6366F1, #4F46E5);
+      background: linear-gradient(135deg, var(--cta-color), var(--cta-hover));
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -1125,7 +1195,7 @@
     }
 
     .clock-number-item.selected {
-      background: linear-gradient(135deg, #6366F1, #4F46E5) !important;
+      background: linear-gradient(135deg, var(--cta-color), var(--cta-hover)) !important;
       color: var(--box-bg) !important;
       font-weight: 900;
       box-shadow: 0 3px 10px rgba(79, 70, 229, 0.4);
@@ -1158,7 +1228,7 @@
       gap: 6px;
       background: var(--bg-color);
       border: 1.5px solid var(--border-color);
-      border-radius: 12px;
+      border-radius: var(--radius);
       padding: 6px 12px;
       transition: all 0.2s;
     }
@@ -1201,7 +1271,7 @@
     .tp-icon-btn {
       width: 36px;
       height: 36px;
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       background: var(--bg-color);
       border: 1.5px solid var(--border-color);
       color: var(--text-secondary);
@@ -1230,7 +1300,7 @@
 
     .tp-text-btn {
       padding: 8px 18px;
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       background: none;
       border: none;
       font-size: 11.5px;
@@ -1258,7 +1328,7 @@
     }
 
     .tp-text-btn.ok:hover {
-      background: linear-gradient(135deg, #6366F1, #4F46E5);
+      background: linear-gradient(135deg, var(--cta-color), var(--cta-hover));
       color: var(--box-bg);
       box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
     }
@@ -1270,7 +1340,7 @@
       gap: 10px;
       padding: 11px 14px;
       border: 1.5px solid var(--border-color);
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       background: var(--box-bg);
       cursor: pointer;
       width: 100%;
@@ -1341,7 +1411,7 @@
       padding: 8px 14px;
       background: var(--box-bg);
       border: 1.5px solid var(--border-color);
-      border-radius: 12px;
+      border-radius: var(--radius);
       cursor: pointer;
       font-size: 11px;
       font-weight: 700;
@@ -1357,7 +1427,7 @@
     .date-filter-trigger:hover {
       border-color: var(--cta-color);
       color: var(--cta-color);
-      background: #F5F3FF;
+      background: var(--primary-light);
       box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
     }
 
@@ -1416,11 +1486,11 @@
     }
 
     .theme-toggle {
-      background: var(--bg, #f8fafc);
-      border: 1px solid var(--border, #e2e8f0);
-      color: var(--text, #0f172a);
+      background: var(--box-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
       padding: 8px 14px;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       font-family: 'Plus Jakarta Sans';
       font-weight: 600;
       font-size: 13px;
@@ -1431,62 +1501,45 @@
       transition: all 0.25s ease;
     }
     .theme-toggle:hover {
-      background: var(--primary-light, rgba(255,0,0,0.08));
-      color: var(--primary, #ff0000);
-      border-color: var(--primary, #ff0000);
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--primary);
     }
     .theme-toggle svg { width: 16px; height: 16px; }
 
+    /* Dark mode = override token saja (root-only). Komponen di bawah otomatis ikut. */
     [data-theme="dark"] {
-        --bg-color: #0f172a;
-        --box-bg: #1e293b;
-        --border-color: #334155;
-        --text-primary: #f1f5f9;
-        --text-secondary: #94a3b8;
-        --cta-color: #60a5fa;
-        --cta-hover: #3b82f6;
+        --bg: #0f172a;
+        --surface: #1e293b;
+        --surface2: #0f172a;
+        --text: #f1f5f9;
+        --muted: #94a3b8;
+        --border: #334155;
+        --primary: #ff3b3b;
+        --primary-hover: #ff5c5c;
+        --primary-light: rgba(255,59,59,0.15);
+        --danger: #f87171;
+        --danger-strong: #fca5a5;
+        --danger-light: rgba(239,68,68,0.2);
+        --success: #34d399;
+        --warning: #fbbf24;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,.45);
+        --shadow-md: 0 10px 15px -3px rgba(0,0,0,.5);
+        --bg-color: var(--bg);
+        --box-bg: var(--surface);
+        --border-color: var(--border);
+        --text-primary: var(--text);
+        --text-secondary: var(--muted);
+        --cta-color: var(--primary);
+        --cta-hover: var(--primary-hover);
     }
-    [data-theme="dark"] body { background-color: var(--bg-color); color: var(--text-primary); }
-    [data-theme="dark"] .nav-bar { background: #1e293b; border-bottom-color: #334155; }
-    [data-theme="dark"] .sidebar { background: #1e293b; border-color: #334155; }
-    [data-theme="dark"] input, [data-theme="dark"] select, [data-theme="dark"] textarea {
-        background: #0f172a; border-color: #334155; color: #f1f5f9;
-    }
-    [data-theme="dark"] .card, [data-theme="dark"] .stat-card, [data-theme="dark"] .form-section {
-        background: #1e293b; border-color: #334155; color: #f1f5f9;
-    }
+    /* Utility Tailwind yang bernilai literal putih/hitam tetap perlu dipetakan. */
+    [data-theme="dark"] .bg-white { background: var(--surface) !important; }
+    [data-theme="dark"] .bg-slate-50, [data-theme="dark"] .bg-slate-100 { background: var(--surface2) !important; }
     [data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.7); }
-    [data-theme="dark"] .modal-content { background: #1e293b; color: #f1f5f9; }
-    [data-theme="dark"] .toast { background: #1e293b; border-color: #334155; color: #f1f5f9; }
-    [data-theme="dark"] .toast-success { background: #064e3b; border-color: #065f46; }
-    [data-theme="dark"] .toast-error { background: #7f1d1d; border-color: #991b1b; }
-    [data-theme="dark"] .toast-warning { background: #78350f; border-color: #92400e; }
-    [data-theme="dark"] .toast-info { background: #1e3a5f; border-color: #1e40af; }
-    [data-theme="dark"] .toast-success .toast-title { color: #a7f3d0; }
-    [data-theme="dark"] .toast-error .toast-title { color: #fecaca; }
-    [data-theme="dark"] .toast-warning .toast-title { color: #fde68a; }
-    [data-theme="dark"] .toast-info .toast-title { color: #bfdbfe; }
-    [data-theme="dark"] .toast-success .toast-icon { background: #065f46; color: #a7f3d0; }
-    [data-theme="dark"] .toast-error .toast-icon { background: #991b1b; color: #fecaca; }
-    [data-theme="dark"] .toast-warning .toast-icon { background: #92400e; color: #fde68a; }
-    [data-theme="dark"] .toast-info .toast-icon { background: #1e40af; color: #bfdbfe; }
-    [data-theme="dark"] .toast-close { color: #94a3b8; }
-    [data-theme="dark"] .toast-close:hover { color: #f1f5f9; background: rgba(255,255,255,0.1); }
-    [data-theme="dark"] .toast-message { color: #f1f5f9; }
-    [data-theme="dark"] #edit-modal-overlay .bg-white { background: #1e293b !important; }
-    [data-theme="dark"] #edit-modal-overlay .border-slate-100 { border-color: #334155 !important; }
-    [data-theme="dark"] #edit-modal-overlay .text-slate-400 { color: #94a3b8 !important; }
-    [data-theme="dark"] #edit-modal-overlay .text-slate-600 { color: #cbd5e1 !important; }
-    [data-theme="dark"] #edit-modal-overlay .bg-slate-100 { background: #0f172a !important; }
-    [data-theme="dark"] #delete-modal-overlay h3 { color: #f1f5f9 !important; }
-    [data-theme="dark"] #delete-modal-overlay p { color: #94a3b8 !important; }
-    [data-theme="dark"] #timepicker-modal-overlay > div { background: #1e293b !important; }
-    [data-theme="dark"] .daterange-modal { background: #1e293b !important; }
-    [data-theme="dark"] .daterange-sidebar { background: #0f172a !important; }
-    [data-theme="dark"] .daterange-footer-premium { background: #0f172a !important; border-top-color: #334155 !important; }
-    [data-theme="dark"] .sidebar-preset-btn.active { background: #1e293b !important; }
-    [data-theme="dark"] .footer-date-input { background: #0f172a !important; border-color: #334155 !important; color: #f1f5f9 !important; }
-    [data-theme="dark"] .date-filter-trigger:hover { background: #1e293b !important; }
+    [data-theme="dark"] .toast-success .toast-title, [data-theme="dark"] .toast-success .toast-icon { color: var(--success); }
+    [data-theme="dark"] .toast-error .toast-title, [data-theme="dark"] .toast-error .toast-icon { color: var(--danger); }
+    [data-theme="dark"] .toast-warning .toast-title, [data-theme="dark"] .toast-warning .toast-icon { color: var(--warning); }
 
   </style>
 </head>
@@ -1509,7 +1562,7 @@
       <div class="daterange-container-premium">
         <!-- Sidebar Presets -->
         <div class="daterange-sidebar" style="overflow-y: auto; max-height: 380px;">
-          <div style="font-size:9px; font-weight:800; color:#94A3B8; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; padding-left:12px;">Presets</div>
+          <div style="font-size:9px; font-weight:800; color:var(--text-secondary); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; padding-left:12px;">Presets</div>
           <button class="sidebar-preset-btn" data-preset="today" onclick="applyPreset('today')">Hari Ini</button>
           <button class="sidebar-preset-btn" data-preset="yesterday" onclick="applyPreset('yesterday')">Kemarin</button>
           <button class="sidebar-preset-btn active" data-preset="7days" onclick="applyPreset('7days')">7 Hari</button>
@@ -1579,27 +1632,27 @@
 
   <!-- CIRCULAR TIME PICKER MODAL -->
   <div id="timepicker-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(8px); z-index:9999; align-items:center; justify-content:center; padding:20px; animation:fadeInOverlay 0.2s ease;" onclick="if(event.target===this)closeTimePickerModal()">
-    <div style="background:#FFFFFF; border-radius:24px; box-shadow:0 25px 60px rgba(15,23,42,0.18),0 8px 24px rgba(15,23,42,0.1); max-width:320px; width:100%; padding:24px; animation:modalSlideIn 0.3s cubic-bezier(0.34,1.4,0.64,1); display:flex; flex-direction:column; align-items:center;" onclick="event.stopPropagation()">
+    <div style="background:var(--box-bg); border-radius: var(--radius-xl); box-shadow:0 25px 60px rgba(15,23,42,0.18),0 8px 24px rgba(15,23,42,0.1); max-width:320px; width:100%; padding:24px; animation:modalSlideIn 0.3s cubic-bezier(0.34,1.4,0.64,1); display:flex; flex-direction:column; align-items:center;" onclick="event.stopPropagation()">
       
-      <div style="width:100%; text-align:left; font-size:10px; font-weight:800; color:#94A3B8; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Select Time</div>
+      <div style="width:100%; text-align:left; font-size:10px; font-weight:800; color:var(--text-secondary); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">Select Time</div>
       
       <!-- Time display header -->
       <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:20px; width:100%;">
         <!-- Hour display box -->
-        <div id="tp-hour-box" class="tp-time-card active" onclick="switchTimePickerMode('hours')" style="padding:16px 20px; background:#F5F3FF; border:1px solid #6366F1; border-radius:12px; font-size:44px; font-weight:700; color:#4F46E5; cursor:pointer; width:80px; text-align:center; transition: all 0.2s;">14</div>
-        <div style="font-size:36px; font-weight:700; color:#475569;">:</div>
+        <div id="tp-hour-box" class="tp-time-card active" onclick="switchTimePickerMode('hours')" style="padding:16px 20px; background:var(--primary-light); border:1px solid var(--cta-color); border-radius: var(--radius); font-size:44px; font-weight:700; color:var(--cta-hover); cursor:pointer; width:80px; text-align:center; transition: all 0.2s;">14</div>
+        <div style="font-size:36px; font-weight:700; color:var(--text-secondary);">:</div>
         <!-- Minute display box -->
-        <div id="tp-minute-box" class="tp-time-card" onclick="switchTimePickerMode('minutes')" style="padding:16px 20px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; font-size:44px; font-weight:700; color:#64748B; cursor:pointer; width:80px; text-align:center; transition: all 0.2s;">00</div>
+        <div id="tp-minute-box" class="tp-time-card" onclick="switchTimePickerMode('minutes')" style="padding:16px 20px; background:var(--bg-color); border:1px solid var(--border-color); border-radius: var(--radius); font-size:44px; font-weight:700; color:var(--text-secondary); cursor:pointer; width:80px; text-align:center; transition: all 0.2s;">00</div>
       </div>
       
       <!-- Clock dial container -->
-      <div id="tp-clock-face" style="width:220px; height:220px; background:#F1F5F9; border-radius:50%; position:relative; margin-bottom:24px; user-select:none; cursor:pointer; overflow:hidden;">
+      <div id="tp-clock-face" style="width:220px; height:220px; background:var(--bg-color); border-radius:50%; position:relative; margin-bottom:24px; user-select:none; cursor:pointer; overflow:hidden;">
         <!-- Center pivot dot -->
-        <div style="position:absolute; top:107px; left:107px; width:6px; height:6px; background:#4F46E5; border-radius:50%; z-index:10;"></div>
+        <div style="position:absolute; top:107px; left:107px; width:6px; height:6px; background:var(--cta-hover); border-radius:50%; z-index:10;"></div>
         <!-- Clock hand line -->
-        <div id="tp-clock-hand" style="position:absolute; bottom:110px; left:110px; width:2px; height:80px; background:#4F46E5; transform-origin:bottom center; z-index:9; transform:rotate(0deg); transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), height 0.2s ease;">
+        <div id="tp-clock-hand" style="position:absolute; bottom:110px; left:110px; width:2px; height:80px; background:var(--cta-hover); transform-origin:bottom center; z-index:9; transform:rotate(0deg); transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), height 0.2s ease;">
           <!-- Hand tip circle selector -->
-          <div style="position:absolute; top:-14px; left:-13px; width:28px; height:28px; background:#4F46E5; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#FFFFFF; font-size:11px; font-weight:800; box-shadow:0 2px 6px rgba(79, 70, 229, 0.4);">00</div>
+          <div style="position:absolute; top:-14px; left:-13px; width:28px; height:28px; background:var(--cta-hover); border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--box-bg); font-size:11px; font-weight:800; box-shadow:0 2px 6px rgba(79, 70, 229, 0.4);">00</div>
         </div>
         <!-- Number items container -->
         <div id="tp-clock-numbers" style="position:absolute; inset:0; z-index:8;"></div>
@@ -1608,15 +1661,15 @@
       <!-- Dialog Actions with Collapsible Keyboard Input -->
       <div style="display:flex; flex-direction:column; gap:12px; width:100%;">
         <!-- Collapsible Inline Manual Input -->
-        <div id="tp-manual-input" style="display:none; align-items:center; justify-content:center; gap:8px; width:100%; padding:10px; background:#F8FAFC; border-radius:12px; border:1px solid #E2E8F0;">
-          <input type="number" id="tp-manual-hr" min="0" max="23" style="width:50px; padding:6px; border:1.5px solid #E2E8F0; border-radius:8px; text-align:center; font-size:14px; font-weight:700; color:#334155; outline:none; margin:0;" placeholder="HH">
-          <span style="font-weight:700; color:#64748B; font-size:16px;">:</span>
-          <input type="number" id="tp-manual-min" min="0" max="59" style="width:50px; padding:6px; border:1.5px solid #E2E8F0; border-radius:8px; text-align:center; font-size:14px; font-weight:700; color:#334155; outline:none; margin:0;" placeholder="MM">
+        <div id="tp-manual-input" style="display:none; align-items:center; justify-content:center; gap:8px; width:100%; padding:10px; background:var(--bg-color); border-radius: var(--radius); border:1px solid var(--border-color);">
+          <input type="number" id="tp-manual-hr" min="0" max="23" style="width:50px; padding:6px; border:1.5px solid var(--border-color); border-radius: var(--radius-sm); text-align:center; font-size:14px; font-weight:700; color:var(--text-secondary); outline:none; margin:0;" placeholder="HH">
+          <span style="font-weight:700; color:var(--text-secondary); font-size:16px;">:</span>
+          <input type="number" id="tp-manual-min" min="0" max="59" style="width:50px; padding:6px; border:1.5px solid var(--border-color); border-radius: var(--radius-sm); text-align:center; font-size:14px; font-weight:700; color:var(--text-secondary); outline:none; margin:0;" placeholder="MM">
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
           <!-- Keyboard toggle icon -->
-          <button onclick="toggleTimeKeyboardInput()" id="tp-keyboard-btn" style="background:none; border:none; color:#64748B; cursor:pointer; padding:8px; border-radius:8px; display:flex; align-items:center; justify-content:center; transition:all 0.2s;" title="Keyboard Input">
+          <button onclick="toggleTimeKeyboardInput()" id="tp-keyboard-btn" style="background:none; border:none; color:var(--text-secondary); cursor:pointer; padding:8px; border-radius: var(--radius-sm); display:flex; align-items:center; justify-content:center; transition:all 0.2s;" title="Keyboard Input">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
               <line x1="6" y1="8" x2="6" y2="8"></line>
@@ -1630,8 +1683,8 @@
             </svg>
           </button>
           <div style="display:flex; gap:8px;">
-            <button onclick="closeTimePickerModal()" style="padding:8px 16px; background:none; border:none; font-size:12px; font-weight:800; color:#64748B; cursor:pointer; text-transform:uppercase; letter-spacing:0.5px; border-radius:8px;">Cancel</button>
-            <button onclick="applySelectedTime()" style="padding:8px 16px; background:none; border:none; font-size:12px; font-weight:800; color:#4F46E5; cursor:pointer; text-transform:uppercase; letter-spacing:0.5px; border-radius:8px;">OK</button>
+            <button onclick="closeTimePickerModal()" style="padding:8px 16px; background:none; border:none; font-size:12px; font-weight:800; color:var(--text-secondary); cursor:pointer; text-transform:uppercase; letter-spacing:0.5px; border-radius: var(--radius-sm);">Cancel</button>
+            <button onclick="applySelectedTime()" style="padding:8px 16px; background:none; border:none; font-size:12px; font-weight:800; color:var(--cta-hover); cursor:pointer; text-transform:uppercase; letter-spacing:0.5px; border-radius: var(--radius-sm);">OK</button>
           </div>
         </div>
       </div>
@@ -1644,12 +1697,12 @@
     style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(8px); z-index:9999; align-items:center; justify-content:center; padding:20px; animation:fadeInOverlay 0.2s ease;"
     onclick="if(event.target===this)tutupDeleteModal()">
     <div
-      style="background:#FFFFFF; border-radius:20px; box-shadow:0 25px 60px rgba(15,23,42,0.18),0 8px 24px rgba(15,23,42,0.1); max-width:380px; width:100%; padding:32px; text-align:center; animation:modalSlideIn 0.3s cubic-bezier(0.34,1.4,0.64,1); position:relative; overflow:hidden;"
+      style="background:var(--box-bg); border-radius: var(--radius-lg); box-shadow:0 25px 60px rgba(15,23,42,0.18),0 8px 24px rgba(15,23,42,0.1); max-width:380px; width:100%; padding:32px; text-align:center; animation:modalSlideIn 0.3s cubic-bezier(0.34,1.4,0.64,1); position:relative; overflow:hidden;"
       onclick="event.stopPropagation()">
       <!-- Red gradient top bar -->
-      <div style="position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#EF4444,#DC2626);"></div>
+      <div style="position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--danger),var(--danger));"></div>
       <!-- Icon -->
-      <div style="width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#FEE2E2,#FEF2F2); border:2px solid #FECACA; display:inline-flex; align-items:center; justify-content:center; margin-bottom:16px; color:#DC2626;">
+      <div style="width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,var(--danger-light),color-mix(in srgb, var(--danger) 10%, var(--box-bg))); border:2px solid color-mix(in srgb, var(--danger) 30%, var(--box-bg)); display:inline-flex; align-items:center; justify-content:center; margin-bottom:16px; color:var(--danger);">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <polyline points="3 6 5 6 21 6"></polyline>
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -1657,13 +1710,13 @@
           <line x1="14" y1="11" x2="14" y2="17"></line>
         </svg>
       </div>
-      <h3 style="margin:0 0 8px; font-size:16px; font-weight:900; color:#0F172A; text-transform:uppercase; letter-spacing:0.8px;">Hapus Aktivitas?</h3>
-      <p style="margin:0 0 24px; font-size:12px; color:#64748B; line-height:1.6;">Tindakan ini <strong style="color:#DC2626;">tidak dapat dibatalkan</strong>. Catatan aktivitas akan dihapus secara permanen dari Google Spreadsheet.</p>
+      <h3 style="margin:0 0 8px; font-size:16px; font-weight:900; color:var(--text-primary); text-transform:uppercase; letter-spacing:0.8px;">Hapus Aktivitas?</h3>
+      <p style="margin:0 0 24px; font-size:12px; color:var(--text-secondary); line-height:1.6;">Tindakan ini <strong style="color:var(--danger);">tidak dapat dibatalkan</strong>. Catatan aktivitas akan dihapus secara permanen dari Google Spreadsheet.</p>
       <div style="display:flex; gap:10px; justify-content:center;">
         <button onclick="tutupDeleteModal()"
-          style="flex:1; padding:11px 16px; background:#F8FAFC; border:1.5px solid #E2E8F0; border-radius:12px; font-size:11px; font-weight:800; color:#475569; cursor:pointer; transition:all 0.2s; min-height:unset; text-transform:uppercase; letter-spacing:0.5px;">Batal</button>
+          style="flex:1; padding:11px 16px; background:var(--bg-color); border:1.5px solid var(--border-color); border-radius: var(--radius); font-size:11px; font-weight:800; color:var(--text-secondary); cursor:pointer; transition:all 0.2s; min-height:unset; text-transform:uppercase; letter-spacing:0.5px;">Batal</button>
         <button id="btn-confirm-delete" onclick="eksekusiHapus()"
-          style="flex:1; padding:11px 16px; background:linear-gradient(135deg,#DC2626,#EF4444); color:#FFFFFF; border:none; border-radius:12px; font-size:11px; font-weight:800; cursor:pointer; transition:all 0.2s; min-height:unset; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 4px 14px rgba(220,38,38,0.35);">Hapus Permanen</button>
+          style="flex:1; padding:11px 16px; background:linear-gradient(135deg,var(--danger),var(--danger)); color:var(--box-bg); border:none; border-radius: var(--radius); font-size:11px; font-weight:800; cursor:pointer; transition:all 0.2s; min-height:unset; text-transform:uppercase; letter-spacing:0.5px; box-shadow:0 4px 14px rgba(220,38,38,0.35);">Hapus Permanen</button>
       </div>
     </div>
   </div>
@@ -1739,7 +1792,7 @@
                 <circle cx="12" cy="12" r="10"></circle>
                 <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
-              <input type="text" id="edit-mulai" readonly placeholder="00:00" style="border:none; background:transparent; font-size:13px; font-weight:700; color:#334155; cursor:pointer; width:100%; outline:none; margin:0; padding:0; min-height:unset; box-shadow:none; font-family:monospace;">
+              <input type="text" id="edit-mulai" readonly placeholder="00:00" style="border:none; background:transparent; font-size:13px; font-weight:700; color:var(--text-secondary); cursor:pointer; width:100%; outline:none; margin:0; padding:0; min-height:unset; box-shadow:none; font-family:monospace;">
             </div>
           </div>
           <div>
@@ -1749,7 +1802,7 @@
                 <circle cx="12" cy="12" r="10"></circle>
                 <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
-              <input type="text" id="edit-selesai" readonly placeholder="00:00" style="border:none; background:transparent; font-size:13px; font-weight:700; color:#334155; cursor:pointer; width:100%; outline:none; margin:0; padding:0; min-height:unset; box-shadow:none; font-family:monospace;">
+              <input type="text" id="edit-selesai" readonly placeholder="00:00" style="border:none; background:transparent; font-size:13px; font-weight:700; color:var(--text-secondary); cursor:pointer; width:100%; outline:none; margin:0; padding:0; min-height:unset; box-shadow:none; font-family:monospace;">
             </div>
           </div>
         </div>
@@ -1798,7 +1851,7 @@
     <div id="tab-navigation-bar" class="col-12 hidden"
       style="grid-column: span 12; margin-top: 4px; margin-bottom: 8px;">
       <div
-        style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; background: #F1F5F9; padding: 6px; border-radius: 16px; border: 1px solid #E2E8F0; gap: 12px; width: 100%; flex-wrap: wrap;">
+        style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; background: var(--bg-color); padding: 6px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); gap: 12px; width: 100%; flex-wrap: wrap;">
         <!-- Left: Pills Tabs -->
         <div style="display: flex; align-items: center; gap: 6px;">
                     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark Mode">
@@ -1807,7 +1860,7 @@
                     </button>
           <!-- Tab 1: Input Activity -->
           <button onclick="switchTab('input')" id="btn-tab-input"
-            style="width: auto; min-height: unset; padding: 10px 18px; border-radius: 12px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; border: none; text-transform: uppercase; margin: 0; line-height: 1; box-shadow: 0 1px 2px rgba(0,0,0,0.05); background: #FFFFFF; color: #2563EB;">
+            style="width: auto; min-height: unset; padding: 10px 18px; border-radius: var(--radius); font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; border: none; text-transform: uppercase; margin: 0; line-height: 1; box-shadow: 0 1px 2px rgba(0,0,0,0.05); background: var(--box-bg); color: var(--cta-color);">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
               stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 5v14M5 12h14"></path>
@@ -1817,7 +1870,7 @@
 
           <!-- Tab 2: View Beban Kerja (Supervisor Only) -->
           <button onclick="switchTab('beban')" id="btn-tab-beban" class="hidden-tab-item hidden"
-            style="width: auto; min-height: unset; padding: 10px 18px; border-radius: 12px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; border: none; text-transform: uppercase; margin: 0; line-height: 1; background: transparent; color: #64748B;">
+            style="width: auto; min-height: unset; padding: 10px 18px; border-radius: var(--radius); font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; border: none; text-transform: uppercase; margin: 0; line-height: 1; background: transparent; color: var(--text-secondary);">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
               stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="3" width="7" height="9"></rect>
@@ -1830,7 +1883,7 @@
 
           <!-- Tab 3: Audit Dengan AI (Supervisor Only) -->
           <button onclick="switchTab('audit')" id="btn-tab-audit" class="hidden-tab-item hidden"
-            style="width: auto; min-height: unset; padding: 10px 18px; border-radius: 12px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; border: none; text-transform: uppercase; margin: 0; line-height: 1; background: transparent; color: #64748B;">
+            style="width: auto; min-height: unset; padding: 10px 18px; border-radius: var(--radius); font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; border: none; text-transform: uppercase; margin: 0; line-height: 1; background: transparent; color: var(--text-secondary);">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
               stroke-linecap="round" stroke-linejoin="round">
               <polygon
@@ -1845,7 +1898,7 @@
         <div id="tab-date-container" style="margin: 0;">
           <input type="date" id="global-audit-date" style="display:none;">
           <button type="button" class="date-filter-trigger" id="unified-date-btn" onclick="openUnifiedDatePicker()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5"
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--cta-color)" stroke-width="2.5"
               stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -1856,7 +1909,7 @@
               <div class="trigger-label" id="unified-date-label">Tanggal Input (WIB)</div>
               <div class="trigger-value" id="unified-date-value">Hari Ini</div>
             </div>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="3"
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="3"
               stroke-linecap="round" stroke-linejoin="round">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
@@ -1878,12 +1931,12 @@
               Input Aktivitas</h2>
             <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--text-secondary);">Dokumentasikan alur kerja harian</p>
             <input type="hidden" id="inp-tanggal" value="">
-            <p id="sync-target-date" style="margin: 8px 0 0; font-size: 10px; font-weight: 700; color: #64748B;">
+            <p id="sync-target-date" style="margin: 8px 0 0; font-size: 10px; font-weight: 700; color: var(--text-secondary);">
               Tanggal log: — (atur di kanan atas)
             </p>
           </div>
           <span
-            style="background: #DEF7EC; color: #03543F; font-size: 9px; font-weight: 800; padding: 4px 10px; border-radius: 12px; letter-spacing: 0.5px; text-transform: uppercase; align-self: flex-start;">
+            style="background: color-mix(in srgb, var(--success) 18%, var(--box-bg)); color: color-mix(in srgb, var(--success) 75%, #000); font-size: 9px; font-weight: 800; padding: 4px 10px; border-radius: var(--radius); letter-spacing: 0.5px; text-transform: uppercase; align-self: flex-start;">
             Google Sheets Live Sync
           </span>
         </div>
@@ -1925,30 +1978,30 @@
 
         <!-- Banner Penjelasan Bidang Tugas Dinamis -->
         <div id="kategori-desc"
-          style="margin-top: 12px; margin-bottom: 16px; font-size: 12px; color: #1E3A8A; background: #EFF6FF; border: 1.5px solid #BFDBFE; padding: 12px 16px; border-radius: 12px; line-height: 1.5; display: none;">
+          style="margin-top: 12px; margin-bottom: 16px; font-size: 12px; color: var(--cta-color); background: var(--primary-light); border: 1.5px solid color-mix(in srgb, var(--cta-color) 30%, var(--box-bg)); padding: 12px 16px; border-radius: var(--radius); line-height: 1.5; display: none;">
         </div>
 
         <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px;">
           <button type="button" onclick="AppFeatures.copyFromYesterday()"
-            style="width:auto; min-height:unset; padding:8px 12px; font-size:10px; font-weight:800; background:#F0FDF4; color:#166534; border:1.5px solid #86EFAC; border-radius:10px; cursor:pointer; text-transform:uppercase;">
+            style="width:auto; min-height:unset; padding:8px 12px; font-size:10px; font-weight:800; background:color-mix(in srgb, var(--success) 10%, var(--box-bg)); color:color-mix(in srgb, var(--success) 75%, #000); border:1.5px solid color-mix(in srgb, var(--success) 35%, var(--box-bg)); border-radius: var(--radius-sm); cursor:pointer; text-transform:uppercase;">
             Salin dari Kemarin
           </button>
           <select id="inp-template-select"
-            style="width:auto; min-width:160px; min-height:unset; padding:8px 10px; font-size:10px; font-weight:700; border-radius:10px; margin:0;">
+            style="width:auto; min-width:160px; min-height:unset; padding:8px 10px; font-size:10px; font-weight:700; border-radius: var(--radius-sm); margin:0;">
             <option value="">— Template —</option>
           </select>
           <button type="button" onclick="AppFeatures.saveCurrentAsTemplate()"
-            style="width:auto; min-height:unset; padding:8px 12px; font-size:10px; font-weight:800; background:#EFF6FF; color:#1E40AF; border:1.5px solid #BFDBFE; border-radius:10px; cursor:pointer;">
+            style="width:auto; min-height:unset; padding:8px 12px; font-size:10px; font-weight:800; background:var(--primary-light); color:var(--cta-color); border:1.5px solid color-mix(in srgb, var(--cta-color) 30%, var(--box-bg)); border-radius: var(--radius-sm); cursor:pointer;">
             + Simpan Template
           </button>
           <button type="button" onclick="AppFeatures.exportMyHistoryCsv()"
-            style="width:auto; min-height:unset; padding:8px 12px; font-size:10px; font-weight:800; background:#F8FAFC; color:#475569; border:1.5px solid #E2E8F0; border-radius:10px; cursor:pointer;">
+            style="width:auto; min-height:unset; padding:8px 12px; font-size:10px; font-weight:800; background:var(--bg-color); color:var(--text-secondary); border:1.5px solid var(--border-color); border-radius: var(--radius-sm); cursor:pointer;">
             Export CSV
           </button>
         </div>
 
         <div id="inp-durasi-ringkasan"
-          style="margin-bottom:14px; padding:10px 14px; background:linear-gradient(135deg,#EFF6FF,#F0FDF4); border:1px solid #BFDBFE; border-radius:12px; font-size:11px; font-weight:600; color:#334155;">
+          style="margin-bottom:14px; padding:10px 14px; background:linear-gradient(135deg,var(--primary-light),color-mix(in srgb, var(--success) 10%, var(--box-bg))); border:1px solid color-mix(in srgb, var(--cta-color) 30%, var(--box-bg)); border-radius: var(--radius); font-size:11px; font-weight:600; color:var(--text-secondary);">
           Ringkasan durasi dimuat setelah login…
         </div>
 
@@ -1967,7 +2020,7 @@
                 <circle cx="12" cy="12" r="10"></circle>
                 <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
-              <input type="text" id="inp-mulai" readonly placeholder="00:00" style="border:none; background:transparent; font-size:13px; font-weight:700; color:#334155; cursor:pointer; width:100%; outline:none; margin:0; padding:0; min-height:unset; box-shadow:none; font-family:monospace;">
+              <input type="text" id="inp-mulai" readonly placeholder="00:00" style="border:none; background:transparent; font-size:13px; font-weight:700; color:var(--text-secondary); cursor:pointer; width:100%; outline:none; margin:0; padding:0; min-height:unset; box-shadow:none; font-family:monospace;">
             </div>
           </div>
           <div>
@@ -1980,7 +2033,7 @@
                 <circle cx="12" cy="12" r="10"></circle>
                 <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
-              <input type="text" id="inp-selesai" readonly placeholder="00:00" style="border:none; background:transparent; font-size:13px; font-weight:700; color:#334155; cursor:pointer; width:100%; outline:none; margin:0; padding:0; min-height:unset; box-shadow:none; font-family:monospace;">
+              <input type="text" id="inp-selesai" readonly placeholder="00:00" style="border:none; background:transparent; font-size:13px; font-weight:700; color:var(--text-secondary); cursor:pointer; width:100%; outline:none; margin:0; padding:0; min-height:unset; box-shadow:none; font-family:monospace;">
             </div>
           </div>
         </div>
@@ -2012,13 +2065,13 @@
           <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <input type="date" id="history-date-filter" style="display:none;">
             <input type="date" id="history-date-end" style="display:none;">
-            <span id="history-sync-hint" style="font-size:10px;font-weight:700;color:#64748B;max-width:220px;line-height:1.4;"></span>
+            <span id="history-sync-hint" style="font-size:10px;font-weight:700;color:var(--text-secondary);max-width:220px;line-height:1.4;"></span>
             <button type="button" onclick="openDateRangeModal('history')"
-              style="width:auto;min-height:unset;padding:6px 10px;font-size:9px;font-weight:800;color:#2563EB;background:transparent;border:1px dashed #BFDBFE;border-radius:8px;cursor:pointer;text-transform:uppercase;">
+              style="width:auto;min-height:unset;padding:6px 10px;font-size:9px;font-weight:800;color:var(--cta-color);background:transparent;border:1px dashed color-mix(in srgb, var(--cta-color) 30%, var(--box-bg));border-radius: var(--radius-sm);cursor:pointer;text-transform:uppercase;">
               Rentang lain
             </button>
             <button onclick="loadUserHistory()"
-              style="width: auto; padding: 8px 14px; background: white; color: var(--text-primary); border: 1.5px solid #E2E8F0; font-size: 11px; display: inline-flex; align-items: center; gap: 6px; border-radius: 12px; font-weight: 800; min-height: unset; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.06); text-transform: uppercase; letter-spacing: 0.5px;">
+              style="width: auto; padding: 8px 14px; background: white; color: var(--text-primary); border: 1.5px solid var(--border-color); font-size: 11px; display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius); font-weight: 800; min-height: unset; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.06); text-transform: uppercase; letter-spacing: 0.5px;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
@@ -2031,9 +2084,9 @@
         <!-- Container list riwayat -->
         <div id="history-container">
           <div
-            style="border: 2px dashed var(--border-color); border-radius: var(--radius); padding: 48px; text-align: center; background: #F8FAFC;">
+            style="border: 2px dashed var(--border-color); border-radius: var(--radius); padding: 48px; text-align: center; background: var(--bg-color);">
             <div
-              style="width: 48px; height: 48px; border-radius: 50%; background: #E2E8F0; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #64748B; margin-left: auto; margin-right: auto;">
+              style="width: 48px; height: 48px; border-radius: 50%; background: var(--border-color); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; color: var(--text-secondary); margin-left: auto; margin-right: auto;">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -2041,7 +2094,7 @@
               </svg>
             </div>
             <div
-              style="font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #94A3B8; text-transform: uppercase;">
+              style="font-size: 12px; font-weight: 700; letter-spacing: 1px; color: var(--text-secondary); text-transform: uppercase;">
               Belum Ada Aktivitas Terdaftar</div>
           </div>
         </div>
@@ -2141,7 +2194,7 @@
           <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100"
             style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5"
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--cta-color)" stroke-width="2.5"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
                 <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
@@ -2151,7 +2204,7 @@
                 Visualisasi Beban Kerja Tim</h2>
 
               <button onclick="loadSPVData()"
-                style="width: auto; min-height: unset; padding: 6px 14px; background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0; font-size: 10px; display: inline-flex; align-items: center; gap: 6px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); text-transform: uppercase; margin-left: 8px; margin-bottom: 0;">
+                style="width: auto; min-height: unset; padding: 6px 14px; background: var(--bg-color); color: var(--text-secondary); border: 1px solid var(--border-color); font-size: 10px; display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-lg); font-weight: bold; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); text-transform: uppercase; margin-left: 8px; margin-bottom: 0;">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                   stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
@@ -2241,9 +2294,9 @@
             <span id="audit-date-label" style="display:none;">Hari Ini</span>
             <!-- Tabs Analytics & System Audit -->
             <div
-              style="display: flex; align-items: center; gap: 4px; background: #F1F5F9; padding: 4px; border-radius: 10px; border: 1px solid #E2E8F0;">
+              style="display: flex; align-items: center; gap: 4px; background: var(--bg-color); padding: 4px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
               <button id="audit-sub-tab-analytics" onclick="switchAuditSubTab('analytics')"
-                style="width: auto; min-height: unset; padding: 6px 14px; border-radius: 8px; font-size: 10px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s; border: none; text-transform: uppercase; margin: 0; background: #FFFFFF; color: #2563EB; box-shadow: 0 1px 2px rgba(0,0,0,0.06);">
+                style="width: auto; min-height: unset; padding: 6px 14px; border-radius: var(--radius-sm); font-size: 10px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s; border: none; text-transform: uppercase; margin: 0; background: var(--box-bg); color: var(--cta-color); box-shadow: 0 1px 2px rgba(0,0,0,0.06);">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <line x1="18" y1="20" x2="18" y2="10"></line>
                   <line x1="12" y1="20" x2="12" y2="4"></line>
@@ -2252,7 +2305,7 @@
                 Analytics
               </button>
               <button id="audit-sub-tab-system" onclick="switchAuditSubTab('system')"
-                style="width: auto; min-height: unset; padding: 6px 14px; border-radius: 8px; font-size: 10px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s; border: none; text-transform: uppercase; margin: 0; background: transparent; color: #64748B;">
+                style="width: auto; min-height: unset; padding: 6px 14px; border-radius: var(--radius-sm); font-size: 10px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s; border: none; text-transform: uppercase; margin: 0; background: transparent; color: var(--text-secondary);">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                 </svg>
@@ -2271,17 +2324,17 @@
           <div class="bento-box interactive"
             style="padding: 24px; min-height: 110px; position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5"
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2.5"
                 stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="13 17 18 12 13 7"></polyline>
                 <polyline points="6 17 11 12 6 7"></polyline>
               </svg>
               <span
-                style="font-size: 10px; font-weight: 800; color: #EF4444; text-transform: uppercase; letter-spacing: 1px;">Beban
+                style="font-size: 10px; font-weight: 800; color: var(--danger); text-transform: uppercase; letter-spacing: 1px;">Beban
                 Harian Divisi</span>
             </div>
             <div id="audit-divisi-status"
-              style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.8px; line-height: 1.5;">
+              style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; line-height: 1.5;">
               Pilih tanggal untuk memuat metrik...
             </div>
             <!-- Detail breakdown per divisi -->
@@ -2293,18 +2346,18 @@
           <div class="bento-box interactive"
             style="padding: 24px; min-height: 110px; position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5"
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2.5"
                 stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="8" x2="12" y2="12"></line>
                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
               <span
-                style="font-size: 10px; font-weight: 800; color: #F59E0B; text-transform: uppercase; letter-spacing: 1px;">Deteksi
+                style="font-size: 10px; font-weight: 800; color: var(--warning); text-transform: uppercase; letter-spacing: 1px;">Deteksi
                 Overlap</span>
             </div>
             <div id="audit-overlap-status"
-              style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.8px; line-height: 1.5;">
+              style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; line-height: 1.5;">
               Pilih tanggal untuk memuat metrik...
             </div>
             <div id="audit-overlap-detail" style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
@@ -2315,17 +2368,17 @@
           <div class="bento-box interactive"
             style="padding: 24px; min-height: 110px; position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5"
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--cta-color)" stroke-width="2.5"
                 stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
               <span
-                style="font-size: 10px; font-weight: 800; color: #2563EB; text-transform: uppercase; letter-spacing: 1px;">Job
+                style="font-size: 10px; font-weight: 800; color: var(--cta-color); text-transform: uppercase; letter-spacing: 1px;">Job
                 Misalignment</span>
             </div>
             <div id="audit-misalign-status"
-              style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.8px; line-height: 1.5;">
+              style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; line-height: 1.5;">
               Pilih tanggal untuk memuat metrik...
             </div>
             <div id="audit-misalign-detail" style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
@@ -2337,18 +2390,18 @@
         <!-- OVERLAP LINTAS USER (indikator beban menumpuk) -->
         <div class="bento-box" style="padding:20px;">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
-            <span style="font-size:10px;font-weight:800;color:#B45309;text-transform:uppercase;letter-spacing:1px;">Overlap Lintas User (Paralel)</span>
+            <span style="font-size:10px;font-weight:800;color:color-mix(in srgb, var(--warning) 80%, #000);text-transform:uppercase;letter-spacing:1px;">Overlap Lintas User (Paralel)</span>
             <button type="button" onclick="AppFeatures.exportSpvCsv()"
-              style="width:auto;min-height:unset;padding:6px 12px;font-size:9px;font-weight:800;background:#FFF7ED;color:#C2410C;border:1.5px solid #FDBA74;border-radius:8px;cursor:pointer;">
+              style="width:auto;min-height:unset;padding:6px 12px;font-size:9px;font-weight:800;background:color-mix(in srgb, var(--warning) 12%, var(--box-bg));color:color-mix(in srgb, var(--warning) 80%, #000);border:1.5px solid color-mix(in srgb, var(--warning) 45%, var(--box-bg));border-radius: var(--radius-sm);cursor:pointer;">
               Export CSV Periode
             </button>
           </div>
-          <div id="audit-cross-overlap-panel" style="font-size:11px;color:#64748B;">Pilih tanggal audit untuk memuat indikator overlap lintas user…</div>
+          <div id="audit-cross-overlap-panel" style="font-size:11px;color:var(--text-secondary);">Pilih tanggal audit untuk memuat indikator overlap lintas user…</div>
         </div>
 
         <!-- GEMINI AI AUDITOR DARK CARD -->
         <div
-          style="background: #0F172A; border-radius: 28px; padding: 48px 40px; text-align: center; position: relative; overflow: hidden;">
+          style="background: var(--text-primary); border-radius: var(--radius-xl); padding: 48px 40px; text-align: center; position: relative; overflow: hidden;">
           <!-- Subtle glow orbs -->
           <div
             style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 200px; height: 200px; background: radial-gradient(circle, rgba(37,99,235,0.18) 0%, transparent 70%); pointer-events: none;">
@@ -2356,65 +2409,65 @@
 
           <!-- Gemini Sparkle Icon -->
           <div
-            style="width: 60px; height: 60px; border-radius: 18px; background: linear-gradient(135deg, #2563EB, #3B82F6); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 0 30px rgba(37,99,235,0.4);">
+            style="width: 60px; height: 60px; border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--cta-color), var(--cta-color)); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 0 30px rgba(37,99,235,0.4);">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
                 fill="white" stroke="none" />
-              <circle cx="12" cy="12" r="2" fill="#2563EB" />
+              <circle cx="12" cy="12" r="2" fill="var(--cta-color)" />
             </svg>
           </div>
 
           <!-- Title & Subtitle -->
           <h3
-            style="margin: 0 0 10px 0; font-size: 16px; font-weight: 900; color: #FFFFFF; text-transform: uppercase; letter-spacing: 1.5px;">
+            style="margin: 0 0 10px 0; font-size: 16px; font-weight: 900; color: var(--box-bg); text-transform: uppercase; letter-spacing: 1.5px;">
             Ingin Analisa Yang Lebih Dalam?</h3>
           <p
-            style="margin: 0 0 28px 0; font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 1.2px; max-width: 400px; margin-left: auto; margin-right: auto; line-height: 1.7;">
+            style="margin: 0 0 28px 0; font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.2px; max-width: 400px; margin-left: auto; margin-right: auto; line-height: 1.7;">
             AI Gemini akan memberikan ringkasan eksekutif dan<br>saran strategis berdasarkan konteks kerja hari ini.</p>
 
           <!-- API Key Input (Collapsible) -->
           <div id="ai-apikey-section"
             style="margin-bottom: 16px; max-width: 380px; margin-left: auto; margin-right: auto; display: none;">
             <div
-              style="background: #1E293B; border: 1px solid #334155; border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 8px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2">
+              style="background: var(--text-primary); border: 1px solid var(--text-secondary); border-radius: var(--radius-sm); padding: 10px 14px; display: flex; align-items: center; gap: 8px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2">
                 <path
                   d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4">
                 </path>
               </svg>
               <input type="password" id="gemini-api-key" placeholder="Paste Gemini API Key Anda di sini (opsional)"
-                style="flex: 1; background: transparent; border: none; outline: none; color: #CBD5E1; font-size: 11px; font-weight: 600; margin: 0; padding: 0; min-height: unset; box-shadow: none; font-family: monospace;">
+                style="flex: 1; background: transparent; border: none; outline: none; color: var(--border-color); font-size: 11px; font-weight: 600; margin: 0; padding: 0; min-height: unset; box-shadow: none; font-family: monospace;">
               <button onclick="saveGeminiKey()"
-                style="width: auto; min-height: unset; padding: 4px 10px; background: #2563EB; color: white; border: none; border-radius: 6px; font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase; margin: 0; line-height: 1.4;">Simpan</button>
+                style="width: auto; min-height: unset; padding: 4px 10px; background: var(--cta-color); color: white; border: none; border-radius: var(--radius-xs); font-size: 9px; font-weight: 800; cursor: pointer; text-transform: uppercase; margin: 0; line-height: 1.4;">Simpan</button>
             </div>
             <p
-              style="margin: 6px 0 0; font-size: 9px; color: #475569; text-transform: uppercase; letter-spacing: 0.8px;">
+              style="margin: 6px 0 0; font-size: 9px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px;">
               Disimpan aman di browser lokal Anda. Tidak dikirim ke server kami.</p>
           </div>
 
           <!-- CTA Button -->
           <button onclick="runGeminiAudit()" id="btn-ai-auditor"
-            style="width: auto; min-height: unset; padding: 14px 36px; background: linear-gradient(135deg, #2563EB, #3B82F6); color: white; border: none; border-radius: 14px; font-size: 11px; font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 1.5px; margin: 0; transition: all 0.2s; box-shadow: 0 4px 20px rgba(37,99,235,0.4); display: inline-block;">
+            style="width: auto; min-height: unset; padding: 14px 36px; background: linear-gradient(135deg, var(--cta-color), var(--cta-color)); color: white; border: none; border-radius: var(--radius); font-size: 11px; font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 1.5px; margin: 0; transition: all 0.2s; box-shadow: 0 4px 20px rgba(37,99,235,0.4); display: inline-block;">
             Gunakan AI Auditor (Opsional)
           </button>
           <button
             onclick="document.getElementById('ai-apikey-section').style.display = document.getElementById('ai-apikey-section').style.display === 'none' ? 'block' : 'none';"
-            style="width: auto; min-height: unset; padding: 8px 16px; background: transparent; color: #475569; border: 1px solid #334155; border-radius: 10px; font-size: 9px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; margin: 0; margin-left: 10px; transition: all 0.2s; display: inline-block;">
+            style="width: auto; min-height: unset; padding: 8px 16px; background: transparent; color: var(--text-secondary); border: 1px solid var(--text-secondary); border-radius: var(--radius-sm); font-size: 9px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; margin: 0; margin-left: 10px; transition: all 0.2s; display: inline-block;">
             <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> API Key
           </button>
         </div>
 
         <!-- AI AUDIT OUTPUT CONTAINER -->
         <div id="ai-audit-output"
-          style="display: none; background: #FFFFFF; border-radius: 20px; border: 1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 32px; position: relative; overflow: hidden;">
+          style="display: none; background: var(--box-bg); border-radius: var(--radius-lg); border: 1px solid var(--border-color); box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 32px; position: relative; overflow: hidden;">
           <div
-            style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #2563EB, #8B5CF6, #10B981);">
+            style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--cta-color), var(--cta-color), var(--success));">
           </div>
           <div
-            style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #F1F5F9;">
+            style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--bg-color);">
             <div
-              style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #2563EB, #3B82F6); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              style="width: 32px; height: 32px; border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--cta-color), var(--cta-color)); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
                 <path
                   d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
@@ -2439,8 +2492,8 @@
         <div class="bento-box" style="padding: 32px;">
           <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
             <div
-              style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #0F172A, #1E293B); display: flex; align-items: center; justify-content: center;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2">
+              style="width: 36px; height: 36px; border-radius: var(--radius-sm); background: linear-gradient(135deg, #0F172A, #1E293B); display: flex; align-items: center; justify-content: center;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
               </svg>
             </div>
@@ -2452,17 +2505,17 @@
                 validasi integritas data</div>
             </div>
           </div>
-          <p id="system-audit-period-hint" style="margin:0 0 12px;font-size:10px;font-weight:600;color:#64748B;line-height:1.5;">
+          <p id="system-audit-period-hint" style="margin:0 0 12px;font-size:10px;font-weight:600;color:var(--text-secondary);line-height:1.5;">
             Atur <strong>Periode Laporan</strong> di kanan atas (tab Audit AI), lalu klik <strong>Set Date</strong> di kalender.
           </p>
           <div id="system-audit-log" style="display: flex; flex-direction: column; gap: 8px;">
-            <div style="border: 2px dashed #E2E8F0; border-radius: 12px; padding: 32px; text-align: center;">
-              <div style="font-size: 11px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px;">
+            <div style="border: 2px dashed var(--border-color); border-radius: var(--radius); padding: 32px; text-align: center;">
+              <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">
                 Buka tab ini setelah memilih periode — log akan terisi otomatis</div>
             </div>
           </div>
           <button type="button" onclick="refreshSystemAuditLog()"
-            style="margin-top:12px;width:auto;min-height:unset;padding:8px 14px;font-size:10px;font-weight:800;background:#F1F5F9;color:#334155;border:1.5px solid #E2E8F0;border-radius:10px;cursor:pointer;text-transform:uppercase;">
+            style="margin-top:12px;width:auto;min-height:unset;padding:8px 14px;font-size:10px;font-weight:800;background:var(--bg-color);color:var(--text-secondary);border:1.5px solid var(--border-color);border-radius: var(--radius-sm);cursor:pointer;text-transform:uppercase;">
             Muat ulang log
           </button>
         </div>
@@ -2581,7 +2634,7 @@
       var syncTarget = document.getElementById('sync-target-date');
       var display = val === getTodayJakarta() ? 'Hari Ini' : formatDateID(val);
       if (syncTarget) {
-        syncTarget.innerHTML = 'Tanggal log: <strong style="color:#1E40AF;">' + val + '</strong> (WIB) · ' + display;
+        syncTarget.innerHTML = 'Tanggal log: <strong style="color:var(--cta-color);">' + val + '</strong> (WIB) · ' + display;
       }
       updateUnifiedDateToolbar(window.__activeTab);
       updateHistorySyncHint();
@@ -2810,8 +2863,8 @@
     function switchTab(tabId) {
       var panes = { input: 'tab-pane-input', beban: 'tab-pane-beban', audit: 'tab-pane-audit' };
       var buttons = { input: 'btn-tab-input', beban: 'btn-tab-beban', audit: 'btn-tab-audit' };
-      var activeStyle = 'background:#FFFFFF;color:#2563EB;box-shadow:0 1px 2px rgba(0,0,0,0.05);width:auto;min-height:unset;padding:10px 18px;border-radius:12px;font-size:11px;font-weight:800;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:all 0.2s;border:none;text-transform:uppercase;margin:0;line-height:1;';
-      var inactiveStyle = 'background:transparent;color:#64748B;box-shadow:none;width:auto;min-height:unset;padding:10px 18px;border-radius:12px;font-size:11px;font-weight:800;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:all 0.2s;border:none;text-transform:uppercase;margin:0;line-height:1;';
+      var activeStyle = 'background:var(--box-bg);color:var(--cta-color);box-shadow:0 1px 2px rgba(0,0,0,0.05);width:auto;min-height:unset;padding:10px 18px;border-radius: var(--radius);font-size:11px;font-weight:800;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:all 0.2s;border:none;text-transform:uppercase;margin:0;line-height:1;';
+      var inactiveStyle = 'background:transparent;color:var(--text-secondary);box-shadow:none;width:auto;min-height:unset;padding:10px 18px;border-radius: var(--radius);font-size:11px;font-weight:800;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:all 0.2s;border:none;text-transform:uppercase;margin:0;line-height:1;';
 
       Object.keys(panes).forEach(function (key) {
         var pane = document.getElementById(panes[key]);
@@ -2854,15 +2907,15 @@
       var sPane = document.getElementById('audit-sub-pane-system');
       var aBtn = document.getElementById('audit-sub-tab-analytics');
       var sBtn = document.getElementById('audit-sub-tab-system');
-      var base = 'width:auto;min-height:unset;padding:6px 14px;border-radius:8px;font-size:10px;font-weight:800;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all 0.2s;border:none;text-transform:uppercase;margin:0;';
+      var base = 'width:auto;min-height:unset;padding:6px 14px;border-radius: var(--radius-sm);font-size:10px;font-weight:800;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all 0.2s;border:none;text-transform:uppercase;margin:0;';
       if (subTabId === 'analytics') {
         aPane.style.display = 'flex'; sPane.style.display = 'none';
-        aBtn.style.cssText = base + 'background:#FFFFFF;color:#2563EB;box-shadow:0 1px 2px rgba(0,0,0,0.06);';
-        sBtn.style.cssText = base + 'background:transparent;color:#64748B;';
+        aBtn.style.cssText = base + 'background:var(--box-bg);color:var(--cta-color);box-shadow:0 1px 2px rgba(0,0,0,0.06);';
+        sBtn.style.cssText = base + 'background:transparent;color:var(--text-secondary);';
       } else {
         aPane.style.display = 'none'; sPane.style.display = 'flex';
-        sBtn.style.cssText = base + 'background:#FFFFFF;color:#2563EB;box-shadow:0 1px 2px rgba(0,0,0,0.06);';
-        aBtn.style.cssText = base + 'background:transparent;color:#64748B;';
+        sBtn.style.cssText = base + 'background:var(--box-bg);color:var(--cta-color);box-shadow:0 1px 2px rgba(0,0,0,0.06);';
+        aBtn.style.cssText = base + 'background:transparent;color:var(--text-secondary);';
         refreshSystemAuditLog();
       }
     }
@@ -2902,19 +2955,19 @@
           var divisiDetailEl = document.getElementById('audit-divisi-detail');
           if (Object.keys(divisiMinutes).length === 0) {
             divisiStatusEl.innerText = 'Tidak ada aktivitas di tanggal ini.';
-            divisiStatusEl.style.color = '#94A3B8';
+            divisiStatusEl.style.color = 'var(--text-secondary)';
           } else {
             var hasOverload = false; var divisiHTML = '';
             Object.keys(divisiMinutes).forEach(function (cat) {
               var hours = (divisiMinutes[cat] / 60).toFixed(1);
               var overload = divisiMinutes[cat] > 480;
               if (overload) hasOverload = true;
-              var barColor = overload ? '#EF4444' : '#10B981';
+              var barColor = overload ? 'var(--danger)' : 'var(--success)';
               var barWidth = Math.min(100, Math.round(divisiMinutes[cat] / 480 * 100));
-              divisiHTML += '<div style="margin-bottom:4px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;"><span style="font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">' + cat + '</span><span style="font-size:9px;font-weight:800;color:' + barColor + ';">' + hours + 'j</span></div><div style="height:4px;background:#F1F5F9;border-radius:4px;overflow:hidden;"><div style="height:100%;width:' + barWidth + '%;background:' + barColor + ';border-radius:4px;transition:width 0.5s;"></div></div></div>';
+              divisiHTML += '<div style="margin-bottom:4px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;"><span style="font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">' + cat + '</span><span style="font-size:9px;font-weight:800;color:' + barColor + ';">' + hours + 'j</span></div><div style="height:4px;background:var(--bg-color);border-radius: var(--radius-xs);overflow:hidden;"><div style="height:100%;width:' + barWidth + '%;background:' + barColor + ';border-radius: var(--radius-xs);transition:width 0.5s;"></div></div></div>';
             });
             divisiStatusEl.innerHTML = hasOverload ? ICONS.alertTriangle + ' Ada divisi melebihi 8 jam kerja.' : 'Tidak ada indikasi overload.';
-            divisiStatusEl.style.color = hasOverload ? '#EF4444' : '#10B981';
+            divisiStatusEl.style.color = hasOverload ? 'var(--danger)' : 'var(--success)';
             divisiDetailEl.innerHTML = divisiHTML;
           }
 
@@ -2943,10 +2996,10 @@
           var overlapStatusEl = document.getElementById('audit-overlap-status');
           var overlapDetailEl = document.getElementById('audit-overlap-detail');
           if (overlapCount === 0) {
-            overlapStatusEl.innerText = 'Jam kerja teratur (No Conflicts).'; overlapStatusEl.style.color = '#10B981'; overlapDetailEl.innerHTML = '';
+            overlapStatusEl.innerText = 'Jam kerja teratur (No Conflicts).'; overlapStatusEl.style.color = 'var(--success)'; overlapDetailEl.innerHTML = '';
           } else {
-            overlapStatusEl.innerText = 'Ditemukan ' + overlapCount + ' tumpang tindih jadwal.'; overlapStatusEl.style.color = '#EF4444';
-            var oh = ''; overlapDetails.slice(0, 3).forEach(function (od) { oh += '<div style="font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;padding:3px 6px;background:#FEF2F2;border-radius:4px;margin-bottom:2px;">' + ICONS.noEntry + ' ' + od.user + ': "' + (od.t1 || '').substring(0, 18) + '..." vs "' + (od.t2 || '').substring(0, 18) + '..."</div>'; });
+            overlapStatusEl.innerText = 'Ditemukan ' + overlapCount + ' tumpang tindih jadwal.'; overlapStatusEl.style.color = 'var(--danger)';
+            var oh = ''; overlapDetails.slice(0, 3).forEach(function (od) { oh += '<div style="font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;padding:3px 6px;background:color-mix(in srgb, var(--danger) 10%, var(--box-bg));border-radius: var(--radius-xs);margin-bottom:2px;">' + ICONS.noEntry + ' ' + od.user + ': "' + (od.t1 || '').substring(0, 18) + '..." vs "' + (od.t2 || '').substring(0, 18) + '..."</div>'; });
             overlapDetailEl.innerHTML = oh;
           }
 
@@ -2963,10 +3016,10 @@
             if (!isAligned) { misalignCount++; if (!misalignMap[si.name]) misalignMap[si.name] = { role: si.role, cats: [] }; if (!misalignMap[si.name].cats.includes(row.kategori)) misalignMap[si.name].cats.push(row.kategori); }
           });
           var msEl = document.getElementById('audit-misalign-status'); var mdEl = document.getElementById('audit-misalign-detail');
-          if (misalignCount === 0) { msEl.innerText = 'Tugas sesuai spesialisasi.'; msEl.style.color = '#10B981'; mdEl.innerHTML = ''; }
+          if (misalignCount === 0) { msEl.innerText = 'Tugas sesuai spesialisasi.'; msEl.style.color = 'var(--success)'; mdEl.innerHTML = ''; }
           else {
-            msEl.innerText = misalignCount + ' tugas di luar spesialisasi divisi.'; msEl.style.color = '#F59E0B';
-            var mh = ''; Object.keys(misalignMap).slice(0, 3).forEach(function (n) { mh += '<div style="font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;padding:3px 6px;background:#FFFBEB;border-radius:4px;margin-bottom:2px;">' + ICONS.shuffle + ' ' + n + ' (' + misalignMap[n].role + '): ' + misalignMap[n].cats.join(', ') + '</div>'; });
+            msEl.innerText = misalignCount + ' tugas di luar spesialisasi divisi.'; msEl.style.color = 'var(--warning)';
+            var mh = ''; Object.keys(misalignMap).slice(0, 3).forEach(function (n) { mh += '<div style="font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;padding:3px 6px;background:color-mix(in srgb, var(--warning) 12%, var(--box-bg));border-radius: var(--radius-xs);margin-bottom:2px;">' + ICONS.shuffle + ' ' + n + ' (' + misalignMap[n].role + '): ' + misalignMap[n].cats.join(', ') + '</div>'; });
             mdEl.innerHTML = mh;
           }
 
@@ -2984,11 +3037,11 @@
       var periodHint = document.getElementById('system-audit-period-hint');
       if (periodHint) {
         var pl = startDate === end ? formatDateID(startDate) : formatDateID(startDate) + ' – ' + formatDateID(end);
-        periodHint.innerHTML = 'Periode aktif: <strong style="color:#1E40AF;">' + pl + '</strong> (WIB) · diubah via pemilih tanggal kanan atas';
+        periodHint.innerHTML = 'Periode aktif: <strong style="color:var(--cta-color);">' + pl + '</strong> (WIB) · diubah via pemilih tanggal kanan atas';
       }
       var logEl = document.getElementById('system-audit-log');
       if (logEl) {
-        logEl.innerHTML = '<div style="padding:20px;text-align:center;font-size:11px;font-weight:700;color:#64748B;">Memuat rekam jejak sistem…</div>';
+        logEl.innerHTML = '<div style="padding:20px;text-align:center;font-size:11px;font-weight:700;color:var(--text-secondary);">Memuat rekam jejak sistem…</div>';
       }
       ['audit-divisi-status', 'audit-overlap-status', 'audit-misalign-status'].forEach(function (id) {
         var el = document.getElementById(id); if (el) el.innerText = 'Memuat data...';
@@ -3010,10 +3063,10 @@
         .catch(function (err) {
           console.error('Audit Dashboard error:', err);
           if (logEl) {
-            logEl.innerHTML = '<div style="padding:16px;background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;font-size:11px;font-weight:700;color:#B91C1C;">Gagal memuat: ' + (err.message || 'cek koneksi / deploy GAS') + '</div>';
+            logEl.innerHTML = '<div style="padding:16px;background:color-mix(in srgb, var(--danger) 10%, var(--box-bg));border:1px solid color-mix(in srgb, var(--danger) 30%, var(--box-bg));border-radius: var(--radius-sm);font-size:11px;font-weight:700;color:color-mix(in srgb, var(--danger) 75%, #000);">Gagal memuat: ' + (err.message || 'cek koneksi / deploy GAS') + '</div>';
           }
           ['audit-divisi-status', 'audit-overlap-status', 'audit-misalign-status'].forEach(function (id) {
-            var el = document.getElementById(id); if (el) { el.innerText = 'Gagal memuat data.'; el.style.color = '#EF4444'; }
+            var el = document.getElementById(id); if (el) { el.innerText = 'Gagal memuat data.'; el.style.color = 'var(--danger)'; }
           });
         });
     }
@@ -3023,15 +3076,15 @@
       var now = new Date().toLocaleString('id-ID');
       var crossC = crossOverlapC || 0;
       var entries = [
-        { label: 'Koneksi Backend GAS', status: 'OK', color: '#10B981', icon: ICONS.check },
-        { label: 'Periode Laporan', status: dateStr, color: '#2563EB', icon: ICONS.calendar },
-        { label: 'Total Aktivitas', status: totalAct + ' entri', color: '#2563EB', icon: ICONS.clipboard },
-        { label: 'Overlap per orang', status: overlapC > 0 ? overlapC + ' tumpang tindih' : 'Teratur', color: overlapC > 0 ? '#EF4444' : '#10B981', icon: overlapC > 0 ? ICONS.noEntry : ICONS.check },
-        { label: 'Overlap lintas user', status: crossC > 0 ? crossC + ' (beban paralel)' : 'Rendah', color: crossC > 0 ? '#F59E0B' : '#10B981', icon: crossC > 0 ? ICONS.zap : ICONS.check },
-        { label: 'Job Misalignment', status: misalignC > 0 ? misalignC + ' item' : 'Sesuai spesialisasi', color: misalignC > 0 ? '#F59E0B' : '#10B981', icon: misalignC > 0 ? ICONS.shuffle : ICONS.check },
-        { label: 'Terakhir diperbarui', status: now, color: '#64748B', icon: ICONS.clock }
+        { label: 'Koneksi Backend GAS', status: 'OK', color: 'var(--success)', icon: ICONS.check },
+        { label: 'Periode Laporan', status: dateStr, color: 'var(--cta-color)', icon: ICONS.calendar },
+        { label: 'Total Aktivitas', status: totalAct + ' entri', color: 'var(--cta-color)', icon: ICONS.clipboard },
+        { label: 'Overlap per orang', status: overlapC > 0 ? overlapC + ' tumpang tindih' : 'Teratur', color: overlapC > 0 ? 'var(--danger)' : 'var(--success)', icon: overlapC > 0 ? ICONS.noEntry : ICONS.check },
+        { label: 'Overlap lintas user', status: crossC > 0 ? crossC + ' (beban paralel)' : 'Rendah', color: crossC > 0 ? 'var(--warning)' : 'var(--success)', icon: crossC > 0 ? ICONS.zap : ICONS.check },
+        { label: 'Job Misalignment', status: misalignC > 0 ? misalignC + ' item' : 'Sesuai spesialisasi', color: misalignC > 0 ? 'var(--warning)' : 'var(--success)', icon: misalignC > 0 ? ICONS.shuffle : ICONS.check },
+        { label: 'Terakhir diperbarui', status: now, color: 'var(--text-secondary)', icon: ICONS.clock }
       ];
-      logEl.innerHTML = entries.map(function (e) { return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:#F8FAFC;border-radius:8px;border:1px solid #F1F5F9;"><span style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">' + e.icon + ' ' + e.label + '</span><span style="font-size:11px;font-weight:800;color:' + e.color + ';text-transform:uppercase;">' + e.status + '</span></div>'; }).join('');
+      logEl.innerHTML = entries.map(function (e) { return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--bg-color);border-radius: var(--radius-sm);border:1px solid var(--bg-color);"><span style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">' + e.icon + ' ' + e.label + '</span><span style="font-size:11px;font-weight:800;color:' + e.color + ';text-transform:uppercase;">' + e.status + '</span></div>'; }).join('');
     }
 
     // ============================================
@@ -3120,24 +3173,24 @@
 
         dateLabelEl.innerText = 'Dianalisa: ' + dateRangeStr + ' · Analitik Lokal Cerdas';
         contentEl.innerHTML =
-          '<h3 style="font-size:13px;font-weight:900;color:#0F172A;text-transform:uppercase;letter-spacing:0.8px;margin:0 0 12px;">1. Ringkasan Eksekutif</h3>' +
-          '<p style="margin:0 0 16px;color:#334155;line-height:1.8;">Tim merekam <strong>' + data.length + ' aktivitas</strong> pada ' + dateRangeStr + ', melibatkan <strong>' + uniqueStaff + ' staf</strong> dengan total <strong>' + totalJam + ' jam kerja</strong>. Divisi dengan beban tertinggi: <em style="color:#2563EB;">' + topDivisi + '</em> (' + (divisiCounts[topDivisi] || 0) + ' tugas).' + (data.length === 0 ? ' Tidak ada data aktivitas — pastikan tim melakukan input rutin harian.' : '') + '</p>' +
-          '<h3 style="font-size:13px;font-weight:900;color:#0F172A;text-transform:uppercase;letter-spacing:0.8px;margin:0 0 12px;">2. Temuan Kritis</h3>' +
+          '<h3 style="font-size:13px;font-weight:900;color:var(--text-primary);text-transform:uppercase;letter-spacing:0.8px;margin:0 0 12px;">1. Ringkasan Eksekutif</h3>' +
+          '<p style="margin:0 0 16px;color:var(--text-secondary);line-height:1.8;">Tim merekam <strong>' + data.length + ' aktivitas</strong> pada ' + dateRangeStr + ', melibatkan <strong>' + uniqueStaff + ' staf</strong> dengan total <strong>' + totalJam + ' jam kerja</strong>. Divisi dengan beban tertinggi: <em style="color:var(--cta-color);">' + topDivisi + '</em> (' + (divisiCounts[topDivisi] || 0) + ' tugas).' + (data.length === 0 ? ' Tidak ada data aktivitas — pastikan tim melakukan input rutin harian.' : '') + '</p>' +
+          '<h3 style="font-size:13px;font-weight:900;color:var(--text-primary);text-transform:uppercase;letter-spacing:0.8px;margin:0 0 12px;">2. Temuan Kritis</h3>' +
           '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">' +
-          '<div style="padding:10px 14px;border-radius:8px;border-left:3px solid ' + (overlapCount > 0 ? '#EF4444' : '#10B981') + ';background:' + (overlapCount > 0 ? '#FEF2F2' : '#F0FDF4') + ';"><span style="font-size:11px;font-weight:800;color:' + (overlapCount > 0 ? '#991B1B' : '#166534') + ';text-transform:uppercase;">' + (overlapCount > 0 ? ICONS.noEntry + ' ' + overlapCount + ' Konflik Jadwal Terdeteksi' : ICONS.check + ' Tidak Ada Konflik Jadwal') + '</span></div>' +
-          '<div style="padding:10px 14px;border-radius:8px;border-left:3px solid ' + (bebanWarning ? '#F59E0B' : '#10B981') + ';background:' + (bebanWarning ? '#FFFBEB' : '#F0FDF4') + ';"><span style="font-size:11px;font-weight:800;color:' + (bebanWarning ? '#92400E' : '#166534') + ';text-transform:uppercase;">' + (bebanWarning ? ICONS.alertTriangle + ' Divisi "' + bebanWarning + '" Melebihi 8 Jam' : ICONS.check + ' Semua Divisi dalam Batas Wajar') + '</span></div>' +
+          '<div style="padding:10px 14px;border-radius: var(--radius-sm);border-left:3px solid ' + (overlapCount > 0 ? 'var(--danger)' : 'var(--success)') + ';background:' + (overlapCount > 0 ? 'color-mix(in srgb, var(--danger) 10%, var(--box-bg))' : 'color-mix(in srgb, var(--success) 10%, var(--box-bg))') + ';"><span style="font-size:11px;font-weight:800;color:' + (overlapCount > 0 ? 'color-mix(in srgb, var(--danger) 75%, #000)' : 'color-mix(in srgb, var(--success) 75%, #000)') + ';text-transform:uppercase;">' + (overlapCount > 0 ? ICONS.noEntry + ' ' + overlapCount + ' Konflik Jadwal Terdeteksi' : ICONS.check + ' Tidak Ada Konflik Jadwal') + '</span></div>' +
+          '<div style="padding:10px 14px;border-radius: var(--radius-sm);border-left:3px solid ' + (bebanWarning ? 'var(--warning)' : 'var(--success)') + ';background:' + (bebanWarning ? 'color-mix(in srgb, var(--warning) 12%, var(--box-bg))' : 'color-mix(in srgb, var(--success) 10%, var(--box-bg))') + ';"><span style="font-size:11px;font-weight:800;color:' + (bebanWarning ? 'color-mix(in srgb, var(--warning) 75%, #000)' : 'color-mix(in srgb, var(--success) 75%, #000)') + ';text-transform:uppercase;">' + (bebanWarning ? ICONS.alertTriangle + ' Divisi "' + bebanWarning + '" Melebihi 8 Jam' : ICONS.check + ' Semua Divisi dalam Batas Wajar') + '</span></div>' +
           '</div>' +
-          '<h3 style="font-size:13px;font-weight:900;color:#0F172A;text-transform:uppercase;letter-spacing:0.8px;margin:0 0 12px;">3. Rekomendasi Strategis</h3>' +
+          '<h3 style="font-size:13px;font-weight:900;color:var(--text-primary);text-transform:uppercase;letter-spacing:0.8px;margin:0 0 12px;">3. Rekomendasi Strategis</h3>' +
           '<ol style="margin:0 0 16px;padding-left:20px;display:flex;flex-direction:column;gap:8px;">' +
-          '<li style="font-size:12px;line-height:1.7;color:#334155;"><strong>Standarisasi Input Harian:</strong> Wajibkan semua anggota tim mengisi log aktivitas sebelum pukul 18:00 setiap hari untuk keakuratan data dashboard.</li>' +
-          '<li style="font-size:12px;line-height:1.7;color:#334155;"><strong>Review Beban Mingguan:</strong> Gunakan dashboard evaluasi ini setiap Senin pagi untuk memetakan dan mendistribusikan beban kerja secara merata.</li>' +
-          '<li style="font-size:12px;line-height:1.7;color:#334155;"><strong>Dokumentasi Cross-Task:</strong> Untuk tugas di luar divisi, buat rekap transfer pengetahuan agar kompetensi tim berkembang secara merata.</li>' +
+          '<li style="font-size:12px;line-height:1.7;color:var(--text-secondary);"><strong>Standarisasi Input Harian:</strong> Wajibkan semua anggota tim mengisi log aktivitas sebelum pukul 18:00 setiap hari untuk keakuratan data dashboard.</li>' +
+          '<li style="font-size:12px;line-height:1.7;color:var(--text-secondary);"><strong>Review Beban Mingguan:</strong> Gunakan dashboard evaluasi ini setiap Senin pagi untuk memetakan dan mendistribusikan beban kerja secara merata.</li>' +
+          '<li style="font-size:12px;line-height:1.7;color:var(--text-secondary);"><strong>Dokumentasi Cross-Task:</strong> Untuk tugas di luar divisi, buat rekap transfer pengetahuan agar kompetensi tim berkembang secara merata.</li>' +
           '</ol>' +
-          '<h3 style="font-size:13px;font-weight:900;color:#0F172A;text-transform:uppercase;letter-spacing:0.8px;margin:0 0 10px;">4. Kesimpulan</h3>' +
-          '<div style="padding:14px 18px;background:linear-gradient(135deg,#EFF6FF,#F0FDF4);border-radius:10px;border:1px solid #BFDBFE;"><p style="margin:0;font-size:12px;font-weight:700;color:#1E3A5F;line-height:1.7;">' +
+          '<h3 style="font-size:13px;font-weight:900;color:var(--text-primary);text-transform:uppercase;letter-spacing:0.8px;margin:0 0 10px;">4. Kesimpulan</h3>' +
+          '<div style="padding:14px 18px;background:linear-gradient(135deg,var(--primary-light),color-mix(in srgb, var(--success) 10%, var(--box-bg)));border-radius: var(--radius-sm);border:1px solid color-mix(in srgb, var(--cta-color) 30%, var(--box-bg));"><p style="margin:0;font-size:12px;font-weight:700;color:var(--text-primary);line-height:1.7;">' +
           (data.length > 0 ? 'Tim menunjukkan produktivitas ' + (data.length > 10 ? 'tinggi' : 'sedang') + ' dengan ' + (overlapCount === 0 && !bebanWarning ? 'distribusi kerja yang baik tanpa anomali signifikan.' : 'beberapa area yang membutuhkan perhatian SPV segera.') : 'Belum ada data aktivitas yang dapat dianalisis. Pastikan seluruh anggota tim mengisi log kerja harian.') +
           '</p></div>' +
-          '<p style="margin:12px 0 0;font-size:9px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.8px;text-align:right;">* Analitik Lokal Cerdas. Gunakan Gemini API Key untuk analisa generatif lebih mendalam.</p>';
+          '<p style="margin:12px 0 0;font-size:9px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.8px;text-align:right;">* Analitik Lokal Cerdas. Gunakan Gemini API Key untuk analisa generatif lebih mendalam.</p>';
 
         outputContainer.style.display = 'block';
         outputContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -3149,11 +3202,11 @@
       return text
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/^### (.+)$/gm, '<h4 style="font-size:12px;font-weight:900;color:#0F172A;text-transform:uppercase;margin:16px 0 8px;">$1</h4>')
-        .replace(/^## (.+)$/gm, '<h3 style="font-size:14px;font-weight:900;color:#0F172A;text-transform:uppercase;margin:20px 0 10px;">$1</h3>')
-        .replace(/^# (.+)$/gm, '<h2 style="font-size:16px;font-weight:900;color:#0F172A;margin:20px 0 10px;">$1</h2>')
-        .replace(/^\d+\. (.+)$/gm, '<li style="font-size:12px;line-height:1.7;color:#334155;margin-bottom:6px;">$1</li>')
-        .replace(/^- (.+)$/gm, '<li style="font-size:12px;line-height:1.7;color:#334155;margin-bottom:4px;">$1</li>')
+        .replace(/^### (.+)$/gm, '<h4 style="font-size:12px;font-weight:900;color:var(--text-primary);text-transform:uppercase;margin:16px 0 8px;">$1</h4>')
+        .replace(/^## (.+)$/gm, '<h3 style="font-size:14px;font-weight:900;color:var(--text-primary);text-transform:uppercase;margin:20px 0 10px;">$1</h3>')
+        .replace(/^# (.+)$/gm, '<h2 style="font-size:16px;font-weight:900;color:var(--text-primary);margin:20px 0 10px;">$1</h2>')
+        .replace(/^\d+\. (.+)$/gm, '<li style="font-size:12px;line-height:1.7;color:var(--text-secondary);margin-bottom:6px;">$1</li>')
+        .replace(/^- (.+)$/gm, '<li style="font-size:12px;line-height:1.7;color:var(--text-secondary);margin-bottom:4px;">$1</li>')
         .replace(/\n\n/g, '<br><br>');
     }
 
@@ -3445,11 +3498,11 @@
 
           if (data.length === 0) {
             container.innerHTML = `
-            <div style="border: 2px dashed var(--border-color); border-radius: var(--radius); padding: 48px; text-align: center; background: #F8FAFC;">
-              <div style="width: 48px; height: 48px; border-radius: 50%; background: #E2E8F0; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #64748B; margin-left: auto; margin-right: auto;">
+            <div style="border: 2px dashed var(--border-color); border-radius: var(--radius); padding: 48px; text-align: center; background: var(--bg-color);">
+              <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--border-color); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; color: var(--text-secondary); margin-left: auto; margin-right: auto;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
               </div>
-              <div style="font-size: 12px; font-weight: 700; letter-spacing: 1px; color: #94A3B8; text-transform: uppercase;">Belum Ada Aktivitas Terdaftar</div>
+              <div style="font-size: 12px; font-weight: 700; letter-spacing: 1px; color: var(--text-secondary); text-transform: uppercase;">Belum Ada Aktivitas Terdaftar</div>
             </div>
           `;
             return;
@@ -3474,14 +3527,14 @@
 
           data.forEach(function (row) {
             // Warna tag beban
-            let bgBeban = '#DCFCE7'; // Ringan (Hijau)
-            let colorBeban = '#166534';
+            let bgBeban = 'color-mix(in srgb, var(--success) 18%, var(--box-bg))'; // Ringan (Hijau)
+            let colorBeban = 'color-mix(in srgb, var(--success) 75%, #000)';
             if (row.beban === 'Tinggi' || row.beban === 'Tinggi / Kompleks') {
-              bgBeban = '#FEE2E2'; // Tinggi (Merah)
-              colorBeban = '#991B1B';
+              bgBeban = 'var(--danger-light)'; // Tinggi (Merah)
+              colorBeban = 'color-mix(in srgb, var(--danger) 75%, #000)';
             } else if (row.beban === 'Sedang' || row.beban === 'Sedang / Fokus') {
-              bgBeban = '#FEF3C7'; // Sedang (Kuning)
-              colorBeban = '#92400E';
+              bgBeban = 'color-mix(in srgb, var(--warning) 20%, var(--box-bg))'; // Sedang (Kuning)
+              colorBeban = 'color-mix(in srgb, var(--warning) 75%, #000)';
             }
 
             // Encode row data as a URI component safely for click handler
@@ -3490,8 +3543,8 @@
             html += `
             <tr style="border-bottom: 1px solid var(--border-color);">
               <td style="padding: 12px; font-weight: 600; color: var(--cta-color);">${row.kategori}</td>
-              <td style="padding: 12px;"><span style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: #F1F5F9; color: #475569;">${row.tipe}</span></td>
-              <td style="padding: 12px;"><span style="padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: ${bgBeban}; color: ${colorBeban};">${row.beban}</span></td>
+              <td style="padding: 12px;"><span style="padding: 4px 8px; border-radius: var(--radius-xs); font-size: 11px; font-weight: 600; background: var(--bg-color); color: var(--text-secondary);">${row.tipe}</span></td>
+              <td style="padding: 12px;"><span style="padding: 4px 8px; border-radius: var(--radius-xs); font-size: 11px; font-weight: 600; background: ${bgBeban}; color: ${colorBeban};">${row.beban}</span></td>
               <td style="padding: 12px; color: var(--text-primary); max-width: 250px; white-space: normal; word-wrap: break-word;">${row.aktivitas}</td>
               <td style="padding: 12px; color: var(--text-secondary); font-family: monospace;">${row.durasi}</td>
               <td style="padding: 12px; font-weight: 600; color: var(--text-primary);">${row.output}</td>
@@ -4196,24 +4249,24 @@
       var mBox = document.getElementById('tp-minute-box');
       
       if (tpActiveMode === 'hours') {
-        hBox.style.background = '#F5F3FF';
-        hBox.style.color = '#4F46E5';
-        hBox.style.borderColor = '#6366F1';
+        hBox.style.background = 'var(--primary-light)';
+        hBox.style.color = 'var(--cta-hover)';
+        hBox.style.borderColor = 'var(--cta-color)';
         hBox.classList.add('active');
         
-        mBox.style.background = '#F8FAFC';
-        mBox.style.color = '#64748B';
-        mBox.style.borderColor = '#E2E8F0';
+        mBox.style.background = 'var(--bg-color)';
+        mBox.style.color = 'var(--text-secondary)';
+        mBox.style.borderColor = 'var(--border-color)';
         mBox.classList.remove('active');
       } else {
-        mBox.style.background = '#F5F3FF';
-        mBox.style.color = '#4F46E5';
-        mBox.style.borderColor = '#6366F1';
+        mBox.style.background = 'var(--primary-light)';
+        mBox.style.color = 'var(--cta-hover)';
+        mBox.style.borderColor = 'var(--cta-color)';
         mBox.classList.add('active');
         
-        hBox.style.background = '#F8FAFC';
-        hBox.style.color = '#64748B';
-        hBox.style.borderColor = '#E2E8F0';
+        hBox.style.background = 'var(--bg-color)';
+        hBox.style.color = 'var(--text-secondary)';
+        hBox.style.borderColor = 'var(--border-color)';
         hBox.classList.remove('active');
       }
       
@@ -4277,8 +4330,8 @@
       el.innerText = val;
       
       if (isSel && !isDisabled) {
-        el.style.background = '#4F46E5';
-        el.style.color = '#FFFFFF';
+        el.style.background = 'var(--cta-hover)';
+        el.style.color = 'var(--box-bg)';
       }
       
       if (!isDisabled) {
@@ -4369,14 +4422,14 @@
       var btn = document.getElementById('tp-keyboard-btn');
       if (container.style.display === 'none') {
         container.style.display = 'flex';
-        btn.style.color = '#4F46E5';
-        btn.style.background = '#EEF2FF';
+        btn.style.color = 'var(--cta-hover)';
+        btn.style.background = 'var(--primary-light)';
         document.getElementById('tp-manual-hr').value = tpSelectedHour;
         document.getElementById('tp-manual-min').value = tpSelectedMinute;
         document.getElementById('tp-manual-hr').focus();
       } else {
         container.style.display = 'none';
-        btn.style.color = '#64748B';
+        btn.style.color = 'var(--text-secondary)';
         btn.style.background = 'none';
       }
     }

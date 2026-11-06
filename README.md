@@ -27,7 +27,8 @@ index.html          SPA Shell (landing + workspace + sidebar + iframe router)
   │   ├── retur-track/retur-track.html   Retur Tracker
   │   ├── ArchiveDoc/index.html       SPPD Toolbox (opsional sinkron cloud: gas/sppdtoolbox.gs)
   │   ├── pdf-merger/PDFM_V2.html     PDF Merger + Label Parser
-  │   └── resi-generator/Index.html   Resi Generator
+  │   ├── resi-generator/Index.html   Resi Generator
+  │   └── self-management/Index.html  Self Management (tugas, karya, jadwal, catatan, keuangan)
   ├── dak/form-dak.html              Form Pengajuan DAK
   └── gas/                           GAS backend (code-*.gs)
 ```
@@ -179,6 +180,13 @@ Penyatuan berkas PDF + ekstraksi label resi (Shopee, TikTok, dll) dengan parse p
 
 #### Resi Generator (`Productive/resi-generator/Index.html`)
 Generator nomor dan label resi otomatis, multi-ekspedisi (JNE, POS, J&T, J&T Cargo, Baraka, Ojol), logo otomatis, preview cetak.
+
+---
+
+#### Self Management (`Productive/self-management/Index.html`)
+Pengelolaan diri harian: target harian + tugas, karya mingguan per kategori, jadwal, catatan, dan keuangan (pemasukan, pengeluaran, tabungan dengan target).
+
+**Backend:** belum ada — data disimpan di `localStorage` perangkat (belum tersambung database).
 
 ---
 

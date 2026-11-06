@@ -408,7 +408,27 @@ Badge `BARU` di kartu: tambahkan blok `if (config.hash === '…') newBadge` di `
 - [ ] Print (jika tool mencetak): `@page` + `@media print` + `.no-print`.
 - [ ] Aksesibilitas: `:focus-visible` memakai `--focus-ring`; input punya `<label>`; `prefers-reduced-motion` dihormati.
 - [ ] Terdaftar di `tool-card.js`, hash unik, kartu + deskripsi benar.
-- [ ] Dibuka via hub: tidak ada error konsol; tema sinkron; ukuran frame pas.
+## Part VII — Keputusan Token yang Sudah Ditetapkan
+
+Keputusan di bawah ini **mengikat**: jangan mengubahnya tanpa alasan baru yang dicatat di sini.
+
+| Tool | Keputusan | Alasan |
+|---|---|---|
+| Planner (`taskschedule.html`) | `--accent` = merah merek `#ff0000`; navy `#1B2A4A` dipensiunkan | Satu bahasa desain untuk aksi utama; warna kanal platform tetap di `--platform-*` (satu tempat) |
+| Self Management (`self-management/Index.html`) | Aksen **indigo `#4f39f6`** (bukan merah merek) + latar `#eef2f6`, radius 16px, shadow halus; dark mode punya pasangan token sendiri | Menduplikasi visual aplikasi acuan “Self Management”; warna tetap lewat token, semantik `--danger`/`--success` tidak diubah |
+| Form DAK (`dak/form-dak.html`) | Aksen **navy** dipertahankan (`--primary: #1e3a8a`), dipetakan ke token baku; cetak dipaksa terang | Formulir resmi harus netral; merah hanya untuk aksi hapus |
+| Analytic (`Analytic.html`) | Warna seri grafik lewat token `--chart-1..8`; `--accent` tidak lagi dipakai sebagai warna permukaan | Data-viz butuh warna berbeda dari merek; token mencegah hex tersebar di logika render |
+| Activity (`tracking.html`) | Palet Tailwind dipetakan ke token suite lewat `tailwind.config` (slate→text/border, blue/indigo→merek, red→danger, dst.) | Utility di markup tetap, tema & merek ikut token tanpa menulis ulang 186 kelas |
+| Resi & LATCH | Neumorphism (`--neo-*`, inset shadow) **dipertahankan** sebagai karakter tool | Bukan pelanggaran bila terdokumentasi; konversi berisiko merusak tampilan yang sudah stabil |
+| RND Roadmap (`Project_develop/dist`) | **Lab terpisah** (Vite + shadcn + Tailwind, `.dark` class) — di luar aturan token suite | Build output React; menyeragamkan berarti menulis ulang stack, bukan perbaikan kecil |
+
+Aturan turunan:
+- Cetak/print pada tool dokumen selalu memaksa token ke nilai terang (`@media print`), apa pun tema aktif.
+- Hex di dalam template cetak yang dihasilkan JS (label resi, timeline) dianggap bagian dokumen cetak, bukan warna UI.
+- `border-radius` wajib lewat `--radius-xs/sm//lg/xl/full`; nilai px mentah = temuan audit.
+
+---
+
 
 ---
 

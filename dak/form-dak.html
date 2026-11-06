@@ -6,20 +6,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formulir Dana Amanah PT EKT</title>
+    <link rel="stylesheet" href="../src/styles/tools.css">
     <style>
+        /* Token dokumen. Aksen tool ini SENGAJA navy (bukan merah brand):
+           formulir resmi harus netral, merah dipakai untuk aksi hapus saja.
+           Namespace --dak-* dipertahankan sebagai alias token suite. */
         :root {
-          --dak-bg: #ffffff;
-          --dak-text: #0f172a;
-          --dak-border: #e2e8f0;
-          --dak-card: #f8fafc;
-          --dak-accent: #1e3a8a;
+          --bg: #f8fafc;
+          --surface: #ffffff;
+          --surface2: #f1f5f9;
+          --text: #0f172a;
+          --muted: #64748b;
+          --border: #e2e8f0;
+          --primary: #1e3a8a;
+          --primary-hover: #172554;
+          --primary-soft: color-mix(in srgb, var(--primary) 10%, transparent);
+          --danger: #ef4444;
+          --success: #22c55e;
+          --warning: #f59e0b;
+          --radius-sm: 6px;
+          --radius: 10px;
+          --radius-xs: 6px;
+          --shadow-md: 0 10px 30px rgba(0,0,0,.2);
+          --focus-ring: 0 0 0 3px var(--primary-soft);
+
+          /* Alias lama agar aturan CSS yang ada tidak perlu diubah massal. */
+          --dak-bg: var(--surface);
+          --dak-text: var(--text);
+          --dak-border: var(--border);
+          --dak-card: var(--bg);
+          --dak-accent: var(--primary);
         }
         [data-theme="dark"] {
-          --dak-bg: #090d16;
-          --dak-text: #f1f5f9;
-          --dak-border: rgba(255,255,255,0.1);
-          --dak-card: #121826;
-          --dak-accent: #60a5fa;
+          --bg: #090d16;
+          --surface: #121826;
+          --surface2: #1a2233;
+          --text: #f1f5f9;
+          --muted: #94a3b8;
+          --border: rgba(255,255,255,0.1);
+          --primary: #60a5fa;
+          --primary-hover: #93c5fd;
         }
         /* Setup Kertas A4 & Layout Dokumen */
         @page {
@@ -28,7 +54,7 @@
         }
 
         body {
-            font-family: 'Plus Jakarta Sans';
+            font-family: var(--font-sans, 'Plus Jakarta Sans'), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             font-size: 11pt;
             line-height: 1.5;
             background: var(--dak-border);
@@ -92,7 +118,7 @@
             background: var(--dak-accent);
             color: var(--dak-bg);
             border: none;
-            border-radius: 5px;
+            border-radius: var(--radius-xs);
             cursor: pointer;
             font-size: 10.5pt;
             font-weight: bold;
@@ -152,7 +178,7 @@
                 background: var(--dak-card) !important;
                 border-bottom: 1px dashed var(--dak-border) !important;
                 padding: 4px 6px;
-                border-radius: 4px;
+                border-radius: var(--radius-xs);
                 box-sizing: border-box;
                 transition: all 0.2s ease;
             }
@@ -209,7 +235,7 @@
             width: 14px;
             height: 14px;
             border: 1px solid var(--dak-text);
-            border-radius: 2px;
+            border-radius: var(--radius-xs);
             outline: none;
             display: inline-block;
             vertical-align: middle;
@@ -252,7 +278,7 @@
         /* Lampiran Box Styling */
         .lampiran-box {
             border: 2px dashed var(--dak-border);
-            border-radius: 6px;
+            border-radius: var(--radius-xs);
             padding: 15px;
             text-align: center;
             cursor: pointer;
@@ -279,16 +305,16 @@
         .lampiran-box img {
             max-width: 100%;
             max-height: 250px;
-            border-radius: 4px;
+            border-radius: var(--radius-xs);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .btn-hapus {
-            background: #ef4444;
+            background: var(--danger);
             color: white;
             border: none;
             padding: 6px 12px;
-            border-radius: 4px;
+            border-radius: var(--radius-xs);
             cursor: pointer;
             margin-top: 8px;
             font-size: 9.5pt;
@@ -298,11 +324,21 @@
         }
 
         .btn-hapus:hover {
-            background: #dc2626;
+            background: color-mix(in srgb, var(--danger) 82%, #000);
         }
 
         /* Mode Print */
         @media print {
+            /* Cetak selalu versi terang: token dipaksa ke nilai light. */
+            :root, [data-theme="dark"] {
+                --bg: #ffffff;
+                --surface: #ffffff;
+                --text: #0f172a;
+                --muted: #64748b;
+                --border: #e2e8f0;
+                --primary: #1e3a8a;
+                --primary-hover: #172554;
+            }
             body {
                 background: white;
                 padding: 0;
@@ -315,6 +351,9 @@
                 width: 100%;
                 min-height: auto;
                 margin: 0;
+                /* Kertas selalu putih saat dicetak, apa pun tema aktif. */
+                background: white;
+                color: black;
             }
 
             .print-actions {
@@ -412,7 +451,7 @@
                 max-width: 100% !important;
                 padding: 1.5cm 1.2cm !important;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
-                border-radius: 8px;
+                border-radius: var(--radius-sm);
             }
             .print-actions {
                 width: 100% !important;
@@ -440,7 +479,7 @@
             table:not(.no-border-table) tr {
                 margin-bottom: 16px;
                 border: 1px solid var(--dak-border);
-                border-radius: 8px;
+                border-radius: var(--radius-sm);
                 background: var(--dak-card);
                 overflow: hidden;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);

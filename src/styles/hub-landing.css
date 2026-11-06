@@ -486,8 +486,7 @@ html[data-theme="dark"] .hero-sheen {
     font-size: .95rem;
     letter-spacing: .04em;
     color: var(--text-main);
-    border-right: 1px solid var(--border);
-    padding: 4px 12px 4px 2px;
+    padding: 4px 10px 4px 6px;
     line-height: 1.2;
     text-align: left;
     flex: none;
@@ -569,11 +568,18 @@ html[data-theme="dark"] .hero-sheen {
     box-shadow: none;
 }
 
-/* Pemisah tipis sebelum kontrol tema/tentang. */
+/* Kontrol tema/tentang: bagian dari kapsul, tanpa garis pemisah. */
 #workspace aside.sidebar .nav-bottom {
-    margin-left: 4px;
-    padding-left: 6px;
-    border-left: 1px solid var(--border);
+    margin-left: 2px;
+    padding-left: 0;
+}
+
+/* Tombol kembali: hanya di layar sempit saat modul terbuka (logo sidebar disembunyikan di sana).
+   Selektornya sengaja lebih spesifik dari `.nav-btn` supaya urutan aturan tidak menentukan. */
+#workspace aside.sidebar .nav-bottom .sidebar-back { display: none; }
+
+@media (max-width: 768px) {
+    #workspace.is-tool-open aside.sidebar .nav-bottom .sidebar-back { display: inline-flex; }
 }
 
 /* ===== DASHBOARD ===== */
@@ -778,28 +784,6 @@ html[data-theme="dark"] .hero-sheen {
     display: flex;
     flex-direction: column;
 }
-
-.hub-back {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    min-height: 44px;
-    padding: 0 16px;
-    background: var(--bg-card);
-    border: 0;
-    border-bottom: 1px solid var(--border);
-    color: var(--text-main);
-    font-family: var(--font-sans);
-    font-size: .82rem;
-    font-weight: 600;
-    cursor: pointer;
-    text-align: left;
-    z-index: 30;
-}
-
-.hub-back:hover { background: var(--surface2); }
 
 #frame-container.is-open #main-frame {
     flex: 1;
