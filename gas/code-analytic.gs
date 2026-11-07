@@ -13,7 +13,7 @@ function geminiKey_() {
 
 // Kunci tulis tim: Script Property BRIDGE_TOKEN (repo publik, jangan tulis nilainya di sini).
 function bridgeToken_() {
-  var t = PropertiesService.getScriptProperties().getProperty('BRIDGE_TOKEN');
+  var t = PropertiesService.getScriptProperties().getProperty('f71777528484496aa4dc15b12fdfca88');
   if (!t) throw new Error('BRIDGE_TOKEN belum diset di Script Properties project ini');
   return String(t).trim();
 }
@@ -80,6 +80,25 @@ function doGet(e) {
     var target = e.parameter.value;
     supabaseRequest_('post', '/rest/v1/settings?on_conflict=%22Key%22', [{ 'Key': 'Target', 'Value': target }]);
     return ContentService.createTextOutput(JSON.stringify({status: "success"}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 3.4. Simpan setting generik (dipakai anggaran per kategori: Key = BUDGET|<KATEGORI>)
+  //      Value kosong = hapus anggaran. Key 'Target' tetap lewat action saveTarget.
+  if (action === 'saveSetting') {
+    try { CacheService.getScriptCache().remove('dash_data_v2'); } catch(e) {}
+    var setKey = String(e.parameter.key || '').trim();
+    var setVal = e.parameter.value == null ? '' : String(e.parameter.value).trim();
+    if (!setKey) {
+      return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: 'key kosong' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    if (setKey === 'Target') {
+      return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: 'Target memakai action saveTarget' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    supabaseRequest_('post', '/rest/v1/settings?on_conflict=%22Key%22', [{ 'Key': setKey, 'Value': setVal }]);
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success', key: setKey }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 
@@ -300,7 +319,7 @@ function doPost(e) {
     }
 
     // Mutasi lewat POST (bukan GET) — logika tetap di doGet agar tidak duplikat.
-    if (action === 'saveTarget' || action === 'addBiaya' || action === 'updateBiaya' || action === 'deleteBiaya') {
+    if (action === 'saveTarget' || action === 'saveSetting' || action === 'addBiaya' || action === 'updateBiaya' || action === 'deleteBiaya') {
       return doGet({ parameter: requestData });
     }
 

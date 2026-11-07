@@ -191,6 +191,23 @@
             min-height: 44px;
         }
 
+        /* Rentang tanggal: kontrol ringkas, bukan kotak teks melar.
+           Sebelumnya input ini mewarisi min-height 44px + padding pada box model
+           content-box dan lebar 100%, sehingga tingginya 66px dan memenuhi satu
+           baris toolbar — terlihat seperti kolom teks kosong. */
+        .nav-bar #reportrange {
+            box-sizing: border-box;
+            flex: 0 1 240px;
+            width: 240px;
+            max-width: 280px;
+            min-width: 190px;
+            height: 44px;
+            min-height: 44px;
+            padding: 0 14px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         .theme-toggle {
             background: var(--surface2);
             border: 1px solid var(--border);
@@ -1614,8 +1631,8 @@
                 </button>
             </div>
             <div class="nav-group">
-                <input type="text" id="reportrange" aria-label="Pilih rentang tanggal" title="Pilih rentang tanggal"
-                    style="background: var(--surface); color: var(--text); cursor: pointer; padding: 10px 15px; border: 1px solid var(--border); border-radius: var(--radius-sm); width: 100%; min-width: 200px; font-weight: 700; font-size: 12px; outline:none; text-align:center;">
+                <input type="text" id="reportrange" readonly placeholder="Pilih rentang tanggal" aria-label="Pilih rentang tanggal" title="Pilih rentang tanggal"
+                    style="background: var(--surface); color: var(--text); cursor: pointer; border: 1px solid var(--border); border-radius: var(--radius-sm); box-sizing: border-box; font-weight: 700; font-size: 12px; outline:none; text-align:center;">
                 <input type="hidden" id="startDate"><input type="hidden" id="endDate">
                 <input type="hidden" id="comparisonMode" value="rolling">
                 <button class="no-print" onclick="window.print()" title="Cetak / Export PDF (A4)"
@@ -1829,6 +1846,7 @@
                         style="display:none; padding:6px 12px; font-size:11px; border-radius:var(--radius-xs); border:1px solid var(--border); background:var(--surface2); color:var(--text); font-weight:700; outline:none; max-width:260px;">
                         <option value="ALL">SEMUA RESELLER</option>
                     </select>
+                    <button onclick="exportProdukCSV()" title="Unduh data produk (terjual, HPP, laba kotor, retur) sebagai CSV" aria-label="Ekspor CSV produk" style="padding:6px 10px; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:var(--radius-sm); font-weight:800; font-size:11px; cursor:pointer; min-height:32px;">CSV</button>
                 </div>
             </div>
             <div style="overflow-x:auto;">
@@ -1876,6 +1894,69 @@
                 <div class="bento-title" style="color:var(--danger)">DETEKSI KEBOCORAN BIAYA</div>
             </div>
             <div id="opexList" style="display:flex; flex-direction:column; gap:8px; flex:1;"></div>
+        </div>
+
+        <!-- ROW 4C: RETENSI + RETUR PRODUK + KESEHATAN KATALOG -->
+        <div id="cardRetensi" class="bento-item col-span-4">
+            <div class="bento-header">
+                <div class="bento-title">RETENSI PELANGGAN <span class="help-icon" data-static-tooltip="Repeat rate = pelanggan dengan &gt;1 transaksi di rentang ini ÷ total pelanggan bertransaksi. Omzet Baru/Lama memakai pembelian pertama pelanggan (first purchase) dari RPC rekap.">?</span></div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:14px;">
+                <div>
+                    <div style="font-size:10px; font-weight:800; color:var(--muted);">REPEAT RATE</div>
+                    <div class="bento-value" id="retensiRepeat" style="font-size:26px;">—</div>
+                    <div id="retensiRepeatInfo" style="font-size:11px; font-weight:700; color:var(--muted);">—</div>
+                </div>
+                <div style="height:1px; background:var(--border);"></div>
+                <div>
+                    <div style="font-size:10px; font-weight:800; color:var(--muted);">OMZET PELANGGAN BARU vs LAMA</div>
+                    <div style="display:flex; justify-content:space-between; gap:10px; margin-top:6px;">
+                        <div><div style="font-size:10px; color:var(--muted); font-weight:700;">BARU</div><div id="retensiBaru" style="font-weight:900; font-size:14px; color:var(--success);">—</div></div>
+                        <div style="text-align:right;"><div style="font-size:10px; color:var(--muted); font-weight:700;">LAMA</div><div id="retensiLama" style="font-weight:900; font-size:14px; color:var(--primary);">—</div></div>
+                    </div>
+                    <div id="retensiSplit" style="height:8px; border-radius:var(--radius-xs); background:var(--surface2); overflow:hidden; display:flex; margin-top:8px;"></div>
+                </div>
+                <div style="height:1px; background:var(--border);"></div>
+                <div>
+                    <div style="font-size:10px; font-weight:800; color:var(--muted);">PALING SERING BELANJA</div>
+                    <div id="retensiList" style="display:flex; flex-direction:column; gap:6px; margin-top:6px; font-size:11px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="cardReturProduk" class="bento-item col-span-4">
+            <div class="bento-header">
+                <div class="bento-title">RETUR PER PRODUK <span class="help-icon" data-static-tooltip="Diurutkan dari nilai retur terbesar. Retur rate = Qty Retur ÷ (Qty Terjual + Qty Retur) pada produk itu.">?</span></div>
+            </div>
+            <div id="returSummary" style="font-size:11px; font-weight:700; color:var(--muted); margin-bottom:8px;">—</div>
+            <div id="returTopList" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+
+        <div id="cardKatalog" class="bento-item col-span-4">
+            <div class="bento-header">
+                <div class="bento-title">KESEHATAN KATALOG <span class="help-icon" data-static-tooltip="HPP kosong = Laba Bersih, Margin, dan Gross Profit produk itu salah. Tidak terjual = produk ada di master katalog tapi nol penjualan pada rentang aktif (indikasi dead stock).">?</span></div>
+                <button onclick="exportKatalogCSV()" title="Unduh daftar masalah katalog (CSV)" style="padding:6px 10px; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:var(--radius-sm); font-weight:800; font-size:11px; cursor:pointer;">CSV</button>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+                <div style="flex:1 1 45%; background:var(--warning-light); border:1px solid var(--warning); border-radius:var(--radius-sm); padding:8px 10px;">
+                    <div style="font-size:10px; font-weight:800; color:var(--warning-strong);">HPP KOSONG</div>
+                    <div id="katalogHpp" style="font-size:18px; font-weight:900; color:var(--text);">—</div>
+                </div>
+                <div style="flex:1 1 45%; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px 10px;">
+                    <div style="font-size:10px; font-weight:800; color:var(--muted);">TIDAK TERJUAL</div>
+                    <div id="katalogDead" style="font-size:18px; font-weight:900; color:var(--text);">—</div>
+                </div>
+            </div>
+            <div id="katalogList" style="display:flex; flex-direction:column; gap:6px; font-size:11px; color:var(--text);"></div>
+        </div>
+
+        <!-- ROW 4D: RIWAYAT 12 BULAN -->
+        <div id="cardRiwayat12" class="bento-item col-span-12">
+            <div class="bento-header">
+                <div class="bento-title">RIWAYAT 12 BULAN <span class="help-icon" data-static-tooltip="Satu panggilan RPC untuk 12 bulan terakhir, lalu dijumlahkan per bulan: Omzet Bersih, Retur, dan Biaya. Dimuat hanya saat tombol ditekan agar dashboard tetap ringan.">?</span></div>
+                <button onclick="muatRiwayat12()" id="btnRiwayat12" style="padding:6px 12px; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:var(--radius-sm); font-weight:800; font-size:11px; cursor:pointer;">Muat Riwayat</button>
+            </div>
+            <div id="riwayat12Body" style="font-size:12px; color:var(--muted);">Belum dimuat.</div>
         </div>
 
         <!-- ROW 5: VIP (4) + DIAGNOSTICS (8) -->
@@ -1980,6 +2061,16 @@
                 <span class="help-icon" data-static-tooltip="Seluruh angka di tab ini dihitung dari data Biaya pada rentang tanggal aktif. Mode komparasi membandingkan dengan rentang periode sebelumnya. Lain-lain = Kategori kosong/LAIN* → derive dari Keterangan Jurnal hanya 5 frasa iklan (shopee/tiktok/kyx/supersub/topup), selain itu tetap Lain-lain.">?</span>
             </div>
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <label style="font-size:11px; font-weight:700; color:var(--muted); display:flex; align-items:center; gap:6px;">Platform:
+                    <select id="biayaFilterPlatform" onchange="setBiayaFilter()" aria-label="Filter platform biaya" style="padding:6px 10px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text); font-weight:700; font-size:11px;">
+                        <option value="ALL">SEMUA</option>
+                    </select>
+                </label>
+                <label style="font-size:11px; font-weight:700; color:var(--muted); display:flex; align-items:center; gap:6px;">Toko:
+                    <select id="biayaFilterToko" onchange="setBiayaFilter()" aria-label="Filter nama toko biaya" style="padding:6px 10px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text); font-weight:700; font-size:11px;">
+                        <option value="ALL">SEMUA</option>
+                    </select>
+                </label>
                 <label style="font-size:11px; font-weight:700; color:var(--muted); display:flex; align-items:center; gap:6px;">Omzet:
                     <select id="biayaOmzetMode" style="padding:6px 10px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text); font-weight:700; font-size:11px;">
                         <option value="bersih">Omzet Bersih</option>
@@ -1995,6 +2086,10 @@
                     title="Upload Bulk Biaya — Keterangan Jurnal → Kategori" aria-label="Upload Bulk Biaya — Keterangan Jurnal → Kategori" style="padding:8px 12px; display:inline-flex; align-items:center; gap:6px; background:var(--warning); color:var(--on-primary); border:none; font-weight:800; font-size:12px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-size="9" font-weight="800" fill="currentColor" stroke="none">Rp</text></svg>
                     Upload Biaya
+                </button>
+                <button onclick="exportBiayaCSV()" title="Unduh baris biaya pada rentang & filter aktif (CSV)" aria-label="Ekspor CSV biaya" style="padding:8px 12px; display:inline-flex; align-items:center; gap:6px; background:var(--surface2); color:var(--text); border:1px solid var(--border); font-weight:800; font-size:12px; border-radius:var(--radius-sm); cursor:pointer; min-height:44px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    CSV
                 </button>
             </div>
         </div>
@@ -2153,9 +2248,62 @@
             </div>
             <div style="overflow-x:auto;">
                 <table id="biayaTable" class="display" style="width:100%;">
-                    <thead><tr><th>Tanggal</th><th>Kategori</th><th>Nominal</th><th style="width:120px;">Aksi</th></tr></thead>
+                    <thead><tr><th>Tanggal</th><th>No Bukti</th><th>Keterangan Jurnal</th><th>Kategori</th><th>Platform</th><th>Toko</th><th>Nominal</th><th style="width:120px;">Aksi</th></tr></thead>
                     <tbody id="biayaTableBody"></tbody>
                 </table>
+            </div>
+            <div id="biayaFilterInfo" style="font-size:10px; color:var(--muted); margin-top:8px;"></div>
+        </div>
+
+        <!-- ROW 5: PLATFORM/TOKO + ANGGARAN -->
+        <div id="cardBiayaPerToko" class="bento-item col-span-6">
+            <div class="bento-header">
+                <div class="bento-title">BIAYA PER PLATFORM &amp; TOKO <span class="help-icon" data-static-tooltip="Dihitung dari kolom Platform dan Nama Toko pada tabel biaya (diisi otomatis saat import jurnal, atau diturunkan dari Keterangan Jurnal). Menghormati filter Platform/Toko di header.">?</span></div>
+            </div>
+            <div style="overflow-x:auto;">
+                <table style="width:100%; font-size:12px; border-collapse:collapse;">
+                    <thead><tr><th style="text-align:left; padding:8px; color:var(--muted);">Toko</th><th style="text-align:left; padding:8px; color:var(--muted);">Platform</th><th style="text-align:right; padding:8px; color:var(--muted);">Total</th><th style="text-align:right; padding:8px; color:var(--muted);">Porsi</th><th style="text-align:right; padding:8px; color:var(--muted);">Entri</th></tr></thead>
+                    <tbody id="biayaTokoTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="cardBiayaBudget" class="bento-item col-span-6">
+            <div class="bento-header">
+                <div class="bento-title">ANGGARAN vs REALISASI <span class="help-icon" data-static-tooltip="Anggaran per kategori disimpan di tabel settings (Key = BUDGET|&lt;KATEGORI&gt;). Realisasi = total biaya kategori pada rentang aktif. Bar merah berarti realisasi melewati anggaran.">?</span></div>
+                <button onclick="bukaModalAnggaran()" style="padding:6px 10px; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:var(--radius-sm); font-weight:800; font-size:11px; cursor:pointer;">Atur Anggaran</button>
+            </div>
+            <div id="biayaBudgetList" style="display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+
+        <!-- ROW 6: BEP + ANOMALI -->
+        <div id="cardBiayaBep" class="bento-item col-span-4">
+            <div class="bento-header">
+                <div class="bento-title">TITIK IMPAS (BEP) <span class="help-icon" data-static-tooltip="Klasifikasi sederhana: biaya berlabel IKLAN/TOPUP/ADS/PROMOSI dianggap VARIABEL, sisanya TETAP. Margin kontribusi = (Omzet − HPP − Biaya Variabel) ÷ Omzet. BEP Omzet = Biaya Tetap ÷ Margin Kontribusi.">?</span></div>
+            </div>
+            <div id="biayaBepBody" style="font-size:12px; color:var(--text); display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+
+        <div id="cardBiayaAnomali" class="bento-item col-span-8">
+            <div class="bento-header">
+                <div class="bento-title">ANOMALI BIAYA <span class="help-icon" data-static-tooltip="Menandai hari dengan pengeluaran jauh di atas kebiasaan (lebih dari rata-rata + 2 simpangan baku) dan kategori yang naik lebih dari 50% dibanding periode pembanding. Selalu tampil, tidak menunggu klik AI.">?</span></div>
+            </div>
+            <div id="biayaAnomaliList" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+    </div>
+
+    <!-- Modal Anggaran per Kategori -->
+    <div id="budgetModal" role="dialog" aria-modal="true" aria-labelledby="budgetModalTitle" style="display:none; position:fixed; inset:0; background:var(--overlay); z-index:var(--z-modal); flex-direction:column; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+        <div style="background:var(--surface); padding:24px; border-radius:var(--radius-xl); box-shadow:var(--shadow-md); border:1px solid var(--border); width:92%; max-width:520px; max-height:86vh; overflow:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 id="budgetModalTitle" style="font-family:'Geomini', 'Plus Jakarta Sans', sans-serif; color:var(--text); margin:0; font-size:18px;">Anggaran per Kategori</h3>
+                <button onclick="document.getElementById('budgetModal').style.display='none'" aria-label="Tutup" style="background:none; border:none; cursor:pointer; color:var(--muted); font-size:24px; line-height:1; font-weight:800;">&times;</button>
+            </div>
+            <p style="color:var(--muted); font-size:12px; margin:0 0 14px; line-height:1.5;">Isi 0 atau kosongkan untuk menghapus anggaran kategori. Anggaran berlaku per kategori untuk setiap rentang tanggal.</p>
+            <div id="budgetFields" style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;"></div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button onclick="document.getElementById('budgetModal').style.display='none'" style="padding:10px 16px; background:none; border:1px solid var(--border); color:var(--muted); border-radius:var(--radius); font-weight:800; cursor:pointer; font-size:12px;">BATAL</button>
+                <button id="btnSaveBudget" onclick="simpanAnggaran()" style="padding:10px 16px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:var(--radius); font-weight:800; cursor:pointer; font-size:12px;">SIMPAN ANGGARAN</button>
             </div>
         </div>
     </div>
@@ -2198,7 +2346,7 @@
           circle: '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6"/></svg>',
           question: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
         };
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyIEtC_S0q7ObAsHxxfP9UsVe2l1CAknAQWT4EdzJex17vBoy6sX9ano42XKEx2jTfLpw/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwbwuQYKeEztqIi5wSlK7wZH-kzFyjnAp3w07x5MKLQAMKMOZaJpmMWCaOZDiwaL43C_g/exec';
 
         // Kunci tulis tim (BRIDGE_TOKEN di GAS). Ditanam di halaman: tanpa prompt.
         // Risiko diterima: siapa pun yang membuka halaman ini bisa ikut menulis data.
@@ -4151,6 +4299,16 @@
             }, 300);
 
             renderCharts(Object.values(rekapTren).sort((a, b) => a.ts - b.ts), rekapKat, rekapProd, grossProfit, netProfit, totalBiaya, rekapHari);
+
+            // Kartu lanjutan (retensi, retur per produk, kesehatan katalog) memakai hasil prosesData ini.
+            try {
+                renderKartuLanjutan_({
+                    freqPelanggan: freqPelanggan,
+                    omzetBaru: omzetBaru,
+                    omzetLama: omzetLama,
+                    rekapProdukDetail: rekapProdukDetail
+                });
+            } catch (e) { console.warn('Kartu lanjutan gagal dirender:', e); }
         }
 
         let _trendDaily = [];
@@ -6097,23 +6255,9 @@
                     }
                     _biayaUploadRows = out;
                     document.getElementById('biayaPreviewBox').style.display = 'block';
-                    document.getElementById('biayaTotalRows').textContent = out.length;
-                    const tb = document.getElementById('biayaPreviewTableBody');
-                    const info = document.getElementById('biayaPreviewInfo');
-                    if (tb) {
-                        const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                        tb.innerHTML = out.slice(0,8).map(r=> { const alasan = r._alasan || getBiayaDeriveReason_(r['Keterangan Jurnal'], r._katBefore || ''); return `<tr style="border-top:1px solid var(--border);"><td style="padding:6px 8px; color:var(--text);">${esc(r['No Bukti'])}</td><td style="padding:6px 8px; color:var(--text); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${esc(r['Keterangan Jurnal'])}">${esc(r['Keterangan Jurnal'])}</td><td style="padding:6px 8px; font-weight:800; color:var(--primary);">${esc(r['Kategori Biaya'])}</td><td style="padding:6px 8px; color:var(--muted); font-size:10px;">${esc(alasan)}</td><td style="padding:6px 8px; text-align:right; color:var(--text);">${r.Debit.toLocaleString('id-ID')}</td></tr>`; }).join('') || '<tr><td colspan="5" style="padding:10px; text-align:center; color:var(--muted);">-</td></tr>';
-                    }
-                    if (info) {
-                        const cnt = {};
-                        out.forEach(r=>{ const k=r['Kategori Biaya']||'LAIN-LAIN'; cnt[k]=(cnt[k]||0)+1; });
-                        const ringkas = Object.entries(cnt).map(([k,c])=> `${k}: ${c}`).join(' · ');
-                        info.textContent = (out.length > 8 ? `Menampilkan 8 dari ${out.length} baris — ` : '') + ringkas;
-                    }
-                    const btn = document.getElementById('btnSubmitBiayaUpload');
-                    btn.disabled = out.length === 0;
-                    btn.style.opacity = out.length === 0 ? '0.5' : '1';
-                    if (out.length === 0)                     showToast('Tidak ada baris valid (periksa No Bukti, Keterangan Jurnal, Debit).', 'error');
+                    renderBiayaPreview_(out);
+                    tandaiDuplikatBiaya_(out).then(() => renderBiayaPreview_(out));
+                    if (out.length === 0) showToast('Tidak ada baris valid (periksa No Bukti, Keterangan Jurnal, Debit).', 'error');
                 } catch (err) {
                     console.error(err);
                     showToast('Gagal membaca file. Pastikan file Excel (.xlsx/.xls) yang valid, lalu coba lagi.', 'error');
@@ -6186,29 +6330,25 @@
                 out.push({ Tanggal: tgl, 'No Bukti': noBukti, 'Keterangan Jurnal': ket, Debit: deb, 'Kategori Biaya': kat, _katBefore: katBefore, _alasan: getBiayaDeriveReason_(ket, katBefore) });
             }
             document.getElementById('biayaMappingBox').style.display = 'none';
-            window._biayaUploadRows = out;
             document.getElementById('biayaPreviewBox').style.display = 'block';
-            document.getElementById('biayaTotalRows').textContent = out.length;
-            const tb = document.getElementById('biayaPreviewTableBody');
-            const info = document.getElementById('biayaPreviewInfo');
-            if (tb) {
-                const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                tb.innerHTML = out.slice(0,8).map(r=> { const alasan = r._alasan || getBiayaDeriveReason_(r['Keterangan Jurnal'], r._katBefore || ''); return `<tr style="border-top:1px solid var(--border);"><td style="padding:6px 8px; color:var(--text);">${esc(r['No Bukti'])}</td><td style="padding:6px 8px; color:var(--text); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${esc(r['Keterangan Jurnal'])}">${esc(r['Keterangan Jurnal'])}</td><td style="padding:6px 8px; font-weight:800; color:var(--primary);">${esc(r['Kategori Biaya'])}</td><td style="padding:6px 8px; color:var(--muted); font-size:10px;">${esc(alasan)}</td><td style="padding:6px 8px; text-align:right; color:var(--text);">${r.Debit.toLocaleString('id-ID')}</td></tr>`; }).join('') || '<tr><td colspan="5" style="padding:10px; text-align:center; color:var(--muted);">-</td></tr>';
-            }
-            if (info) info.textContent = out.length > 8 ? `Menampilkan 8 dari ${out.length} baris` : '';
-            const btn = document.getElementById('btnSubmitBiayaUpload');
-            btn.disabled = out.length === 0;
-            btn.style.opacity = out.length === 0 ? '0.5' : '1';
-            if (out.length === 0)                     showToast('Tidak ada baris valid (periksa No Bukti, Keterangan Jurnal, Debit).', 'error');
+            _biayaUploadRows = out;
+            window._biayaUploadRows = out;
+            renderBiayaPreview_(out);
+            tandaiDuplikatBiaya_(out).then(() => renderBiayaPreview_(out));
+            if (out.length === 0) showToast('Tidak ada baris valid (periksa No Bukti, Keterangan Jurnal, Debit).', 'error');
         }
         function sendBiayaToGAS() {
             if (!_biayaUploadRows.length) return showToast('Pilih file Excel terlebih dahulu!', 'error');
+            // Baris yang terdeteksi sudah ada di database (pratinjau) tidak dikirim ulang.
+            const rowsKirim = _biayaUploadRows.filter(r => !r._dup);
+            const dilewatiLokal = _biayaUploadRows.length - rowsKirim.length;
+            if (!rowsKirim.length) return showToast('Semua baris sudah ada di database — tidak ada yang perlu dikirim.', 'warning');
             lockBtn(document.getElementById('btnSubmitBiayaUpload'), 'Mengirim...');
             showProcessingOverlayWithProgress('Mengunggah Biaya Bulk...', 'Menghubungkan ke server...');
             // ponytail: chunk 1000 baris/request (alasan sama dengan upload transaksi)
             const CHUNK_ROWS_BIAYA = 1000;
             const chunks = [];
-            for (let i = 0; i < _biayaUploadRows.length; i += CHUNK_ROWS_BIAYA) chunks.push(_biayaUploadRows.slice(i, i + CHUNK_ROWS_BIAYA));
+            for (let i = 0; i < rowsKirim.length; i += CHUNK_ROWS_BIAYA) chunks.push(rowsKirim.slice(i, i + CHUNK_ROWS_BIAYA));
             let doneChunks = 0;
             const acc = { added: 0, skipped: 0 };
             window.isProcessingGAS = true;
@@ -6217,7 +6357,7 @@
                 if (!window.isProcessingGAS) { clearInterval(progressTimer); return; }
                 const target = (doneChunks / chunks.length) * 90;
                 if (currentProgress < target) currentProgress = Math.min(target, currentProgress + 5);
-                statusText = `Mengirim bagian ${Math.min(doneChunks + 1, chunks.length)}/${chunks.length} (${_biayaUploadRows.length} baris)...`;
+                statusText = `Mengirim bagian ${Math.min(doneChunks + 1, chunks.length)}/${chunks.length} (${rowsKirim.length} baris)...`;
                 updateProcessingProgress(currentProgress, statusText);
             }, 200);
             const postChunk = (rows) => fetch(API_URL, {
@@ -6236,7 +6376,7 @@
                     closeBiayaUploadModal();
                     unlockBtn(document.getElementById('btnSubmitBiayaUpload'));
                     // Konfirmasi sukses LANGSUNG: data sudah tersimpan di DB.
-                    const msg = `<b>Import Biaya Berhasil!</b><br>• Baris Baru: <b>${acc.added}</b><br>• Baris Skip (Duplikat): <b>${acc.skipped}</b>`;
+                    const msg = `<b>Import Biaya Berhasil!</b><br>• Baris Baru: <b>${acc.added}</b><br>• Baris Skip (Duplikat): <b>${acc.skipped + dilewatiLokal}</b>`;
                     showSuccessOverlay('Import Biaya Selesai', msg, 4000);
                     // Dynamic Sync di latar belakang; gagal hanya tampilkan toast kecil.
                     syncDashboardData().then(ok => {
@@ -6290,7 +6430,7 @@
             // (policy RLS "allow public read", lihat supabase/migrasi_analytic.sql).
             if (DATA_SOURCE === 'supabase') {
                 const p = new URLSearchParams({
-                    select: 'id,"Tanggal","Kategori Biaya","Nominal","Keterangan Jurnal"',
+                    select: 'id,"Tanggal","Kategori Biaya","Nominal","Keterangan Jurnal","No Bukti","Platform","Nama Toko","Debit"',
                     order: '"Tanggal".asc'
                 });
                 p.append('"Tanggal"', 'gte.' + startIso);
@@ -6355,22 +6495,25 @@
             const prevKey = prev.start + '|' + prev.end;
             try {
                 if (_biayaRangeKey !== key) {
-                    _biayaRowsCur = await fetchBiayaRows(gStart, gEnd);
+                    _biayaRowsAll = await fetchBiayaRows(gStart, gEnd);
                     _biayaRangeKey = key;
                 }
                 if (_biayaPrevKey !== prevKey) {
-                    _biayaRowsPrev = await fetchBiayaRows(prev.start, prev.end);
+                    _biayaRowsPrevAll = await fetchBiayaRows(prev.start, prev.end);
                     _biayaPrevKey = prevKey;
                 }
                 // Rentang tanpa baris biaya bukan error — beri hint tanggal data terakhir.
-                if ((!_biayaRowsCur || _biayaRowsCur.length === 0) && !_biayaLatestIso) {
+                if ((!_biayaRowsAll || _biayaRowsAll.length === 0) && !_biayaLatestIso) {
                     try { _biayaLatestIso = await fetchBiayaLatestIso(); } catch (e) {}
                 }
+                // Anggaran disimpan di tabel settings — muat sekali, lalu pakai cache.
+                if (!_settingsMap) { try { await fetchSettingsMap_(); } catch (e) {} }
+                fillBiayaFilterOptions_();
+                terapkanFilterBiaya_(false);
                 drawBiaya();
             } catch (err) {
                 console.error('Gagal memuat data biaya:', err);
-                const tbody = document.getElementById('biayaTableBody');
-                if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="color:var(--danger); text-align:center; padding:20px;">Gagal memuat data biaya. Periksa koneksi lalu coba lagi. <span style="display:block; margin-top:6px; font-size:11px; color:var(--muted);">' + String(err && err.message ? err.message : err) + '</span></td></tr>';
+                const tbody = document.getElementById('biayaTableBody');                    if (tbody) tbody.innerHTML = '<tr><td colspan="8" style="color:var(--danger); text-align:center; padding:20px;">Gagal memuat data biaya. Periksa koneksi lalu coba lagi. <span style="display:block; margin-top:6px; font-size:11px; color:var(--muted);">' + String(err && err.message ? err.message : err) + '</span></td></tr>';
             }
         }
 
@@ -6675,18 +6818,29 @@
                 }
                 const nom = parseFloat(r['Nominal']) || 0;
                 const tglFmt = new Date(tgl + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-                return `<tr><td>${tglFmt}</td><td>${kat}</td><td>${fmtRpBiaya(nom)}</td>
+                const noBukti = String(r['No Bukti'] || '');
+                const ket = String(r['Keterangan Jurnal'] || r['Keterangan'] || '');
+                const plat = biayaPlatformOf_(r);
+                const toko = biayaTokoOf_(r);
+                const kosong = '<span style="color:var(--muted);">—</span>';
+                return `<tr><td>${tglFmt}</td>
+                    <td style="color:var(--muted); font-size:11px;">${noBukti ? escHtml_(noBukti) : kosong}</td>
+                    <td style="max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escHtml_(ket)}">${ket ? escHtml_(ket) : kosong}</td>
+                    <td>${escHtml_(kat)}</td>
+                    <td style="font-size:11px;">${plat === 'Tanpa Platform' ? kosong : escHtml_(plat)}</td>
+                    <td style="font-size:11px;">${toko === 'Tanpa Toko' ? kosong : escHtml_(toko)}</td>
+                    <td>${fmtRpBiaya(nom)}</td>
                     <td><div style="display:flex; gap:6px;">
                         <button onclick="editBiayaRow(${id})" class="theme-toggle" title="Edit" style="padding:6px 10px; color:var(--primary); font-weight:800; font-size:11px;">EDIT</button>
                         <button onclick="deleteBiayaRow(${id}, this)" class="theme-toggle" title="Hapus" style="padding:6px 10px; color:var(--danger); font-weight:800; font-size:11px;">HAPUS</button>
                     </div></td></tr>`;
-            }).join('') || ('<tr><td colspan="4" style="text-align:center; color:var(--muted); padding:20px;">Belum ada biaya pada rentang ini.' +
+            }).join('') || ('<tr><td colspan="8" style="text-align:center; color:var(--muted); padding:20px;">Belum ada biaya pada rentang ini.' +
                 (_biayaLatestIso
                     ? ' <span style="display:block; margin-top:6px; font-size:11px;">Data biaya terakhir: ' + new Date(_biayaLatestIso + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) + ' — perluas rentang tanggal.</span>'
                     : '') +
                 '</td></tr>');
             if (window.$ && $.fn.DataTable && (_biayaRowsCur || []).length > 0) {
-                _biayaDataTable = $('#biayaTable').DataTable({ pageLength: 10, lengthChange: false, order: [], columns: [null, null, null, { orderable: false }] });
+                _biayaDataTable = $('#biayaTable').DataTable({ pageLength: 10, lengthChange: false, order: [], columns: [null, null, null, null, null, null, null, { orderable: false }] });
             }
         }
 
@@ -6827,6 +6981,526 @@
             renderBiayaKomposisi();
             renderBiayaRank();
             renderBiayaTable();
+            renderBiayaPerToko();
+            renderBiayaBudget();
+            renderBiayaBep();
+            renderBiayaAnomali();
+        }
+
+        /* ============================================================
+           ANALYTICS LANJUTAN (Group A & B)
+           CSV, filter Platform/Toko, biaya per toko, anggaran, BEP,
+           anomali, retensi, retur per produk, kesehatan katalog,
+           riwayat 12 bulan, deteksi duplikat import biaya.
+           Semua MEMBACA data yang sudah ada (transaksi, produk, biaya
+           + kolom jurnal, settings). Tidak ada perubahan skema.
+           ============================================================ */
+        const HARI_MS = 86400000;
+        const escHtml_ = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        const SUPABASE_HEADERS_ = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY };
+
+        function csvCell_(v) {
+            const s = String(v == null ? '' : v);
+            return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+        }
+        function downloadCSV_(filename, header, rows) {
+            const lines = [header.map(csvCell_).join(';')].concat((rows || []).map(r => r.map(csvCell_).join(';')));
+            const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { URL.revokeObjectURL(a.href); if (a.parentNode) a.remove(); }, 0);
+            showToast('CSV diunduh: ' + filename, 'success');
+        }
+        function rentangTag_() {
+            const s = document.getElementById('startDate').value || 'awal';
+            const e = document.getElementById('endDate').value || 'akhir';
+            return s + '_sd_' + e;
+        }
+
+        /* ---------- A2: Platform / Nama Toko ---------- */
+        let _biayaRowsAll = [], _biayaRowsPrevAll = [];
+        let _biayaFilterPlatform = 'ALL', _biayaFilterToko = 'ALL';
+        function biayaPlatformOf_(r) {
+            const p = String(r['Platform'] || '').trim();
+            if (p) return p;
+            const k = String(r['Keterangan Jurnal'] || r['Keterangan'] || '').toLowerCase();
+            if (k.indexOf('tiktok') >= 0) return 'TikTok';
+            if (k.indexOf('shopee') >= 0) return 'Shopee';
+            return 'Tanpa Platform';
+        }
+        function biayaTokoOf_(r) {
+            const t = String(r['Nama Toko'] || '').trim();
+            if (t) return t;
+            const k = String(r['Keterangan Jurnal'] || r['Keterangan'] || '').toLowerCase();
+            if (k.indexOf('supersub') >= 0) return 'Supersub';
+            if (k.indexOf('kyx') >= 0) return 'KYX';
+            return 'Tanpa Toko';
+        }
+        function biayaLolosFilter_(r) {
+            if (_biayaFilterPlatform !== 'ALL' && biayaPlatformOf_(r) !== _biayaFilterPlatform) return false;
+            if (_biayaFilterToko !== 'ALL' && biayaTokoOf_(r) !== _biayaFilterToko) return false;
+            return true;
+        }
+        function fillBiayaFilterOptions_() {
+            const setP = {}, setT = {};
+            (_biayaRowsAll || []).concat(_biayaRowsPrevAll || []).forEach(r => { setP[biayaPlatformOf_(r)] = 1; setT[biayaTokoOf_(r)] = 1; });
+            const isi = (id, nilai, current) => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                const opts = ['ALL'].concat(Object.keys(nilai).sort());
+                sel.innerHTML = opts.map(v => '<option value="' + escHtml_(v) + '">' + (v === 'ALL' ? 'SEMUA' : escHtml_(v)) + '</option>').join('');
+                sel.value = opts.indexOf(current) >= 0 ? current : 'ALL';
+            };
+            isi('biayaFilterPlatform', setP, _biayaFilterPlatform);
+            isi('biayaFilterToko', setT, _biayaFilterToko);
+        }
+        function setBiayaFilter() {
+            const p = document.getElementById('biayaFilterPlatform');
+            const t = document.getElementById('biayaFilterToko');
+            _biayaFilterPlatform = p ? p.value : 'ALL';
+            _biayaFilterToko = t ? t.value : 'ALL';
+            terapkanFilterBiaya_(true);
+        }
+        function terapkanFilterBiaya_(gambar) {
+            _biayaRowsCur = (_biayaRowsAll || []).filter(biayaLolosFilter_);
+            _biayaRowsPrev = (_biayaRowsPrevAll || []).filter(biayaLolosFilter_);
+            const info = document.getElementById('biayaFilterInfo');
+            if (info) {
+                const aktif = _biayaFilterPlatform !== 'ALL' || _biayaFilterToko !== 'ALL';
+                info.textContent = aktif
+                    ? 'Filter aktif — ' + _biayaRowsCur.length + ' dari ' + (_biayaRowsAll || []).length + ' baris ditampilkan (semua kartu mengikuti filter).'
+                    : '';
+            }
+            if (gambar) drawBiaya();
+        }
+
+        /* ---------- A5: ekspor CSV ---------- */
+        function exportBiayaCSV() {
+            const rows = (_biayaRowsCur || []).map(r => [
+                String(r['Tanggal'] || '').slice(0, 10),
+                String(r['No Bukti'] || ''),
+                String(r['Keterangan Jurnal'] || r['Keterangan'] || ''),
+                String(r['Kategori Biaya'] || ''),
+                biayaPlatformOf_(r) === 'Tanpa Platform' ? '' : biayaPlatformOf_(r),
+                biayaTokoOf_(r) === 'Tanpa Toko' ? '' : biayaTokoOf_(r),
+                (parseFloat(r['Nominal']) || 0)
+            ]);
+            if (!rows.length) return showToast('Tidak ada baris biaya untuk diekspor pada rentang ini.', 'warning');
+            downloadCSV_('biaya_' + rentangTag_() + '.csv', ['Tanggal', 'No Bukti', 'Keterangan Jurnal', 'Kategori Biaya', 'Platform', 'Nama Toko', 'Nominal'], rows);
+        }
+        function exportProdukCSV() {
+            const detail = window.__rekapProdukDetailLast || {};
+            const rows = Object.keys(detail).map(p => {
+                const x = detail[p] || {};
+                const qty = x.qty || 0, rq = x.returQty || 0;
+                return [p, qty, x.sales || 0, x.cogs || 0, (x.sales || 0) - (x.cogs || 0), rq, x.returRp || 0, (qty + rq) > 0 ? (rq / (qty + rq) * 100).toFixed(2) : '0'];
+            }).sort((a, b) => b[2] - a[2]);
+            if (!rows.length) return showToast('Tidak ada data produk untuk diekspor pada rentang ini.', 'warning');
+            downloadCSV_('produk_' + rentangTag_() + '.csv', ['Produk', 'Qty Terjual', 'Penjualan', 'HPP', 'Laba Kotor', 'Qty Retur', 'Nilai Retur', 'Retur Rate %'], rows);
+        }
+
+        /* ---------- A2: kartu biaya per platform & toko ---------- */
+        function renderBiayaPerToko() {
+            const tbody = document.getElementById('biayaTokoTable');
+            if (!tbody) return;
+            const map = {};
+            (_biayaRowsCur || []).forEach(r => {
+                const toko = biayaTokoOf_(r), plat = biayaPlatformOf_(r);
+                const key = toko + '|' + plat;
+                if (!map[key]) map[key] = { toko: toko, plat: plat, total: 0, n: 0 };
+                map[key].total += parseFloat(r['Nominal']) || 0;
+                map[key].n += 1;
+            });
+            const arr = Object.keys(map).map(k => map[k]).sort((a, b) => b.total - a.total);
+            const total = _biayaTotalCur || 0;
+            tbody.innerHTML = arr.map(x => `<tr style="border-top:1px solid var(--border);">
+                <td style="padding:8px; color:var(--text); font-weight:700;">${escHtml_(x.toko)}</td>
+                <td style="padding:8px; color:var(--muted);">${escHtml_(x.plat)}</td>
+                <td style="padding:8px; text-align:right; color:var(--text); font-weight:800;">${fmtRpBiaya(x.total)}</td>
+                <td style="padding:8px; text-align:right; color:var(--muted);">${total > 0 ? (x.total / total * 100).toFixed(1) : '0.0'}%</td>
+                <td style="padding:8px; text-align:right; color:var(--muted);">${x.n}</td></tr>`).join('')
+                || '<tr><td colspan="5" style="padding:14px; text-align:center; color:var(--muted);">Tidak ada baris biaya pada rentang/filter ini.</td></tr>';
+        }
+
+        /* ---------- A7: anggaran per kategori (tabel settings) ---------- */
+        let _settingsMap = null;
+        const BUDGET_PREFIX_ = 'BUDGET|';
+        async function fetchSettingsMap_(force) {
+            if (DATA_SOURCE !== 'supabase') return null;
+            if (_settingsMap && !force) return _settingsMap;
+            try {
+                const res = await fetch(SUPABASE_URL + '/rest/v1/settings?select=' + encodeURIComponent('"Key","Value"') + '&order=id.asc', { headers: SUPABASE_HEADERS_ });
+                if (!res.ok) throw new Error('Supabase ' + res.status);
+                const data = await res.json();
+                const m = {};
+                (Array.isArray(data) ? data : []).forEach(s => { if (s && s.Key != null) m[String(s.Key)] = s.Value; });
+                _settingsMap = m;
+            } catch (e) {
+                console.warn('Gagal memuat settings (anggaran):', e);
+            }
+            return _settingsMap || {};
+        }
+        function budgetMap_() {
+            const m = {};
+            const src = _settingsMap || {};
+            Object.keys(src).forEach(k => {
+                if (k.indexOf(BUDGET_PREFIX_) !== 0) return;
+                const kat = k.slice(BUDGET_PREFIX_.length);
+                const v = parseFloat(String(src[k] == null ? '' : src[k]).replace(/[^0-9.-]/g, ''));
+                if (kat && !isNaN(v) && v > 0) m[kat] = v;
+            });
+            return m;
+        }
+        function renderBiayaBudget() {
+            const box = document.getElementById('biayaBudgetList');
+            if (!box) return;
+            const budgets = budgetMap_();
+            const aktual = {};
+            (_biayaCatCur || []).forEach(x => { aktual[x[0]] = x[1]; });
+            const cats = Array.from(new Set(Object.keys(aktual).concat(Object.keys(budgets))));
+            cats.sort((a, b) => (aktual[b] || 0) - (aktual[a] || 0));
+            if (!cats.length) {
+                box.innerHTML = '<div style="color:var(--muted); font-size:12px;">Belum ada biaya pada rentang ini. Anggaran tetap bisa diatur lewat tombol Atur Anggaran.</div>';
+                return;
+            }
+            box.innerHTML = cats.slice(0, 8).map(kat => {
+                const ang = budgets[kat] || 0;
+                const real = aktual[kat] || 0;
+                const pct = ang > 0 ? (real / ang * 100) : null;
+                const warna = pct === null ? 'var(--muted)' : (pct > 100 ? 'var(--danger)' : (pct >= 85 ? 'var(--warning)' : 'var(--success)'));
+                const lebar = pct === null ? 0 : Math.min(100, Math.max(2, pct));
+                return `<div>
+                    <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:800; gap:8px;">
+                        <span style="color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml_(kat)}</span>
+                        <span style="color:${warna}; white-space:nowrap;">${pct === null ? 'belum dianggarkan (' + fmtRpBiaya(real) + ')' : fmtRpBiaya(real) + ' / ' + fmtRpBiaya(ang) + ' (' + pct.toFixed(0) + '%)'}</span>
+                    </div>
+                    <div style="height:6px; border-radius:var(--radius-xs); background:var(--surface2); margin-top:4px; overflow:hidden;">
+                        <div style="height:100%; width:${lebar}%; background:${warna};"></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        async function bukaModalAnggaran() {
+            const box = document.getElementById('budgetFields');
+            if (!box) return;
+            document.getElementById('budgetModal').style.display = 'flex';
+            box.innerHTML = '<div style="color:var(--muted); font-size:12px;">Memuat daftar kategori...</div>';
+            await fetchSettingsMap_();
+            const budgets = budgetMap_();
+            const cats = Array.from(new Set((_biayaCatCur || []).map(x => x[0]).concat(Object.keys(budgets)))).sort();
+            box.innerHTML = cats.length ? cats.map(kat => `<label style="display:flex; align-items:center; gap:10px; font-size:12px; font-weight:700; color:var(--text);">
+                    <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml_(kat)}</span>
+                    <input type="number" data-budget-kat="${escHtml_(kat)}" min="0" step="1000" value="${budgets[kat] || ''}" placeholder="0" style="width:150px; padding:8px 10px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--bg); color:var(--text); font-weight:700; font-size:12px;">
+                </label>`).join('')
+                : '<div style="color:var(--muted); font-size:12px;">Belum ada kategori biaya pada rentang ini, jadi belum ada yang bisa dianggarkan.</div>';
+        }
+        async function simpanAnggaran() {
+            const inputs = Array.prototype.slice.call(document.querySelectorAll('#budgetFields input[data-budget-kat]'));
+            if (!inputs.length) { document.getElementById('budgetModal').style.display = 'none'; return; }
+            const btn = document.getElementById('btnSaveBudget');
+            if (btn) { btn.disabled = true; btn.textContent = 'MENYIMPAN...'; }
+            try {
+                for (let i = 0; i < inputs.length; i++) {
+                    const kat = inputs[i].getAttribute('data-budget-kat');
+                    const val = String(inputs[i].value || '').trim();
+                    const res = await postAction('saveSetting', { key: BUDGET_PREFIX_ + kat, value: val });
+                    let data = null;
+                    try { data = await res.json(); } catch (e) { data = null; }
+                    if (!data || data.status !== 'success') throw new Error((data && data.message) || 'Server tidak mengembalikan status sukses');
+                }
+                await fetchSettingsMap_(true);
+                document.getElementById('budgetModal').style.display = 'none';
+                renderBiayaBudget();
+                showToast('Anggaran tersimpan.', 'success');
+            } catch (err) {
+                console.error('Gagal menyimpan anggaran:', err);
+                showToast('Anggaran belum tersimpan. Pastikan backend GAS sudah memuat aksi saveSetting (deploy ulang gas/code-analytic.gs).', 'error');
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = 'SIMPAN ANGGARAN'; }
+            }
+        }
+
+        /* ---------- B12: titik impas (BEP) ---------- */
+        function renderBiayaBep() {
+            const box = document.getElementById('biayaBepBody');
+            if (!box) return;
+            const omzetMode = getBiayaOmzetMode_();
+            const netSales = typeof __lastNetSales === 'number' ? __lastNetSales : 0;
+            const grossSales = typeof __lastGrossSales === 'number' ? __lastGrossSales : netSales;
+            const omzet = omzetMode === 'kotor' ? grossSales : netSales;
+            const cogs = typeof __lastCogs === 'number' ? __lastCogs : 0;
+            const isVariabel = (k) => /IKLAN|ADS|PROMOSI|MARKETING/.test(String(k).toUpperCase());
+            let variabel = 0, tetap = 0;
+            (_biayaCatCur || []).forEach(x => { if (isVariabel(x[0])) variabel += x[1]; else tetap += x[1]; });
+            const cm = omzet > 0 ? (omzet - cogs - variabel) / omzet : 0;
+            const bep = cm > 0 ? tetap / cm : null;
+            const sisa = bep !== null ? omzet - bep : null;
+            const baris = (label, val, color) => `<div style="display:flex; justify-content:space-between; gap:8px;"><span style="color:var(--muted); font-weight:700;">${label}</span><span style="font-weight:900; color:${color || 'var(--text)'}; text-align:right;">${val}</span></div>`;
+            box.innerHTML = [
+                baris('Biaya Tetap', fmtRpBiaya(tetap)),
+                baris('Biaya Variabel (iklan/topup)', fmtRpBiaya(variabel)),
+                baris('Margin Kontribusi', cm > 0 ? (cm * 100).toFixed(1) + '%' : '—'),
+                baris('BEP Omzet', bep === null ? 'tidak bisa dihitung' : fmtRpBiaya(bep)),
+                baris(omzetMode === 'kotor' ? 'Omzet Kotor' : 'Omzet Bersih', fmtRpBiaya(omzet)),
+                baris('Posisi', bep === null ? 'margin kontribusi ≤ 0' : (sisa >= 0 ? 'di atas BEP ' + fmtRpBiaya(sisa) : 'di bawah BEP ' + fmtRpBiaya(Math.abs(sisa))), bep !== null ? (sisa >= 0 ? 'var(--success)' : 'var(--danger)') : 'var(--muted)')
+            ].join('');
+        }
+
+        /* ---------- B14: anomali biaya ---------- */
+        function renderBiayaAnomali() {
+            const box = document.getElementById('biayaAnomaliList');
+            if (!box) return;
+            const perHari = {};
+            (_biayaRowsCur || []).forEach(r => {
+                const d = String(r['Tanggal'] || '').slice(0, 10);
+                if (!d) return;
+                perHari[d] = (perHari[d] || 0) + (parseFloat(r['Nominal']) || 0);
+            });
+            const hari = Object.keys(perHari);
+            const items = [];
+            if (hari.length >= 5) {
+                const nilai = hari.map(d => perHari[d]);
+                const rata = nilai.reduce((a, b) => a + b, 0) / nilai.length;
+                const sd = Math.sqrt(nilai.reduce((a, b) => a + (b - rata) * (b - rata), 0) / nilai.length);
+                hari.filter(d => sd > 0 && perHari[d] > rata + 2 * sd)
+                    .sort((a, b) => perHari[b] - perHari[a])
+                    .slice(0, 4)
+                    .forEach(d => items.push(`<div class="item-row" style="display:flex; justify-content:space-between; gap:8px;"><span style="color:var(--text);"><b style="color:var(--danger);">Lonjakan harian</b> ${new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span><span style="font-weight:900; color:var(--danger);">${fmtRpBiaya(perHari[d])}</span></div>`));
+            }
+            const prevAgg = _biayaAggPrev || {};
+            const totalPrev = Object.keys(prevAgg).reduce((a, k) => a + prevAgg[k], 0);
+            if (totalPrev > 0) {
+                Object.keys(prevAgg).forEach(kat => {
+                    const vLalu = prevAgg[kat] || 0;
+                    const found = (_biayaCatCur || []).find(x => x[0] === kat);
+                    const vSkrg = found ? found[1] : 0;
+                    if (vLalu > 0 && vSkrg > vLalu * 1.5) {
+                        items.push(`<div class="item-row" style="display:flex; justify-content:space-between; gap:8px;"><span style="color:var(--text);"><b style="color:var(--warning-strong);">Kategori naik &gt;50%</b> ${escHtml_(kat)}</span><span style="font-weight:900; color:var(--warning-strong);">${fmtRpBiaya(vLalu)} → ${fmtRpBiaya(vSkrg)}</span></div>`);
+                    }
+                });
+            }
+            box.innerHTML = items.length ? items.slice(0, 6).join('') : '<div class="item-row" style="color:var(--muted);">Tidak ada anomali mencolok pada rentang ini.</div>';
+        }
+
+        /* ---------- B9: retensi pelanggan ---------- */
+        function renderRetensiPelanggan(d) {
+            const freq = (d && d.freqPelanggan) || {};
+            const keys = Object.keys(freq);
+            const repeat = keys.filter(k => (freq[k] || 0) > 1).length;
+            const el = (id) => document.getElementById(id);
+            if (el('retensiRepeat')) el('retensiRepeat').textContent = keys.length ? (repeat / keys.length * 100).toFixed(1) + '%' : '—';
+            if (el('retensiRepeatInfo')) el('retensiRepeatInfo').textContent = keys.length ? repeat + ' dari ' + keys.length + ' pelanggan belanja lebih dari 1x' : 'Belum ada pelanggan pada rentang ini';
+            const baru = d.omzetBaru || 0, lama = d.omzetLama || 0;
+            if (el('retensiBaru')) el('retensiBaru').textContent = formatRp(baru);
+            if (el('retensiLama')) el('retensiLama').textContent = formatRp(lama);
+            const total = baru + lama;
+            if (el('retensiSplit')) {
+                el('retensiSplit').innerHTML = total > 0
+                    ? `<div style="width:${(baru / total * 100).toFixed(1)}%; background:var(--success);"></div><div style="flex:1; background:var(--primary);"></div>`
+                    : '';
+            }
+            const top = Object.keys(freq).map(k => [k, freq[k]]).sort((a, b) => b[1] - a[1]).slice(0, 3);
+            if (el('retensiList')) {
+                el('retensiList').innerHTML = top.length ? top.map((x, i) => `<div style="display:flex; justify-content:space-between; gap:8px;"><span style="color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${i + 1}. ${escHtml_(x[0])}</span><span style="font-weight:900; color:var(--primary);">${x[1]}x</span></div>`).join('') : '<span style="color:var(--muted);">Belum ada data pelanggan.</span>';
+            }
+        }
+
+        /* ---------- B10: retur per produk ---------- */
+        function renderReturProduk(d) {
+            const detail = (d && d.rekapProdukDetail) || {};
+            const arr = Object.keys(detail).map(p => {
+                const x = detail[p] || {};
+                const qty = x.qty || 0, rq = x.returQty || 0;
+                return { p: p, rq: rq, rr: x.returRp || 0, rate: (qty + rq) > 0 ? rq / (qty + rq) * 100 : 0 };
+            }).filter(x => x.rq > 0 || x.rr > 0).sort((a, b) => b.rr - a.rr);
+            const el = (id) => document.getElementById(id);
+            const totalRetur = arr.reduce((a, x) => a + x.rr, 0);
+            if (el('returSummary')) el('returSummary').textContent = arr.length ? fmtRpBiaya(totalRetur) + ' dari ' + arr.length + ' produk' : 'Tidak ada retur pada rentang ini.';
+            if (el('returTopList')) {
+                el('returTopList').innerHTML = arr.slice(0, 5).map((x, i) => `<div style="display:flex; justify-content:space-between; gap:8px; font-size:11px;"><span style="color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${i + 1}. ${escHtml_(x.p)}</span><span style="text-align:right; white-space:nowrap;"><b style="color:var(--danger);">${formatRp(x.rr)}</b><br><span style="color:var(--muted); font-size:10px;">${x.rq} unit · ${x.rate.toFixed(1)}%</span></span></div>`).join('') || '<span style="color:var(--muted); font-size:11px;">—</span>';
+            }
+        }
+
+        /* ---------- A6 + B11: kesehatan katalog (HPP kosong, dead stock) ---------- */
+        let _produkMasterCache = null;
+        async function fetchProdukMaster_() {
+            if (_produkMasterCache) return _produkMasterCache;
+            if (DATA_SOURCE !== 'supabase') { _produkMasterCache = []; return _produkMasterCache; }
+            const res = await fetch(SUPABASE_URL + '/rest/v1/produk?select=' + encodeURIComponent('"Nama Barang","Kode Series","Nama Series","Kategori Produk","HPP"') + '&order=id.asc', { headers: SUPABASE_HEADERS_ });
+            if (!res.ok) throw new Error('Supabase ' + res.status);
+            const data = await res.json();
+            _produkMasterCache = (Array.isArray(data) ? data : []).map(p => ({
+                nama: String(p['Nama Barang'] || '').trim(),
+                hpp: parseFloat(p['HPP']) || 0,
+                seri: String(p['Kode Series'] || '').trim(),
+                kategori: String(p['Kategori Produk'] || '').trim()
+            })).filter(p => p.nama);
+            return _produkMasterCache;
+        }
+        function renderKatalogSehat(d) {
+            const detail = (d && d.rekapProdukDetail) || {};
+            const terjual = {};
+            Object.keys(detail).forEach(p => { terjual[String(p).toUpperCase()] = detail[p]; });
+            fetchProdukMaster_().then(katalog => {
+                const tanpaHpp = [], dead = [];
+                katalog.forEach(p => {
+                    const t = terjual[p.nama.toUpperCase()];
+                    if (!(p.hpp > 0) && t && (t.qty || 0) > 0) tanpaHpp.push(p.nama);
+                    if (!t || ((t.qty || 0) === 0 && (t.returQty || 0) === 0)) dead.push(p.nama);
+                });
+                Object.keys(terjual).forEach(k => {
+                    const adaDiMaster = katalog.some(p => p.nama.toUpperCase() === k);
+                    if (!adaDiMaster && (terjual[k].qty || 0) > 0) tanpaHpp.push(k);
+                });
+                window.__katalogHppKosong = tanpaHpp;
+                window.__katalogTidakTerjual = dead;
+                const el = (id) => document.getElementById(id);
+                if (el('katalogHpp')) el('katalogHpp').textContent = tanpaHpp.length;
+                if (el('katalogDead')) el('katalogDead').textContent = dead.length;
+                if (el('katalogList')) {
+                    const tampil = tanpaHpp.slice(0, 3).map(n => `<div style="color:var(--warning-strong); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">HPP kosong: ${escHtml_(n)}</div>`)
+                        .concat(dead.slice(0, 3).map(n => `<div style="color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Tidak terjual: ${escHtml_(n)}</div>`));
+                    el('katalogList').innerHTML = tampil.join('') || '<span style="color:var(--muted); font-size:11px;">Katalog sehat: semua produk punya HPP dan ada penjualan.</span>';
+                }
+            }).catch(err => {
+                console.warn('Gagal memuat master produk:', err);
+                const el = document.getElementById('katalogList');
+                if (el) el.innerHTML = '<span style="color:var(--danger); font-size:11px;">Gagal memuat master produk: ' + escHtml_(err.message || err) + '</span>';
+            });
+        }
+        function exportKatalogCSV() {
+            const hpp = window.__katalogHppKosong || [];
+            const dead = window.__katalogTidakTerjual || [];
+            if (!hpp.length && !dead.length) return showToast('Tidak ada masalah katalog untuk diekspor.', 'warning');
+            const rows = hpp.map(n => ['HPP kosong', n]).concat(dead.map(n => ['Tidak terjual', n]));
+            downloadCSV_('katalog_' + rentangTag_() + '.csv', ['Masalah', 'Nama Barang'], rows);
+        }
+
+        /* ---------- B13: riwayat 12 bulan ---------- */
+        let _riwayat12 = null;
+        async function muatRiwayat12() {
+            const body = document.getElementById('riwayat12Body');
+            const btn = document.getElementById('btnRiwayat12');
+            if (!body) return;
+            if (DATA_SOURCE !== 'supabase') { body.textContent = 'Riwayat 12 bulan hanya tersedia pada mode Supabase.'; return; }
+            if (_riwayat12) { renderRiwayat12(); return; }
+            if (btn) { btn.disabled = true; btn.textContent = 'MEMUAT...'; }
+            body.textContent = 'Memuat 12 bulan terakhir...';
+            try {
+                const now = new Date();
+                const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+                const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                const r = await muatRekapSupabase({
+                    p_start: isoDate(start), p_end: isoDate(end),
+                    p_start_lalu: null, p_end_lalu: null,
+                    p_kat_filter: 'ALL', p_pel_filter: 'ALL'
+                });
+                const bulan = {};
+                ((r && r.trend) || []).forEach(e => {
+                    const d = new Date(start.getTime() + (e.ts || 0) * HARI_MS);
+                    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+                    if (!bulan[key]) bulan[key] = { key: key, label: d.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' }), omzet: 0, retur: 0, biaya: 0 };
+                    bulan[key].omzet += (e.sales || 0) - (e.retur || 0);
+                    bulan[key].retur += (e.retur || 0);
+                });
+                try {
+                    const p = new URLSearchParams({ select: '"Tanggal","Nominal"', order: '"Tanggal".asc' });
+                    p.append('"Tanggal"', 'gte.' + isoDate(start));
+                    p.append('"Tanggal"', 'lte.' + isoDate(end));
+                    const res = await fetch(SUPABASE_URL + '/rest/v1/biaya?' + p.toString(), { headers: SUPABASE_HEADERS_ });
+                    if (res.ok) {
+                        (await res.json()).forEach(row => {
+                            const d = String(row['Tanggal'] || '').slice(0, 10);
+                            if (!d) return;
+                            const key = d.slice(0, 7);
+                            if (!bulan[key]) return;
+                            bulan[key].biaya += parseFloat(row['Nominal']) || 0;
+                        });
+                    }
+                } catch (e) { console.warn('Biaya 12 bulan gagal dimuat:', e); }
+                _riwayat12 = Object.keys(bulan).map(k => bulan[k]).sort((a, b) => a.key.localeCompare(b.key));
+                renderRiwayat12();
+            } catch (err) {
+                console.error('Gagal memuat riwayat 12 bulan:', err);
+                body.innerHTML = '<span style="color:var(--danger);">Gagal memuat: ' + escHtml_(err.message || err) + '</span>';
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = _riwayat12 ? 'Muat Ulang' : 'Muat Riwayat'; }
+            }
+        }
+        function renderRiwayat12() {
+            const body = document.getElementById('riwayat12Body');
+            if (!body || !_riwayat12) return;
+            if (!_riwayat12.length) { body.textContent = 'Tidak ada data pada 12 bulan terakhir.'; return; }
+            const max = Math.max.apply(null, _riwayat12.map(b => Math.max(b.omzet, b.biaya)).concat([1]));
+            body.innerHTML = _riwayat12.map(b => `<div style="margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:800; gap:8px; flex-wrap:wrap;">
+                        <span style="color:var(--text); text-transform:uppercase;">${escHtml_(b.label)}</span>
+                        <span style="color:var(--muted);">Omzet ${formatRp(b.omzet)} · Retur ${formatRp(b.retur)} · Biaya ${formatRp(b.biaya)}</span>
+                    </div>
+                    <div style="display:flex; gap:3px; margin-top:4px; height:10px;">
+                        <div title="Omzet" style="width:${Math.max(1, b.omzet / max * 100)}%; background:var(--primary); border-radius:var(--radius-xs);"></div>
+                        <div title="Biaya" style="width:${Math.max(1, b.biaya / max * 100)}%; background:var(--warning); border-radius:var(--radius-xs);"></div>
+                    </div>
+                </div>`).join('');
+        }
+
+        /* ---------- A4: deteksi duplikat sebelum import biaya ---------- */
+        function biayaKeyClient_(r) {
+            const debit = Number(r && (r.Debit != null ? r.Debit : r['Nominal'])) || 0;
+            return [String(r['Tanggal'] || '').slice(0, 10), String(r['No Bukti'] || '').toLowerCase(), String(r['Keterangan Jurnal'] || '').toLowerCase(), debit].join('|');
+        }
+        async function tandaiDuplikatBiaya_(rows) {
+            if (!rows || !rows.length || DATA_SOURCE !== 'supabase') return rows;
+            const tgl = rows.map(r => String(r['Tanggal'] || '').slice(0, 10)).filter(Boolean).sort();
+            if (!tgl.length) return rows;
+            try {
+                const p = new URLSearchParams({ select: '"Tanggal","No Bukti","Keterangan Jurnal","Debit","Nominal"', order: '"Tanggal".asc' });
+                p.append('"Tanggal"', 'gte.' + tgl[0]);
+                p.append('"Tanggal"', 'lte.' + tgl[tgl.length - 1]);
+                const res = await fetch(SUPABASE_URL + '/rest/v1/biaya?' + p.toString(), { headers: SUPABASE_HEADERS_ });
+                if (!res.ok) return rows;
+                const ada = {};
+                (await res.json()).forEach(r => { ada[biayaKeyClient_(r)] = 1; });
+                rows.forEach(r => { r._dup = !!ada[biayaKeyClient_(r)]; });
+            } catch (e) {
+                console.warn('Cek duplikat biaya gagal:', e);
+            }
+            return rows;
+        }
+        function renderBiayaPreview_(out) {
+            const daftar = out || [];
+            const dup = daftar.filter(r => r._dup).length;
+            const siap = daftar.length - dup;
+            const totalEl = document.getElementById('biayaTotalRows');
+            if (totalEl) totalEl.textContent = siap;
+            const tb = document.getElementById('biayaPreviewTableBody');
+            if (tb) {
+                tb.innerHTML = daftar.slice(0, 8).map(r => {
+                    const alasan = r._alasan || getBiayaDeriveReason_(r['Keterangan Jurnal'], r._katBefore || '');
+                    return `<tr style="border-top:1px solid var(--border);${r._dup ? ' opacity:0.65;' : ''}"><td style="padding:6px 8px; color:var(--text);">${escHtml_(r['No Bukti'])}</td><td style="padding:6px 8px; color:var(--text); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escHtml_(r['Keterangan Jurnal'])}">${escHtml_(r['Keterangan Jurnal'])}</td><td style="padding:6px 8px; font-weight:800; color:var(--primary);">${escHtml_(r['Kategori Biaya'])}</td><td style="padding:6px 8px; font-size:10px; ${r._dup ? 'color:var(--danger); font-weight:800;' : 'color:var(--muted);'}">${r._dup ? 'SUDAH ADA' : escHtml_(alasan)}</td><td style="padding:6px 8px; text-align:right; color:var(--text);">${(r.Debit || 0).toLocaleString('id-ID')}</td></tr>`;
+                }).join('') || '<tr><td colspan="5" style="padding:10px; text-align:center; color:var(--muted);">-</td></tr>';
+            }
+            const info = document.getElementById('biayaPreviewInfo');
+            if (info) {
+                const cnt = {};
+                daftar.forEach(r => { if (r._dup) return; const k = r['Kategori Biaya'] || 'LAIN-LAIN'; cnt[k] = (cnt[k] || 0) + 1; });
+                const ringkas = Object.keys(cnt).map(k => k + ': ' + cnt[k]).join(' · ');
+                info.innerHTML = (daftar.length > 8 ? 'Menampilkan 8 dari ' + daftar.length + ' baris — ' : '') + escHtml_(ringkas)
+                    + (dup ? '<br><b style="color:var(--danger);">' + dup + ' baris sudah ada di database</b> (akan dilewati).' : '');
+            }
+            const btn = document.getElementById('btnSubmitBiayaUpload');
+            if (btn) { btn.disabled = siap <= 0; btn.style.opacity = siap <= 0 ? '0.5' : '1'; }
+        }
+
+        /* ---------- orkestrasi kartu baru di dashboard penjualan ---------- */
+        function renderKartuLanjutan_(d) {
+            try { renderRetensiPelanggan(d); } catch (e) { console.warn('Retensi gagal:', e); }
+            try { renderReturProduk(d); } catch (e) { console.warn('Retur produk gagal:', e); }
+            try { renderKatalogSehat(d); } catch (e) { console.warn('Katalog gagal:', e); }
+            try { window.__rekapProdukDetailLast = d.rekapProdukDetail || {}; } catch (e) {}
         }
 
         function bukaModalBiaya() {
