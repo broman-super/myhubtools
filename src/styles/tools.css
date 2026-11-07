@@ -71,7 +71,9 @@ code, pre, .monospace, .font-mono, [style*="font-family: monospace"], [style*="f
    hub sudah memegang kontrol tema dan menyiarkannya lewat postMessage.
    Kelas `embedded-in-hub` dipasang oleh src/app.js pada <html> modul.
    Tanpa kelas ini (modul dibuka mandiri/embed lain) tombolnya tetap tampil. */
-html.embedded-in-hub .theme-toggle,
+/* Jangan menargetkan class `.theme-toggle` di sini: beberapa tool meminjam class
+   itu untuk tombol aksi non-tema (import, modal, dsb), sehingga tombolnya ikut
+   hilang di dalam hub. Tombol tema asli sudah tertangkap lewat id/onclick. */
 html.embedded-in-hub #theme-toggle,
 html.embedded-in-hub #themeToggle,
 html.embedded-in-hub #themeToggleDash,
