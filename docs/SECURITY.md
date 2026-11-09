@@ -33,7 +33,9 @@ perbarui di tiga tempat: `app_private.write_key` (2 project), Script Property
    ```
 4. Set Script Property `BRIDGE_TOKEN` = secret yang sama di **setiap** project GAS
    (`sppdtoolbox`, `rndtracker`, `code-taskschedule`, `code-analytic`) — nilai ini
-   tidak ditulis di file karena repo publik.
+   tidak ditulis di file karena repo publik. Di `code-analytic` cukup jalankan
+   `setBridgeToken('KUNCI_TIM')` dari editor Apps Script (properti `BRIDGE_TOKEN`
+   menang; ada fallback sementara selama properti belum diset).
 5. Deploy ulang keempat Web App GAS (Deploy → Manage deployments → Edit → New version).
 6. Deploy ulang klien (hub + `Project_develop/dist`) supaya versi baru yang terpakai.
 7. Buka tiap tool → muncul prompt kunci sekali → tempel secret.

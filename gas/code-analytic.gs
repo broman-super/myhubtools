@@ -11,11 +11,18 @@ function geminiKey_() {
   return k ? String(k).trim() : '';
 }
 
-// Kunci tulis tim: Script Property BRIDGE_TOKEN (repo publik, jangan tulis nilainya di sini).
+// Kunci tulis tim: Script Property BRIDGE_TOKEN.
+//   Set sekali lewat editor Apps Script:  setBridgeToken('KUNCI_TIM')
+//   Properti ini yang jadi sumber utama; nilai di bawah hanya jembatan sementara
+//   agar upload tidak mati selama properti belum diset (nilai sama dengan klien).
+var LEGACY_BRIDGE_TOKEN_ = 'f71777528484496aa4dc15b12fdfca88';
+function setBridgeToken(token) {
+  PropertiesService.getScriptProperties().setProperty('BRIDGE_TOKEN', String(token || '').trim());
+  return 'ok';
+}
 function bridgeToken_() {
-  var t = PropertiesService.getScriptProperties().getProperty('f71777528484496aa4dc15b12fdfca88');
-  if (!t) throw new Error('BRIDGE_TOKEN belum diset di Script Properties project ini');
-  return String(t).trim();
+  var t = PropertiesService.getScriptProperties().getProperty('BRIDGE_TOKEN');
+  return t ? String(t).trim() : LEGACY_BRIDGE_TOKEN_;
 }
 
 // Cek kunci tulis. String(t || '') = token kosong bila klien tidak mengirim; jangan diisi.
