@@ -155,6 +155,18 @@
            import, cetak) tetap tampil supaya tool tetap bisa dipakai. */
         .is-embedded .nav-bar h1 { display: none !important; }
 
+        /* Di dalam hub, hub sudah punya kartu + latar sendiri. Kartu nav-bar
+           (putih solid + border + shadow) tampil sebagai blok warna yang menutupi
+           area hub, jadi chrome-nya dilepas — hanya kontrolnya yang terlihat. */
+        html.embedded-in-hub .nav-bar,
+        body.is-embedded .nav-bar {
+            background: transparent;
+            border-color: transparent;
+            box-shadow: none;
+            padding: 0;
+            margin-bottom: 18px;
+        }
+
         .nav-bar h1 {
             font-family: 'Geomini', 'Plus Jakarta Sans', sans-serif;
             font-size: 24px;
@@ -359,7 +371,9 @@
                 padding-left: 0;
             }
 
-            #reportrange {
+            /* Selektornya harus sama spesifik dengan aturan dasar (.nav-bar #reportrange),
+               kalau hanya `#reportrange` aturan 240px di atas yang menang. */
+            .nav-bar #reportrange {
                 flex: 1 1 240px;
                 max-width: 280px;
             }
@@ -390,8 +404,11 @@
                 min-width: 0;
             }
 
-            #reportrange {
-                flex-basis: 100%;
+            /* Di layar sempit kolom tanggal mengisi sisa baris di samping tombol
+               Cetak — bukan 240px kaku yang menyisakan celah kosong. */
+            .nav-bar #reportrange {
+                flex: 1 1 auto;
+                width: auto;
                 max-width: none;
                 min-width: 0;
             }
