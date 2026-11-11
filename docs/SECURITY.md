@@ -67,7 +67,7 @@ update app_private.latch_pin set value = '<pin baru>';
 - [ ] Login latch dengan PIN benar berhasil; PIN salah gagal.
 - [ ] Klik link di halaman publik menambah `click_count` tanpa login.
 - [ ] SPPD: buka dua tab, hapus 1 event di tab A, simpan tab B (data lama) → event lain tidak hilang.
-- [ ] Analytic: simpan target, tambah/edit/hapus biaya, upload Excel → semua sukses dengan kunci, gagal tanpa kunci.
+- [ ] Analytic: simpan target, tambah/edit/hapus biaya, upload Excel, impor HPP (tab HPP, action `bulkUpsertProduk`) → semua sukses dengan kunci, gagal tanpa kunci.
 - [ ] Planner: simpan/edit/hapus tugas sukses; buka link `#ss-<slug>` tanpa kunci tetap bisa baca.
 - [ ] RND: simpan project + upload/hapus foto sukses dengan kunci.
 

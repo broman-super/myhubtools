@@ -413,12 +413,15 @@
                 min-width: 0;
             }
 
+            /* Pil (tab & mode komparasi) cukup selebar isinya, tidak melebar penuh
+               seperti slab warna. Tetap 44px tinggi supaya raba-ramah. */
             .compare-pill {
-                width: 100%;
+                width: auto;
+                max-width: 100%;
             }
 
             .compare-pill button {
-                flex: 1;
+                flex: 0 0 auto;
             }
         }
 
@@ -459,6 +462,20 @@
 
             #syncStatus {
                 display: none;
+            }
+
+            /* Di layar sempit nav-bar jadi kolom, jadi tiap anak melebar penuh.
+               Baris status yang isinya tersembunyi jangan menyisakan baris kosong; 
+               kalau badge Data Quality tampil, barisnya ikut selebar badge saja. */
+            .nav-bar > div:has(#syncStatus) {
+                display: none !important;
+            }
+
+            .nav-bar > div:has(#dqBadge[style*="inline-flex"]) {
+                display: flex !important;
+                align-self: flex-start;
+                width: auto;
+                margin-left: 0 !important;
             }
 
             #rfmList {
@@ -632,18 +649,22 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 24px;
-            height: 24px;
+            /* Ikon bantuan dipakai di tiga tinggi teks berbeda (judul 11px, nilai 26px,
+               baris detail 10px). Ukuran 24px membuat baris 10px ikut melar dan ikon
+               tampak melayang; satu ukuran kecil + vertical-align membuatnya rapi di semua. */
+            width: 15px;
+            height: 15px;
             border-radius: 50%;
             border: none;
-            margin: 0 0 0 6px;
+            margin: 0 0 0 4px;
             padding: 0;
             background: var(--surface2);
-            color: var(--text);
+            color: var(--muted);
             font: inherit;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 800;
             line-height: 1;
+            vertical-align: middle;
             cursor: help;
             flex-shrink: 0;
         }
@@ -737,17 +758,78 @@
             border-color: var(--border);
         }
 
-        table.dataTable thead th {
+        table.dataTable thead th,
+        #biayaTable thead th {
             border-bottom: 2px solid var(--border);
             color: var(--muted);
             font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
         }
 
-        table.dataTable {
+        /* Tabel detail biaya tampil tanpa DataTables saat rentang kosong/gagal
+           (DataTables hanya aktif kalau ada baris), jadi gaya dasarnya tidak boleh
+           bergantung pada kelas .dataTable. */
+        table.dataTable,
+        #biayaTable {
             color: var(--text);
             font-size: 12px;
             border-collapse: collapse;
+        }
+
+        #biayaTable thead th,
+        #biayaTable tbody td {
+            padding: 8px 10px;
+        }
+
+        /* Wadah tabel detail sudah bisa digeser ke samping, jadi sel tidak perlu
+           membungkus: tanpa ini baris jadi 72px karena tanggal/kategori pecah 2-3 baris. */
+        #biayaTable tbody td {
+            white-space: nowrap;
+        }
+
+        /* Kontrol DataTables (cari + paginasi) mewarisi 16px bawaan plugin,
+           jauh lebih besar dari teks tabel 11-12px di sekitarnya. */
+        .dataTables_wrapper .dataTables_filter,
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_paginate {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .dataTables_wrapper .dataTables_paginate {
+            margin-top: 10px;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 4px 8px;
+            min-width: 26px;
+            text-align: center;
+        }
+
+        /* Nominal itu angka: rata kanan + lebar digit seragam supaya bisa dipindai. */
+        #biayaTable thead th:nth-child(7),
+        #biayaTable tbody td:nth-child(7) {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Tabel per platform/toko: header mengikuti tipografi tabel detail
+           (11px, muted, uppercase) — sebelumnya 12px sentence-case. */
+        #cardBiayaPerToko thead th {
+            text-align: left;
+            padding: 8px 10px;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        #cardBiayaPerToko thead th:nth-child(n+3) {
+            text-align: right;
         }
 
         /* Tabel Top Produk: di layar sempit cukup kartunya yang menggulir, bukan seluruh halaman. */
@@ -1052,20 +1134,25 @@
                 display: none !important;
             }
 
+            /* Tab HPP = master data (bukan laporan) — jangan ikut tercetak. */
+            #hppContainer {
+                display: none !important;
+            }
+
             /* Pemisah antar bagian (bukan header branding) */
             #mainContainer::before,
             #biayaContainer::before {
                 content: "";
                 display: block;
                 grid-column: 1 / -1 !important;
-                font-size: 13px;
+                font-size: 10px;
                 font-weight: 800;
                 text-transform: uppercase;
                 letter-spacing: 1px;
                 color: var(--text);
                 border-bottom: 2px solid var(--muted);
-                padding-bottom: 4px;
-                margin-bottom: 10px;
+                padding-bottom: 2px;
+                margin-bottom: 4px;
             }
 
             #mainContainer::before { content: "Dashboard"; }
@@ -1076,6 +1163,13 @@
                 display: grid !important;
                 grid-template-columns: 1fr !important;
                 gap: 6px !important;
+                align-items: start !important;
+            }
+
+            /* Kartu KPI di Dashboard tidak boleh saling menyamakan tinggi: kartu berisi
+               sedikit teks ikut melar setinggi kartu tetangganya, menyisakan ruang putih
+               besar dan membuat halaman terlihat bolong. */
+            #mainContainer {
                 align-items: start !important;
             }
 
@@ -1096,9 +1190,46 @@
                 page-break-inside: auto;
             }
 
-            /* Chart-box ukuran kecil di print 1 kolom */
-            .chart-box { height: 140px !important; min-height: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .chart-box.large { min-height: 190px !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            /* Tinggi chart per peran, bukan satu angka untuk semua:
+               - default 130px: chart pendamping (donut/bar kecil) cukup
+               - .col-span-12 (TREN) 180px: butuh ruang label sumbu Rp + tanggal
+               - donut Market Share 100px: dipasangkan dengan tabel di sebelahnya,
+                 kalau ikut 130px kartunya jadi lebih tinggi dari pasangannya
+               - tab Biaya: tren 150px, komposisi donut 130px */
+            .chart-box { height: 130px !important; min-height: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .chart-box.large { min-height: 150px !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .col-span-12 .chart-box { height: 180px !important; }
+            .bento-item:has(#tableKategori) .chart-box { height: 100px !important; }
+            #biayaContainer .chart-box { height: 150px !important; }
+
+            /* Daftar kategori di kartu MARKET SHARE dipasangkan dengan tabel TOP PRODUK.
+               Di layar elemennya flex-column 1 kolom (inline style), jadi di print dipaksa
+               grid 2 kolom: kartunya tidak lagi 2x lebih tinggi dari pasangannya dan
+               tidak memakan setengah halaman. Isi tetap utuh, hanya dibagi 2 kolom. */
+            .bento-item:has(#tableKategori) #tableKategori {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 4px 12px !important;
+                flex: 0 0 auto !important;
+            }
+            .bento-item:has(#tableKategori) #tableKategori > * {
+                break-inside: avoid;
+                padding: 2px 0 !important;
+                min-height: 0 !important;
+                line-height: 1.25 !important;
+            }
+            .bento-item:has(#tableKategori) #tableKategori > * * {
+                font-size: 8px !important;
+                line-height: 1.25 !important;
+            }
+
+            /* Judul kartu / judul bagian tidak boleh menggantung sendirian di dasar halaman */
+            .bento-header,
+            #mainContainer::before,
+            #biayaContainer::before {
+                break-after: avoid;
+                page-break-after: avoid;
+            }
 
             /* Typography ramping agar tidak buang kertas */
             .bento-value { font-size: 16px !important; line-height: 1.1 !important; }
@@ -1116,7 +1247,7 @@
                 color: var(--muted);
                 text-transform: uppercase;
                 letter-spacing: 0.5px;
-                margin-bottom: 8px;
+                margin-bottom: 4px;
             }
 
             /* Kurasi print: sembunyikan panel teks (hemat kertas), pertahankan KPI + chart inti + tabel
@@ -1140,8 +1271,8 @@
             .bento-item.col-span-6 { grid-column: span 6 !important; }
             .bento-item.col-span-8 { grid-column: span 8 !important; }
             .bento-item.col-span-12 { grid-column: 1 / -1 !important; }
-            /* Trend chart diperbesar agar label axis (Rp + tanggal) tidak di-collapse Chart.js */
-            .col-span-12 .chart-box { height: 200px !important; }
+            /* Tinggi chart tren diatur di blok "Tinggi chart per peran" di atas
+               (satu tempat saja) — jangan tambah aturan .chart-box lagi di sini. */
 
             /* Top Produk (tabel 20 baris) dipasangkan 2/3 di kanan Market Share (1/3): side-by-side */
             .bento-item:has(#dtProduk) {
@@ -1601,6 +1732,7 @@
                 <div class="compare-pill" style="margin-right:2px;" title="Pilih tampilan dashboard">
                     <button id="tabMain" class="active" onclick="showTab('main')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg> Dashboard</button>
                     <button id="tabBiaya" onclick="showTab('biaya')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Biaya</button>
+                    <button id="tabHpp" onclick="showTab('hpp')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg> HPP</button>
                 </div>
             </div>
             <div class="nav-group">
@@ -1684,11 +1816,29 @@
                         style="min-height:44px; padding:12px 20px; background:var(--surface2); color:var(--muted); border:1px solid var(--border); border-radius:var(--radius); font-weight:800; font-size:13px; cursor:pointer;">Tutup</button>
                 </div>
             </div>
+
+            <!-- Peringatan data: SKU terjual tapi HPP-nya 0/kosong -->
+            <div id="hppWarningBanner" style="display:none; grid-column:1 / -1; box-sizing:border-box; background:var(--warning-light); border:1px solid var(--warning); border-radius:var(--radius-lg); padding:14px 18px; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+                <div style="display:flex; align-items:flex-start; gap:12px; min-width:0;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--warning-strong)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0; margin-top:2px;"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <div style="min-width:0;">
+                        <div id="hppWarnTitle" style="font-weight:800; font-size:13px; color:var(--warning-strong);">Sebagian SKU terjual tanpa HPP</div>
+                        <div id="hppWarnDetail" style="font-size:12px; font-weight:600; color:var(--text); margin-top:3px; line-height:1.5;"></div>
+                        <div id="hppWarnList" style="font-size:11px; font-weight:700; color:var(--muted); margin-top:6px; line-height:1.6;"></div>
+                    </div>
+                </div>
+                <div class="no-print" style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button id="btnHppWarnFix" onclick="bukaHppDariPeringatan()"
+                        style="padding:10px 16px; background:var(--warning); color:var(--on-primary); border:none; border-radius:var(--radius); font-weight:800; font-size:12px; cursor:pointer;">Isi HPP</button>
+                    <button onclick="document.getElementById('hppWarningBanner').style.display='none';"
+                        style="padding:10px 16px; background:var(--surface); color:var(--muted); border:1px solid var(--border); border-radius:var(--radius); font-weight:800; font-size:12px; cursor:pointer;">Tutup</button>
+                </div>
+            </div>
         <!-- ROW 1 -->
         <div id="cardKpiOmzet" class="bento-item col-span-3">
             <div class="bento-header">
                 <div class="bento-title">OMZET VS TARGET <span class="help-icon"
-                        data-tooltip="Logika: Omzet Bersih = (Total Penjualan) - (Total Retur). AVG & Proyeksi Akhir mengunci pada data Bulan Berjalan: AVG = (Omzet Bulan Ini) ÷ (Hari yg Lewat). Proyeksi = AVG × (Total Hari sebulan).">?</span>
+                        data-tooltip="Logika: Omzet Bersih = (Total Penjualan) - (Total Retur). Semua angka di kartu ini mengikuti rentang tanggal yang dipilih: AVG = (Omzet rentang terpilih) ÷ (hari rentang yang sudah lewat). Proyeksi = AVG × (total hari di bulan tanggal akhir rentang).">?</span>
                 </div>
                 <div class="badge primary"><svg class="icon" width="10" height="10" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor">
@@ -1711,10 +1861,10 @@
                 style="display:flex; justify-content:space-between; align-items:center; font-size:10px; font-weight:800; color:var(--muted);">
                 <span style="display:inline-flex; align-items:center;"><span id="kpiSalesPct">0%</span><span
                         class="help-icon static"
-                        data-static-tooltip="AVG = (Omzet bersih bulan berjalan) ÷ (hari yang sudah lewat di bulan itu). Pembagi memakai hari terakhir data bila data belum masuk (lag ±7 hari).">?</span></span>
+                        data-static-tooltip="AVG = (Omzet bersih rentang terpilih) ÷ (jumlah hari rentang yang sudah lewat). Contoh: rentang 1–15 Okt dibagi 15 hari.">?</span></span>
                 <span style="display:inline-flex; align-items:center;"><span id="kpiSalesRunRate"
                         style="color:var(--primary)">Proyeksi: Rp 0</span><span class="help-icon static"
-                        data-static-tooltip="Proyeksi Akhir = AVG × (total hari dalam bulan berjalan).">?</span></span>
+                        data-static-tooltip="Proyeksi = AVG rentang terpilih × total hari di bulan tanggal akhir rentang (mis. 31 hari untuk Oktober).">?</span></span>
             </div>
             <div style="font-size: 11px; font-weight: 800; margin-top: 10px; color: var(--danger);" id="kpiSalesGap">
                 Target: 820JT</div>
@@ -2072,6 +2222,7 @@
 
     <!-- ===== TAB BIAYA (Dashboard Khusus Pengeluaran) ===== -->
     <div class="bento-container" id="biayaContainer" style="display:none;">
+        <div id="printRangeHeaderBiaya" class="print-range-subheader" style="display:none;"></div>
         <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; grid-column:1 / -1;">
             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                 <span style="font-family:'Geomini', 'Plus Jakarta Sans', sans-serif; color:var(--text); font-size:18px; font-weight:800;">DASHBOARD BIAYA (OPEX)</span>
@@ -2112,7 +2263,7 @@
         </div>
 
         <!-- ROW 0: PEMBERITAHUAN RENTANG KOSONG -->
-        <div id="biayaEmptyHint" style="display:none; grid-column:1 / -1; align-items:center; gap:8px; background:var(--warning-light); color:var(--warning-strong); border:1px solid var(--warning); border-radius:var(--radius); padding:10px 14px; font-weight:700; font-size:12px;"></div>
+        <div id="biayaEmptyHint" style="display:none; grid-column:1 / -1; background:var(--warning-light); color:var(--warning-strong); border:1px solid var(--warning); border-radius:var(--radius); padding:10px 14px; font-weight:700; font-size:12px;"></div>
 
         <!-- ROW 1: KPI BIAYA -->
         <div id="cardBiayaTotal" class="bento-item col-span-3">
@@ -2279,7 +2430,7 @@
             </div>
             <div style="overflow-x:auto;">
                 <table style="width:100%; font-size:12px; border-collapse:collapse;">
-                    <thead><tr><th style="text-align:left; padding:8px; color:var(--muted);">Toko</th><th style="text-align:left; padding:8px; color:var(--muted);">Platform</th><th style="text-align:right; padding:8px; color:var(--muted);">Total</th><th style="text-align:right; padding:8px; color:var(--muted);">Porsi</th><th style="text-align:right; padding:8px; color:var(--muted);">Entri</th></tr></thead>
+                    <thead><tr><th>Toko</th><th>Platform</th><th>Total</th><th>Porsi</th><th>Entri</th></tr></thead>
                     <tbody id="biayaTokoTable"></tbody>
                 </table>
             </div>
@@ -2306,6 +2457,137 @@
                 <div class="bento-title">ANOMALI BIAYA <span class="help-icon" data-static-tooltip="Menandai hari dengan pengeluaran jauh di atas kebiasaan (lebih dari rata-rata + 2 simpangan baku) dan kategori yang naik lebih dari 50% dibanding periode pembanding. Selalu tampil, tidak menunggu klik AI.">?</span></div>
             </div>
             <div id="biayaAnomaliList" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+    </div>
+
+    <!-- ================= TAB HPP: MASTER SKU & HPP ================= -->
+    <div class="bento-container" id="hppContainer" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; grid-column:1 / -1;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span style="font-family:'Geomini', 'Plus Jakarta Sans', sans-serif; color:var(--text); font-size:18px; font-weight:800;">MASTER HPP &amp; SKU</span>
+                <span class="help-icon" data-static-tooltip="HPP = harga pokok per SKU. Tab ini membaca tabel produk (master SKU). Impor Excel mencocokkan tiap baris ke SKU terdaftar lewat Nama Barang, lalu Kode Series; baris yang tidak cocok bisa dihubungkan ke SKU lama atau dibuat sebagai SKU baru.">?</span>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <input id="hppSearch" type="search" placeholder="Cari nama / kode series..." oninput="filterHppRows()" aria-label="Cari SKU"
+                    style="padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text); font-size:12px; font-weight:700; min-width:200px;">
+                <button onclick="openHppImportModal()" title="Impor HPP dari Excel" aria-label="Impor HPP dari Excel"
+                    style="padding:8px 12px; display:inline-flex; align-items:center; gap:6px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:var(--radius-sm); font-weight:800; font-size:12px; cursor:pointer;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Impor Excel
+                </button>
+                <button onclick="downloadHppTemplate()" title="Unduh template Excel HPP" aria-label="Unduh template Excel HPP"
+                    style="padding:8px 12px; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:var(--radius-sm); font-weight:800; font-size:12px; cursor:pointer;">Template</button>
+                <button onclick="exportHppCSV()" title="Unduh master SKU + HPP sebagai CSV" aria-label="Ekspor CSV HPP"
+                    style="padding:8px 12px; background:var(--surface2); color:var(--text); border:1px solid var(--border); border-radius:var(--radius-sm); font-weight:800; font-size:12px; cursor:pointer;">CSV</button>
+            </div>
+        </div>
+
+        <div class="bento-item col-span-3" id="cardHppTotal">
+            <div class="bento-header">
+                <div class="bento-title">TOTAL SKU</div>
+                <div class="badge primary">MASTER</div>
+            </div>
+            <div class="bento-value" id="hppKpiTotal">0</div>
+            <div id="hppKpiTotalInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">memuat...</div>
+        </div>
+
+        <div class="bento-item col-span-3" id="cardHppTerisi">
+            <div class="bento-header">
+                <div class="bento-title">HPP TERISI <span class="help-icon" data-static-tooltip="Jumlah SKU dengan HPP lebih dari 0. Hanya SKU ini yang laba kotornya dihitung benar di dashboard.">?</span></div>
+                <div class="badge success" style="background:var(--success-light); color:var(--success-strong);">SIAP</div>
+            </div>
+            <div class="bento-value" id="hppKpiTerisi" style="color:var(--success);">0</div>
+            <div id="hppKpiTerisiInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">0% dari master</div>
+        </div>
+
+        <div class="bento-item col-span-3" id="cardHppKosong">
+            <div class="bento-header">
+                <div class="bento-title" style="color:var(--danger);">HPP KOSONG <span class="help-icon" data-static-tooltip="SKU tanpa HPP. Transaksi SKU ini membuat Laba Bersih, Margin, dan Gross Profit produk terlalu besar karena HPP dihitung 0.">?</span></div>
+                <div class="badge danger">PERLU ISI</div>
+            </div>
+            <div class="bento-value" id="hppKpiKosong" style="color:var(--danger);">0</div>
+            <div id="hppKpiKosongInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">belum ada HPP</div>
+        </div>
+
+        <div class="bento-item col-span-3" id="cardHppRata">
+            <div class="bento-header">
+                <div class="bento-title">RATA-RATA HPP <span class="help-icon" data-static-tooltip="Rata-rata HPP dari SKU yang sudah terisi, bukan rata-rata seluruh master.">?</span></div>
+                <div class="badge primary">PER SKU</div>
+            </div>
+            <div class="bento-value" id="hppKpiRata" style="font-size:22px;">Rp 0</div>
+            <div id="hppKpiRataInfo" style="font-size:12px; font-weight:700; margin-top:8px; color:var(--muted);">-</div>
+        </div>
+
+        <div class="bento-item col-span-12" id="cardHppTable">
+            <div class="bento-header" style="flex-wrap:wrap; gap:8px;">
+                <div class="bento-title">DAFTAR SKU &amp; HPP <span class="help-icon" data-static-tooltip="Semua kolom bisa diedit langsung: Nama Barang, Kode Series, Kategori, dan HPP. Baris berlatar kuning = belum disimpan. Mengganti Nama Barang memutus pencocokan HPP ke transaksi lama yang memakai nama lama, jadi akan ada konfirmasi. HPP 0 (kosong) membuat laba dan margin produk itu salah.">?</span></div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span id="hppDirtyInfo" style="font-size:11px; font-weight:700; color:var(--muted);">Tidak ada perubahan</span>
+                    <button id="btnHppSave" onclick="saveHppChanges()" disabled
+                        style="padding:8px 14px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:var(--radius-sm); font-weight:800; font-size:12px; cursor:pointer; opacity:.5;">Simpan</button>
+                </div>
+            </div>
+            <div style="overflow:auto; max-height:56vh; border:1px solid var(--border); border-radius:var(--radius-sm);">
+                <table id="hppTable" style="width:100%; font-size:12px; border-collapse:collapse;">
+                    <thead style="position:sticky; top:0; background:var(--surface2); z-index:1;">
+                        <tr>
+                            <th style="text-align:left; padding:8px 10px; font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:800; border-bottom:1px solid var(--border);">Nama Barang</th>
+                            <th style="text-align:left; padding:8px 10px; font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:800; border-bottom:1px solid var(--border);">Kode Series</th>
+                            <th style="text-align:left; padding:8px 10px; font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:800; border-bottom:1px solid var(--border);">Kategori</th>
+                            <th style="text-align:right; padding:8px 10px; font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:800; border-bottom:1px solid var(--border); width:150px;">HPP (Rp)</th>
+                            <th style="text-align:center; padding:8px 10px; font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:800; border-bottom:1px solid var(--border); width:90px;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hppTableBody">
+                        <tr><td colspan="5" style="padding:18px; text-align:center; color:var(--muted); font-size:12px;">Memuat master SKU...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="hppLoadInfo" style="font-size:11px; color:var(--muted); margin-top:8px;"></div>
+        </div>
+    </div>
+
+    <!-- Modal Impor HPP dari Excel -->
+    <div id="hppImportModal" role="dialog" aria-modal="true" aria-labelledby="hppImportTitle"
+        style="display:none; position:fixed; inset:0; background:rgba(15,23,42,.6); z-index:var(--z-toast); align-items:center; justify-content:center; padding:20px;">
+        <div style="background:var(--surface); border-radius:var(--radius-xl); box-shadow:var(--shadow-md); border:1px solid var(--border); width:100%; max-width:980px; max-height:92vh; display:flex; flex-direction:column;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:18px 20px; border-bottom:1px solid var(--border);">
+                <div>
+                    <h3 id="hppImportTitle" style="margin:0; font-size:16px; font-weight:800; color:var(--text);">Impor HPP dari Excel</h3>
+                    <p style="margin:5px 0 0; font-size:11px; color:var(--muted); line-height:1.5;">Kolom wajib: <b>Nama Barang</b> + <b>HPP</b> (atau Modal). Opsional: Kode Series, Nama Series, Kategori Produk. Tiap baris dicocokkan otomatis ke SKU terdaftar lewat Nama Barang, lalu Kode Series.</p>
+                </div>
+                <button onclick="closeHppImportModal()" aria-label="Tutup"
+                    style="background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; line-height:1;">&#10005;</button>
+            </div>
+            <div style="padding:16px 20px; overflow:auto;">
+                <div id="hppImportDrop"
+                    style="border:2px dashed var(--border); border-radius:var(--radius); padding:26px; text-align:center; cursor:pointer; background:var(--surface2);">
+                    <div style="font-weight:800; font-size:13px; color:var(--text);">Tarik file Excel ke sini</div>
+                    <div style="font-size:11px; color:var(--muted); margin-top:4px;">atau klik untuk memilih (.xlsx, .xls, .csv)</div>
+                </div>
+                <input type="file" id="hppFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
+                <div id="hppImportSummary" style="display:none; gap:10px; flex-wrap:wrap; align-items:center; margin-top:14px;"></div>
+                <div id="hppImportReviewWrap" style="display:none; margin-top:12px; overflow:auto; max-height:46vh; border:1px solid var(--border); border-radius:var(--radius-sm);">
+                    <table style="width:100%; min-width:780px; font-size:12px; border-collapse:collapse;">
+                        <thead style="position:sticky; top:0; background:var(--surface2); z-index:1;">
+                            <tr>
+                                <th style="text-align:left; padding:8px 10px; font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:800; width:38px;">#</th>
+                                <th style="text-align:left; padding:8px 10px; font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:800;">Nama di Excel</th>
+                                <th style="text-align:right; padding:8px 10px; font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:800; width:110px;">HPP</th>
+                                <th style="text-align:left; padding:8px 10px; font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:800;">Hasil Pencocokan</th>
+                                <th style="text-align:left; padding:8px 10px; font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); font-weight:800; width:210px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hppImportReviewBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div style="padding:14px 20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px;">
+                <button onclick="closeHppImportModal()"
+                    style="padding:10px 16px; background:none; border:1px solid var(--border); color:var(--muted); border-radius:var(--radius-sm); font-weight:800; cursor:pointer; font-size:12px;">Batal</button>
+                <button id="btnHppImportSave" onclick="saveHppImport()" disabled
+                    style="padding:10px 16px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:var(--radius-sm); font-weight:800; cursor:pointer; font-size:12px; opacity:.5;">Simpan</button>
+            </div>
         </div>
     </div>
 
@@ -2363,7 +2645,7 @@
           circle: '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6"/></svg>',
           question: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
         };
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwAXxbNYaYkE4L53AUMjufh7RkkytVopTiRzEq3w0UanwTbhYOyBlB0D8KO5qBlhE2C-Q/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxFHmvpjEUknWx4MFx40e99Ugd5JZR0iqebdxScpaA30jQPoBw08wvihDZHyzVWGUzaZw/exec';
 
         // Kunci tulis tim (BRIDGE_TOKEN di GAS). Ditanam di halaman: tanpa prompt.
         // Risiko diterima: siapa pun yang membuka halaman ini bisa ikut menulis data.
@@ -3641,6 +3923,8 @@
             let basketData = {};
             // Data Quality counters
             let dqUnclassified = 0, dqMissingHpp = 0, dqReturNoMatch = 0;
+            // SKU yang terjual tapi HPP-nya 0 → dipakai banner peringatan dashboard
+            let hppKosongMap = {};
             const listHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
             let barisDihitung = 0;
@@ -3670,6 +3954,16 @@
                 updateKategoriFilterSupabase(r);
                 updateResellerPelangganDropdown(filterKatProduk, gStart, gEnd, r.reseller);
                 ({ dSkrg, dLalu, totalBiaya, totalBiayaLalu, omzetBaru, omzetLama, rekapTren, rekapReseller, rekapMarketplace, rekapKat, rekapKatLalu, rekapProd, rekapCont, lastOrder, rekapHari, rekapSeri, rekapWarna, rekapBiaya, rekapProdukDetail, rekapTrendProd, freqPelanggan, basketData, firstPurchaseData } = terapkanRekapSupabase(r));
+
+                // Mode Supabase tidak memuat baris transaksi, jadi peringatan HPP dihitung dari
+                // produkDetail (agregat per SKU dari RPC). cogs = 0 padahal ada unit terjual
+                // berarti HPP SKU itu 0/kosong atau namanya tidak ada di master produk.
+                Object.keys(rekapProdukDetail || {}).forEach(function (prod) {
+                    const d = rekapProdukDetail[prod] || {};
+                    if ((d.sales || 0) <= 0 || (d.qty || 0) <= 0 || (d.cogs || 0) > 0) return;
+                    hppKosongMap[prod] = { nama: prod, omzet: d.sales || 0, qty: d.qty || 0, nota: 0 };
+                    dqMissingHpp++;
+                });
             }
 
             if (rawDataTransaksi && rawDataTransaksi.length > 0) {
@@ -3755,6 +4049,17 @@
                             let hppSales = Math.abs(hppTotalBaris || 0);
                             if (hppSales <= 0 && prod && prod.trim() !== '') {
                                 dqMissingHpp++;
+                                // kumpulkan per SKU: berapa omzet & unit yang labanya salah karena HPP 0
+                                let rec = hppKosongMap[prod];
+                                if (!rec) {
+                                    rec = hppKosongMap[prod] = {
+                                        nama: String(b['Nama Barang'] || b['Barang'] || b['Produk'] || prod).trim(),
+                                        omzet: 0, qty: 0, nota: 0
+                                    };
+                                }
+                                rec.omzet += nilai;
+                                rec.qty += Math.abs(qty);
+                                rec.nota += 1;
                             }
                             dSkrg.cogs += hppSales;
                             barisDihitung++;
@@ -3887,6 +4192,7 @@
                         dqBadge.style.display = 'none';
                     }
                 }
+                renderHppWarning_(hppKosongMap);
             } catch(e){}
 
             function hitungVsText(skrg, lalu, revertColor = false) {
@@ -3911,98 +4217,40 @@
                 let notaCount = Object.keys(basketData).length;
                 window.__lastNotaCount = notaCount;
                 updateEmptyState(netSales, notaCount);
-                if (document.getElementById('kpiSalesVs')) document.getElementById('kpiSalesVs').innerHTML = `<span class="help-icon" data-tooltip="Persentase pertumbuhan omzet bersih vs periode pembanding. Nota = 1 pembeli yang belanja dalam 1 hari (proxy transaksi).">?</span> ${hitungVsText(netSales, netSalesLalu)} vs <span style="font-weight:700; color:var(--muted);">${formatRp(netSalesLalu)}</span> · <span style="color:var(--muted); font-weight:700;">${notaCount.toLocaleString('id-ID')} Nota</span>`;
+                if (document.getElementById('kpiSalesVs')) document.getElementById('kpiSalesVs').innerHTML = `${hitungVsText(netSales, netSalesLalu)} vs <span style="font-weight:700; color:var(--muted);">${formatRp(netSalesLalu)}</span> · <span style="color:var(--muted); font-weight:700;">${notaCount.toLocaleString('id-ID')} Nota</span><span class="help-icon" data-tooltip="Persentase pertumbuhan omzet bersih vs periode pembanding. Nota = 1 pembeli yang belanja dalam 1 hari (proxy transaksi).">?</span>`;
                 let barFill = document.getElementById('kpiSalesProgress');
                 if (barFill) {
                     let displayPersen = persen < 0 ? 0 : (persen > 100 ? 100 : persen);
                     barFill.style.width = displayPersen + '%';
                     barFill.style.background = persen >= 100 ? 'var(--success)' : (persen >= 80 ? 'var(--warning)' : 'var(--primary)');
                 }
-                // --- PENGHITUNGAN AVG & RUN RATE STATIS (Mengunci pada Bulan Berjalan) ---
-                let realToday = new Date();
-                let today = new Date(gEnd);
-                if (gEnd.getMonth() === realToday.getMonth() && gEnd.getFullYear() === realToday.getFullYear()) {
-                    today = realToday;
-                }
-                let staticMonthlySales = 0;
-                let staticMonthlyQty = 0;
-                let staticPrevMonthlyQty = 0;
-                let staticMaxDate = 1;
-                let daysInCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-                let isEndOfCurrentMonth = today.getDate() === daysInCurrentMonth;
+                // --- AVG & PROYEKSI: MENGIKUTI RENTANG TERPILIH ---
+                // Dulu blok ini mengunci ke bulan berjalan, jadi memilih rentang bulan
+                // lain (mis. Agustus) tetap menampilkan angka bulan ini.
+                // Pembagi = hari rentang yang sudah lewat; tanggal masa depan tidak ikut
+                // dihitung supaya AVG tidak terpecah oleh hari yang belum ada datanya.
+                let hariDataRentang = Math.max(1, hariBerjalan);
+                let avgRentang = netSales / hariDataRentang;
+                // Proyeksi = ritme rentang × jumlah hari di bulan tanggal akhir rentang.
+                let hariBulanAkhir = new Date(gEnd.getFullYear(), gEnd.getMonth() + 1, 0).getDate();
+                let proyeksiRentang = avgRentang * hariBulanAkhir;
+                let labelRentangBulan = gEnd.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+                let qtyRentang = (dSkrg.salesQty || 0) - (dSkrg.returQty || 0);
+                let qtyRentangLalu = (dLalu.salesQty || 0) - (dLalu.returQty || 0);
 
-                // Mode supabase: nilai statis bulan berjalan datang dari RPC (rawDataTransaksi kosong)
-                if (DATA_SOURCE === 'supabase' && __rekapSupabaseData && __rekapSupabaseData.staticMonthly) {
-                    const st = __rekapSupabaseData.staticMonthly;
-                    staticMonthlySales = st.sales || 0;
-                    staticMonthlyQty = st.qty || 0;
-                    staticPrevMonthlyQty = st.prevQty || 0;
-                    staticMaxDate = st.maxDate || 1;
-                }
-
-                if (rawDataTransaksi && rawDataTransaksi.length > 0) {
-                    rawDataTransaksi.forEach(b => {
-                        let d = b.parsedDate;
-                        if (isNaN(d.getTime())) return;
-
-                        if (d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()) {
-                            let mentahNilai = b['Total Harga'] || b['Penjualan'] || b['Harga'] || b['Nilai'] || 0;
-                            let angkaAman = typeof mentahNilai === 'number' ? mentahNilai : parseFloat(mentahNilai.toString().replace(/[^0-9,-]/g, '').replace(/,/g, '.')) || 0;
-                            let qtyAman = b['Kuantitas'] ? parseInt(b['Kuantitas'].toString().replace(/[^\d-]/g, '')) : 0;
-
-                            let st = (b.Status || b.status || '').toString().toLowerCase();
-                            let isBatal = st.includes('batal') || st.includes('cancel') || st.includes('refund');
-                            if (!isBatal) {
-                                let isRetur = st.includes('retur') || st.includes('return') || b['Jenis'] === 'Retur';
-                                if (isRetur) {
-                                    staticMonthlySales -= Math.abs(angkaAman);
-                                    staticMonthlyQty -= Math.abs(qtyAman);
-                                } else {
-                                    staticMonthlySales += angkaAman;
-                                    staticMonthlyQty += Math.abs(qtyAman);
-                                }
-                                if (d.getDate() > staticMaxDate && isDateInRange(d, gStart, today)) {
-                                    staticMaxDate = d.getDate();
-                                }
-                            }
-                        } else if (d.getMonth() === (today.getMonth() === 0 ? 11 : today.getMonth() - 1) && d.getFullYear() === (today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear())) {
-                            if (isEndOfCurrentMonth || d.getDate() <= today.getDate()) {
-                                let qtyAman = b['Kuantitas'] ? parseInt(b['Kuantitas'].toString().replace(/[^\d-]/g, '')) : 0;
-                                let st = (b.Status || b.status || '').toString().toLowerCase();
-                                let isBatal = st.includes('batal') || st.includes('cancel') || st.includes('refund');
-                                if (!isBatal) {
-                                    let isRetur = st.includes('retur') || st.includes('return') || b['Jenis'] === 'Retur';
-                                    if (isRetur) {
-                                        staticPrevMonthlyQty -= Math.abs(qtyAman);
-                                    } else {
-                                        staticPrevMonthlyQty += Math.abs(qtyAman);
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
-
-                // Pembagi AVG: pakai hari terakhir data saat lag (data belum masuk), hari ini saat real-time
-                let pembagiHari = (staticMaxDate < today.getDate() - 1) ? staticMaxDate : today.getDate();
-                let staticAvg = staticMonthlySales / pembagiHari;
-                let staticRunRate = staticAvg * daysInCurrentMonth;
-                let bulanNama = today.toLocaleDateString('id-ID', { month: 'short' });
-
-                if (document.getElementById('kpiSalesPct')) document.getElementById('kpiSalesPct').innerText = `AVG (${bulanNama}): ${formatRp(staticAvg)} / hari`;
-                if (document.getElementById('kpiSalesRunRate')) document.getElementById('kpiSalesRunRate').innerText = `Proyeksi (${bulanNama}): ${formatRp(staticRunRate)}`;
+                if (document.getElementById('kpiSalesPct')) document.getElementById('kpiSalesPct').innerText = `AVG (${labelRentangBulan}): ${formatRp(avgRentang)} / hari`;
+                if (document.getElementById('kpiSalesRunRate')) document.getElementById('kpiSalesRunRate').innerText = `Proyeksi (${labelRentangBulan}): ${formatRp(proyeksiRentang)}`;
 
                 let elGap = document.getElementById('kpiSalesGap');
                 if (elGap) {
-                    let staticPersen = TARGET > 0 ? (staticMonthlySales / TARGET) * 100 : 0;
                     let defisitText = '';
-                    if (staticPersen >= 100) { defisitText = `<span style="color:var(--success);">${ICONS.fire} TARGET TEMBUS! ${staticPersen.toFixed(0)}%</span>`; }
+                    if (persen >= 100) { defisitText = `<span style="color:var(--success);">${ICONS.fire} TARGET TEMBUS! ${persen.toFixed(0)}%</span>`; }
                     else {
-                        let pctColor = staticPersen >= 80 ? 'var(--warning)' : 'var(--danger)';
-                        defisitText = `<span class="help-icon static" data-static-tooltip="Pencapaian = (Omzet bersih bulan berjalan ÷ Target) × 100%. Bar: Hijau ≥100%, Kuning ≥80%, Merah <80%.">?</span><span style="color:${pctColor};">${staticPersen.toFixed(0)}% · Defisit −${formatRp(TARGET - staticMonthlySales)}</span>`;
+                        let pctColor = persen >= 80 ? 'var(--warning)' : 'var(--danger)';
+                        defisitText = `<span style="color:${pctColor};">${persen.toFixed(0)}% · Defisit −${formatRp(TARGET - netSales)}</span><span class="help-icon static" data-static-tooltip="Pencapaian = (Omzet bersih pada rentang terpilih ÷ Target) × 100%. Bar: Hijau ≥100%, Kuning ≥80%, Merah <80%.">?</span>`;
                     }
 
-                    let qtyDiff = staticMonthlyQty - staticPrevMonthlyQty;
+                    let qtyDiff = qtyRentang - qtyRentangLalu;
                     let diffArrow = qtyDiff > 0 ? '▲' : (qtyDiff < 0 ? '▼' : '-');
                     let diffColor = qtyDiff > 0 ? 'var(--success)' : (qtyDiff < 0 ? 'var(--danger)' : 'var(--muted)');
                     let diffSign = qtyDiff > 0 ? '+' : '';
@@ -4013,18 +4261,18 @@
                     elGap.innerHTML = `
                         ${defisitText}
                         <span style="color:var(--muted); font-weight:800; font-size:10px;">
-                            Net QTY: ${staticMonthlyQty} Unit ${diffText}
+                            Net QTY: ${qtyRentang} Unit ${diffText}
                         </span>
                     `;
                 }
 
                 if (document.getElementById('kpiRetur')) document.getElementById('kpiRetur').innerText = formatRp(dSkrg.retur);
-                if (document.getElementById('kpiReturVs')) document.getElementById('kpiReturVs').innerHTML = `<span class="help-icon" data-tooltip="Persentase perubahan retur vs periode pembanding. Naik retur = merah.">?</span> ${hitungVsText(dSkrg.retur, dLalu.retur, true)} vs <span style="font-weight:700; color:var(--muted);">${formatRp(dLalu.retur)}</span>`;
+                if (document.getElementById('kpiReturVs')) document.getElementById('kpiReturVs').innerHTML = `${hitungVsText(dSkrg.retur, dLalu.retur, true)} vs <span style="font-weight:700; color:var(--muted);">${formatRp(dLalu.retur)}</span><span class="help-icon" data-tooltip="Persentase perubahan retur vs periode pembanding. Naik retur = merah.">?</span>`;
                 let pctRetur = netSales > 0 ? (dSkrg.retur / netSales * 100).toFixed(1) : 0;
                 if (document.getElementById('kpiReturDetail')) document.getElementById('kpiReturDetail').innerText = dSkrg.returQty + " Unit | " + pctRetur + "% Loss Rate";
 
                 if (document.getElementById('kpiNetProfit')) document.getElementById('kpiNetProfit').innerText = formatRp(netProfit);
-                if (document.getElementById('kpiNetVs')) document.getElementById('kpiNetVs').innerHTML = `<span class="help-icon" data-tooltip="Persentase perubahan laba bersih vs periode pembanding.">?</span> ${hitungVsText(netProfit, netProfitLalu)} vs <span style="font-weight:700; color:var(--muted);">${formatRp(netProfitLalu)}</span>`;
+                if (document.getElementById('kpiNetVs')) document.getElementById('kpiNetVs').innerHTML = `${hitungVsText(netProfit, netProfitLalu)} vs <span style="font-weight:700; color:var(--muted);">${formatRp(netProfitLalu)}</span><span class="help-icon" data-tooltip="Persentase perubahan laba bersih vs periode pembanding.">?</span>`;
                 let pelBaruBulanIni = 0;
                 for (let plg in firstPurchaseData) {
                     let pd = firstPurchaseData[plg];
@@ -4035,7 +4283,7 @@
                 if (document.getElementById('kpiOpexDetail')) document.getElementById('kpiOpexDetail').innerHTML = `<div>Margin: ${netMargin.toFixed(1)}% | Biaya: ${formatRp(totalBiaya)}</div><div>CAC: <b style="color:var(--danger)">${formatRp(CAC)}/plg</b></div>`;
 
                 if (document.getElementById('kpiPiutang')) document.getElementById('kpiPiutang').innerText = formatRp(piutangVal);
-                if (document.getElementById('kpiPiutangVs')) document.getElementById('kpiPiutangVs').innerHTML = `<span class="help-icon" data-tooltip="Piutang = Omzet Bersih 7 hari terakhir (proxy payout).">?</span> ${piutangVal > 0 ? ((piutangVal/netSales*100).toFixed(1)+'% dari Omzet') : '0%'}`;
+                if (document.getElementById('kpiPiutangVs')) document.getElementById('kpiPiutangVs').innerHTML = `${piutangVal > 0 ? ((piutangVal/netSales*100).toFixed(1)+'% dari Omzet') : '0%'}<span class="help-icon" data-tooltip="Piutang = Omzet Bersih 7 hari terakhir (proxy payout).">?</span>`;
                 if (document.getElementById('kpiPiutangDetail')) document.getElementById('kpiPiutangDetail').innerHTML = `<span>Lunas: ${formatRp(lunasVal)} | Retur: ${formatRp(dSkrg.retur)}</span>`;
 
                 let maxHari = Object.keys(rekapHari).reduce((a, b) => rekapHari[a] > rekapHari[b] ? a : b, '-');
@@ -4979,6 +5227,9 @@
             const prev = document.documentElement.getAttribute('data-theme') || 'light';
             sessionStorage.setItem('printPrevTheme', prev);
             if (prev === 'dark') document.documentElement.setAttribute('data-theme', 'light');
+            // Simpan warna asli: sebelumnya restore selalu memaksa --muted, jadi
+            // warna teks chart berubah permanen setelah print.
+            if (window.__chartColorBeforePrint === undefined) window.__chartColorBeforePrint = Chart.defaults.color;
             Chart.defaults.color = cssVar_('--text');
             const all = [];
             if (Chart.instances) Object.values(Chart.instances).forEach(function (c) { all.push(c); });
@@ -5011,13 +5262,46 @@
             if (!biayaEmpty && typeof renderBiayaTable === 'function') { try { renderBiayaTable(); } catch (e) {} }
             if ($.fn.DataTable.isDataTable('#biayaTable')) { try { const dt = $('#biayaTable').DataTable(); sessionStorage.setItem('biayaTable_len', dt.page.len()); dt.page.len(-1).draw(false); } catch (e) {} }
             if (biayaEmpty) { const bc = document.getElementById('biayaContainer'); if (bc) bc.classList.add('biaya-kosong'); }
-            try { const r = $('#reportrange').val() || ''; const ph = document.getElementById('printRangeHeader'); if (ph) ph.textContent = 'Periode: ' + r; } catch (e) {}
+            // Header cetak: rentang terpilih + rentang pembanding (angka "vs" di kartu
+            // tidak menyebut periodenya, jadi tanpa ini pembaca cetak tidak tahu
+            // dibandingkan dengan rentang apa).
+            try {
+                const label = labelRentangCetak_();
+                ['printRangeHeader', 'printRangeHeaderBiaya'].forEach(function (id) {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = label;
+                });
+            } catch (e) {}
+        }
+
+        // "Periode: 04 Nov 2026 – 10 Nov 2026 · Pembanding (Periode Sebelumnya): 28 Okt 2026 – 03 Nov 2026"
+        function labelRentangCetak_() {
+            const fmt = function (d) {
+                return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            };
+            const sIso = (document.getElementById('startDate') || {}).value || '';
+            const eIso = (document.getElementById('endDate') || {}).value || '';
+            const mode = (document.getElementById('comparisonMode') || {}).value || 'rolling';
+            const gS = sIso ? new Date(sIso + 'T00:00:00') : null;
+            const gE = eIso ? new Date(eIso + 'T00:00:00') : null;
+            if (!gS || !gE || isNaN(gS.getTime()) || isNaN(gE.getTime())) {
+                const r = (document.getElementById('reportrange') || {}).value || '';
+                return 'Periode: ' + r;
+            }
+            const modeLabel = mode === 'monthly' ? 'Bulan Lalu' : 'Periode Sebelumnya';
+            let pembanding = '';
+            if (typeof hitungRentangPembanding === 'function') {
+                const { pStart, pEnd } = hitungRentangPembanding(gS, gE, mode);
+                pembanding = ' · Pembanding (' + modeLabel + '): ' + fmt(pStart) + ' – ' + fmt(pEnd);
+            }
+            return 'Periode: ' + fmt(gS) + ' – ' + fmt(gE) + pembanding;
         }
 
         function restoreScreenTheme() {
             const prev = sessionStorage.getItem('printPrevTheme') || 'light';
             document.documentElement.setAttribute('data-theme', prev);
-            Chart.defaults.color = cssVar_('--muted');
+            Chart.defaults.color = (window.__chartColorBeforePrint !== undefined) ? window.__chartColorBeforePrint : cssVar_('--muted');
+            delete window.__chartColorBeforePrint;
             const all = [];
             if (Chart.instances) Object.values(Chart.instances).forEach(function (c) { all.push(c); });
             if (typeof charts !== 'undefined' && charts) Object.values(charts).forEach(function (c) { if (c) all.push(c); });
@@ -5028,12 +5312,13 @@
                 ['x', 'y'].forEach(function (ax) {
                     const s = c.options.scales && c.options.scales[ax];
                     if (s) {
-                        if (s.ticks) s.ticks.color = undefined;
-                        if (s.grid) s.grid.color = undefined;
+                        // delete (bukan = undefined): biar Chart.js kembali memakai defaultnya.
+                        if (s.ticks) delete s.ticks.color;
+                        if (s.grid) delete s.grid.color;
                     }
                 });
                 if (c.options.plugins && c.options.plugins.legend && c.options.plugins.legend.labels) {
-                    c.options.plugins.legend.labels.color = undefined;
+                    delete c.options.plugins.legend.labels.color;
                 }
                 if ('_printMAR' in c) { c.options.maintainAspectRatio = c._printMAR; delete c._printMAR; }
                 c.update('none');
@@ -5043,10 +5328,40 @@
             if ($.fn.DataTable.isDataTable('#dtProduk')) { try { const dt = $('#dtProduk').DataTable(); if (dt.responsive) { dt.responsive.enable(); dt.columns.adjust().draw(false); } } catch (e) {} }
             if ($.fn.DataTable.isDataTable('#biayaTable')) { try { $('#biayaTable').DataTable().page.len(parseInt(sessionStorage.getItem('biayaTable_len') || '10', 10)).draw(false); } catch (e) {} }
             try { const bc = document.getElementById('biayaContainer'); if (bc) bc.classList.remove('biaya-kosong'); } catch (e) {}
+
+            // Setelah print ditutup, layout layar belum tentu sudah dihitung ulang saat
+            // resize() dipanggil — kanvas bisa tertinggal di ukuran kertas (grafik
+            // gepeng/terlalu pendek). Ulangi sekali di frame berikutnya.
+            const resizeUlang_ = function () {
+                all.forEach(function (c) {
+                    try {
+                        const box = c.canvas && c.canvas.parentElement;
+                        if (box && box.clientWidth > 0 && box.clientHeight > 0) { c.resize(); c.update('none'); }
+                    } catch (e) {}
+                });
+            };
+            if (typeof requestAnimationFrame === 'function') requestAnimationFrame(resizeUlang_);
+            setTimeout(resizeUlang_, 160);
         }
 
         window.addEventListener('beforeprint', applyPrintTheme);
         window.addEventListener('afterprint', restoreScreenTheme);
+
+        // Tab HPP tidak ikut tercetak. Kalau user mencetak dari tab itu, pindah ke
+        // Dashboard dulu supaya hasil cetak tidak kosong, lalu kembali setelah print.
+        window.addEventListener('beforeprint', function () {
+            const box = document.getElementById('hppContainer');
+            if (box && box.style.display !== 'none') {
+                window.__tabSebelumPrint = 'hpp';
+                showTab('main');
+            }
+        });
+        window.addEventListener('afterprint', function () {
+            if (window.__tabSebelumPrint === 'hpp') {
+                delete window.__tabSebelumPrint;
+                showTab('hpp');
+            }
+        });
 
         // =======================================================
         // BULK IMPORT EXCEL FUNCTIONS (UPSERT LOGIC)
@@ -6426,12 +6741,492 @@
 
         function showTab(name) {
             const isMain = name === 'main';
+            const isBiaya = name === 'biaya';
+            const isHpp = name === 'hpp';
             document.getElementById('mainContainer').style.display = isMain ? '' : 'none';
-            document.getElementById('biayaContainer').style.display = isMain ? 'none' : '';
+            document.getElementById('biayaContainer').style.display = isBiaya ? '' : 'none';
+            const hppBox = document.getElementById('hppContainer');
+            if (hppBox) hppBox.style.display = isHpp ? '' : 'none';
             document.getElementById('tabMain').classList.toggle('active', isMain);
-            document.getElementById('tabBiaya').classList.toggle('active', !isMain);
-            if (!isMain) renderBiayaTab();
+            document.getElementById('tabBiaya').classList.toggle('active', isBiaya);
+            const tabHpp = document.getElementById('tabHpp');
+            if (tabHpp) tabHpp.classList.toggle('active', isHpp);
+            if (isBiaya) renderBiayaTab();
+            if (isHpp) renderHppTab();
+        }        /* =====================================================================
+           TAB HPP — MASTER SKU & HPP
+           Baca: tabel `produk` lewat REST (policy "allow public read").
+           Tulis: GAS action `bulkUpsertProduk` (anon tidak punya policy tulis).
+           Alur impor: Excel → cocokkan Nama Barang (lalu Kode Series) →
+           baris tak cocok dipetakan ke SKU lama atau dibuat SKU baru.
+           ===================================================================== */
+        let _hppRows = [];
+        let _hppDirty = {};
+        let _hppLoading = false;
+        let _hppImport = null;
+
+        function parseHppNumber_(v) {
+            if (v === null || v === undefined || v === '') return 0;
+            if (typeof v === 'number') return isFinite(v) ? Math.round(v * 100) / 100 : 0;
+            let s = String(v).trim().replace(/[^0-9.,-]/g, '');
+            if (!s) return 0;
+            const lastDot = s.lastIndexOf('.'), lastComma = s.lastIndexOf(',');
+            if (lastDot > -1 && lastComma > -1) {
+                if (lastComma > lastDot) s = s.replace(/\./g, '').replace(',', '.');
+                else s = s.replace(/,/g, '');
+            } else if (lastComma > -1) {
+                s = (s.length - lastComma - 1) === 3 ? s.replace(/,/g, '') : s.replace(',', '.');
+            } else if (lastDot > -1) {
+                if ((s.length - lastDot - 1) === 3) s = s.replace(/\./g, '');
+            }
+            const n = parseFloat(s);
+            return isFinite(n) ? Math.round(n * 100) / 100 : 0;
         }
+
+        async function fetchHppRows_(force) {
+            if (_hppRows.length && !force) return _hppRows;
+            if (DATA_SOURCE !== 'supabase') { _hppRows = []; return _hppRows; }
+            const sel = 'id,"Nama Barang","Kode Series","Nama Series","Kategori Produk","HPP"';
+            const res = await fetch(SUPABASE_URL + '/rest/v1/produk?select=' + encodeURIComponent(sel) + '&order=id.asc', { headers: SUPABASE_HEADERS_ });
+            if (!res.ok) throw new Error('Supabase ' + res.status);
+            const data = await res.json();
+            _hppRows = (Array.isArray(data) ? data : []).map(function (p) {
+                return {
+                    id: p.id,
+                    nama: String(p['Nama Barang'] || '').trim(),
+                    kode: String(p['Kode Series'] || '').trim(),
+                    seri: String(p['Nama Series'] || '').trim(),
+                    kategori: String(p['Kategori Produk'] || '').trim(),
+                    hpp: parseFloat(p['HPP']) || 0
+                };
+            }).filter(function (p) { return p.nama; });
+            return _hppRows;
+        }
+
+        function renderHppKpi_() {
+            const total = _hppRows.length;
+            const terisi = _hppRows.filter(function (r) { return r.hpp > 0; }).length;
+            const kosong = total - terisi;
+            const seri = {};
+            _hppRows.forEach(function (r) { if (r.kode) seri[r.kode.toUpperCase()] = 1; });
+            const rata = terisi ? _hppRows.reduce(function (s, r) { return s + (r.hpp > 0 ? r.hpp : 0); }, 0) / terisi : 0;
+            const set = function (id, txt) { const el = document.getElementById(id); if (el) el.textContent = txt; };
+            set('hppKpiTotal', total.toLocaleString('id-ID'));
+            set('hppKpiTotalInfo', Object.keys(seri).length + ' kode series');
+            set('hppKpiTerisi', terisi.toLocaleString('id-ID'));
+            set('hppKpiTerisiInfo', (total ? (terisi / total * 100).toFixed(0) : 0) + '% dari master');
+            set('hppKpiKosong', kosong.toLocaleString('id-ID'));
+            set('hppKpiKosongInfo', kosong ? 'laba produk ini dihitung tanpa HPP' : 'semua SKU sudah punya HPP');
+            set('hppKpiRata', formatRp(rata));
+            set('hppKpiRataInfo', terisi ? 'dari ' + terisi + ' SKU terisi' : 'belum ada HPP');
+        }
+
+        async function renderHppTab() {
+            const tb = document.getElementById('hppTableBody');
+            if (!tb) return;
+            if (!_hppRows.length && !_hppLoading) {
+                _hppLoading = true;
+                tb.innerHTML = '<tr><td colspan="5" style="padding:18px; text-align:center; color:var(--muted); font-size:12px;">Memuat master SKU...</td></tr>';
+                try {
+                    await fetchHppRows_(true);
+                } catch (err) {
+                    _hppLoading = false;
+                    tb.innerHTML = '<tr><td colspan="5" style="padding:18px; text-align:center; color:var(--danger); font-size:12px;">Gagal memuat master SKU: ' + escHtml_(err.message || err) + '</td></tr>';
+                    return;
+                }
+                _hppLoading = false;
+            }
+            renderHppKpi_();
+            filterHppRows();
+            updateHppDirtyUI_();
+        }
+
+        // Nilai yang ditampilkan = nilai edit (kalau ada) atau nilai tersimpan.
+        // Dipakai saat render ulang (mis. setelah pencarian) supaya ketikan yang
+        // belum disimpan tidak hilang dari layar.
+        function hppVal_(row, field) {
+            const d = _hppDirty[row.id];
+            if (d && d[field] !== undefined) return d[field];
+            return row[field];
+        }
+
+        function hppBadge_(hpp) {
+            return hpp > 0
+                ? '<span style="padding:2px 8px; border-radius:var(--radius-full); background:var(--success-light); color:var(--success-strong); font-size:10px; font-weight:800;">ADA</span>'
+                : '<span style="padding:2px 8px; border-radius:var(--radius-full); background:var(--danger-light); color:var(--danger); font-size:10px; font-weight:800;">KOSONG</span>';
+        }
+
+        function filterHppRows() {
+            const tb = document.getElementById('hppTableBody');
+            if (!tb) return;
+            const q = (document.getElementById('hppSearch') || {}).value || '';
+            const key = q.trim().toUpperCase();
+            // pencarian memakai nilai yang terlihat, supaya SKU yang baru diketik namanya tetap ketemu
+            const list = key
+                ? _hppRows.filter(function (r) {
+                    const hay = (hppVal_(r, 'nama') + ' ' + hppVal_(r, 'kode') + ' ' + hppVal_(r, 'kategori')).toUpperCase();
+                    return hay.indexOf(key) > -1;
+                })
+                : _hppRows;
+            if (!list.length) {
+                tb.innerHTML = '<tr><td colspan="5" style="padding:18px; text-align:center; color:var(--muted); font-size:12px;">' +
+                    (_hppRows.length ? 'Tidak ada SKU yang cocok dengan pencarian.' : 'Master SKU kosong.') + '</td></tr>';
+            } else {
+                const cell = 'padding:4px 6px; border-bottom:1px solid var(--border);';
+                const inp = 'width:100%; box-sizing:border-box; padding:5px 7px; border:1px solid transparent; border-radius:var(--radius-sm); background:transparent; color:var(--text); font-size:12px; font-weight:700; outline:none;';
+                const focus = 'onfocus="this.style.borderColor=\'var(--border)\'; this.style.background=\'var(--surface)\';" onblur="this.style.borderColor=\'transparent\'; this.style.background=\'transparent\';"';
+                tb.innerHTML = list.map(function (r) {
+                    const dirty = Object.prototype.hasOwnProperty.call(_hppDirty, r.id);
+                    const hpp = hppVal_(r, 'hpp');
+                    return '<tr data-id="' + r.id + '" style="' + (dirty ? 'background:var(--warning-light);' : '') + '">' +
+                        '<td style="' + cell + '">' +
+                        '<input type="text" value="' + escHtml_(hppVal_(r, 'nama')) + '" aria-label="Nama barang" ' + focus +
+                        ' onchange="onHppEdit(' + r.id + ', \'nama\', this.value)" style="' + inp + ' font-weight:800;">' +
+                        '</td>' +
+                        '<td style="' + cell + '">' +
+                        '<input type="text" value="' + escHtml_(hppVal_(r, 'kode')) + '" placeholder="-" aria-label="Kode series" ' + focus +
+                        ' onchange="onHppEdit(' + r.id + ', \'kode\', this.value)" style="' + inp + ' color:var(--muted);">' +
+                        '</td>' +
+                        '<td style="' + cell + '">' +
+                        '<input type="text" value="' + escHtml_(hppVal_(r, 'kategori')) + '" placeholder="-" aria-label="Kategori produk" ' + focus +
+                        ' onchange="onHppEdit(' + r.id + ', \'kategori\', this.value)" style="' + inp + ' color:var(--muted);">' +
+                        '</td>' +
+                        '<td style="' + cell + ' text-align:right;">' +
+                        '<input type="number" min="0" step="1" inputmode="numeric" value="' + (hpp > 0 ? hpp : '') + '" placeholder="0" ' +
+                        'aria-label="HPP ' + escHtml_(r.nama) + '" onfocus="this.select()" onchange="onHppEdit(' + r.id + ', \'hpp\', this.value)" ' +
+                        'style="width:130px; padding:6px 8px; text-align:right; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text); font-weight:700; font-size:12px; font-variant-numeric:tabular-nums;">' +
+                        '</td>' +
+                        '<td style="' + cell + ' text-align:center;">' + hppBadge_(hpp) + '</td>' +
+                        '</tr>';
+                }).join('');
+            }
+            const info = document.getElementById('hppLoadInfo');
+            if (info) info.textContent = _hppRows.length ? ('Menampilkan ' + list.length + ' dari ' + _hppRows.length + ' SKU.') : '';
+        }
+
+        // field: 'nama' | 'kode' | 'kategori' | 'hpp'
+        function onHppEdit(id, field, val) {
+            const row = _hppRows.find(function (r) { return String(r.id) === String(id); });
+            if (!row) return;
+            const tr = document.querySelector('#hppTableBody tr[data-id="' + id + '"]');
+            const v = field === 'hpp' ? parseHppNumber_(val) : String(val == null ? '' : val).trim();
+            if (field === 'nama' && !v) {
+                showToast('Nama barang tidak boleh kosong.', 'warning');
+                if (tr) tr.querySelector('input[aria-label="Nama barang"]').value = row.nama;
+                return;
+            }
+            const cur = _hppDirty[row.id] || {};
+            const orig = field === 'hpp' ? (row.hpp || 0) : (row[field] || '');
+            if (v === orig) delete cur[field];
+            else cur[field] = v;
+            if (Object.keys(cur).length) _hppDirty[row.id] = cur;
+            else delete _hppDirty[row.id];
+            if (tr) {
+                tr.style.background = Object.prototype.hasOwnProperty.call(_hppDirty, row.id) ? 'var(--warning-light)' : '';
+                if (field === 'hpp') tr.lastElementChild.innerHTML = hppBadge_(v);
+            }
+            updateHppDirtyUI_();
+        }
+
+        function updateHppDirtyUI_() {
+            const ids = Object.keys(_hppDirty);
+            const fields = ids.reduce(function (s, id) { return s + Object.keys(_hppDirty[id]).length; }, 0);
+            const btn = document.getElementById('btnHppSave');
+            const info = document.getElementById('hppDirtyInfo');
+            if (btn) { btn.disabled = ids.length === 0; btn.style.opacity = ids.length ? '1' : '.5'; }
+            if (info) info.textContent = ids.length ? (ids.length + ' SKU · ' + fields + ' kolom belum disimpan') : 'Tidak ada perubahan';
+        }
+
+        async function kirimHppRows_(rows, label) {
+            const btn = document.getElementById('btnHppSave');
+            if (btn) { btn.disabled = true; btn.style.opacity = '.5'; }
+            try {
+                const res = await postAction('bulkUpsertProduk', { rows: rows });
+                const txt = await res.text();
+                let out = {};
+                try { out = JSON.parse(txt); } catch (e) { out = { status: 'error', message: txt.slice(0, 200) }; }
+                if (out.status !== 'success') throw new Error(out.message || 'Gagal menyimpan');
+                const peringatan = Array.isArray(out.warnings) ? out.warnings : [];
+                showToast((label || 'HPP tersimpan') + ' - ' + (out.updated || 0) + ' diperbarui, ' + (out.added || 0) + ' baru' +
+                    (out.skipped ? ', ' + out.skipped + ' dilewati' : '') +
+                    (peringatan.length ? '\n' + peringatan.join('\n') : ''), peringatan.length ? 'warning' : 'success');
+                _hppDirty = {};
+                _hppRows = [];
+                _produkMasterCache = null;   // kartu KESEHATAN KATALOG ikut segar
+                await fetchHppRows_(true);
+                renderHppTab();
+                if (document.getElementById('mainContainer').style.display !== 'none') {
+                    try { await jalankanProsesData_(); } catch (e) {}
+                }
+                return true;
+            } catch (err) {
+                showToast('Gagal menyimpan HPP: ' + (err.message || err), 'error');
+                return false;
+            } finally {
+                updateHppDirtyUI_();
+            }
+        }
+
+        function saveHppChanges() {
+            const ids = Object.keys(_hppDirty);
+            if (!ids.length) return Promise.resolve(false);
+
+            // Nama Barang adalah kunci pencocokan HPP ke transaksi. Dua penjagaan:
+            // (1) nama baru tidak boleh bentrok dengan SKU lain, (2) rename diberi peringatan.
+            const namaBaru = {};
+            let rename = 0;
+            for (let i = 0; i < ids.length; i++) {
+                const d = _hppDirty[ids[i]];
+                if (d.nama === undefined) continue;
+                const key = d.nama.toUpperCase();
+                if (namaBaru[key]) { showToast('Nama "' + d.nama + '" dipakai lebih dari satu baris.', 'error'); return Promise.resolve(false); }
+                namaBaru[key] = true;
+                rename++;
+            }
+            if (rename) {
+                const bentrok = _hppRows.some(function (r) {
+                    const d = _hppDirty[r.id];
+                    if (d && d.nama !== undefined) return false;
+                    return Object.prototype.hasOwnProperty.call(namaBaru, r.nama.toUpperCase());
+                });
+                if (bentrok) { showToast('Nama baru bentrok dengan SKU lain yang sudah ada.', 'error'); return Promise.resolve(false); }
+                if (!confirm('Mengganti nama ' + rename + ' SKU akan memutus pencocokan HPP untuk transaksi lama yang memakai nama lama.\n\nLanjutkan?')) return Promise.resolve(false);
+            }
+
+            const rows = ids.map(function (id) {
+                const d = _hppDirty[id];
+                const out = { id: Number(id) };
+                if (d.hpp !== undefined) out.hpp = d.hpp;
+                if (d.nama !== undefined) out.nama = d.nama;
+                if (d.kode !== undefined) out.kode_series = d.kode;
+                if (d.kategori !== undefined) out.kategori = d.kategori;
+                return out;
+            });
+            return kirimHppRows_(rows, 'Master SKU diperbarui');
+        }
+
+        function openHppImportModal() {
+            _hppImport = null;
+            const modal = document.getElementById('hppImportModal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+            const dz = document.getElementById('hppImportDrop');
+            const fi = document.getElementById('hppFileInput');
+            if (fi) fi.value = '';
+            if (dz && fi && !dz.dataset.bound) {
+                dz.dataset.bound = '1';
+                dz.onclick = function () { fi.click(); };
+                dz.ondragover = function (e) { e.preventDefault(); dz.style.borderColor = 'var(--primary)'; };
+                dz.ondragleave = function () { dz.style.borderColor = 'var(--border)'; };
+                dz.ondrop = function (e) {
+                    e.preventDefault();
+                    dz.style.borderColor = 'var(--border)';
+                    if (e.dataTransfer.files.length) handleHppFile(e.dataTransfer.files[0]);
+                };
+                fi.onchange = function (e) { if (e.target.files.length) handleHppFile(e.target.files[0]); };
+            }
+            const sum = document.getElementById('hppImportSummary');
+            if (sum) sum.style.display = 'none';
+            const wrap = document.getElementById('hppImportReviewWrap');
+            if (wrap) wrap.style.display = 'none';
+            const btn = document.getElementById('btnHppImportSave');
+            if (btn) { btn.disabled = true; btn.style.opacity = '.5'; btn.textContent = 'Simpan'; }
+            fetchHppRows_(false).catch(function () {});
+        }
+
+        function closeHppImportModal() {
+            const modal = document.getElementById('hppImportModal');
+            if (modal) modal.style.display = 'none';
+            _hppImport = null;
+        }
+
+        function handleHppFile(file) {
+            if (typeof XLSX === 'undefined') { showToast('Library Excel belum termuat, coba muat ulang halaman.', 'error'); return; }
+            const reader = new FileReader();
+            reader.onload = function (ev) {
+                try { parseHppWorkbook_(ev.target.result); }
+                catch (err) { showToast('Gagal membaca file: ' + (err.message || err), 'error'); }
+            };
+            reader.onerror = function () { showToast('File tidak bisa dibaca.', 'error'); };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function parseHppWorkbook_(buf) {
+            const wb = XLSX.read(new Uint8Array(buf), { type: 'array' });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false, defval: '' });
+            if (!aoa.length) throw new Error('Sheet kosong.');
+            const norm = function (s) { return String(s === null || s === undefined ? '' : s).toLowerCase().replace(/\s+/g, ' ').trim(); };
+            const aliases = {
+                nama: ['nama barang', 'nama produk', 'produk', 'sku', 'nama', 'item', 'barang', 'nama item'],
+                hpp: ['hpp', 'modal', 'harga modal', 'harga pokok', 'hpp satuan', 'cost', 'harga beli'],
+                kode: ['kode series', 'kode barang', 'kode sku', 'kode', 'sku code'],
+                seri: ['nama series', 'series', 'seri'],
+                kategori: ['kategori produk', 'kategori']
+            };
+            let headerIdx = -1, map = {};
+            for (let i = 0; i < Math.min(aoa.length, 10); i++) {
+                const row = (aoa[i] || []).map(norm);
+                const found = {};
+                Object.keys(aliases).forEach(function (k) {
+                    const c = row.findIndex(function (v) { return v && aliases[k].some(function (a) { return v === a || v.indexOf(a) > -1; }); });
+                    if (c > -1) found[k] = c;
+                });
+                if (found.nama !== undefined && found.hpp !== undefined) { headerIdx = i; map = found; break; }
+            }
+            if (headerIdx < 0) throw new Error('Header tidak dikenali. Butuh kolom "Nama Barang" dan "HPP" (atau "Modal").');
+            const rows = [];
+            for (let i = headerIdx + 1; i < aoa.length; i++) {
+                const r = aoa[i] || [];
+                const nama = String(r[map.nama] === undefined || r[map.nama] === null ? '' : r[map.nama]).trim();
+                if (!nama) continue;
+                rows.push({
+                    nama: nama,
+                    hpp: parseHppNumber_(r[map.hpp]),
+                    kode: map.kode !== undefined ? String(r[map.kode] || '').trim() : '',
+                    seri: map.seri !== undefined ? String(r[map.seri] || '').trim() : '',
+                    kategori: map.kategori !== undefined ? String(r[map.kategori] || '').trim() : ''
+                });
+            }
+            if (!rows.length) throw new Error('Tidak ada baris dengan nama produk.');
+
+            const byName = {}, byKode = {};
+            _hppRows.forEach(function (p) {
+                byName[p.nama.toUpperCase()] = p;
+                if (p.kode) byKode[p.kode.toUpperCase()] = p;
+            });
+            rows.forEach(function (r) {
+                const up = r.nama.toUpperCase();
+                let m = byName[up] || (r.kode ? byKode[String(r.kode).toUpperCase()] : null) || null;
+                r.matchBy = m ? (byName[up] ? 'nama' : 'kode') : '';
+                r.matchId = m ? m.id : '';
+                r.matchNama = m ? m.nama : '';
+                r.action = m ? 'match' : 'new';
+                r.linkId = '';
+            });
+            _hppImport = { rows: rows };
+            renderHppImportReview_();
+        }
+
+        function renderHppImportReview_() {
+            if (!_hppImport) return;
+            const rows = _hppImport.rows;
+            const matched = rows.filter(function (r) { return r.action === 'match'; }).length;
+            const baru = rows.filter(function (r) { return r.action === 'new'; }).length;
+            const tertaut = rows.filter(function (r) { return r.action === 'link'; }).length;
+            const sum = document.getElementById('hppImportSummary');
+            if (sum) {
+                sum.style.display = 'flex';
+                const pill = function (txt, bg, fg) {
+                    return '<span style="padding:3px 10px; border-radius:var(--radius-full); background:' + bg + '; color:' + fg + '; font-size:11px; font-weight:800;">' + txt + '</span>';
+                };
+                sum.innerHTML = '<span style="font-size:12px; font-weight:800; color:var(--text);">' + rows.length + ' baris terbaca</span>' +
+                    pill(matched + ' cocok ke SKU lama', 'var(--success-light)', 'var(--success-strong)') +
+                    pill((rows.length - matched) + ' perlu dipetakan', 'var(--warning-light)', 'var(--warning-strong)') +
+                    (tertaut ? pill(tertaut + ' ditautkan manual', 'var(--surface2)', 'var(--muted)') : '') +
+                    (baru ? pill(baru + ' jadi SKU baru', 'var(--surface2)', 'var(--muted)') : '');
+            }
+            const body = document.getElementById('hppImportReviewBody');
+            const opsiSku = _hppRows.map(function (p) {
+                return '<option value="' + p.id + '">' + escHtml_(p.nama) + (p.kode ? ' - ' + escHtml_(p.kode) : '') + '</option>';
+            }).join('');
+            if (body) {
+                body.innerHTML = rows.map(function (r, i) {
+                    let badge;
+                    if (r.action === 'match') {
+                        badge = '<span style="padding:2px 8px; border-radius:var(--radius-full); background:var(--success-light); color:var(--success-strong); font-size:10px; font-weight:800;">COCOK' +
+                            (r.matchBy === 'kode' ? ' VIA KODE' : '') + '</span><div style="font-size:10px; color:var(--muted); margin-top:3px;">' + escHtml_(r.matchNama) + '</div>';
+                    } else if (r.action === 'link') {
+                        badge = '<select onchange="setHppImportLink(' + i + ', this.value)" aria-label="Pilih SKU tujuan" ' +
+                            'style="width:100%; min-width:210px; padding:5px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text); font-size:11px; font-weight:700;">' +
+                            '<option value="">- pilih SKU terdaftar -</option>' + opsiSku + '</select>';
+                    } else {
+                        badge = '<span style="padding:2px 8px; border-radius:var(--radius-full); background:var(--warning-light); color:var(--warning-strong); font-size:10px; font-weight:800;">SKU BARU</span>';
+                    }
+                    return '<tr data-i="' + i + '" style="' + (r.action === 'match' ? '' : 'background:var(--warning-light);') + '">' +
+                        '<td style="padding:6px 10px; color:var(--muted); border-bottom:1px solid var(--border);">' + (i + 1) + '</td>' +
+                        '<td style="padding:6px 10px; font-weight:700; color:var(--text); border-bottom:1px solid var(--border); min-width:170px;">' + escHtml_(r.nama) +
+                        (r.kode ? '<div style="font-size:10px; color:var(--muted); font-weight:700;">' + escHtml_(r.kode) + '</div>' : '') + '</td>' +
+                        '<td style="padding:6px 10px; text-align:right; font-weight:700; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums;">' + formatRp(r.hpp) + '</td>' +
+                        '<td style="padding:6px 10px; border-bottom:1px solid var(--border);">' + badge + '</td>' +
+                        '<td style="padding:6px 10px; border-bottom:1px solid var(--border);">' +
+                        '<select onchange="setHppImportAction(' + i + ', this.value)" aria-label="Aksi baris" ' +
+                        'style="width:100%; padding:5px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text); font-size:11px; font-weight:700;">' +
+                        '<option value="match"' + (r.action === 'match' ? ' selected' : '') + (r.matchId ? '' : ' disabled') + '>' + (r.matchId ? 'Pakai SKU terdeteksi' : 'Tidak ada SKU terdeteksi') + '</option>' +
+                        '<option value="link"' + (r.action === 'link' ? ' selected' : '') + '>Hubungkan ke SKU terdaftar</option>' +
+                        '<option value="new"' + (r.action === 'new' ? ' selected' : '') + '>Buat SKU baru</option>' +
+                        '</select></td>' +
+                        '</tr>';
+                }).join('');
+            }
+            const wrap = document.getElementById('hppImportReviewWrap');
+            if (wrap) wrap.style.display = 'block';
+            const btn = document.getElementById('btnHppImportSave');
+            const siap = rows.filter(function (r) { return r.action !== 'link' || r.linkId; }).length;
+            if (btn) {
+                btn.disabled = siap !== rows.length;
+                btn.style.opacity = btn.disabled ? '.5' : '1';
+                btn.textContent = btn.disabled ? 'Lengkapi pemetaan' : ('Simpan ' + rows.length + ' baris');
+            }
+        }
+
+        function setHppImportAction(i, val) {
+            if (!_hppImport || !_hppImport.rows[i]) return;
+            const r = _hppImport.rows[i];
+            if (val === 'match' && !r.matchId) return;
+            r.action = val;
+            if (val !== 'link') r.linkId = '';
+            renderHppImportReview_();
+        }
+
+        function setHppImportLink(i, id) {
+            if (!_hppImport || !_hppImport.rows[i]) return;
+            const r = _hppImport.rows[i];
+            r.linkId = id || '';
+            r.action = id ? 'link' : 'new';
+            renderHppImportReview_();
+            // pertahankan pilihan select setelah render ulang
+            const sel = document.querySelector('#hppImportReviewBody tr[data-i="' + i + '"] select[aria-label="Pilih SKU tujuan"]');
+            if (sel && id) sel.value = String(id);
+        }
+
+        async function saveHppImport() {
+            if (!_hppImport) return;
+            const rows = [];
+            _hppImport.rows.forEach(function (r) {
+                if (r.action === 'match' && r.matchId) rows.push({ id: r.matchId, hpp: r.hpp });
+                else if (r.action === 'link' && r.linkId) rows.push({ id: Number(r.linkId), hpp: r.hpp });
+                else if (r.action === 'new') rows.push({ nama: r.nama, kode_series: r.kode || '', nama_series: r.seri || '', kategori: r.kategori || '', hpp: r.hpp });
+            });
+            if (!rows.length) { showToast('Tidak ada baris untuk disimpan.', 'warning'); return; }
+            const btn = document.getElementById('btnHppImportSave');
+            if (btn) { btn.disabled = true; btn.style.opacity = '.5'; btn.textContent = 'Menyimpan...'; }
+            const ok = await kirimHppRows_(rows, 'Impor HPP selesai');
+            if (ok) closeHppImportModal();
+            else if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.textContent = 'Simpan ' + rows.length + ' baris'; }
+        }
+
+        function downloadHppTemplate() {
+            if (typeof XLSX === 'undefined') { showToast('Library Excel belum termuat.', 'error'); return; }
+            const ws = XLSX.utils.aoa_to_sheet([
+                ['Nama Barang', 'HPP', 'Kode Series', 'Nama Series', 'Kategori Produk'],
+                ['Contoh Produk A', 25000, 'SWP', 'Sweeper', 'Alat']
+            ]);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'HPP');
+            XLSX.writeFile(wb, 'template_hpp.xlsx');
+        }
+
+        function exportHppCSV() {
+            if (!_hppRows.length) { showToast('Master SKU belum dimuat.', 'warning'); return; }
+            const rows = _hppRows.map(function (r) {
+                // pakai nilai yang terlihat (termasuk editan yang belum disimpan)
+                const hpp = hppVal_(r, 'hpp');
+                return [hppVal_(r, 'nama'), hppVal_(r, 'kode') || '', r.seri || '', hppVal_(r, 'kategori') || '', hpp, hpp > 0 ? 'ADA' : 'KOSONG'];
+            });
+            downloadCSV_('hpp_' + rentangTag_() + '.csv', ['Nama Barang', 'Kode Series', 'Nama Series', 'Kategori Produk', 'HPP', 'Status'], rows);
+        }
+
 
         function getPrevRangeIso() {
             const gStart = new Date((document.getElementById('startDate').value || '') + 'T00:00:00');
@@ -6857,7 +7652,9 @@
                     : '') +
                 '</td></tr>');
             if (window.$ && $.fn.DataTable && (_biayaRowsCur || []).length > 0) {
-                _biayaDataTable = $('#biayaTable').DataTable({ pageLength: 10, lengthChange: false, order: [], columns: [null, null, null, null, null, null, null, { orderable: false }] });
+                // Label Indonesia sama seperti tabel Top Produk; tanpa ini tabel biaya
+                // menampilkan "Search / Showing 1 to 10 of N entries" (bawaan plugin).
+                _biayaDataTable = $('#biayaTable').DataTable({ pageLength: 10, lengthChange: false, order: [], language: { search: 'Cari:', lengthMenu: '_MENU_ / hal', info: 'Hal _PAGE_ dari _PAGES_' }, columns: [null, null, null, null, null, null, null, { orderable: false }] });
             }
         }
 
@@ -6875,7 +7672,9 @@
             const emptyHint = document.getElementById('biayaEmptyHint');
             if (emptyHint) {
                 const kosong = !_biayaRowsCur || _biayaRowsCur.length === 0;
-                emptyHint.style.display = kosong ? 'flex' : 'none';
+                // Satu kalimat utuh: block, bukan flex — flex memecah teks jadi beberapa
+                // item dan merenggangkannya menjadi kolom-kolom aneh.
+                emptyHint.style.display = kosong ? 'block' : 'none';
                 if (kosong) {
                     emptyHint.innerHTML = 'Tidak ada biaya pada rentang ini' +
                         (_biayaLatestIso
@@ -7624,6 +8423,52 @@
         }
         window.addEventListener('beforeprint', function () { bumpChartFonts(2); fitChartsToPrint(); });
         window.addEventListener('afterprint', function () { bumpChartFonts(-2); fitChartsToPrint(); });
+
+        // ===== Peringatan: ada transaksi dari SKU yang HPP-nya kosong =====
+        // `map` = { PRODUK_UPPER: {nama, omzet, qty, nota} } dari prosesData.
+        // Render tidak menulis balik ke data; hanya menyalin ke elemen.
+        function renderHppWarning_(map) {
+            const box = document.getElementById('hppWarningBanner');
+            if (!box) return;
+            const list = Object.keys(map || {}).map(function (k) { return map[k]; })
+                .filter(function (v) { return v && v.omzet > 0; })
+                .sort(function (a, b) { return b.omzet - a.omzet; });
+            if (!list.length) {
+                box.style.display = 'none';
+                window.__hppKosongList = [];
+                return;
+            }
+            const omzet = list.reduce(function (s, v) { return s + v.omzet; }, 0);
+            const qty = list.reduce(function (s, v) { return s + v.qty; }, 0);
+            window.__hppKosongList = list;
+            const t = document.getElementById('hppWarnTitle');
+            const d = document.getElementById('hppWarnDetail');
+            const l = document.getElementById('hppWarnList');
+            if (t) t.textContent = list.length + ' SKU terjual tanpa HPP';
+            if (d) d.innerHTML = 'Omzet terdampak <b>' + formatRp(omzet) + '</b> (' + qty.toLocaleString('id-ID') + ' unit). '
+                + 'Laba bersih, margin, dan gross profit produk ini dihitung terlalu besar karena HPP-nya 0.';
+            if (l) {
+                const contoh = list.slice(0, 4).map(function (v) { return escHtml_(v.nama); }).join(' · ');
+                l.textContent = 'Contoh: ' + contoh + (list.length > 4 ? ' · dan ' + (list.length - 4) + ' SKU lain' : '');
+            }
+            box.style.display = 'flex';
+        }
+
+        async function bukaHppDariPeringatan() {
+            const list = window.__hppKosongList || [];
+            showTab('hpp');
+            // Tab HPP memuat master secara async; tunggu supaya pilihan jatuh ke SKU yang
+            // memang ada di master (SKU transaksi tanpa master tidak akan ketemu di tabel).
+            try { await fetchHppRows_(); } catch (e) { return; }
+            const ada = (_hppRows || []).find(function (r) {
+                return list.some(function (v) { return String(v.nama).toUpperCase() === r.nama.toUpperCase(); });
+            });
+            const cari = document.getElementById('hppSearch');
+            if (cari) {
+                cari.value = ada ? ada.nama : (list.length ? list[0].nama : '');
+                filterHppRows();
+            }
+        }
 
         // ===== Empty state: panduan saat periode tanpa data =====
         function updateEmptyState(netSales, notaCount) {

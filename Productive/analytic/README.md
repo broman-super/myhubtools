@@ -31,7 +31,7 @@ Dashboard analitik penjualan real-time berbasis **Google Sheets + Google Apps Sc
 
 ### 2.1 Backend GAS
 - `API_URL = https://script.google.com/macros/s/AKfycbyIEtC_S0q7ObAsHxxfP9UsVe2l1CAknAQWT4EdzJex17vBoy6sX9ano42XKEx2jTfLpw/exec`
-- Action: `getSalesData`, `saveTarget`, `addBiaya`
+- Action: `getSalesData`, `saveTarget`, `addBiaya`, `updateBiaya`, `deleteBiaya`, `bulkUpsertTransactions`, `bulkUpsertBiaya`, `bulkUpsertProduk`
 - Backend disimpan di `gas/code-analytic.gs` — **bukan** lagi di `Productive/planner/`.
 - Data mentah lag ±7 hari dari hari ini (sheet update manual). Konsekuensi penting di §3.4.
 
@@ -91,10 +91,12 @@ Spinner & `loadingScreenText` sengaja **dihapus** (diganti 3-dot roadmap via `se
 - **Bulan Ini = anchor ke `refEnd`** (timestamp transaksi terakhir di data), bukan hari ini.
 Jangan "perbaiki" preset jadi anchor `refEnd` semua — itu keputusan user (default kosong boleh).
 
-### 3.4b AVG & Proyeksi bulan berjalan — pembagi data-lag
-- `pembagiHari = (staticMaxDate < today - 1) ? staticMaxDate : today` — memakai **hari terakhir data** saat data lag (proyeksi akurat), atau **hari ini** saat real-time. Jangan balik ke `Math.max` (AVG jadi pesimis saat data lag ±7 hari).
-- Label `AVG (Jul):` / `Proyeksi (Jul):` memakai bulan yang dikunci (`today`), biar tidak menyesatkan di rentang multi-bulan.
-- `kpiSalesGap` kiri menampilkan **persen pencapaian target** (hijau ≥100% / kuning ≥80% / merah), bukan cuma teks defisit.
+### 3.4b AVG & Proyeksi kartu "OMZET VS TARGET" — mengikuti RENTANG
+- AVG/hari = omzet bersih **rentang terpilih** ÷ jumlah hari rentang yang sudah lewat (`hariBerjalan`); tanggal masa depan tidak ikut dibagi.
+- Proyeksi = AVG × jumlah hari di bulan tanggal **akhir rentang**; label memakai bulan itu (`AVG (Okt 2026)` / `Proyeksi (Okt 2026)`).
+- `kpiSalesGap` kiri menampilkan **persen pencapaian target** (hijau ≥100% / kuning ≥80% / merah) dari omzet rentang, dan Net QTY memakai QTY rentang vs rentang pembanding.
+- 🔴 Jangan kembali ke pola lama: blok ini dulu menyaring tanggal ke `today.getMonth()` (bulan berjalan), sehingga memilih rentang Agustus tetap menampilkan angka November. Itu akar bug "KPI terkunci bulan sekarang".
+- Konsekuensi yang diterima: pembagi tidak lagi memakai "hari terakhir berdata" (kompensasi lag), jadi AVG sedikit lebih kecil bila hari terakhir rentang belum masuk.
 
 ### 3.4c 🛟 Tooltip kalkulasi KPI — JS global + dua varian
 - Tooltip **bukan CSS lagi** — pakai satu elemen global `#kpiTip` (`position:fixed; z-index:2147483000`) yang digerakkan delegasi event di akhir skrip utama. Alasannya: `.bento-item:hover { transform: translateY(-4px) }` menciptakan *stacking context* yang mengunci z-index tooltip di dalam kartu → tertutup chart lain; dan `translateX(-50%)` memotong tooltip di tepi layar.
@@ -114,6 +116,18 @@ Jangan "perbaiki" preset jadi anchor `refEnd` semua — itu keputusan user (defa
 - **WAJIB menunggu `prosesData()`:** semua pemanggilan lewat `jalankanProsesData_()` (mencatat `_prosesDataPromise`), dan `renderBiayaTab()` meng-`await` promise itu sebelum menggambar. Tanpa ini Total Biaya (dari baris tabel) sudah baru sementara Omzet/OPEX Ratio/Laba/ROAS/ROI masih angka rentang sebelumnya — lihat §3.11.
 - `updateGranPills` di-scope `#mainContainer` supaya tidak menyentuh pill granularity tab biaya (`updateBiayaGranPills` terpisah).
 - **Pendekatan komputasi:** semua KPI/komposisi/delta dihitung **client-side dari baris biaya** (bukan dari agregat RPC `rekapBiaya`) — konsisten antar widget di tab ini.
+
+### 3.4e 📦 Tab HPP (master SKU & HPP)
+- Pill ketiga `HPP` di nav-bar (`showTab('hpp')`) → `#hppContainer`. Tab ini **tidak ikut tercetak** (`@media print` menyembunyikannya).
+- **Baca:** `GET /rest/v1/produk?select=id,"Nama Barang","Kode Series","Nama Series","Kategori Produk","HPP"` — RLS "allow public read", tanpa SQL/RPC baru.
+- **Edit langsung:** tabel HPP bisa mengubah Nama Barang, Kode Series, Kategori, dan HPP per baris. Perubahan disimpan per-kolom di `_hppDirty[id] = {nama?,kode?,kategori?,hpp?}` (hanya field yang berubah yang dikirim), baris kena highlight, dan nilai yang belum disimpan tetap tampil saat tabel di-render ulang (lewat `hppVal_()`) — render tidak boleh mengembalikan nilai lama.
+  - Nama Barang dipakai sebagai kunci pencocokan HPP ke transaksi, jadi: nama kosong ditolak, nama bentrok dengan SKU lain ditolak, dan rename minta konfirmasi (`confirm`) karena transaksi lama dengan nama lama kehilangan HPP-nya.
+  - GAS membedakan `undefined` (jangan ubah) vs string kosong (sengaja dikosongkan) untuk kolom Kode Series / Nama Series / Kategori. Jangan kembalikan ke `if (r.kategori)` — mengosongkan kategori jadi mustahil.
+- **Tulis:** GAS action `bulkUpsertProduk` (anon tidak punya policy INSERT/UPDATE). Payload `{rows:[{id?, hpp, nama?, kode_series?, nama_series?, kategori?}]}`. Server membaca peta `nama → id` sekali, jadi baris tanpa id menempel ke SKU yang sudah ada dan impor berulang **tidak** membuat duplikat. ⚠️ Setelah mengubah `gas/code-analytic.gs`, **deploy ulang Web App**; kalau belum, simpan akan gagal dengan "Action tidak dikenali oleh backend!".
+- **Impor Excel:** header dideteksi dari 10 baris pertama (`Nama Barang`/`SKU`/`Produk` + `HPP`/`Modal`; opsional Kode Series, Nama Series, Kategori Produk). Pencocokan: Nama Barang (uppercase + trim) → lalu Kode Series. Baris tak cocok default **SKU baru**; dropdown per baris bisa diganti ke **Hubungkan ke SKU terdaftar** (HPP masuk ke SKU pilihan) atau **Buat SKU baru**. Tombol simpan terkunci sampai semua baris mode taut punya SKU tujuan.
+- Setelah simpan sukses: `_hppRows` + `_produkMasterCache` di-reset dan `jalankanProsesData_()` dipanggil bila Dashboard aktif, supaya laba/margin langsung memakai HPP baru.
+- HPP 0 tetap dianggap **kosong** (badge KOSONG, masuk KPI "HPP KOSONG") karena HPP 0 = laba produk dihitung terlalu besar. Jangan ubah jadi "ada".
+- **`Kategori Produk` = teks, bukan harga.** Sheet lama menaruh HPP di kolom ini (kolom HPP kosong), jadi 261 dari 263 baris berisi angka. `normalizeProduk_` di `gas/migrate-supabase.gs` sekarang membaca HPP dari HPP/Modal lebih dulu dan mengisi kategori dari `Nama Series` bila selnya angka/`-`/kosong; GAS `bulkUpsertProduk` menolak kategori berupa angka dengan pesan jelas. Data lama dibersihkan lewat `supabase/migrasi_bersihkan_kategori_produk.sql` (mencadangkan nilai lama ke `produk_kategori_backup`, RLS aktif tanpa policy). Kategori asli tidak ada di sumber mana pun — jangan mengarang kategori lain selain `Nama Series`.
 
 ### 3.5 🟡 Responsif
 - `html`/`body` `min-width:360px` + `body { overflow-x:auto }` (kunci minimum layar HP).
@@ -152,6 +166,19 @@ Bug layout di file ini mustahil dideteksi sekilas (lihat §3.1). Setelah menguba
 3. Nilai pembanding dijumlahkan per *offset hari*, padahal panjang bulan berbeda → bucket Feb berisi 1–28 Jan, bucket Mar berisi 29 Jan–28 Feb, dst. Label tooltip lalu menulis "Bulan Lalu (JAN 26)" untuk angka Desember.
 **Perbaikan:** satu helper `hitungRentangPembanding()` + `geserBulanClamp_()` (hari di-clamp ke akhir bulan tujuan) dipakai `prosesData()` **dan** `getPrevRangeIso()`; bucket bulanan dibuat lengkap hanya untuk bulan di rentang tanggal; nilai pembanding dipetakan ke bulan tanggalnya + 1 bulan, sehingga tiap bulan dibandingkan dengan total bulan kalender sebelumnya.
 **Aturan:** jangan kembali ke `setMonth()` polos untuk menggeser bulan, dan jangan membuat bucket chart dari data (buat dari rentang tanggal). Regresi dikunci di `tests/analytic-trend.test.js`.
+
+### 3.13 🖨️ Aturan tata letak cetak (A4 landscape)
+- **Satu sumber tinggi chart**: blok "Tinggi chart per peran" di `@media print` — `.chart-box` 130px, `.col-span-12` (TREN) 180px, kartu Market Share 100px, tab Biaya 150px. Jangan menambah aturan `.chart-box` kedua di tempat lain: dulu ada `.col-span-12 .chart-box{200px}` yang diam-diam menimpa dan membuat baris pertama meluap.
+- **Daftar kategori Market Share** dipaksa `display:grid` 2 kolom di print (inline-nya `display:flex; flex-direction:column`), supaya kartunya tidak 2x lebih tinggi dari tabel TOP PRODUK di sebelahnya. `column-count` tidak bisa dipakai di kontainer flex.
+- **Pemenggalan halaman**: `.bento-item` tetap `break-inside:avoid` (kartu tidak boleh terbelah), `.bento-header` + separator `#...::before` memakai `break-after:avoid` (judul tidak menggantung di dasar halaman), tabel boleh pecah (`table{break-inside:auto}`, `tr{break-inside:avoid}`, `thead{display:table-header-group}`).
+- **Hasil terukur (data Nov 2026)**: Dashboard 2 halaman — hal.1 KPI + TREN, hal.2 Market Share/Top Produk + Retensi/Retur/Katalog + Riwayat (sebelumnya 3 halaman dengan lubang 159px dan 235px). Tab Biaya: 19 kartu bertumpuk 1 kolom, kartu tertinggi 205px dari tinggi halaman 718px.
+- **Cara mengukur** tanpa dialog print: sunting isi `@media print` ke `<style>` lalu ukur **clone** kartu di kontainer selebar 1046px (A4 landscape 190mm). Mengukur elemen aslinya menipu: `prosesData()` mengganti node kartu, jadi hasilnya nilai basi.
+
+### 3.14 ⚠️ Peringatan SKU terjual tanpa HPP
+- Banner `#hppWarningBanner` (tepat di atas baris KPI, `grid-column:1/-1`) muncul saat rentang terpilih memuat penjualan dari SKU yang HPP-nya 0/kosong, dan menyebut jumlah SKU, omzet terdampak, serta unit. Tombol **Isi HPP** pindah ke tab HPP dengan pencarian terisi; tombol **Tutup** hanya menyembunyikan banner sampai `prosesData()` berikutnya.
+- **Mode Sheet:** `hppKosongMap` dikumpulkan per baris penjualan saat `totalHpp` baris itu 0.
+- **Mode Supabase (aktif):** `rawDataTransaksi` **kosong** — data datang agregat dari RPC, jadi loop per baris tidak pernah jalan dan `dqMissingHpp` selalu 0. Deteksi karena itu diambil dari `rekapProdukDetail` (agregat per SKU): `sales > 0`, `qty > 0`, `cogs == 0`. `cogs` di SQL = `sum(abs(hpp*qty))` dari join ke master `produk`, jadi cogs 0 berarti HPP 0 **atau** nama SKU tidak ada di master — dua-duanya data yang harus dibetulkan. Jangan pindahkan deteksi kembali ke loop transaksi tanpa memuat baris transaksi di mode Supabase.
+- SKU tanpa master (mis. `S PINK BIRU`) tidak akan ketemu di tabel HPP; tombol **Isi HPP** sengaja memilih SKU pertama yang ada di master supaya tidak mendarat di pencarian kosong. SKU seperti itu hanya bisa masuk lewat impor Excel (opsi "Buat SKU baru").
 
 ---
 ## 4. Flow Data (ringkas)

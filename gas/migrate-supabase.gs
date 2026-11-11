@@ -300,15 +300,25 @@ function normalizeTransaksi_(r) {
   return row;
 }
 
+// Sheet lama menaruh HPP di kolom 'Kategori Produk' (kolom HPP kosong), sehingga
+// kategori berisi harga. HPP dibaca dari HPP/Modal lebih dulu — 0 yang ditulis
+// eksplisit tetap 0. 'Kategori Produk' tidak pernah diisi angka: kalau selnya
+// angka / '-' / kosong, pakai 'Nama Series' (satu-satunya klasifikasi nyata).
+// Pembersihan data lama: supabase/migrasi_bersihkan_kategori_produk.sql.
 function normalizeProduk_(r) {
+  var kategori = String(r['Kategori Produk'] == null ? '' : r['Kategori Produk']).trim();
+  var kategoriBukanTeks = !kategori || kategori === '-' || /^[0-9]+(\.[0-9]+)?$/.test(kategori);
+  var hppSumber = (r['HPP'] !== '' && r['HPP'] != null)
+    ? r['HPP']
+    : ((r['Modal'] !== '' && r['Modal'] != null) ? r['Modal'] : kategori);
   return {
     'Nama Barang': r['Nama Barang'] || '',
     'Kode Series': r['Kode Series'] || '',
     'Nama Series': r['Nama Series'] || '',
-    'Kategori Produk': r['Kategori Produk'] || '',
-    // ponytail: sheet selama ini menaruh HPP di kolom 'Kategori Produk' (kolom HPP kosong).
-    // Kolom HPP/Modal tetap menang bila terisi; fallback ini menyelamatkan data tanpa memindah 263 baris manual.
-    'HPP': angka_(r['HPP'] || r['Modal'] || r['Kategori Produk'] || 0)
+    'Kategori Produk': kategoriBukanTeks
+      ? (String(r['Nama Series'] || '').trim() || 'UMUM')
+      : kategori,
+    'HPP': angka_(hppSumber)
   };
 }
 

@@ -468,6 +468,81 @@ function doPost(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
+    if (action === 'bulkUpsertProduk') {
+      var prows = requestData.rows;
+      if (!prows || !Array.isArray(prows) || prows.length === 0) {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: 'error',
+          message: 'Tidak ada baris HPP untuk disimpan.'
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+
+      try { CacheService.getScriptCache().remove('dash_data_v2'); } catch (e) {}
+
+      // Peta nama -> id dibaca sekali: baris tanpa id tetap menempel ke SKU yang
+      // sudah ada, supaya impor berulang tidak melahirkan duplikat produk.
+      var master = [];
+      try {
+        master = JSON.parse(supabaseRequest_('get', '/rest/v1/produk?select=' + encodeURIComponent('id,"Nama Barang"')).getContentText());
+      } catch (e) { master = []; }
+      var idByName = {};
+      (Array.isArray(master) ? master : []).forEach(function (p) {
+        var key = String(p['Nama Barang'] || '').trim().toUpperCase();
+        if (key) idByName[key] = p.id;
+      });
+
+      var added = 0, updated = 0, skipped = 0, errors = [], warnings = [];
+      prows.forEach(function (r) {
+        var nama = String(r.nama != null ? r.nama : (r['Nama Barang'] != null ? r['Nama Barang'] : '')).trim();
+        var hpp = Number(r.hpp != null ? r.hpp : 0);
+        if (!isFinite(hpp)) hpp = 0;
+        var id = r.id || (nama ? idByName[nama.toUpperCase()] : null);
+        // 'Kategori Produk' = teks. Angka di kolom ini berasal dari sheet lama yang
+        // menaruh HPP di sana. Nilai seperti itu TIDAK ditulis (supaya HPP tetap
+        // tersimpan), tapi dilaporkan di `warnings` — jangan diabaikan diam-diam.
+        var kategori = (r.kategori !== undefined && r.kategori !== null) ? String(r.kategori).trim() : null;
+        if (kategori !== null && (/^[0-9]+(\.[0-9]+)?$/.test(kategori) || kategori === '-')) {
+          warnings.push(nama + ': Kategori Produk berisi angka ("' + kategori + '") — tidak disimpan; isi kategori teks.');
+          kategori = null;
+        }
+        try {
+          if (id) {
+            var patch = { 'HPP': hpp };
+            if (nama) patch['Nama Barang'] = nama;
+            // undefined = jangan diubah; string kosong = sengaja dikosongkan (harus tetap ditulis)
+            if (r.kode_series !== undefined && r.kode_series !== null) patch['Kode Series'] = String(r.kode_series).trim();
+            if (r.nama_series !== undefined && r.nama_series !== null) patch['Nama Series'] = String(r.nama_series).trim();
+            if (kategori !== null) patch['Kategori Produk'] = kategori;
+            supabaseRequest_('patch', '/rest/v1/produk?id=eq.' + encodeURIComponent(id), patch);
+            updated++;
+          } else if (nama) {
+            supabaseRequest_('post', '/rest/v1/produk', [{
+              'Nama Barang': nama,
+              'Kode Series': r.kode_series ? String(r.kode_series).trim() : null,
+              'Nama Series': r.nama_series ? String(r.nama_series).trim() : null,
+              'Kategori Produk': kategori || null,
+              'HPP': hpp
+            }]);
+            added++;
+          } else {
+            skipped++;
+          }
+        } catch (err) {
+          skipped++;
+          errors.push(nama + ': ' + err.message);
+        }
+      });
+
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'success',
+        added: added,
+        updated: updated,
+        skipped: skipped,
+        errors: errors.slice(0, 5),
+        warnings: warnings.slice(0, 5)
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     return ContentService.createTextOutput(JSON.stringify({
       status: "error",
       message: "Action tidak dikenali oleh backend!"
