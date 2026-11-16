@@ -2174,8 +2174,8 @@
                 <button onclick="closeBiayaUploadModal()" aria-label="Tutup" style="background:none; border:none; cursor:pointer; color:var(--muted); font-size:24px; line-height:1; font-weight:800;">&times;</button>
             </div>
             <p style="color:var(--muted); font-size:12px; margin-bottom:16px; font-weight:500;">
-                Unggah file Excel/CSV laporan biaya (format jurnal). Kolom dibaca: <b>No Bukti</b>, <b>Keterangan Jurnal</b>, <b>Debit</b> (Nominal), dan <b>Tanggal</b> (opsional).<br>
-                Jika kolom Tanggal kosong, tanggal diambil dari <b>No Bukti</b> (mis. <code>110202.2026.08.00008</code> → <code>2026-08-02</code>). Platform (TikTok/Shopee) &amp; Nama Toko (Supersub/KYX) otomatis ditandai dari Keterangan. Baris duplikat otomatis dilewati.
+                Unggah file Excel/CSV laporan biaya (format jurnal). Kolom dibaca: <b>No Bukti</b>, <b>Keterangan Jurnal</b>, <b>Debit</b> (Nominal), dan <b>Tanggal</b>.<br>
+                Tanggal diambil dari kolom <b>Tanggal</b>; jika kosong, dari <b>No Bukti</b> (mis. <code>110202.2026.08.00008</code> → <code>2026-08-02</code>). Baris yang tanggalnya tetap tidak terbaca <b>dilewati</b> — tanpa tanggal, biaya tidak akan muncul di rentang dashboard mana pun. Platform (TikTok/Shopee) &amp; Nama Toko (Supersub/KYX) otomatis ditandai dari Keterangan. Baris duplikat otomatis dilewati.
             </p>
             <div id="biayaDropzone" style="border:2px dashed var(--border); border-radius:var(--radius-lg); padding:40px 20px; text-align:center; background:var(--bg); cursor:pointer; transition:0.2s;">
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="margin-bottom:12px;">
@@ -2195,7 +2195,7 @@
                 </div>
                 <div style="margin-top:12px; max-height:220px; overflow:auto; border:1px solid var(--border); border-radius:var(--radius);">
                     <table style="width:100%; font-size:11px; border-collapse:collapse;">
-                        <thead style="position:sticky; top:0; background:var(--surface2);"><tr><th style="padding:8px; text-align:left; color:var(--muted);">No Bukti</th><th style="padding:8px; text-align:left; color:var(--muted);">Keterangan</th><th style="padding:8px; text-align:left; color:var(--muted);">Kategori →</th><th style="padding:8px; text-align:left; color:var(--muted);">Alasan</th><th style="padding:8px; text-align:right; color:var(--muted);">Nominal</th></tr></thead>
+                        <thead style="position:sticky; top:0; background:var(--surface2);"><tr><th style="padding:8px; text-align:left; color:var(--muted);">Tanggal</th><th style="padding:8px; text-align:left; color:var(--muted);">No Bukti</th><th style="padding:8px; text-align:left; color:var(--muted);">Keterangan</th><th style="padding:8px; text-align:left; color:var(--muted);">Kategori →</th><th style="padding:8px; text-align:left; color:var(--muted);">Alasan</th><th style="padding:8px; text-align:right; color:var(--muted);">Nominal</th></tr></thead>
                         <tbody id="biayaPreviewTableBody"></tbody>
                     </table>
                 </div>
@@ -2207,7 +2207,7 @@
                     <label style="font-size:11px; color:var(--text);">No Bukti <select id="mapNoBukti" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text);"></select></label>
                     <label style="font-size:11px; color:var(--text);">Keterangan Jurnal <span style="color:var(--danger);">*</span> <select id="mapKeterangan" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text);"></select></label>
                     <label style="font-size:11px; color:var(--text);">Debit/Nominal <span style="color:var(--danger);">*</span> <select id="mapDebit" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text);"></select></label>
-                    <label style="font-size:11px; color:var(--text);">Tanggal (opsional) <select id="mapTanggal" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text);"></select></label>
+                    <label style="font-size:11px; color:var(--text);">Tanggal <select id="mapTanggal" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text);"></select></label>
                     <label style="font-size:11px; color:var(--text);">Kategori Biaya (opsional) <select id="mapKategori" style="width:100%; margin-top:4px; padding:8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface); color:var(--text);"></select></label>
                 </div>
                 <button onclick="applyBiayaMapping()" style="margin-top:12px; width:100%; padding:12px 20px; background:var(--primary-solid); color:var(--on-primary); border:none; border-radius:var(--radius); font-weight:800; cursor:pointer; font-size:13px;">TERAPKAN PEMETAAN</button>
@@ -5561,9 +5561,13 @@
             const cellRef = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
             const cell = worksheet[cellRef];
             if (!cell) return rawValue !== undefined && rawValue !== null ? rawValue : "";
-            // Prioritas: teks yang Excel tampilkan ke user (cell.w) — bebas bug timezone
-            if (isLikelyDateCell(cell, rawValue) && cell.w && String(cell.w).trim()) {
-                return String(cell.w).trim();
+            // Sel tanggal: pakai nilai aslinya (Date/serial → YYYY-MM-DD), BUKAN cell.w.
+            // cell.w ikut format tampilan user (mis. "11/2/26") yang ambigu D/M vs M/D dan
+            // bikin tanggal bergeser bulan saat dikirim ke backend. cell.w hanya cadangan.
+            if (isLikelyDateCell(cell, rawValue)) {
+                const ymd = parseFlexibleDate(rawValue);
+                if (/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return ymd;
+                if (cell.w && String(cell.w).trim()) return String(cell.w).trim();
             }
             return rawValue !== undefined && rawValue !== null ? rawValue : "";
         }
@@ -5617,11 +5621,12 @@
                 if (result) return result;
             }
 
-            const dmyMatch = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+            const dmyMatch = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
             if (dmyMatch) {
                 const a = parseInt(dmyMatch[1], 10);
                 const b = parseInt(dmyMatch[2], 10);
-                const y = parseInt(dmyMatch[3], 10);
+                let y = parseInt(dmyMatch[3], 10);
+                if (dmyMatch[3].length === 2) y += y < 50 ? 2000 : 1900;
                 let d, m;
                 if (a > 12 && b <= 12) { d = a; m = b; }        // D/M (angka pertama >12 → hari)
                 else if (b > 12 && a <= 12) { m = a; d = b; }   // M/D (angka kedua >12 → bulan di depan)
@@ -5652,7 +5657,8 @@
                 }
             }
 
-            const mdyWordMatch = strLow.match(/^([a-z]+)[\s\-]+(\d{1,2})[,\s\-]+(\d{4})/);
+            // Hari di depan diabaikan: "Mon Nov 02 2026 00:00:00 GMT+0000 (...)" → "Nov 02 2026".
+            const mdyWordMatch = strLow.match(/^(?:[a-z]{3,9},?\s+)?([a-z]+)[\s\-]+(\d{1,2})[,\s\-]+(\d{4})/);
             if (mdyWordMatch) {
                 const m = monthMap[mdyWordMatch[1]];
                 const d = parseInt(mdyWordMatch[2], 10);
@@ -6426,6 +6432,8 @@
 
         // ===== BULK IMPORT BIAYA (mirror penjualan, tanpa mapping UI) =====
         let _biayaUploadRows = [];
+        let _biayaDilewati = [];
+        let _biayaKredit = [];
 
         function openBiayaUploadModal() {
             initBiayaDropzone();
@@ -6438,6 +6446,8 @@
         }
         function resetBiayaDropzone() {
             _biayaUploadRows = [];
+            _biayaDilewati = [];
+            _biayaKredit = [];
             const fi = document.getElementById('biayaFileInput');
             if (fi) fi.value = '';
             const pv = document.getElementById('biayaPreviewBox');
@@ -6509,20 +6519,51 @@
         function parseBiayaNominal(val) {
             if (val == null || val === '') return 0;
             if (typeof val === 'number') return val;
-            let s = String(val).trim();
-            if (s.indexOf(',') >= 0 && s.indexOf('.') >= 0) {
-                s = s.replace(/\./g, '').replace(',', '.');
-            } else if (s.indexOf('.') >= 0 && s.indexOf(',') < 0) {
-                if (s.split('.').length > 2) s = s.replace(/\./g, '');
-            } else if (s.indexOf(',') >= 0 && s.indexOf('.') < 0) {
-                if (s.split(',').length > 2) s = s.replace(/,/g, '');
-                else s = s.replace(',', '.');
-            } else {
-                s = s.replace(/[^0-9.-]/g, '');
+            // Buang mata uang/spasi; sisakan angka, pemisah, dan tanda minus.
+            let s = String(val).replace(/[^0-9.,\-]/g, '');
+            if (!s) return 0;
+            const negatif = s.charAt(0) === '-';
+            s = s.replace(/-/g, '');
+            if (!s) return 0;
+
+            // Pemisah desimal = pemisah TERAKHIR (titik atau koma), sisanya ribuan.
+            // Kalau hanya ada satu jenis pemisah: satu pemisah dengan tepat 3 digit di
+            // belakang berarti ribuan ("2.220", "2,220"), selain itu desimal ("0.5", "12,75").
+            const titik = s.lastIndexOf('.');
+            const koma = s.lastIndexOf(',');
+            let desimal = -1;
+            if (titik >= 0 && koma >= 0) {
+                desimal = Math.max(titik, koma);
+            } else if (titik >= 0 || koma >= 0) {
+                const sep = titik >= 0 ? '.' : ',';
+                const jumlahPemisah = s.split(sep).length - 1;
+                const digitDiBelakang = s.length - s.lastIndexOf(sep) - 1;
+                // pemisah muncul >1 kali = ribuan ("2.220.000"); sekali + 3 digit = ribuan ("2.220")
+                desimal = (jumlahPemisah > 1 || digitDiBelakang === 3) ? -1 : s.lastIndexOf(sep);
             }
-            const n = parseFloat(s);
-            return isNaN(n) ? 0 : n;
+            const bersih = desimal < 0
+                ? s.replace(/[.,]/g, '')
+                : s.slice(0, desimal).replace(/[.,]/g, '') + '.' + s.slice(desimal + 1).replace(/[.,]/g, '');
+
+            const n = parseFloat(bersih);
+            if (isNaN(n)) return 0;
+            return negatif ? -n : n;
         }
+        // Tanggal harus lengkap dan nyata: YYYY-MM-DD, tahun 1900–2100, dan ada di
+        // kalender. Menolak "31/02", "2026-02-30", dan "46235-01-01" (hasil Date.parse
+        // teks angka). GAS menyimpan Tanggal: null bila tidak bisa dinormalkan — baris
+        // seperti itu tidak akan pernah muncul di rentang dashboard mana pun.
+        function tanggalIsoValid_(val) {
+            const s = String(val == null ? '' : val);
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+            const y = parseInt(s.slice(0, 4), 10);
+            const m = parseInt(s.slice(5, 7), 10);
+            const d = parseInt(s.slice(8, 10), 10);
+            if (y < 1900 || y > 2100) return false;
+            const dt = new Date(Date.UTC(y, m - 1, d));
+            return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
+        }
+
         function handleBiayaFileSelect(file) {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -6534,8 +6575,9 @@
                     if (!rows.length) return showToast('File kosong atau tidak berisi baris data.', 'error');
                     let headerRowIdx = 0;
                     let headers = rows[0].map(h => String(h == null ? '' : h).trim().toLowerCase());
-                    // cari baris header yang sebenarnya (skip judul merge di atas)
-                    for (let r = 0; r < Math.min(5, rows.length); r++) {
+                    // Cari baris header sebenarnya (skip judul/merge di atas). Batas 30 baris:
+                    // export akuntansi bisa punya 5-6 baris judul sebelum header.
+                    for (let r = 0; r < Math.min(30, rows.length); r++) {
                         const cand = rows[r].map(h => String(h == null ? '' : h).trim().toLowerCase());
                         const candStr = cand.join(' ');
                         if ((candStr.includes('keterangan') || candStr.includes('bukti') || candStr.includes('debit') || candStr.includes('nominal')) && cand.filter(Boolean).length >= 3) {
@@ -6559,6 +6601,7 @@
                     const iCat = matchHdr(['kategori biaya', 'kategori', 'category', 'jenis']);
                     const iDate = matchHdr(['tanggal', 'tgl', 'date', 'hari']);
                     const iDeb = matchHdr(['debit', 'nominal', 'jumlah', 'nilai', 'amount', 'biaya']);
+                    const iKredit = matchHdr(['kredit', 'credit']);
                     if (iNo < 0 || iKet < 0 || iDeb < 0) {
                         window._biayaRawRows = rows;
                         window._biayaHeaderRowIdx = headerRowIdx;
@@ -6567,13 +6610,16 @@
                         return;
                     }
                     const out = [];
+                    _biayaDilewati = [];
+                    _biayaKredit = [];
                     for (let i = headerRowIdx + 1; i < rows.length; i++) {
                         const r = rows[i];
                         if (!r || r.length === 0) continue;
                         const noBukti = String(r[iNo] == null ? '' : r[iNo]).trim();
                         const ket = String(r[iKet] == null ? '' : r[iKet]).trim();
                         const deb = parseBiayaNominal(r[iDeb]);
-                        let tgl = iDate >= 0 ? parseBiayaDate(r[iDate]) : '';
+                        const kredit = iKredit >= 0 ? parseBiayaNominal(r[iKredit]) : 0;
+                        let tgl = iDate >= 0 ? parseFlexibleDate(r[iDate]) : '';
                         if (!tgl && iNo >= 0) tgl = parseNoBuktiDate(String(r[iNo] || ''));
                         let kat = iCat >= 0 ? String(r[iCat] == null ? '' : r[iCat]).trim() : '';
                         const katBefore = kat;
@@ -6582,14 +6628,30 @@
                             kat = deriveBiayaSubKat_(ket) || 'LAIN-LAIN';
                         }
                         if (!noBukti && !ket && !tgl) continue;
+                        // Baris yang nilainya hanya di kolom Kredit bukan biaya: tidak diimpor,
+                        // tapi dihitung & didaftarkan supaya tidak hilang tanpa jejak.
+                        if (deb <= 0 && kredit > 0) {
+                            _biayaKredit.push({ baris: i + 1, no: noBukti, nominal: kredit });
+                            continue;
+                        }
                         if (deb <= 0) continue;
+                        // Tanpa tanggal, baris tidak akan pernah muncul di dashboard
+                        // (semua widget difilter per rentang) — jangan disimpan diam-diam.
+                        if (!tanggalIsoValid_(tgl)) {
+                            _biayaDilewati.push({
+                                baris: i + 1,
+                                sel: iDate >= 0 ? String(r[iDate] == null ? '' : r[iDate]).trim() : '(kolom tanggal tidak dipetakan)',
+                                no: noBukti
+                            });
+                            continue;
+                        }
                         out.push({ Tanggal: tgl, 'No Bukti': noBukti, 'Keterangan Jurnal': ket, Debit: deb, 'Kategori Biaya': kat, _katBefore: katBefore, _alasan: getBiayaDeriveReason_(ket, katBefore) });
                     }
                     _biayaUploadRows = out;
                     document.getElementById('biayaPreviewBox').style.display = 'block';
                     renderBiayaPreview_(out);
                     tandaiDuplikatBiaya_(out).then(() => renderBiayaPreview_(out));
-                    if (out.length === 0) showToast('Tidak ada baris valid (periksa No Bukti, Keterangan Jurnal, Debit).', 'error');
+                    if (out.length === 0) showToast('Tidak ada baris valid (periksa No Bukti, Keterangan Jurnal, Debit, dan Tanggal).', 'error');
                 } catch (err) {
                     console.error(err);
                     showToast('Gagal membaca file. Pastikan file Excel (.xlsx/.xls) yang valid, lalu coba lagi.', 'error');
@@ -6639,17 +6701,23 @@
             const iDeb = getIdx('mapDebit');
             const iDate = getIdx('mapTanggal');
             const iCat = getIdx('mapKategori');
+            // Kolom Kredit tidak punya dropdown sendiri; dicari dari header yang sama.
+            const iKredit = (window._biayaHeaders || []).findIndex(h =>
+                String(h || '').replace(/[().\-/]/g, ' ').replace(/\s+/g, ' ').trim().indexOf('kredit') >= 0);
             if (iKet < 0 || iDeb < 0) return showToast('Pilih minimal Keterangan Jurnal dan Debit/Nominal.', 'error');
             const rows = window._biayaRawRows;
             const headerRowIdx = window._biayaHeaderRowIdx || 0;
             const out = [];
+            _biayaDilewati = [];
+            _biayaKredit = [];
             for (let i = headerRowIdx + 1; i < rows.length; i++) {
                 const r = rows[i];
                 if (!r || r.length === 0) continue;
                 const noBukti = iNo >=0 ? String(r[iNo] == null ? '' : r[iNo]).trim() : '';
                 const ket = iKet >=0 ? String(r[iKet] == null ? '' : r[iKet]).trim() : '';
                 const deb = iDeb >=0 ? parseBiayaNominal(r[iDeb]) : 0;
-                let tgl = iDate >=0 ? parseBiayaDate(r[iDate]) : '';
+                const kredit = iKredit >= 0 ? parseBiayaNominal(r[iKredit]) : 0;
+                let tgl = iDate >=0 ? parseFlexibleDate(r[iDate]) : '';
                 if (!tgl && iNo >=0) tgl = parseNoBuktiDate(String(r[iNo] || ''));
                 let kat = iCat >=0 ? String(r[iCat] == null ? '' : r[iCat]).trim() : '';
                 const katBefore = kat;
@@ -6658,7 +6726,19 @@
                     kat = deriveBiayaSubKat_(ket) || 'LAIN-LAIN';
                 }
                 if (!noBukti && !ket && !tgl) continue;
+                if (deb <= 0 && kredit > 0) {
+                    _biayaKredit.push({ baris: i + 1, no: noBukti, nominal: kredit });
+                    continue;
+                }
                 if (deb <= 0) continue;
+                if (!tanggalIsoValid_(tgl)) {
+                    _biayaDilewati.push({
+                        baris: i + 1,
+                        sel: iDate >= 0 ? String(r[iDate] == null ? '' : r[iDate]).trim() : '(kolom tanggal tidak dipetakan)',
+                        no: noBukti
+                    });
+                    continue;
+                }
                 out.push({ Tanggal: tgl, 'No Bukti': noBukti, 'Keterangan Jurnal': ket, Debit: deb, 'Kategori Biaya': kat, _katBefore: katBefore, _alasan: getBiayaDeriveReason_(ket, katBefore) });
             }
             document.getElementById('biayaMappingBox').style.display = 'none';
@@ -6667,10 +6747,23 @@
             window._biayaUploadRows = out;
             renderBiayaPreview_(out);
             tandaiDuplikatBiaya_(out).then(() => renderBiayaPreview_(out));
-            if (out.length === 0) showToast('Tidak ada baris valid (periksa No Bukti, Keterangan Jurnal, Debit).', 'error');
+            if (out.length === 0) showToast('Tidak ada baris valid (periksa No Bukti, Keterangan Jurnal, Debit, dan Tanggal).', 'error');
         }
         function sendBiayaToGAS() {
             if (!_biayaUploadRows.length) return showToast('Pilih file Excel terlebih dahulu!', 'error');
+            // Jaring terakhir sebelum kirim: hanya baris bertanggal YYYY-MM-DD nyata.
+            const tanggalSalah = _biayaUploadRows.filter(r => !tanggalIsoValid_(r.Tanggal));
+            if (tanggalSalah.length) {
+                tanggalSalah.forEach(r => _biayaDilewati.push({
+                    baris: '-',
+                    sel: String(r.Tanggal == null ? '' : r.Tanggal) || '(kosong)',
+                    no: r['No Bukti'] || ''
+                }));
+                _biayaUploadRows = _biayaUploadRows.filter(r => tanggalIsoValid_(r.Tanggal));
+                renderBiayaPreview_(_biayaUploadRows);
+                showToast('Ada baris dengan tanggal tidak valid — baris itu belum dikirim. Periksa daftar di bawah pratinjau.', 'error');
+                return;
+            }
             // Baris yang terdeteksi sudah ada di database (pratinjau) tidak dikirim ulang.
             const rowsKirim = _biayaUploadRows.filter(r => !r._dup);
             const dilewatiLokal = _biayaUploadRows.length - rowsKirim.length;
@@ -8296,16 +8389,35 @@
             if (tb) {
                 tb.innerHTML = daftar.slice(0, 8).map(r => {
                     const alasan = r._alasan || getBiayaDeriveReason_(r['Keterangan Jurnal'], r._katBefore || '');
-                    return `<tr style="border-top:1px solid var(--border);${r._dup ? ' opacity:0.65;' : ''}"><td style="padding:6px 8px; color:var(--text);">${escHtml_(r['No Bukti'])}</td><td style="padding:6px 8px; color:var(--text); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escHtml_(r['Keterangan Jurnal'])}">${escHtml_(r['Keterangan Jurnal'])}</td><td style="padding:6px 8px; font-weight:800; color:var(--primary);">${escHtml_(r['Kategori Biaya'])}</td><td style="padding:6px 8px; font-size:10px; ${r._dup ? 'color:var(--danger); font-weight:800;' : 'color:var(--muted);'}">${r._dup ? 'SUDAH ADA' : escHtml_(alasan)}</td><td style="padding:6px 8px; text-align:right; color:var(--text);">${(r.Debit || 0).toLocaleString('id-ID')}</td></tr>`;
-                }).join('') || '<tr><td colspan="5" style="padding:10px; text-align:center; color:var(--muted);">-</td></tr>';
+                    return `<tr style="border-top:1px solid var(--border);${r._dup ? ' opacity:0.65;' : ''}"><td style="padding:6px 8px; color:var(--text); white-space:nowrap;">${escHtml_(r.Tanggal || '—')}</td><td style="padding:6px 8px; color:var(--text);">${escHtml_(r['No Bukti'])}</td><td style="padding:6px 8px; color:var(--text); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escHtml_(r['Keterangan Jurnal'])}">${escHtml_(r['Keterangan Jurnal'])}</td><td style="padding:6px 8px; font-weight:800; color:var(--primary);">${escHtml_(r['Kategori Biaya'])}</td><td style="padding:6px 8px; font-size:10px; ${r._dup ? 'color:var(--danger); font-weight:800;' : 'color:var(--muted);'}">${r._dup ? 'SUDAH ADA' : escHtml_(alasan)}</td><td style="padding:6px 8px; text-align:right; color:var(--text);">${(r.Debit || 0).toLocaleString('id-ID')}</td></tr>`;
+                }).join('') || '<tr><td colspan="6" style="padding:10px; text-align:center; color:var(--muted);">-</td></tr>';
             }
             const info = document.getElementById('biayaPreviewInfo');
             if (info) {
                 const cnt = {};
                 daftar.forEach(r => { if (r._dup) return; const k = r['Kategori Biaya'] || 'LAIN-LAIN'; cnt[k] = (cnt[k] || 0) + 1; });
                 const ringkas = Object.keys(cnt).map(k => k + ': ' + cnt[k]).join(' · ');
+                // Daftar baris dilewati, bukan sekadar jumlahnya: nomor baris Excel +
+                // isi sel tanggal aslinya, supaya bisa langsung dicek di file.
+                const lewat = _biayaDilewati || [];
+                const daftarLewat = lewat.slice(0, 10).map(x =>
+                    '• baris ' + x.baris + (x.no ? ' (' + escHtml_(x.no) + ')' : '') + ': ' + escHtml_(x.sel || '(kosong)')
+                ).join('<br>');
+                const kreditRows = _biayaKredit || [];
+                const totalKredit = kreditRows.reduce((a, x) => a + (Number(x.nominal) || 0), 0);
+                const daftarKredit = kreditRows.slice(0, 10).map(x =>
+                    '• baris ' + x.baris + (x.no ? ' (' + escHtml_(x.no) + ')' : '') + ': Rp ' + (Number(x.nominal) || 0).toLocaleString('id-ID')
+                ).join('<br>');
                 info.innerHTML = (daftar.length > 8 ? 'Menampilkan 8 dari ' + daftar.length + ' baris — ' : '') + escHtml_(ringkas)
-                    + (dup ? '<br><b style="color:var(--danger);">' + dup + ' baris sudah ada di database</b> (akan dilewati).' : '');
+                    + (dup ? '<br><b style="color:var(--danger);">' + dup + ' baris sudah ada di database</b> (akan dilewati).' : '')
+                    + (kreditRows.length
+                        ? '<br><b style="color:var(--warning);">' + kreditRows.length + ' baris hanya berisi Kredit — total Rp ' + totalKredit.toLocaleString('id-ID') + ' tidak diimpor</b>:<br>' + daftarKredit
+                          + (kreditRows.length > 10 ? '<br>… dan ' + (kreditRows.length - 10) + ' baris lain.' : '')
+                        : '')
+                    + (lewat.length
+                        ? '<br><b style="color:var(--warning);">' + lewat.length + ' baris dilewati — tanggal tidak valid</b> (isi sel tanggal):<br>' + daftarLewat
+                          + (lewat.length > 10 ? '<br>… dan ' + (lewat.length - 10) + ' baris lain.' : '')
+                        : '');
             }
             const btn = document.getElementById('btnSubmitBiayaUpload');
             if (btn) { btn.disabled = siap <= 0; btn.style.opacity = siap <= 0 ? '0.5' : '1'; }
