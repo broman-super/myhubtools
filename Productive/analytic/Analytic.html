@@ -6564,94 +6564,126 @@
             return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d;
         }
 
+        // ===== PIPA PARSE UPLOAD BIAYA — satu tahap satu fungsi =====
+        // 1. workbook → baris mentah sheet pertama
+        function bacaBarisBiaya_(buffer) {
+            const wb = XLSX.read(new Uint8Array(buffer), { type: 'array' });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            return XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' }) || [];
+        }
+
+        // 2. cari baris header sebenarnya (skip judul/merge di atas). Batas 30 baris:
+        //    export akuntansi bisa punya 5-6 baris judul sebelum header.
+        function cariHeaderBiaya_(rows) {
+            let headerRowIdx = 0;
+            let headers = rows[0].map(h => String(h == null ? '' : h).trim().toLowerCase());
+            for (let r = 0; r < Math.min(30, rows.length); r++) {
+                const cand = rows[r].map(h => String(h == null ? '' : h).trim().toLowerCase());
+                const candStr = cand.join(' ');
+                if ((candStr.includes('keterangan') || candStr.includes('bukti') || candStr.includes('debit') || candStr.includes('nominal')) && cand.filter(Boolean).length >= 3) {
+                    headerRowIdx = r;
+                    headers = cand;
+                    break;
+                }
+                if (r === 0) headers = cand;
+            }
+            return { headerRowIdx, headers };
+        }
+
+        // 3. petakan kolom wajib/opsional dari header
+        function petakanKolomBiaya_(headers) {
+            const usedCols = {};
+            const matchHdr = (keys) => {
+                for (let i = 0; i < headers.length; i++) {
+                    if (usedCols[i]) continue;
+                    const h = headers[i].replace(/[().\-/]/g, ' ').replace(/\s+/g, ' ').trim();
+                    for (const k of keys) { if (h.indexOf(k) >= 0) { usedCols[i] = true; return i; } }
+                }
+                return -1;
+            };
+            return {
+                iNo: matchHdr(['no bukti', 'nobukti', 'bukti', 'nomor', 'nota']),
+                iKet: matchHdr(['keterangan jurnal', 'keterangan', 'uraian', 'memo', 'desc', 'description']),
+                iCat: matchHdr(['kategori biaya', 'kategori', 'category', 'jenis']),
+                iDate: matchHdr(['tanggal', 'tgl', 'date', 'hari']),
+                iDeb: matchHdr(['debit', 'nominal', 'jumlah', 'nilai', 'amount', 'biaya']),
+                iKredit: matchHdr(['kredit', 'credit'])
+            };
+        }
+
+        // 4. baris mentah → baris siap kirim + daftar dilewati/ditahan.
+        //    Satu-satunya tempat aturan ini; dipakai jalur otomatis DAN pemetaan manual.
+        function susunBarisBiaya_(rows, headerRowIdx, kol) {
+            const hasil = { siap: [], dilewati: [], kredit: [] };
+            for (let i = headerRowIdx + 1; i < rows.length; i++) {
+                const r = rows[i];
+                if (!r || r.length === 0) continue;
+                const noBukti = kol.iNo >= 0 ? String(r[kol.iNo] == null ? '' : r[kol.iNo]).trim() : '';
+                const ket = kol.iKet >= 0 ? String(r[kol.iKet] == null ? '' : r[kol.iKet]).trim() : '';
+                const deb = kol.iDeb >= 0 ? parseBiayaNominal(r[kol.iDeb]) : 0;
+                const kredit = kol.iKredit >= 0 ? parseBiayaNominal(r[kol.iKredit]) : 0;
+                let tgl = kol.iDate >= 0 ? parseFlexibleDate(r[kol.iDate]) : '';
+                if (!tgl && kol.iNo >= 0) tgl = parseNoBuktiDate(String(r[kol.iNo] || ''));
+                let kat = kol.iCat >= 0 ? String(r[kol.iCat] == null ? '' : r[kol.iCat]).trim() : '';
+                const katBefore = kat;
+                const katUp = kat.toUpperCase();
+                if (!katUp || katUp.includes('LAIN')) {
+                    kat = deriveBiayaSubKat_(ket) || 'LAIN-LAIN';
+                }
+                if (!noBukti && !ket && !tgl) continue;
+                // Baris yang nilainya hanya di kolom Kredit bukan biaya: tidak diimpor,
+                // tapi dihitung & didaftarkan supaya tidak hilang tanpa jejak.
+                if (deb <= 0 && kredit > 0) {
+                    hasil.kredit.push({ baris: i + 1, no: noBukti, nominal: kredit });
+                    continue;
+                }
+                if (deb <= 0) continue;
+                // Tanpa tanggal, baris tidak akan pernah muncul di dashboard
+                // (semua widget difilter per rentang) — jangan disimpan diam-diam.
+                if (!tanggalIsoValid_(tgl)) {
+                    hasil.dilewati.push({
+                        baris: i + 1,
+                        sel: kol.iDate >= 0 ? String(r[kol.iDate] == null ? '' : r[kol.iDate]).trim() : '(kolom tanggal tidak dipetakan)',
+                        no: noBukti
+                    });
+                    continue;
+                }
+                hasil.siap.push({ Tanggal: tgl, 'No Bukti': noBukti, 'Keterangan Jurnal': ket, Debit: deb, 'Kategori Biaya': kat, _katBefore: katBefore, _alasan: getBiayaDeriveReason_(ket, katBefore) });
+            }
+            return hasil;
+        }
+
+        // 5. hasil parse → state + UI pratinjau
+        function tampilkanHasilParseBiaya_(hasil, dariMapping) {
+            _biayaUploadRows = hasil.siap;
+            _biayaDilewati = hasil.dilewati;
+            _biayaKredit = hasil.kredit;
+            if (dariMapping) {
+                document.getElementById('biayaMappingBox').style.display = 'none';
+                window._biayaUploadRows = hasil.siap;
+            }
+            document.getElementById('biayaPreviewBox').style.display = 'block';
+            renderBiayaPreview_(hasil.siap);
+            tandaiDuplikatBiaya_(hasil.siap).then(() => renderBiayaPreview_(hasil.siap));
+            if (hasil.siap.length === 0) showToast('Tidak ada baris valid (periksa No Bukti, Keterangan Jurnal, Debit, dan Tanggal).', 'error');
+        }
+
         function handleBiayaFileSelect(file) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
-                    const data = new Uint8Array(e.target.result);
-                    const wb = XLSX.read(data, { type: 'array' });
-                    const ws = wb.Sheets[wb.SheetNames[0]];
-                    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+                    const rows = bacaBarisBiaya_(e.target.result);
                     if (!rows.length) return showToast('File kosong atau tidak berisi baris data.', 'error');
-                    let headerRowIdx = 0;
-                    let headers = rows[0].map(h => String(h == null ? '' : h).trim().toLowerCase());
-                    // Cari baris header sebenarnya (skip judul/merge di atas). Batas 30 baris:
-                    // export akuntansi bisa punya 5-6 baris judul sebelum header.
-                    for (let r = 0; r < Math.min(30, rows.length); r++) {
-                        const cand = rows[r].map(h => String(h == null ? '' : h).trim().toLowerCase());
-                        const candStr = cand.join(' ');
-                        if ((candStr.includes('keterangan') || candStr.includes('bukti') || candStr.includes('debit') || candStr.includes('nominal')) && cand.filter(Boolean).length >= 3) {
-                            headerRowIdx = r;
-                            headers = cand;
-                            break;
-                        }
-                        if (r === 0) headers = cand;
-                    }
-                    const usedCols = {};
-                    const matchHdr = (keys) => {
-                        for (let i = 0; i < headers.length; i++) {
-                            if (usedCols[i]) continue;
-                            const h = headers[i].replace(/[().\-/]/g, ' ').replace(/\s+/g, ' ').trim();
-                            for (const k of keys) { if (h.indexOf(k) >= 0) { usedCols[i] = true; return i; } }
-                        }
-                        return -1;
-                    };
-                    const iNo = matchHdr(['no bukti', 'nobukti', 'bukti', 'nomor', 'nota']);
-                    const iKet = matchHdr(['keterangan jurnal', 'keterangan', 'uraian', 'memo', 'desc', 'description']);
-                    const iCat = matchHdr(['kategori biaya', 'kategori', 'category', 'jenis']);
-                    const iDate = matchHdr(['tanggal', 'tgl', 'date', 'hari']);
-                    const iDeb = matchHdr(['debit', 'nominal', 'jumlah', 'nilai', 'amount', 'biaya']);
-                    const iKredit = matchHdr(['kredit', 'credit']);
-                    if (iNo < 0 || iKet < 0 || iDeb < 0) {
+                    const header = cariHeaderBiaya_(rows);
+                    const kol = petakanKolomBiaya_(header.headers);
+                    if (kol.iNo < 0 || kol.iKet < 0 || kol.iDeb < 0) {
                         window._biayaRawRows = rows;
-                        window._biayaHeaderRowIdx = headerRowIdx;
-                        window._biayaHeaders = headers;
-                        showBiayaMappingBox(headers, {iNo, iKet, iDeb, iCat, iDate});
+                        window._biayaHeaderRowIdx = header.headerRowIdx;
+                        window._biayaHeaders = header.headers;
+                        showBiayaMappingBox(header.headers, { iNo: kol.iNo, iKet: kol.iKet, iDeb: kol.iDeb, iCat: kol.iCat, iDate: kol.iDate });
                         return;
                     }
-                    const out = [];
-                    _biayaDilewati = [];
-                    _biayaKredit = [];
-                    for (let i = headerRowIdx + 1; i < rows.length; i++) {
-                        const r = rows[i];
-                        if (!r || r.length === 0) continue;
-                        const noBukti = String(r[iNo] == null ? '' : r[iNo]).trim();
-                        const ket = String(r[iKet] == null ? '' : r[iKet]).trim();
-                        const deb = parseBiayaNominal(r[iDeb]);
-                        const kredit = iKredit >= 0 ? parseBiayaNominal(r[iKredit]) : 0;
-                        let tgl = iDate >= 0 ? parseFlexibleDate(r[iDate]) : '';
-                        if (!tgl && iNo >= 0) tgl = parseNoBuktiDate(String(r[iNo] || ''));
-                        let kat = iCat >= 0 ? String(r[iCat] == null ? '' : r[iCat]).trim() : '';
-                        const katBefore = kat;
-                        const katUp = kat.toUpperCase();
-                        if (!katUp || katUp.includes('LAIN')) {
-                            kat = deriveBiayaSubKat_(ket) || 'LAIN-LAIN';
-                        }
-                        if (!noBukti && !ket && !tgl) continue;
-                        // Baris yang nilainya hanya di kolom Kredit bukan biaya: tidak diimpor,
-                        // tapi dihitung & didaftarkan supaya tidak hilang tanpa jejak.
-                        if (deb <= 0 && kredit > 0) {
-                            _biayaKredit.push({ baris: i + 1, no: noBukti, nominal: kredit });
-                            continue;
-                        }
-                        if (deb <= 0) continue;
-                        // Tanpa tanggal, baris tidak akan pernah muncul di dashboard
-                        // (semua widget difilter per rentang) — jangan disimpan diam-diam.
-                        if (!tanggalIsoValid_(tgl)) {
-                            _biayaDilewati.push({
-                                baris: i + 1,
-                                sel: iDate >= 0 ? String(r[iDate] == null ? '' : r[iDate]).trim() : '(kolom tanggal tidak dipetakan)',
-                                no: noBukti
-                            });
-                            continue;
-                        }
-                        out.push({ Tanggal: tgl, 'No Bukti': noBukti, 'Keterangan Jurnal': ket, Debit: deb, 'Kategori Biaya': kat, _katBefore: katBefore, _alasan: getBiayaDeriveReason_(ket, katBefore) });
-                    }
-                    _biayaUploadRows = out;
-                    document.getElementById('biayaPreviewBox').style.display = 'block';
-                    renderBiayaPreview_(out);
-                    tandaiDuplikatBiaya_(out).then(() => renderBiayaPreview_(out));
-                    if (out.length === 0) showToast('Tidak ada baris valid (periksa No Bukti, Keterangan Jurnal, Debit, dan Tanggal).', 'error');
+                    tampilkanHasilParseBiaya_(susunBarisBiaya_(rows, header.headerRowIdx, kol), false);
                 } catch (err) {
                     console.error(err);
                     showToast('Gagal membaca file. Pastikan file Excel (.xlsx/.xls) yang valid, lalu coba lagi.', 'error');
@@ -6693,61 +6725,21 @@
         function applyBiayaMapping() {
             const getIdx = id => {
                 const el = document.getElementById(id);
-                const v = el ? parseInt(el.value,10) : -1;
+                const v = el ? parseInt(el.value, 10) : -1;
                 return isNaN(v) ? -1 : v;
             };
-            const iNo = getIdx('mapNoBukti');
-            const iKet = getIdx('mapKeterangan');
-            const iDeb = getIdx('mapDebit');
-            const iDate = getIdx('mapTanggal');
-            const iCat = getIdx('mapKategori');
-            // Kolom Kredit tidak punya dropdown sendiri; dicari dari header yang sama.
-            const iKredit = (window._biayaHeaders || []).findIndex(h =>
-                String(h || '').replace(/[().\-/]/g, ' ').replace(/\s+/g, ' ').trim().indexOf('kredit') >= 0);
-            if (iKet < 0 || iDeb < 0) return showToast('Pilih minimal Keterangan Jurnal dan Debit/Nominal.', 'error');
-            const rows = window._biayaRawRows;
-            const headerRowIdx = window._biayaHeaderRowIdx || 0;
-            const out = [];
-            _biayaDilewati = [];
-            _biayaKredit = [];
-            for (let i = headerRowIdx + 1; i < rows.length; i++) {
-                const r = rows[i];
-                if (!r || r.length === 0) continue;
-                const noBukti = iNo >=0 ? String(r[iNo] == null ? '' : r[iNo]).trim() : '';
-                const ket = iKet >=0 ? String(r[iKet] == null ? '' : r[iKet]).trim() : '';
-                const deb = iDeb >=0 ? parseBiayaNominal(r[iDeb]) : 0;
-                const kredit = iKredit >= 0 ? parseBiayaNominal(r[iKredit]) : 0;
-                let tgl = iDate >=0 ? parseFlexibleDate(r[iDate]) : '';
-                if (!tgl && iNo >=0) tgl = parseNoBuktiDate(String(r[iNo] || ''));
-                let kat = iCat >=0 ? String(r[iCat] == null ? '' : r[iCat]).trim() : '';
-                const katBefore = kat;
-                const katUp = kat.toUpperCase();
-                if (!katUp || katUp.includes('LAIN')) {
-                    kat = deriveBiayaSubKat_(ket) || 'LAIN-LAIN';
-                }
-                if (!noBukti && !ket && !tgl) continue;
-                if (deb <= 0 && kredit > 0) {
-                    _biayaKredit.push({ baris: i + 1, no: noBukti, nominal: kredit });
-                    continue;
-                }
-                if (deb <= 0) continue;
-                if (!tanggalIsoValid_(tgl)) {
-                    _biayaDilewati.push({
-                        baris: i + 1,
-                        sel: iDate >= 0 ? String(r[iDate] == null ? '' : r[iDate]).trim() : '(kolom tanggal tidak dipetakan)',
-                        no: noBukti
-                    });
-                    continue;
-                }
-                out.push({ Tanggal: tgl, 'No Bukti': noBukti, 'Keterangan Jurnal': ket, Debit: deb, 'Kategori Biaya': kat, _katBefore: katBefore, _alasan: getBiayaDeriveReason_(ket, katBefore) });
-            }
-            document.getElementById('biayaMappingBox').style.display = 'none';
-            document.getElementById('biayaPreviewBox').style.display = 'block';
-            _biayaUploadRows = out;
-            window._biayaUploadRows = out;
-            renderBiayaPreview_(out);
-            tandaiDuplikatBiaya_(out).then(() => renderBiayaPreview_(out));
-            if (out.length === 0) showToast('Tidak ada baris valid (periksa No Bukti, Keterangan Jurnal, Debit, dan Tanggal).', 'error');
+            const kol = {
+                iNo: getIdx('mapNoBukti'),
+                iKet: getIdx('mapKeterangan'),
+                iDeb: getIdx('mapDebit'),
+                iDate: getIdx('mapTanggal'),
+                iCat: getIdx('mapKategori'),
+                // Kolom Kredit tidak punya dropdown sendiri; dicari dari header yang sama.
+                iKredit: (window._biayaHeaders || []).findIndex(h =>
+                    String(h || '').replace(/[().\-/]/g, ' ').replace(/\s+/g, ' ').trim().indexOf('kredit') >= 0)
+            };
+            if (kol.iKet < 0 || kol.iDeb < 0) return showToast('Pilih minimal Keterangan Jurnal dan Debit/Nominal.', 'error');
+            tampilkanHasilParseBiaya_(susunBarisBiaya_(window._biayaRawRows, window._biayaHeaderRowIdx || 0, kol), true);
         }
         function sendBiayaToGAS() {
             if (!_biayaUploadRows.length) return showToast('Pilih file Excel terlebih dahulu!', 'error');
@@ -7751,13 +7743,57 @@
             }
         }
 
+        // ===== RENDER TAB BIAYA — bagian hitung (tanpa DOM) =====
+        function totalNominalBiaya_(rows) {
+            return (rows || []).reduce((a, r) => a + (parseFloat(r['Nominal']) || 0), 0);
+        }
+
+        function agregatKategoriBiaya_(rows) {
+            const m = {};
+            (rows || []).forEach(r => {
+                let k = String(r['Kategori Biaya'] || '').trim().toUpperCase();
+                const ket = String(r['Keterangan Jurnal'] || r['Keterangan'] || '').trim();
+                if (!k || k.includes('LAIN')) { const sub = deriveBiayaSubKat_(ket); k = sub || 'LAIN-LAIN'; }
+                if (!k) return;
+                m[k] = (m[k] || 0) + (parseFloat(r['Nominal']) || 0);
+            });
+            return m;
+        }
+
+        function omzetMarketplaceBiaya_(market, mode) {
+            const totalNet = typeof __lastNetSales === 'number' ? __lastNetSales : 0;
+            const totalGross = typeof __lastGrossSales === 'number' ? __lastGrossSales : totalNet;
+            if (market === 'total') return mode === 'kotor' ? totalGross : totalNet;
+            // untuk shopee/tiktok, coba rekap dulu lalu skala sesuai mode
+            try {
+                const r = (typeof __rekapSupabaseData !== 'undefined' && __rekapSupabaseData) ? __rekapSupabaseData : null;
+                if (r && r.marketplace) {
+                    let sumBersih = 0;
+                    let found = false;
+                    Object.entries(r.marketplace).forEach(([k, v]) => {
+                        const kl = String(k).toLowerCase();
+                        if (kl.includes(market)) { sumBersih += (typeof v === 'number' ? v : parseFloat(v) || 0); found = true; }
+                    });
+                    if (found) {
+                        if (mode === 'kotor' && totalNet > 0 && totalGross > 0) return sumBersih * (totalGross / totalNet);
+                        return sumBersih;
+                    }
+                }
+                if (r && r.omzetByMarket) {
+                    const v = r.omzetByMarket[market] || 0;
+                    if (mode === 'kotor' && totalNet > 0 && totalGross > 0 && v > 0) return v * (totalGross / totalNet);
+                    return v;
+                }
+            } catch (e) {}
+            // fallback: jika rekap tidak ada, kembalikan 0 (jangan tebak proporsi dari biaya)
+            return 0;
+        }
+
         function drawBiaya() {
-            const sum = (arr) => arr.reduce((a, r) => a + (parseFloat(r['Nominal']) || 0), 0);
-            _biayaTotalCur = sum(_biayaRowsCur || []);
-            const totalPrev = sum(_biayaRowsPrev || []);
-            const agg = (arr) => { const m = {}; (arr || []).forEach(r => { let k = String(r['Kategori Biaya'] || '').trim().toUpperCase(); const ket = String(r['Keterangan Jurnal'] || r['Keterangan'] || '').trim(); if (!k || k.includes('LAIN')) { const sub = deriveBiayaSubKat_(ket); k = sub || 'LAIN-LAIN'; } if (!k) return; m[k] = (m[k] || 0) + (parseFloat(r['Nominal']) || 0); }); return m; };
-            _biayaAggPrev = agg(_biayaRowsPrev);
-            _biayaCatCur = Object.entries(agg(_biayaRowsCur)).sort((a, b) => b[1] - a[1]);
+            _biayaTotalCur = totalNominalBiaya_(_biayaRowsCur);
+            const totalPrev = totalNominalBiaya_(_biayaRowsPrev);
+            _biayaAggPrev = agregatKategoriBiaya_(_biayaRowsPrev);
+            _biayaCatCur = Object.entries(agregatKategoriBiaya_(_biayaRowsCur)).sort((a, b) => b[1] - a[1]);
             _biayaDaily = buildBiayaDaily();
             updateBiayaGranPills();
 
@@ -7811,43 +7847,9 @@
             const biayaIklanTiktok = ((_biayaCatCur.find(([k]) => k === 'IKLAN TIKTOK SUPERSUB') || [null,0])[1] + (_biayaCatCur.find(([k]) => k === 'TOPUP SALDO IKLAN TIKTOK SUPERSUB') || [null,0])[1]);
             const biayaIklanTotal = biayaIklanShopee + biayaIklanTiktok;
             // Omzet per marketplace — pakai rekap jika ada, fallback ke net/gross proporsional
-            const getOmzet = (market) => {
-                const mode = omzetMode;
-                const totalNet = typeof __lastNetSales === 'number' ? __lastNetSales : 0;
-                const totalGross = typeof __lastGrossSales === 'number' ? __lastGrossSales : totalNet;
-                if (market === 'total') {
-                    return mode === 'kotor' ? totalGross : totalNet;
-                }
-                // untuk shopee/tiktok, coba rekap dulu lalu skala sesuai mode
-                try {
-                    const r = (typeof __rekapSupabaseData !== 'undefined' && __rekapSupabaseData) ? __rekapSupabaseData : null;
-                    if (r && r.marketplace) {
-                        let sumBersih = 0;
-                        let found = false;
-                        Object.entries(r.marketplace).forEach(([k,v])=>{
-                            const kl = String(k).toLowerCase();
-                            if (kl.includes(market)) { sumBersih += (typeof v === 'number' ? v : parseFloat(v)||0); found = true; }
-                        });
-                        if (found) {
-                            if (mode === 'kotor' && totalNet > 0 && totalGross > 0) {
-                                // skala proporsional kotor/bersih dari total
-                                return sumBersih * (totalGross / totalNet);
-                            }
-                            return sumBersih;
-                        }
-                    }
-                    if (r && r.omzetByMarket) {
-                        const v = r.omzetByMarket[market] || 0;
-                        if (mode === 'kotor' && totalNet > 0 && totalGross > 0 && v > 0) return v * (totalGross / totalNet);
-                        return v;
-                    }
-                } catch(e) {}
-                // fallback: jika rekap tidak ada, kembalikan 0 (jangan tebak proporsi dari biaya)
-                return 0;
-            };
-            const omzetTotal = getOmzet('total');
-            const omzetShopee = getOmzet('shopee');
-            const omzetTiktok = getOmzet('tiktok');
+            const omzetTotal = omzetMarketplaceBiaya_('total', omzetMode);
+            const omzetShopee = omzetMarketplaceBiaya_('shopee', omzetMode);
+            const omzetTiktok = omzetMarketplaceBiaya_('tiktok', omzetMode);
             const labaBersih = typeof __lastNetProfit === 'number' ? __lastNetProfit : 0;
             const cogs = typeof __lastCogs === 'number' ? __lastCogs : 0;
             const grossCogs = typeof __lastGrossCogs === 'number' ? __lastGrossCogs : cogs;
@@ -8379,6 +8381,36 @@
             }
             return rows;
         }
+        // ===== PRATINJAU UPLOAD BIAYA — bagian ringkasan =====
+        function ringkasKategoriBiaya_(daftar) {
+            const cnt = {};
+            (daftar || []).forEach(r => { if (r._dup) return; const k = r['Kategori Biaya'] || 'LAIN-LAIN'; cnt[k] = (cnt[k] || 0) + 1; });
+            return Object.keys(cnt).map(k => k + ': ' + cnt[k]).join(' · ');
+        }
+
+        // Daftar baris dilewati, bukan sekadar jumlahnya: nomor baris Excel +
+        // isi sel tanggal aslinya, supaya bisa langsung dicek di file.
+        function htmlBarisDilewatiBiaya_() {
+            const lewat = _biayaDilewati || [];
+            if (!lewat.length) return '';
+            const daftar = lewat.slice(0, 10).map(x =>
+                '• baris ' + x.baris + (x.no ? ' (' + escHtml_(x.no) + ')' : '') + ': ' + escHtml_(x.sel || '(kosong)')
+            ).join('<br>');
+            return '<br><b style="color:var(--warning);">' + lewat.length + ' baris dilewati — tanggal tidak valid</b> (isi sel tanggal):<br>' + daftar
+                + (lewat.length > 10 ? '<br>… dan ' + (lewat.length - 10) + ' baris lain.' : '');
+        }
+
+        function htmlBarisKreditBiaya_() {
+            const rows = _biayaKredit || [];
+            if (!rows.length) return '';
+            const total = rows.reduce((a, x) => a + (Number(x.nominal) || 0), 0);
+            const daftar = rows.slice(0, 10).map(x =>
+                '• baris ' + x.baris + (x.no ? ' (' + escHtml_(x.no) + ')' : '') + ': Rp ' + (Number(x.nominal) || 0).toLocaleString('id-ID')
+            ).join('<br>');
+            return '<br><b style="color:var(--warning);">' + rows.length + ' baris hanya berisi Kredit — total Rp ' + total.toLocaleString('id-ID') + ' tidak diimpor</b>:<br>' + daftar
+                + (rows.length > 10 ? '<br>… dan ' + (rows.length - 10) + ' baris lain.' : '');
+        }
+
         function renderBiayaPreview_(out) {
             const daftar = out || [];
             const dup = daftar.filter(r => r._dup).length;
@@ -8394,30 +8426,10 @@
             }
             const info = document.getElementById('biayaPreviewInfo');
             if (info) {
-                const cnt = {};
-                daftar.forEach(r => { if (r._dup) return; const k = r['Kategori Biaya'] || 'LAIN-LAIN'; cnt[k] = (cnt[k] || 0) + 1; });
-                const ringkas = Object.keys(cnt).map(k => k + ': ' + cnt[k]).join(' · ');
-                // Daftar baris dilewati, bukan sekadar jumlahnya: nomor baris Excel +
-                // isi sel tanggal aslinya, supaya bisa langsung dicek di file.
-                const lewat = _biayaDilewati || [];
-                const daftarLewat = lewat.slice(0, 10).map(x =>
-                    '• baris ' + x.baris + (x.no ? ' (' + escHtml_(x.no) + ')' : '') + ': ' + escHtml_(x.sel || '(kosong)')
-                ).join('<br>');
-                const kreditRows = _biayaKredit || [];
-                const totalKredit = kreditRows.reduce((a, x) => a + (Number(x.nominal) || 0), 0);
-                const daftarKredit = kreditRows.slice(0, 10).map(x =>
-                    '• baris ' + x.baris + (x.no ? ' (' + escHtml_(x.no) + ')' : '') + ': Rp ' + (Number(x.nominal) || 0).toLocaleString('id-ID')
-                ).join('<br>');
-                info.innerHTML = (daftar.length > 8 ? 'Menampilkan 8 dari ' + daftar.length + ' baris — ' : '') + escHtml_(ringkas)
+                info.innerHTML = (daftar.length > 8 ? 'Menampilkan 8 dari ' + daftar.length + ' baris — ' : '') + escHtml_(ringkasKategoriBiaya_(daftar))
                     + (dup ? '<br><b style="color:var(--danger);">' + dup + ' baris sudah ada di database</b> (akan dilewati).' : '')
-                    + (kreditRows.length
-                        ? '<br><b style="color:var(--warning);">' + kreditRows.length + ' baris hanya berisi Kredit — total Rp ' + totalKredit.toLocaleString('id-ID') + ' tidak diimpor</b>:<br>' + daftarKredit
-                          + (kreditRows.length > 10 ? '<br>… dan ' + (kreditRows.length - 10) + ' baris lain.' : '')
-                        : '')
-                    + (lewat.length
-                        ? '<br><b style="color:var(--warning);">' + lewat.length + ' baris dilewati — tanggal tidak valid</b> (isi sel tanggal):<br>' + daftarLewat
-                          + (lewat.length > 10 ? '<br>… dan ' + (lewat.length - 10) + ' baris lain.' : '')
-                        : '');
+                    + htmlBarisKreditBiaya_()
+                    + htmlBarisDilewatiBiaya_();
             }
             const btn = document.getElementById('btnSubmitBiayaUpload');
             if (btn) { btn.disabled = siap <= 0; btn.style.opacity = siap <= 0 ? '0.5' : '1'; }
