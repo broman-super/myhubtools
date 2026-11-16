@@ -52,6 +52,11 @@ temp/
 
 # AI design-tooling session artifacts (critique snapshots, dsb.)
 /.impeccable/
+**/.impeccable/
+
+# Artefak audit/sesi (screenshot, dump percakapan) — bukan aset web
+/screenshots/
+/.cloud-attachments/
 
 # Vite
 vite.config.js.timestamp-*.mjs
