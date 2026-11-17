@@ -1,5 +1,5 @@
 // src/sw.js - Service Worker for REYNAHUB offline caching
-const CACHE_NAME = 'reynahub-v20';
+const CACHE_NAME = 'reynahub-v21';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -53,8 +53,10 @@ self.addEventListener('fetch', (event) => {
   // Network-first untuk semua aset sendiri: deploy langsung terpakai pada muat
   // pertama, cache hanya cadangan saat offline. Cache-first pernah membuat
   // perubahan CSS tertahan di perangkat meski cache sudah berganti nama.
+  // cache:'no-cache' memaksa revalidasi (ETag/304), karena GitHub Pages memasang
+  // max-age=600 yang bisa menyajikan CSS lama sampai 10 menit.
   event.respondWith(
-    fetch(request).then((response) => {
+    fetch(request, { cache: 'no-cache' }).then((response) => {
       if (response.ok) {
         const clone = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
