@@ -3,14 +3,21 @@
 // ReynaHub desktop — pembungkus tipis untuk https://reynahub.web.id.
 // Aplikasi ini SENGAJA tidak membundel aset tool: situs dimuat langsung dari
 // GitHub Pages supaya update tool tidak perlu install ulang aplikasi.
-// Satu-satunya berkas lokal adalah offline.html (layar "internet mati").
+//
+// Mode shell: halaman dimuat dengan `?shell=1` sehingga hub menyembunyikan
+// landing dan sidebar-nya sendiri; navigasi disediakan menu jendela native di
+// bawah ini. Tool tetap berjalan di dalam iframe hub, jadi sinkronisasi tema
+// lewat postMessage (window.parent) tidak berubah.
 
 const { app, BrowserWindow, Menu, ipcMain, shell, screen } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 
-const APP_URL = 'https://reynahub.web.id/';
+// Bisa ditimpa untuk uji lokal: REYNA_APP_URL=http://127.0.0.1:8900/
+const APP_URL = process.env.REYNA_APP_URL || 'https://reynahub.web.id/';
 const APP_ORIGIN = new URL(APP_URL).origin;
+const SHELL_QUERY = '?shell=1';
+const DEFAULT_HASH = '#dashboard';
 
 const PROBE_TIMEOUT_MS = 6000;  // batas satu percobaan koneksi
 const RETRY_MS = 5000;          // jeda coba ulang saat layar offline tampil
@@ -18,23 +25,49 @@ const WATCH_MS = 30000;         // cek berkala selama aplikasi online
 const MISS_LIMIT = 2;           // gagal berturut-turut sebelum dianggap offline
 const DEFAULT_BOUNDS = { width: 1280, height: 800 };
 
+const GROUP_LABEL = {
+  analitik: 'Analitik & Insight',
+  operasional: 'Operasional & Logistik',
+  dokumen: 'Dokumen & Arsip',
+  tim: 'Perencanaan & Tim'
+};
+const GROUP_ORDER = ['analitik', 'operasional', 'dokumen', 'tim'];
+
 let win = null;
+let palette = null;
 let retryTimer = null;
 let watchTimer = null;
 let stateTimer = null;
 let misses = 0;
 let showingOffline = false;
+let tools = [];
+let lastHash = DEFAULT_HASH;
 
-// ---------- simpan ukuran/posisi jendela ----------
+// ---------- daftar tool (dihasilkan scripts/build-tools.js) ----------
+function loadTools() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(__dirname, 'tools.json'), 'utf8'));
+    tools = Array.isArray(raw) ? raw : [];
+  } catch (e) {
+    tools = [];
+    console.warn('[reyna] tools.json belum ada — menu tool kosong. Jalankan: npm run tools');
+  }
+}
+
+// ---------- simpan ukuran/posisi jendela + tool terakhir ----------
 function statePath() {
   return path.join(app.getPath('userData'), 'window-state.json');
 }
 
 function readState() {
   try {
-    return JSON.parse(fs.readFileSync(statePath(), 'utf8')) || {};
+    const s = JSON.parse(fs.readFileSync(statePath(), 'utf8')) || {};
+    return {
+      bounds: s.bounds || null,
+      lastHash: typeof s.lastHash === 'string' && s.lastHash ? s.lastHash : DEFAULT_HASH
+    };
   } catch (e) {
-    return {};
+    return { bounds: null, lastHash: DEFAULT_HASH };
   }
 }
 
@@ -62,7 +95,10 @@ function usableBounds(saved) {
 function saveState() {
   if (!win || win.isDestroyed()) return;
   try {
-    fs.writeFileSync(statePath(), JSON.stringify(win.getNormalBounds()));
+    fs.writeFileSync(statePath(), JSON.stringify({
+      bounds: win.getNormalBounds(),
+      lastHash: lastHash
+    }));
   } catch (e) {
     // gagal menyimpan ukuran bukan alasan untuk mengganggu pemakaian
   }
@@ -105,13 +141,14 @@ function openExternal(url) {
   if (/^https?:\/\//i.test(url)) shell.openExternal(url);
 }
 
+function shellUrl(hash) {
+  const h = hash && hash !== DEFAULT_HASH ? hash : '';
+  return APP_URL + SHELL_QUERY + h;
+}
+
 // ---------- alur online / offline ----------
-function showApp() {
-  if (!win || win.isDestroyed()) return;
-  clearTimers();
-  misses = 0;
-  showingOffline = false;
-  win.loadURL(APP_URL);
+function startWatch() {
+  clearInterval(watchTimer);
   watchTimer = setInterval(async () => {
     if (await probe()) {
       misses = 0;
@@ -119,6 +156,15 @@ function showApp() {
     }
     if (++misses >= MISS_LIMIT) showOffline();
   }, WATCH_MS);
+}
+
+function showApp() {
+  if (!win || win.isDestroyed()) return;
+  clearTimers();
+  misses = 0;
+  showingOffline = false;
+  win.loadURL(shellUrl(lastHash));
+  startWatch();
 }
 
 function showOffline() {
@@ -136,14 +182,136 @@ function showOffline() {
   }, RETRY_MS);
 }
 
+// Navigasi dari menu/palette. Saat situs sudah terbuka, pakai hash supaya
+// pindah tool tidak memuat ulang seluruh halaman (hub menangani hashchange).
+async function openHash(hash) {
+  const target = hash || DEFAULT_HASH;
+  lastHash = target;
+  scheduleStateSave();
+  if (!win || win.isDestroyed()) return;
+
+  if (!(await probe())) {
+    showOffline();
+    return;
+  }
+  clearTimers();
+  misses = 0;
+
+  const current = win.webContents.getURL();
+  if (!showingOffline && current.startsWith(APP_ORIGIN) && current.indexOf('shell=1') !== -1) {
+    try {
+      await win.webContents.executeJavaScript(
+        'window.location.hash = ' + JSON.stringify(target) + ';'
+      );
+      startWatch();
+      return;
+    } catch (e) {
+      // halaman belum siap → jatuh ke muat ulang penuh
+    }
+  }
+  showApp();
+}
+
 async function boot() {
+  const saved = readState();
+  lastHash = saved.lastHash;
   if (await probe()) showApp();
   else showOffline();
 }
 
+// ---------- palette pencarian tool (Ctrl+K) ----------
+function closePalette() {
+  if (palette && !palette.isDestroyed()) palette.destroy();
+  palette = null;
+}
+
+function openPalette() {
+  if (!win || win.isDestroyed()) return;
+  if (palette && !palette.isDestroyed()) {
+    palette.focus();
+    return;
+  }
+  palette = new BrowserWindow({
+    width: 640,
+    height: 460,
+    show: false,
+    frame: false,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    parent: win,
+    backgroundColor: '#0f1115',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      spellcheck: false
+    }
+  });
+  palette.loadFile(path.join(__dirname, 'palette.html'));
+  palette.once('ready-to-show', () => {
+    if (palette && !palette.isDestroyed()) palette.show();
+  });
+  palette.on('blur', closePalette);
+  palette.on('closed', () => { palette = null; });
+}
+
+// ---------- menu native ----------
+function buildMenu() {
+  const toolMenus = GROUP_ORDER
+    .filter((g) => tools.some((t) => t.group === g))
+    .map((g) => ({
+      label: GROUP_LABEL[g] || g,
+      submenu: tools.filter((t) => t.group === g).map((t) => ({
+        label: t.title,
+        click: () => { openHash(t.hash); }
+      }))
+    }));
+
+  const template = [
+    {
+      label: 'ReynaHub',
+      submenu: [
+        { label: 'Beranda', accelerator: 'Alt+Left', click: () => { openHash(DEFAULT_HASH); } },
+        { label: 'Cari Tool…', accelerator: 'CommandOrControl+K', click: () => { openPalette(); } },
+        { type: 'separator' },
+        {
+          label: 'Muat ulang halaman',
+          accelerator: 'CommandOrControl+R',
+          click: () => { if (win && !win.isDestroyed()) win.webContents.reload(); }
+        },
+        { type: 'separator' },
+        { role: 'quit', label: 'Keluar' }
+      ]
+    },
+    ...toolMenus,
+    {
+      label: 'Tampilan',
+      submenu: [
+        { role: 'togglefullscreen', label: 'Layar penuh' },
+        { type: 'separator' },
+        { role: 'zoomIn', label: 'Perbesar' },
+        { role: 'zoomOut', label: 'Perkecil' },
+        { role: 'resetZoom', label: 'Ukuran normal' },
+        ...(app.isPackaged ? [] : [{ type: 'separator' }, { role: 'toggleDevTools', label: 'DevTools' }])
+      ]
+    }
+  ];
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
+function titleFor(url) {
+  const i = String(url || '').indexOf('#');
+  const hash = i === -1 ? '' : url.slice(i);
+  const tool = tools.find((t) => t.hash === hash);
+  return tool ? 'ReynaHub — ' + tool.title : 'ReynaHub';
+}
+
 // ---------- jendela ----------
 function createWindow() {
-  const saved = usableBounds(readState());
+  const saved = usableBounds(readState().bounds);
   win = new BrowserWindow({
     ...(saved || DEFAULT_BOUNDS),
     minWidth: 800,
@@ -152,7 +320,7 @@ function createWindow() {
     backgroundColor: '#0f1115',
     title: 'ReynaHub',
     icon: path.join(__dirname, 'build', 'icon.png'),
-    autoHideMenuBar: true,
+    autoHideMenuBar: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -166,7 +334,7 @@ function createWindow() {
   win.on('resize', scheduleStateSave);
   win.on('move', scheduleStateSave);
   win.on('close', saveState);
-  win.on('closed', () => { win = null; });
+  win.on('closed', () => { win = null; closePalette(); });
 
   // Tautan keluar (mis. link di tool) dibuka di browser, bukan di dalam aplikasi.
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -178,6 +346,16 @@ function createWindow() {
     event.preventDefault();
     openExternal(url);
   });
+
+  // Judul jendela mengikuti tool yang sedang dibuka.
+  const refreshTitle = (url) => {
+    if (!win || win.isDestroyed()) return;
+    lastHash = (String(url || '').includes('#') ? '#' + String(url).split('#')[1] : DEFAULT_HASH);
+    scheduleStateSave();
+    win.setTitle(titleFor(url));
+  };
+  win.webContents.on('did-navigate', (e, url) => refreshTitle(url));
+  win.webContents.on('did-navigate-in-page', (e, url) => refreshTitle(url));
 
   // Navigasi utama gagal (internet putus di tengah pemakaian) → layar offline.
   // -3 = ERR_ABORTED, yaitu loadURL baru menggantikan navigasi sebelumnya.
@@ -204,7 +382,8 @@ if (!app.requestSingleInstanceLock()) {
   });
 
   app.whenReady().then(() => {
-    Menu.setApplicationMenu(null);
+    loadTools();
+    buildMenu();
 
     ipcMain.handle('reyna:retry', async () => {
       if (!win || win.isDestroyed()) return false;
@@ -214,6 +393,19 @@ if (!app.requestSingleInstanceLock()) {
       }
       return false;
     });
+
+    ipcMain.handle('reyna:tools', () => tools.map((t) => ({
+      group: t.group, title: t.title, desc: t.desc, hash: t.hash
+    })));
+
+    ipcMain.handle('reyna:open', (event, hash) => {
+      if (typeof hash !== 'string' || hash.charAt(0) !== '#') return false;
+      closePalette();
+      openHash(hash);
+      return true;
+    });
+
+    ipcMain.on('reyna:close', () => { closePalette(); });
 
     createWindow();
 

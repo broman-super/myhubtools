@@ -182,6 +182,18 @@ main {
     font-weight: bold;
 }
 
+/* ===== MODE SHELL (aplikasi desktop) =====
+   Dipakai saat hub dimuat dengan ?shell=1: menu + navigasi disediakan jendela
+   native, jadi landing dan sidebar hub disembunyikan agar tool dapat seluruh
+   ruang. Aturan lain tidak diubah, dan mode ini tidak aktif di browser biasa. */
+html.shell-mode #landing-page { display: none !important; }
+html.shell-mode #workspace aside.sidebar { display: none !important; }
+/* Judul "Workspace", hitungan modul, dan kotak cari digantikan menu native +
+   Ctrl+K, jadi blok itu tidak perlu memakan ruang di jendela aplikasi. */
+html.shell-mode .dashboard-header,
+html.shell-mode .search-and-filter { display: none !important; }
+html.shell-mode #dashboard-view { padding-top: 20px; }
+
 /* ===== RESPONSIVE: hanya tumpang tindih keluar yang dipertahankan ===== */
 @media (max-width: 768px) {
     /* bottom bar 56px + safe area: iframe modul tidak boleh berjalan di bawahnya */

@@ -63,5 +63,6 @@ vite.config.js.timestamp-*.mjs
 
 # Desktop wrapper (Electron): node_modules & dist diabaikan, ikon build tetap ikut
 desktop/node_modules/
+desktop/tools.json
 !desktop/build/
 !desktop/build/icon.png

@@ -51,6 +51,21 @@
     ToolCard.renderAll();
     setInert(ui.workspace, true);
 
+    // Mode shell: hub dimuat dengan ?shell=1 oleh wrapper desktop. Menu dan
+    // navigasi datang dari jendela native, jadi landing dan sidebar hub
+    // disembunyikan (CSS: html.shell-mode). Tool tetap di dalam iframe supaya
+    // sinkronisasi tema lewat window.parent tidak berubah.
+    if (/[?&]shell=1(&|$)/.test(window.location.search)) {
+      document.documentElement.classList.add('shell-mode');
+      if (ui.landing) {
+        ui.landing.style.display = 'none';
+        ui.landing.classList.add('hide');
+      }
+      ui.workspace.classList.add('active');
+      setInert(ui.landing, true);
+      setInert(ui.workspace, false);
+    }
+
     // Label manifest diisi dari data kartu (anti-hardcode jumlah modul)
     var countIn = function(id, sel) {
       var el = document.getElementById(id);

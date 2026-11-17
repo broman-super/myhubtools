@@ -1,14 +1,19 @@
 {
   "name": "reynahub-desktop",
   "productName": "ReynaHub",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Jendela aplikasi ReynaHub — memuat reynahub.web.id, butuh internet.",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
-    "build:dir": "electron-builder --win --dir",
-    "build": "electron-builder --win portable zip"
+    "tools": "node scripts/build-tools.js",
+    "start": "node scripts/build-tools.js && electron .",
+    "build:dir": "node scripts/build-tools.js && electron-builder --win --dir",
+    "build": "node scripts/build-tools.js && electron-builder --win portable zip"
+  },
+  "devDependencies": {
+    "electron": "^45.3.3",
+    "electron-builder": "^26.18.0"
   },
   "build": {
     "appId": "id.reynahub.desktop",
@@ -21,6 +26,8 @@
       "main.js",
       "preload.js",
       "offline.html",
+      "palette.html",
+      "tools.json",
       "build/icon.png"
     ],
     "win": {
@@ -33,9 +40,5 @@
     "portable": {
       "artifactName": "ReynaHub-${version}-portable.exe"
     }
-  },
-  "devDependencies": {
-    "electron": "^45.3.3",
-    "electron-builder": "^26.18.0"
   }
 }

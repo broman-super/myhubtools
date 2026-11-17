@@ -23,12 +23,43 @@ library CDN (Chart.js, jQuery, SheetJS, pdf-lib, pdf.js, Sortable, Tailwind CDN 
 `activity-tracker`) harus dipindahkan ke lokal dulu. Jangan janjikan offline sebelum
 itu dikerjakan.
 
+## Mode shell (menu native)
+
+Situs dimuat dengan **`?shell=1`**. Di mode itu hub menambahkan kelas
+`html.shell-mode` (lihat `src/app.js` + `src/styles/components.css`) yang
+menyembunyikan landing dan sidebar hub, sehingga tool memakai seluruh jendela.
+Browser biasa tidak terpengaruh karena tanpa query itu mode ini tidak aktif.
+
+Navigasi disediakan menu jendela native:
+
+- **ReynaHub → Beranda** (`Alt+←`), **Cari Tool…** (`Ctrl+K`), **Muat ulang** (`Ctrl+R`).
+- Submenu per grup: Analitik & Insight, Operasional & Logistik, Dokumen & Arsip,
+  Perencanaan & Tim.
+- **Tampilan**: layar penuh, zoom, ukuran normal (DevTools hanya saat dev).
+- Pindah tool memakai `location.hash`, bukan muat ulang halaman, supaya tool
+  berganti tanpa kedip. Tool terakhir diingat di `window-state.json`.
+- Palette `Ctrl+K` (`palette.html`) mencari judul/deskripsi/hash, `↑ ↓` pilih,
+  `Enter` buka, `Esc` tutup, dan menutup sendiri saat kehilangan fokus.
+
+**Daftar tool tidak ditulis dua kali.** `scripts/build-tools.js` membaca
+`src/components/tool-card.js` + `src/core/router.js` lalu menghasilkan
+`tools.json` (di-ignore git, dibuat ulang setiap `npm start` / `npm run build`).
+Kalau ada tool baru di hub, menu aplikasi ikut bertambah tanpa edit di sini —
+tapi `npm run build` harus dijalankan lagi agar daftar di aplikasi ikut baru.
+
+Tool tetap berjalan di dalam iframe hub. Itu disengaja: sinkronisasi tema lewat
+`window.parent.postMessage` dan logika share link planner (`parent.location.hash`)
+bergantung pada parent HTML. Jangan pindahkan tool keluar iframe tanpa
+memindahkan logika tema ke `localStorage` per tool.
+
 ## Struktur
 
 ```
 desktop/
-├── main.js            proses utama: jendela, probe koneksi, layar offline, guard navigasi
-├── preload.js         satu-satunya jembatan ke halaman: tombol "Coba lagi"
+├── main.js            proses utama: jendela, probe koneksi, layar offline, menu, palette
+├── preload.js         jembatan minimal: retry, tools, open, close
+├── palette.html       pencarian tool Ctrl+K (tanpa sumber daya eksternal)
+├── scripts/build-tools.js  generator tools.json dari hub (satu sumber data)
 ├── offline.html       layar "Tidak ada koneksi internet" (tanpa sumber daya eksternal)
 ├── build/icon.png     ikon aplikasi 256×256 (dipakai electron-builder)
 ├── package.json       manifest + konfigurasi build (portable + zip)
@@ -42,7 +73,7 @@ Tidak ada `node_modules` di repo — jalankan `npm install` di folder ini setela
 ```bash
 cd desktop
 npm install            # sekali per mesin
-npm start              # jalankan langsung (dev)
+npm start              # generate tools.json lalu jalankan (dev)
 npm run build:dir      # hasil unpacked di dist/win-unpacked (cepat, untuk uji)
 npm run build          # installer portable .exe + .zip di dist/
 ```
