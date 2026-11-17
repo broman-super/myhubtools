@@ -1,5 +1,5 @@
 // src/sw.js - Service Worker for REYNAHUB offline caching
-const CACHE_NAME = 'reynahub-v18';
+const CACHE_NAME = 'reynahub-v19';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -50,34 +50,19 @@ self.addEventListener('fetch', (event) => {
   // Hanya aset milik sendiri; GAS/Supabase/lintas-origin ditangani browser langsung
   if (url.origin !== self.location.origin) return;
 
-  if (url.pathname.startsWith('/Productive/') || url.pathname.startsWith('/dak/')) {
-    // Network-first: tool files must reflect latest edits; cache only as offline fallback
-    event.respondWith(
-      fetch(request).then((response) => {
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-        }
-        return response;
-      }).catch(() => caches.match(request).then((cached) => cached || offlineResponse()))
-    );
-    return;
-  }
-
+  // Network-first untuk semua aset sendiri: deploy langsung terpakai pada muat
+  // pertama, cache hanya cadangan saat offline. Cache-first pernah membuat
+  // perubahan CSS tertahan di perangkat meski cache sudah berganti nama.
   event.respondWith(
-    caches.match(request).then((cached) => {
-      const fetched = fetch(request).then((response) => {
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-        }
-        return response;
-      }).catch(() => {
-        if (cached) return cached;
-        return request.mode === 'navigate' ? offlineResponse() : new Response('', { status: 504 });
-      });
-
-      return cached || fetched;
-    })
+    fetch(request).then((response) => {
+      if (response.ok) {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+      }
+      return response;
+    }).catch(() => caches.match(request).then((cached) => {
+      if (cached) return cached;
+      return request.mode === 'navigate' ? offlineResponse() : new Response('', { status: 504 });
+    }))
   );
 });
