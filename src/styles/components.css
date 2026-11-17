@@ -192,6 +192,8 @@ html.shell-mode #workspace aside.sidebar { display: none !important; }
    Ctrl+K, jadi blok itu tidak perlu memakan ruang di jendela aplikasi. */
 html.shell-mode .dashboard-header,
 html.shell-mode .search-and-filter { display: none !important; }
+/* Judul kelompok juga digantikan pengelompokan di menu native. */
+html.shell-mode .section-label { display: none !important; }
 html.shell-mode #dashboard-view { padding-top: 20px; }
 /* Notch/navbar hub memesan 76px di atas (#frame-container di hub-landing.css).
    Di software navbar itu tidak ada, jadi tool menempel tepi atas jendela. */
