@@ -195,8 +195,11 @@
     <script src="src/app.js"></script>
     <script>
     if ('serviceWorker' in navigator) {
-      // Root scope: SW harus mengontrol halaman ini, bukan hanya /src/
-      navigator.serviceWorker.register('sw.js').catch(function () {});
+      // Root scope: SW harus mengontrol halaman ini, bukan hanya /src/.
+      // updateViaCache 'none': src/sw.js yang di-import tidak boleh diambil dari
+      // cache HTTP (GitHub Pages: max-age=600), kalau tidak logika SW baru bisa
+      // tertahan 10 menit dan deploy tampak tidak berpengaruh.
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(function () {});
     }
     </script>
     <script>
