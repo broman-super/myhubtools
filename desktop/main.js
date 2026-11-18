@@ -16,7 +16,6 @@ const fs = require('node:fs');
 // Bisa ditimpa untuk uji lokal: REYNA_APP_URL=http://127.0.0.1:8900/
 const APP_URL = process.env.REYNA_APP_URL || 'https://reynahub.web.id/';
 const APP_ORIGIN = new URL(APP_URL).origin;
-const SHELL_QUERY = '?shell=1';
 const DEFAULT_HASH = '#dashboard';
 
 const PROBE_TIMEOUT_MS = 6000;  // batas satu percobaan koneksi
@@ -31,7 +30,6 @@ const GROUP_LABEL = {
   dokumen: 'Dokumen & Arsip',
   tim: 'Perencanaan & Tim'
 };
-const GROUP_ORDER = ['analitik', 'operasional', 'dokumen', 'tim'];
 
 // Setelah deploy, service worker baru (skipWaiting + clients.claim) mengambil
 // alih halaman. Tanpa ini jendela tetap memakai CSS/JS lama sampai pengguna
@@ -128,7 +126,9 @@ function scheduleStateSave() {
 // navigator.onLine tidak dipakai: WiFi bisa tersambung tanpa internet.
 async function probe() {
   try {
-    const res = await fetch(APP_URL + '?ping=' + Date.now(), {
+    const url = new URL(APP_URL);
+    url.searchParams.set('ping', String(Date.now()));
+    const res = await fetch(url, {
       method: 'HEAD',
       cache: 'no-store',
       signal: AbortSignal.timeout(PROBE_TIMEOUT_MS)
@@ -146,19 +146,39 @@ function clearTimers() {
   watchTimer = null;
 }
 
+function isHubUrl(url) {
+  return String(url || '').startsWith(APP_ORIGIN);
+}
+
 function isInternal(url) {
-  if (!url) return false;
-  if (url.startsWith('file://')) return true;
-  return url.startsWith(APP_ORIGIN);
+  return isHubUrl(url) || String(url || '').startsWith('file://');
+}
+
+// Jendela bisa saja masih di about:blank saat menu diklik.
+function isShellPage(url) {
+  try {
+    return new URL(url).searchParams.get('shell') === '1';
+  } catch (e) {
+    return false;
+  }
 }
 
 function openExternal(url) {
   if (/^https?:\/\//i.test(url)) shell.openExternal(url);
 }
 
+function hashOf(url) {
+  try {
+    return new URL(url).hash || DEFAULT_HASH;
+  } catch (e) {
+    return DEFAULT_HASH;
+  }
+}
+
 function shellUrl(hash) {
-  const h = hash && hash !== DEFAULT_HASH ? hash : '';
-  return APP_URL + SHELL_QUERY + h;
+  const url = new URL(APP_URL);
+  url.searchParams.set('shell', '1');
+  return url.href + (hash && hash !== DEFAULT_HASH ? hash : '');
 }
 
 // ---------- alur online / offline ----------
@@ -213,7 +233,7 @@ async function openHash(hash) {
   misses = 0;
 
   const current = win.webContents.getURL();
-  if (!showingOffline && current.startsWith(APP_ORIGIN) && current.indexOf('shell=1') !== -1) {
+  if (!showingOffline && isHubUrl(current) && isShellPage(current)) {
     try {
       await win.webContents.executeJavaScript(
         'window.location.hash = ' + JSON.stringify(target) + ';'
@@ -227,8 +247,7 @@ async function openHash(hash) {
   showApp();
 }
 
-async function boot() {
-  const saved = readState();
+async function boot(saved) {
   lastHash = saved.lastHash;
   if (await probe()) showApp();
   else showOffline();
@@ -274,7 +293,7 @@ function openPalette() {
 
 // ---------- menu native ----------
 function buildMenu() {
-  const toolMenus = GROUP_ORDER
+  const toolMenus = Object.keys(GROUP_LABEL)
     .filter((g) => tools.some((t) => t.group === g))
     .map((g) => ({
       label: GROUP_LABEL[g] || g,
@@ -318,15 +337,14 @@ function buildMenu() {
 }
 
 function titleFor(url) {
-  const i = String(url || '').indexOf('#');
-  const hash = i === -1 ? '' : url.slice(i);
-  const tool = tools.find((t) => t.hash === hash);
+  const tool = tools.find((t) => t.hash === hashOf(url));
   return tool ? 'ReynaHub — ' + tool.title : 'ReynaHub';
 }
 
 // ---------- jendela ----------
 function createWindow() {
-  const saved = usableBounds(readState().bounds);
+  const stored = readState();
+  const saved = usableBounds(stored.bounds);
   win = new BrowserWindow({
     ...(saved || DEFAULT_BOUNDS),
     minWidth: 800,
@@ -367,9 +385,12 @@ function createWindow() {
     if (!win || win.isDestroyed()) return;
     // Layar offline dimuat dari file:// tanpa hash. Kalau lastHash ikut ditimpa,
     // tool terakhir hilang dan aplikasi kembali ke beranda setelah internet pulih.
-    if (String(url || '').startsWith(APP_ORIGIN)) {
-      lastHash = (String(url).includes('#') ? '#' + String(url).split('#')[1] : DEFAULT_HASH);
-      scheduleStateSave();
+    if (isHubUrl(url)) {
+      const next = hashOf(url);
+      if (next !== lastHash) {
+        lastHash = next;
+        scheduleStateSave();
+      }
     }
     win.setTitle(titleFor(url));
   };
@@ -379,7 +400,7 @@ function createWindow() {
   // Hanya halaman hub (bukan layar offline/palette) yang punya service worker.
   win.webContents.on('dom-ready', () => {
     if (!win || win.isDestroyed()) return;
-    if (!win.webContents.getURL().startsWith(APP_ORIGIN)) return;
+    if (!isHubUrl(win.webContents.getURL())) return;
     win.webContents.executeJavaScript(WATCH_SW_SCRIPT).catch(() => {});
   });
 
@@ -392,7 +413,7 @@ function createWindow() {
     showOffline();
   });
 
-  boot();
+  boot(stored);
 }
 
 // ---------- siklus hidup ----------

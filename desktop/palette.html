@@ -206,13 +206,12 @@
         }
       });
 
-      window.addEventListener('DOMContentLoaded', function () { q.focus(); });
-
       (async function load() {
         try {
           all = (window.reyna && window.reyna.tools) ? await window.reyna.tools() : [];
         } catch (e) {
           all = [];
+          console.warn('[reyna] daftar tool gagal dimuat', e);
         }
         filter();
         q.focus();
