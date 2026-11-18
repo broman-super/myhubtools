@@ -118,13 +118,6 @@
       var shown = [];
       var index = 0;
 
-      var GROUP = {
-        analitik: 'Analitik',
-        operasional: 'Operasional',
-        dokumen: 'Dokumen',
-        tim: 'Tim'
-      };
-
       function render() {
         list.textContent = '';
         if (!shown.length) {
@@ -153,7 +146,7 @@
 
           var group = document.createElement('span');
           group.className = 'group';
-          group.textContent = GROUP[t.group] || t.group;
+          group.textContent = t.groupLabel || t.group;  // label dari menu native
           li.appendChild(group);
 
           li.addEventListener('mousemove', function () {

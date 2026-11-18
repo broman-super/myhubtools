@@ -33,6 +33,21 @@ const GROUP_LABEL = {
 };
 const GROUP_ORDER = ['analitik', 'operasional', 'dokumen', 'tim'];
 
+// Setelah deploy, service worker baru (skipWaiting + clients.claim) mengambil
+// alih halaman. Tanpa ini jendela tetap memakai CSS/JS lama sampai pengguna
+// menekan Ctrl+R sendiri — persis penyebab gap 76px yang terlihat dulu.
+// Penanda `refreshing` hanya hidup per muat halaman, jadi tidak ada reload
+// berulang, dan deploy berikutnya tetap memicu satu reload lagi.
+const WATCH_SW_SCRIPT = `(function () {
+  if (!('serviceWorker' in navigator)) return;
+  var refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    if (refreshing) return;
+    refreshing = true;
+    location.reload();
+  });
+})();`;
+
 let win = null;
 let palette = null;
 let retryTimer = null;
@@ -350,12 +365,23 @@ function createWindow() {
   // Judul jendela mengikuti tool yang sedang dibuka.
   const refreshTitle = (url) => {
     if (!win || win.isDestroyed()) return;
-    lastHash = (String(url || '').includes('#') ? '#' + String(url).split('#')[1] : DEFAULT_HASH);
-    scheduleStateSave();
+    // Layar offline dimuat dari file:// tanpa hash. Kalau lastHash ikut ditimpa,
+    // tool terakhir hilang dan aplikasi kembali ke beranda setelah internet pulih.
+    if (String(url || '').startsWith(APP_ORIGIN)) {
+      lastHash = (String(url).includes('#') ? '#' + String(url).split('#')[1] : DEFAULT_HASH);
+      scheduleStateSave();
+    }
     win.setTitle(titleFor(url));
   };
   win.webContents.on('did-navigate', (e, url) => refreshTitle(url));
   win.webContents.on('did-navigate-in-page', (e, url) => refreshTitle(url));
+
+  // Hanya halaman hub (bukan layar offline/palette) yang punya service worker.
+  win.webContents.on('dom-ready', () => {
+    if (!win || win.isDestroyed()) return;
+    if (!win.webContents.getURL().startsWith(APP_ORIGIN)) return;
+    win.webContents.executeJavaScript(WATCH_SW_SCRIPT).catch(() => {});
+  });
 
   // Navigasi utama gagal (internet putus di tengah pemakaian) → layar offline.
   // -3 = ERR_ABORTED, yaitu loadURL baru menggantikan navigasi sebelumnya.
@@ -394,11 +420,21 @@ if (!app.requestSingleInstanceLock()) {
       return false;
     });
 
+    // `reyna:open` hanya untuk palette (file://). Halaman situs memakai preload
+    // yang sama, jadi tanpa cek pengirim sebuah tool bisa memicu navigasi sendiri.
+    const fromFile = (event) => {
+      const url = event && event.senderFrame ? event.senderFrame.url : '';
+      return String(url || '').startsWith('file://');
+    };
+
     ipcMain.handle('reyna:tools', () => tools.map((t) => ({
-      group: t.group, title: t.title, desc: t.desc, hash: t.hash
+      group: t.group,
+      groupLabel: GROUP_LABEL[t.group] || t.group,
+      title: t.title, desc: t.desc, hash: t.hash
     })));
 
     ipcMain.handle('reyna:open', (event, hash) => {
+      if (!fromFile(event)) return false;
       if (typeof hash !== 'string' || hash.charAt(0) !== '#') return false;
       closePalette();
       openHash(hash);
