@@ -1,0 +1,285 @@
+/* shell.css — chrome desktop REYNAHUB.
+   Hanya dimuat oleh aplikasi Electron (bukan versi web). Warna memakai token
+   hub supaya tema terang/gelap tetap satu keluarga dengan isi tool. */
+
+html.rh-shell {
+  --rh-bar-height: 48px;
+}
+
+/* Ruang untuk titlebar kustom. #workspace tetap 100dvh; padding atas
+   memotong tinggi konten, bukan menambah scroll halaman. */
+html.rh-shell #workspace {
+  padding-top: var(--rh-bar-height);
+}
+
+/* ===== TITLEBAR / APP BAR ===== */
+.rh-appbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1400;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: var(--rh-bar-height);
+  /* Ruang kontrol jendela native Windows. Dibagi zoom agar tetap 152 DIP
+     saat halaman diperbesar/diperkecil. */
+  padding: 0 calc(152px / var(--rh-zoom, 1)) 0 10px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-main);
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.rh-appbar button {
+  -webkit-app-region: no-drag;
+}
+
+.rh-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  flex: none;
+  height: 30px;
+  padding: 0 9px 0 3px;
+  border-radius: 8px;
+  color: var(--text-main);
+  transition: background-color .15s ease;
+}
+
+.rh-brand:hover {
+  background: var(--surface2);
+}
+
+.rh-brand:active {
+  transform: translateY(1px);
+}
+
+.rh-mark {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--stamp-ink);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+.rh-wordmark {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  line-height: 1;
+}
+
+.rh-sep {
+  flex: none;
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: var(--border);
+}
+
+.rh-back {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  color: var(--text-muted);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity .15s ease, background-color .15s ease, color .15s ease;
+}
+
+.rh-back.is-on {
+  visibility: visible;
+  opacity: 1;
+}
+
+.rh-back:hover {
+  background: var(--surface2);
+  color: var(--text-main);
+}
+
+.rh-title {
+  min-width: 0;
+  max-width: min(46vw, 540px);
+  overflow: hidden;
+  color: var(--text-main);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -.005em;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rh-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.rh-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 7px;
+  color: var(--text-muted);
+  transition: background-color .15s ease, color .15s ease;
+}
+
+.rh-action:hover {
+  background: var(--surface2);
+  color: var(--text-main);
+}
+
+.rh-action:active {
+  transform: translateY(1px);
+}
+
+.rh-action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.rh-action svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+.rh-icon {
+  width: 30px;
+  padding: 0;
+}
+
+.rh-search {
+  justify-content: flex-start;
+  padding: 0 7px 0 9px;
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+}
+
+.rh-search:hover {
+  background: var(--surface2);
+  border-color: color-mix(in srgb, var(--text-main) 14%, var(--border));
+}
+
+.rh-search-label {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.rh-kbd {
+  margin-left: 2px;
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  line-height: 1.5;
+}
+
+/* Ikon tema menunjukkan aksi berikutnya: bulan di terang, matahari di gelap. */
+.rh-theme-sun { display: none; }
+html.rh-shell[data-theme="dark"] .rh-theme-sun { display: block; }
+html.rh-shell[data-theme="dark"] .rh-theme-moon { display: none; }
+
+/* ===== DASHBOARD ===== */
+html.rh-shell #dashboard-view {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 26px clamp(18px, 3.2vw, 44px) 72px;
+  scrollbar-gutter: stable;
+}
+
+html.rh-shell.shell-mode .section-label {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .13em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+html.rh-shell.shell-mode .section-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+html.rh-shell .group-section {
+  margin-bottom: 30px;
+}
+
+html.rh-shell .bento-grid {
+  gap: 16px;
+}
+
+html.rh-shell .bento-card {
+  padding: 18px 18px 16px;
+}
+
+/* ===== RESPONSIF ===== */
+@media (max-width: 980px) {
+  .rh-wordmark,
+  .rh-search-label,
+  .rh-kbd {
+    display: none;
+  }
+
+  .rh-search {
+    width: 30px;
+    padding: 0;
+    justify-content: center;
+    border-color: transparent;
+    background: transparent;
+  }
+
+  .rh-title {
+    max-width: 40vw;
+  }
+}
+
+@media (max-width: 840px) {
+  .rh-appbar {
+    padding-right: calc(148px / var(--rh-zoom, 1));
+  }
+
+  .rh-title {
+    max-width: 32vw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rh-brand,
+  .rh-back,
+  .rh-action {
+    transition: none;
+  }
+}
+
+@media print {
+  .rh-appbar { display: none !important; }
+  html.rh-shell #workspace { padding-top: 0; }
+}

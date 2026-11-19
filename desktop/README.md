@@ -23,12 +23,26 @@ library CDN (Chart.js, jQuery, SheetJS, pdf-lib, pdf.js, Sortable, Tailwind CDN 
 `activity-tracker`) harus dipindahkan ke lokal dulu. Jangan janjikan offline sebelum
 itu dikerjakan.
 
-## Mode shell (menu native)
+## Mode shell (chrome desktop)
 
 Situs dimuat dengan **`?shell=1`**. Di mode itu hub menambahkan kelas
 `html.shell-mode` (lihat `src/app.js` + `src/styles/components.css`) yang
 menyembunyikan landing dan sidebar hub, sehingga tool memakai seluruh jendela.
 Browser biasa tidak terpengaruh karena tanpa query itu mode ini tidak aktif.
+
+Aplikasi menambahkan chrome desktop sendiri lewat `shell.css` + `shell.js`
+(diinjeksi `main.js` setelah halaman siap). Halaman web tidak memuat aset ini.
+Yang tampil:
+
+- Titlebar kustom 48px dengan wordmark, judul tool aktif, tombol kembali,
+  pencarian, tema, dan menu aplikasi.
+- Titlebar memakai `titleBarOverlay` Windows, jadi kontrol minimize/maximize/close
+  tetap native dan warna overlay mengikuti tema hub. Tinggi overlay dan ruang
+  kontrol ikut disesuaikan saat halaman di-zoom.
+- Label grup dashboard ditampilkan lagi agar kartu tidak tampil sebagai grid tanpa
+  konteks. Pencarian pindah ke palette `Ctrl+K`.
+- Menu bar native disembunyikan (`Alt` masih bisa memunculkannya). Tombol menu di
+  titlebar membuka menu aplikasi yang sama, jadi daftar tool tetap satu sumber.
 
 Navigasi disediakan menu jendela native:
 
@@ -57,10 +71,12 @@ memindahkan logika tema ke `localStorage` per tool.
 ```
 desktop/
 ├── main.js            proses utama: jendela, probe koneksi, layar offline, menu, palette
-├── preload.js         jembatan minimal: retry, tools, open, close
+├── preload.js         jembatan minimal: retry, tools, open, close, palette, menu, tema
+├── shell.css          chrome desktop: titlebar, dashboard, label grup
+├── shell.js           isi titlebar + sinkron judul/tema (diinjeksi ke halaman shell)
 ├── palette.html       pencarian tool Ctrl+K (tanpa sumber daya eksternal)
 ├── scripts/build-tools.js  generator tools.json dari hub (satu sumber data)
-├── offline.html       layar "Tidak ada koneksi internet" (tanpa sumber daya eksternal)
+├── offline.html       layar "Tidak ada koneksi internet" + titlebar geser
 ├── build/icon.png     ikon aplikasi 256×256 (dipakai electron-builder)
 ├── package.json       manifest + konfigurasi build (portable + zip)
 └── dist/              hasil build (diabaikan git)
@@ -100,14 +116,16 @@ internet, dan itu justru kasus yang paling sering terjadi di lapangan.
 - Navigasi dikunci ke origin `reynahub.web.id`; tautan keluar dibuka di browser
   lewat `shell.openExternal`, bukan di dalam aplikasi.
 - `Menu` bawaan Electron dihapus supaya tidak ada menu yang membingungkan.
+- `reyna:palette`, `reyna:menu`, dan `reyna:theme` hanya menerima pengirim dari
+  halaman hub `?shell=1`. Palette tetap membatasi `reyna:open` ke `file://`.
 
 Kalau nanti menambah IPC baru, tambahkan di `preload.js` dengan nama spesifik — jangan
 membuka `ipcRenderer` mentah ke halaman.
 
 ## Distribusi ke tim
 
-1. `npm run build` → `desktop/dist/ReynaHub-1.0.0-portable.exe` (jalankan langsung,
-   tanpa instalasi) dan `ReynaHub-1.0.0-win.zip` (extract lalu jalankan).
+1. `npm run build` → `desktop/dist/ReynaHub-1.1.4-portable.exe` (jalankan langsung,
+   tanpa instalasi) dan `ReynaHub-1.1.4-win.zip` (extract lalu jalankan).
 2. Bagikan lewat drive internal/WhatsApp. **Tidak ditandatangani**, jadi Windows
    menampilkan "Unknown publisher" sekali per PC: More info → Run anyway.
 3. Kalau antivirus menandai `.exe` portable (sering terjadi pada NSIS tanpa tanda

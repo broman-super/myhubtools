@@ -24,6 +24,24 @@ const WATCH_MS = 30000;         // cek berkala selama aplikasi online
 const MISS_LIMIT = 2;           // gagal berturut-turut sebelum dianggap offline
 const DEFAULT_BOUNDS = { width: 1280, height: 800 };
 
+// Chrome desktop: titlebar kustom + top bar. Tinggi ini harus sama dengan
+// --rh-bar-height di shell.css dan titleBarOverlay di BrowserWindow.
+const TITLEBAR_HEIGHT = 48;
+const TITLEBAR_COLORS = {
+  light: { color: '#ffffff', symbolColor: '#0f172a' },
+  dark: { color: '#121826', symbolColor: '#f1f5f9' }
+};
+
+// Aset shell hanya ada di paket desktop; halaman web tidak memuatnya.
+let SHELL_CSS = '';
+let SHELL_SCRIPT = '';
+try {
+  SHELL_CSS = fs.readFileSync(path.join(__dirname, 'shell.css'), 'utf8');
+  SHELL_SCRIPT = fs.readFileSync(path.join(__dirname, 'shell.js'), 'utf8');
+} catch (e) {
+  console.warn('[reyna] aset shell tidak lengkap — pakai chrome bawaan situs:', e.message);
+}
+
 const GROUP_LABEL = {
   analitik: 'Analitik & Insight',
   operasional: 'Operasional & Logistik',
@@ -55,6 +73,8 @@ let misses = 0;
 let showingOffline = false;
 let tools = [];
 let lastHash = DEFAULT_HASH;
+let zoomTimer = null;
+let lastZoomFactor = 1;
 
 // ---------- daftar tool (dihasilkan scripts/build-tools.js) ----------
 function loadTools() {
@@ -147,7 +167,11 @@ function clearTimers() {
 }
 
 function isHubUrl(url) {
-  return String(url || '').startsWith(APP_ORIGIN);
+  try {
+    return new URL(url).origin === APP_ORIGIN;
+  } catch (e) {
+    return false;
+  }
 }
 
 function isInternal(url) {
@@ -160,6 +184,71 @@ function isShellPage(url) {
     return new URL(url).searchParams.get('shell') === '1';
   } catch (e) {
     return false;
+  }
+}
+
+let currentTitleBarTheme = 'light';
+
+// Kontrol jendela native tidak ikut zoom halaman. Tinggi overlay harus
+// dikalikan zoom agar sejajar dengan titlebar kustom yang ikut membesar.
+function titleBarOverlayHeight() {
+  if (!win || win.isDestroyed()) return TITLEBAR_HEIGHT;
+  const factor = win.webContents.getZoomFactor() || 1;
+  return Math.max(32, Math.round(TITLEBAR_HEIGHT * factor));
+}
+
+function applyTitleBarOverlay() {
+  if (!win || win.isDestroyed()) return;
+  const colors = TITLEBAR_COLORS[currentTitleBarTheme];
+  try {
+    win.setTitleBarOverlay({ ...colors, height: titleBarOverlayHeight() });
+  } catch (e) {
+    // platform tanpa titleBarOverlay — jendela tetap memakai frame native
+  }
+}
+
+function setTitleBarTheme(theme) {
+  currentTitleBarTheme = theme === 'dark' ? 'dark' : 'light';
+  applyTitleBarOverlay();
+}
+
+function syncTitleBarZoom(wc) {
+  if (!win || win.isDestroyed()) return;
+  applyTitleBarOverlay();
+  if (!wc || wc.isDestroyed()) return;
+  const factor = wc.getZoomFactor() || 1;
+  lastZoomFactor = factor;
+  wc.executeJavaScript(
+    'document.documentElement.style.setProperty("--rh-zoom", "' + factor + '");'
+  ).catch(() => {});
+}
+
+// `zoom-changed` tidak selalu terpicu untuk zoom programatik, menu, atau roda
+// mouse. Polling ringan ini menyamakan overlay dengan titlebar pada semua jalur.
+function startZoomWatch() {
+  clearInterval(zoomTimer);
+  zoomTimer = setInterval(() => {
+    if (!win || win.isDestroyed()) return;
+    const factor = win.webContents.getZoomFactor() || 1;
+    if (Math.abs(factor - lastZoomFactor) < 0.001) return;
+    syncTitleBarZoom(win.webContents);
+  }, 400);
+}
+
+// Chrome desktop dipasang setelah dokumen siap, hanya di halaman hub ?shell=1.
+// Versi web tidak disentuh: aset ini tidak pernah dimuat oleh index.html.
+let shellCssKey = null;
+async function applyDesktopShell(wc) {
+  if (!wc || wc.isDestroyed() || !SHELL_CSS || !SHELL_SCRIPT) return;
+  try {
+    if (shellCssKey) {
+      try { await wc.removeInsertedCSS(shellCssKey); } catch (e) {}
+    }
+    shellCssKey = await wc.insertCSS(SHELL_CSS);
+    await wc.executeJavaScript(SHELL_SCRIPT + '(' + JSON.stringify(tools) + ');');
+    syncTitleBarZoom(wc);
+  } catch (e) {
+    console.warn('[reyna] gagal memasang chrome desktop:', e.message);
   }
 }
 
@@ -353,7 +442,9 @@ function createWindow() {
     backgroundColor: '#0f1115',
     title: 'ReynaHub',
     icon: path.join(__dirname, 'build', 'icon.png'),
-    autoHideMenuBar: false,
+    titleBarStyle: 'hidden',
+    titleBarOverlay: { ...TITLEBAR_COLORS.light, height: TITLEBAR_HEIGHT },
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -363,11 +454,25 @@ function createWindow() {
     }
   });
 
+  win.setMenuBarVisibility(false);
+  lastZoomFactor = win.webContents.getZoomFactor() || 1;
+  startZoomWatch();
+  win.webContents.on('zoom-changed', () => {
+    setTimeout(() => {
+      if (!win || win.isDestroyed()) return;
+      syncTitleBarZoom(win.webContents);
+    }, 50);
+  });
   win.once('ready-to-show', () => win.show());
   win.on('resize', scheduleStateSave);
   win.on('move', scheduleStateSave);
   win.on('close', saveState);
-  win.on('closed', () => { win = null; closePalette(); });
+  win.on('closed', () => {
+    clearInterval(zoomTimer);
+    zoomTimer = null;
+    win = null;
+    closePalette();
+  });
 
   // Tautan keluar (mis. link di tool) dibuka di browser, bukan di dalam aplikasi.
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -397,10 +502,14 @@ function createWindow() {
   win.webContents.on('did-navigate', (e, url) => refreshTitle(url));
   win.webContents.on('did-navigate-in-page', (e, url) => refreshTitle(url));
 
-  // Hanya halaman hub (bukan layar offline/palette) yang punya service worker.
+  // Hanya halaman hub (bukan layar offline/palette) yang punya service worker
+  // dan chrome desktop. Halaman web biasa tidak pernah mendapat shell.css/js.
   win.webContents.on('dom-ready', () => {
     if (!win || win.isDestroyed()) return;
-    if (!isHubUrl(win.webContents.getURL())) return;
+    const url = win.webContents.getURL();
+    syncTitleBarZoom(win.webContents);
+    if (!isHubUrl(url)) return;
+    if (isShellPage(url)) applyDesktopShell(win.webContents);
     win.webContents.executeJavaScript(WATCH_SW_SCRIPT).catch(() => {});
   });
 
@@ -448,6 +557,11 @@ if (!app.requestSingleInstanceLock()) {
       return String(url || '').startsWith('file://');
     };
 
+    const fromShell = (event) => {
+      const url = event && event.senderFrame ? event.senderFrame.url : '';
+      return isHubUrl(url) && isShellPage(url);
+    };
+
     ipcMain.handle('reyna:tools', () => tools.map((t) => ({
       group: t.group,
       groupLabel: GROUP_LABEL[t.group] || t.group,
@@ -463,6 +577,25 @@ if (!app.requestSingleInstanceLock()) {
     });
 
     ipcMain.on('reyna:close', () => { closePalette(); });
+
+    // Top bar desktop memakai jalur yang sama dengan menu native: palette,
+    // menu aplikasi, dan warna titlebar. Semua dibatasi ke halaman shell.
+    ipcMain.on('reyna:palette', (event) => {
+      if (!fromShell(event)) return;
+      openPalette();
+    });
+
+    ipcMain.on('reyna:menu', (event) => {
+      if (!fromShell(event)) return;
+      if (!win || win.isDestroyed()) return;
+      const menu = Menu.getApplicationMenu();
+      if (menu) menu.popup({ window: win });
+    });
+
+    ipcMain.on('reyna:theme', (event, theme) => {
+      if (!fromShell(event)) return;
+      setTitleBarTheme(theme);
+    });
 
     createWindow();
 

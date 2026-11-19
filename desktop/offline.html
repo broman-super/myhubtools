@@ -33,12 +33,43 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 32px;
+      padding: 48px 32px 32px;
       background: var(--bg);
       color: var(--ink);
       font: 15px/1.6 "Segoe UI", system-ui, -apple-system, sans-serif;
       -webkit-user-select: none;
       user-select: none;
+    }
+    /* Titlebar kustom tetap ada saat layar offline: jendela tidak memakai frame
+       native, jadi area geser dan identitas harus disediakan halaman ini. */
+    .chrome {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      height: 48px;
+      padding: 0 calc(152px / var(--rh-zoom, 1)) 0 13px;
+      background: var(--card);
+      border-bottom: 1px solid var(--line);
+      -webkit-app-region: drag;
+    }
+    .chrome .mark {
+      width: 24px;
+      height: 24px;
+      margin: 0;
+      border-radius: 6px;
+      color: #111111;
+      font-size: 11px;
+    }
+    .chrome .wordmark {
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      line-height: 1;
     }
     .card {
       width: 100%;
@@ -70,7 +101,7 @@
       border-radius: 999px;
       background: var(--danger-soft);
       color: var(--brand);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       letter-spacing: .02em;
       text-transform: uppercase;
@@ -87,7 +118,7 @@
     }
     h1 {
       margin: 0 0 8px;
-      font-size: 20px;
+      font-size: 22px;
       letter-spacing: -.01em;
     }
     p {
@@ -113,7 +144,7 @@
     .status {
       margin: 14px 0 0;
       color: var(--muted);
-      font-size: 12.5px;
+      font-size: 11px;
       min-height: 18px;
     }
     .foot {
@@ -121,7 +152,7 @@
       padding-top: 16px;
       border-top: 1px solid var(--line);
       color: var(--muted);
-      font-size: 11.5px;
+      font-size: 11px;
     }
     @media (prefers-reduced-motion: reduce) {
       .signal i { animation: none; }
@@ -129,6 +160,10 @@
   </style>
 </head>
 <body>
+  <header class="chrome" aria-label="ReynaHub">
+    <span class="mark" aria-hidden="true">R</span>
+    <span class="wordmark">REYNAHUB</span>
+  </header>
   <main class="card">
     <div class="mark" aria-hidden="true">R</div>
     <div class="signal"><i></i> Offline</div>

@@ -8,5 +8,8 @@ contextBridge.exposeInMainWorld('reyna', {
   retry: () => ipcRenderer.invoke('reyna:retry'),
   tools: () => ipcRenderer.invoke('reyna:tools'),
   open: (hash) => ipcRenderer.invoke('reyna:open', hash),
-  close: () => ipcRenderer.send('reyna:close')
+  close: () => ipcRenderer.send('reyna:close'),
+  palette: () => ipcRenderer.send('reyna:palette'),
+  menu: () => ipcRenderer.send('reyna:menu'),
+  setTheme: (theme) => ipcRenderer.send('reyna:theme', theme)
 });
