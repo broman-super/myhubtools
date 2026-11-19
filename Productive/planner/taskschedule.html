@@ -115,6 +115,8 @@
     .skeleton-grid {
       width: 100%; max-width: 500px;
       display: flex; flex-direction: column; gap: 12px; padding: 0 20px;
+      /* content-box membuat 100% + padding melebihi layar 360px */
+      box-sizing: border-box;
     }
     .skeleton-card {
       display: flex; align-items: center; gap: 14px;
@@ -727,11 +729,26 @@ color: var(--accent-ink);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-lg);
-      width: 300px;
+      width: min(320px, calc(100vw - 16px), var(--dp-fit));
       padding: 20px;
       display: none;
       margin-top: 10px;
       animation: popIn 0.3s ease-out;
+      /* Ukuran ikut tinggi layar (dvh), bukan px mati: lebar maksimum 320px,
+         tetapi menyusut bila tinggi jendela kurang supaya 6 baris tanggal tetap
+         muat tanpa scrollbar. --dp-fit = 32px padding + 7/6 x ruang baris.
+         158px = padding + header + nama hari + gap + jarak aman. */
+      --dp-fit: max(200px, calc(32px + 7 * (100dvh - 158px) / 6));
+      max-height: calc(100dvh - 16px);
+      /* Hanya jaring pengaman di layar ekstrem; scrollbar-nya disembunyikan
+         agar tidak merusak tampilan. */
+      overflow-y: auto;
+      scrollbar-width: none;
+      overscroll-behavior: contain;
+    }
+
+    .datepicker-popover::-webkit-scrollbar {
+      display: none;
     }
 
     @keyframes popIn {
@@ -750,6 +767,25 @@ color: var(--accent-ink);
       display: block;
     }
 
+    /* Di dalam modal, kalender (tinggi ~414px) tidak cukup ruang di atas maupun
+       di bawah field pada jendela pendek: sebelumnya ia dibuka ke bawah sampai
+       keluar layar dan tak bisa digulir. Mode dialog terpusat selalu muat. */
+    .datepicker-popover.dp-center {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      margin: 0 !important;
+      width: min(320px, calc(100vw - 16px), var(--dp-fit)) !important;
+      box-sizing: border-box !important; /* max-height harus mencakup padding+border */
+      max-height: calc(100dvh - 16px) !important;
+      padding: 16px !important;
+      overflow-y: auto !important;
+      scrollbar-width: none;
+      overscroll-behavior: contain;
+      animation: none !important;
+    }
+
     /* Mobile DatePicker (Modal Style) */
     @media (max-width: 600px) {
       .datepicker-popover.open {
@@ -758,7 +794,7 @@ color: var(--accent-ink);
         left: 50% !important;
         transform: translate(-50%, -50%) !important;
         margin: 0 !important;
-        width: 320px !important;
+        width: min(320px, calc(100vw - 16px), var(--dp-fit)) !important;
         box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.4), var(--shadow-lg) !important;
         animation: mobilePopIn 0.3s ease-out !important;
       }
@@ -793,7 +829,7 @@ color: var(--accent-ink);
       aspect-ratio: 1;
       display: grid;
       place-items: center;
-      font-size: 12px;
+      font-size: clamp(9px, 2.4dvh, 12px);
       font-weight: 600;
       cursor: pointer;
       border-radius: 50%;
@@ -820,7 +856,7 @@ color: var(--accent-ink);
 .dp-day-names {
 display: grid;
 grid-template-columns: repeat(7, 1fr);
-font-size: 10px;
+font-size: clamp(8px, 1.9dvh, 10px);
 font-weight: 700;
 color: var(--text-soft);
 text-align: center;
@@ -1098,20 +1134,26 @@ margin-bottom: 8px;
       .nav {
         width: 100%;
         order: 3;
-        justify-content: space-between;
+        justify-content: flex-start;
         background: var(--bg);
         border: 1px solid var(--border);
         margin-top: 4px;
+        /* 6 tab tidak muat di 360px: biarkan strip ini yang menggeser, bukan halaman. */
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
       }
       .nav-item {
-        flex: 1;
+        /* flex:1 memaksa min-content tab melebarkan strip melewati layar */
+        flex: 0 0 auto;
         justify-content: center;
         padding: 10px 4px;
         font-size: 13px;
         gap: 6px;
+        white-space: nowrap;
       }
       .nav-count { padding: 1px 6px; font-size: 10px; }
-      .topbar-right { margin-left: auto; gap: 10px; }
+      /* 3 tombol aksi tidak muat sebaris di 360px: bungkus, jangan melewati layar. */
+      .topbar-right { margin-left: auto; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
       .topbar-right .btn { padding: 8px 16px; font-size: 13px; }
       .stats-bar {
         padding: 10px 16px;
@@ -1167,7 +1209,7 @@ margin-bottom: 8px;
       .datepicker-popover.open {
         position: fixed !important; top: 50% !important; left: 50% !important;
         transform: translate(-50%,-50%) !important; margin: 0 !important;
-        width: 320px !important;
+        width: min(320px, calc(100vw - 16px), var(--dp-fit)) !important;
         box-shadow: 0 0 0 5000px rgba(0,0,0,0.6), var(--shadow-lg) !important;
       }
 
@@ -1812,7 +1854,10 @@ border-color: var(--accent);
     .task-check::before { content: ''; position: absolute; inset: -12px; }
     .quick-toggle { min-width: 28px; min-height: 28px; display: inline-flex; align-items: center; justify-content: center; }
     .week-chip .quick-toggle, .cal-chip .quick-toggle { margin-left: auto; font-size: 10px; opacity: 0.6; cursor: pointer; flex-shrink: 0; padding: 0 2px; }
-    .dp-cell { min-height: 40px; }
+    /* aspect-ratio + lebar kolom yang menentukan tinggi sel; min-height 40px
+       dulu memaksa baris lebih tinggi dari lebar di jendela pendek sehingga
+       kalender melebihi layar. */
+    .dp-cell { min-height: 0; }
     .filter-chip { min-height: 32px; padding: 6px 12px; display: inline-flex; align-items: center; }
     @media (max-width: 1023px) {
       .detail-panel {
@@ -4280,24 +4325,37 @@ border-color: var(--accent);
       const el = document.getElementById(id);
       const pop = document.getElementById('datepicker');
 
-      if (window.innerWidth > 600) {
-        const rect = el.getBoundingClientRect();
-        pop.style.top = (rect.bottom + 5) + 'px';
-        pop.style.left = rect.left + 'px';
-        // If nested in a scrolled container, we might need absolute doc position
-        if (document.querySelector('.modal-bg.open')) {
-          // Inside modal, coordinate space is often viewport-based if modal is fixed
-        } else {
-          pop.style.top = (window.scrollY + rect.bottom + 5) + 'px';
-        }
-      } else {
-        // Mobile: CSS handles centering via position:fixed
-        pop.style.top = '';
-        pop.style.left = '';
-      }
-
       pop.classList.add('open');
       renderDP();
+
+      // Di dalam modal, pakai mode dialog terpusat (kelas dp-center): tidak ada
+      // ruang yang cukup di atas/bawah field untuk kalender setinggi ~414px.
+      const inModal = !!document.querySelector('.modal-bg.open');
+      pop.classList.toggle('dp-center', inModal);
+
+      if (inModal || window.innerWidth <= 600) {
+        // Mobile & modal: CSS yang menentukan posisi
+        pop.style.top = '';
+        pop.style.left = '';
+      } else {
+        // Popover ini anak <body>, jadi koordinatnya dokumen: viewport + scroll.
+        // offsetHeight/offsetWidth, bukan getBoundingClientRect: animasi popIn memakai
+        // transform scale sehingga rect terukur lebih kecil dari ukuran aslinya.
+        const rect = el.getBoundingClientRect();
+        const h = pop.offsetHeight;
+        const w = pop.offsetWidth;
+        const gap = 5;
+        const margin = 8;
+        const mt = 10; // margin-top CSS popover, ikut menggeser kotak ke bawah
+        let boxTop = rect.bottom + gap;
+        if (boxTop + h > window.innerHeight - margin && rect.top - gap - h >= margin) {
+          boxTop = rect.top - gap - h; // buka ke atas bila bawah tidak muat
+        }
+        boxTop = Math.max(margin, Math.min(boxTop, window.innerHeight - h - margin));
+        const left = Math.max(margin, Math.min(rect.left, window.innerWidth - w - margin));
+        pop.style.top = (window.scrollY + boxTop - mt) + 'px';
+        pop.style.left = left + 'px';
+      }
     }
     // C7: addEventListener - window.onclick menimpa handler lain yang menempel setelahnya
     document.addEventListener('click', function(e) {

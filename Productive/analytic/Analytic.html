@@ -281,13 +281,18 @@
 
         .bento-container {
             display: grid;
-            grid-template-columns: repeat(12, 1fr);
+            /* minmax(0, 1fr), bukan 1fr: track 1fr punya minimum `auto`, jadi canvas
+               chart selebar 1325px (ukuran saat dibuat) bisa melebarkan track dan
+               membuat seluruh halaman bergeser ke samping. Dengan 0 sebagai minimum,
+               lebar track selalu mengikuti kontainer. */
+            grid-template-columns: repeat(12, minmax(0, 1fr));
             gap: 24px;
             max-width: none;
             margin: 0 auto;
         }
 
         .bento-item {
+            min-width: 0;
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: var(--radius-xl);
@@ -599,6 +604,14 @@
             min-height: 350px;
         }
 
+        /* Jaring ukuran: Chart.js menulis lebar/tinggi piksel inline di kanvas.
+           Kalau resize tertunda, kanvas bisa lebih lebar dari kartunya. Batas ini
+           memastikan grafik tidak pernah menonjol keluar kartu. */
+        .chart-box canvas {
+            display: block;
+            max-width: 100%;
+        }
+
         .badge {
             padding: 4px 10px;
             border-radius: var(--radius-xs);
@@ -862,6 +875,14 @@
 
         .item-row:hover {
             background: var(--surface2);
+        }
+
+        /* Anak .item-row memakai flex + teks panjang (nama partner, keterangan).
+           Tanpa min-width:0 anak flex menolak menyusut dan teksnya keluar dari
+           kartu; overflow-wrap menjaga kata panjang tetap patah di dalam kartu. */
+        .item-row > * {
+            min-width: 0;
+            overflow-wrap: anywhere;
         }
 
         .tag-warn {
@@ -1250,16 +1271,10 @@
                 margin-bottom: 4px;
             }
 
-            /* Kurasi print: sembunyikan panel teks (hemat kertas), pertahankan KPI + chart inti + tabel
-               Catatan: RANKING KATEGORI (#biayaRankList) DIPERTAHANKAN — muncul setelah Komposisi Kategori */
-            .bento-item:has(#basketIntel),
-            .bento-item:has(#opexList),
-            .bento-item:has(#rfmList),
-            .bento-item:has(#localWarningBox),
-            .bento-item:has(#kpiGoldenDay),
-            .bento-item:has(#chartMargin),
-            .bento-item:has(#chartHari) { display: none !important; }
-            #marginAnalysis { display: none !important; }
+            /* Semua kartu tab aktif ikut tercetak — termasuk panel teks (INSIGHTS,
+               RASIO KESEHATAN, PETA WAKTU, KERANJANG, VIP, DIAGNOSA). Dulu kartu-kartu
+               itu disembunyikan "hemat kertas", akibatnya laporan cetak kehilangan
+               seluruh bagian tulisannya. Hanya kontrol (pill komparasi) yang dibuang. */
             .compare-pill { display: none !important; }
             div:has(> #biayaChartKomposisi) { height: 160px !important; }
             #biayaChartKomposisi { width: 100% !important; height: 100% !important; display: block !important; }
@@ -1415,7 +1430,7 @@
     <div id="loginOverlay"
         style="position:fixed; inset:0; background:var(--bg); z-index:var(--z-modal); display:flex; flex-direction:column; justify-content:center; align-items:center;">
         <div
-            style="background:var(--surface); padding:40px; border-radius:var(--radius-xl); box-shadow:var(--shadow-md); border:1px solid var(--border); width:90%; max-width:400px; text-align:center;">
+            style="background:var(--surface); padding:40px; border-radius:var(--radius-xl); box-shadow:var(--shadow-md); border:1px solid var(--border); width:90%; max-width:400px; box-sizing:border-box; text-align:center;">
             <h3 style="font-family:'Geomini', 'Plus Jakarta Sans', sans-serif; color:var(--primary); margin-bottom:12px; font-size:18px;">Sales Analytic</h3>
             <p style="color:var(--muted); font-size:14px; margin-bottom:16px; font-weight:600;">Area Terbatas.
                 Masukkan Password.</p>
@@ -2133,8 +2148,11 @@
                         data-tooltip="Melacak Status Loyalitas Pelanggan: SETIA (Sering Belanja), AKTIF, dan BERISIKO CHURN (Tidak transaksi >14 Hari). Dibagi ke kelompok Reseller (B2B) dan Marketplace/Umum (B2C).">?</span>
                 </div>
             </div>
+            <!-- Tanpa max-height: isi daftar menentukan tinggi kartu. Batas 400px dulu
+                 memotong daftar sementara overflow tetap visible, jadi baris partner
+                 tercetak/tergambar keluar dari kartu. -->
             <div id="rfmList"
-                style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; flex:1; min-height:0; max-height:400px;">
+                style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; flex:1; min-height:0; align-content:start;">
             </div>
             <div id="vipInsight" style="margin-top:auto; padding-top:15px;"></div>
         </div>
@@ -5346,6 +5364,37 @@
 
         window.addEventListener('beforeprint', applyPrintTheme);
         window.addEventListener('afterprint', restoreScreenTheme);
+
+        // Chart.js menunda permintaan resize ke `_resizeBeforeDraw` bila animasi masih
+        // berjalan, dan penundaan itu tidak pernah dijalankan lagi — kanvas tertinggal
+        // di lebar jendela lama (mis. 1325px) sementara kartunya menyusut, sehingga
+        // grafik menonjol keluar kartu dan halaman bisa digeser ke samping.
+        // Satu handler resize yang menunggu ukuran stabil menutup celah itu.
+        (function () {
+            let _rsTimer = 0;
+            window.addEventListener('resize', function () {
+                clearTimeout(_rsTimer);
+                _rsTimer = setTimeout(function () {
+                    if (typeof Chart === 'undefined') return;
+                    Object.values(Chart.instances || {}).forEach(function (c) {
+                        const box = c.canvas && c.canvas.parentElement;
+                        if (!box || box.clientWidth <= 0 || box.clientHeight <= 0) return;
+                        try {
+                            // `stop()` wajib: selama animasi jalan, Chart.js membaca
+                            // `mt.running(this)` dan menunda resize (nilai tersimpan di
+                            // `_resizeBeforeDraw`), sehingga kanvas tetap selebar layar
+                            // lama. Ukuran dikirim eksplisit supaya tidak bergantung
+                            // pada pembacaan ulang kontainer.
+                            c.stop();
+                            c._resizeBeforeDraw = undefined;
+                            c.resize(box.clientWidth, box.clientHeight);
+                        } catch (e) {
+                            console.warn('[Analytic] resize chart gagal:', c.canvas && c.canvas.id, e);
+                        }
+                    });
+                }, 120);
+            });
+        })();
 
         // Tab HPP tidak ikut tercetak. Kalau user mencetak dari tab itu, pindah ke
         // Dashboard dulu supaya hasil cetak tidak kosong, lalu kembali setelah print.

@@ -302,6 +302,9 @@ html{ caret-color:var(--accent); scrollbar-color:var(--text-quaternary) transpar
 .link-card{
   position:relative;
   display:flex; align-items:center; gap:var(--space-3);
+  /* item grid: tanpa min-width:0, min-content judul nowrap melebarkan kolom
+     melewati layar 320px */
+  min-width:0;
   padding:var(--space-4);
   border-radius:var(--radius-md);
   background:var(--bg-alt);
@@ -764,7 +767,7 @@ html, body{ overflow-x:clip; }
 }
 .loading-overlay.hide{ opacity:0; pointer-events:none; }
 .loading-overlay .brand{ font-size:16px; letter-spacing:0.12em; }
-.loading-grid{ width:100%; max-width:400px; display:flex; flex-direction:column; gap:var(--space-3); padding:0 var(--space-5); }
+.loading-grid{ width:100%; max-width:400px; display:flex; flex-direction:column; gap:var(--space-3); padding:0 var(--space-5); box-sizing:border-box; }
 
 /* ---------- 16. FOOTER ---------- */
 .offline-banner{

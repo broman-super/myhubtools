@@ -98,3 +98,38 @@ html.embedded-in-hub .brand {
 html.embedded-in-hub body {
   overscroll-behavior-y: contain;
 }
+
+/* ===== Jaring aman modal (berlaku untuk semua modul) ===== */
+/* Tiap modul menulis CSS modalnya sendiri, tetapi polanya berulang: overlay
+   `position:fixed; inset:0` dengan `justify-content:center` dan tanpa
+   overflow. Di jendela pendek kartu menjadi lebih tinggi dari layar,
+   bagian atasnya terpotong, dan tombolnya tidak bisa dicapai karena overlay
+   tidak bisa digulir (dibuktikan di Analytic: kartu 442px pada tinggi 380px,
+   top -11 dan bottom +51).
+   `safe center` = tetap di tengah selama kartu muat, rata atas saat
+   melebihi layar; `overflow-y:auto` membuat sisa kartu bisa digulir.
+   Scrollbar overlay disembunyikan (masih bisa digulir dengan roda/trackpad)
+   karena batang gulir di atas backdrop membuat tampilan terpotong.
+   !important karena banyak modul menulis aturan ini sebagai style inline
+   atau <style> yang dimuat setelah file ini. */
+.modal-overlay,
+.modal-backdrop,
+.modal-bg,
+.modal-overlay-base,
+.confirm-overlay,
+[role="dialog"][aria-modal="true"] {
+  overflow-y: auto !important;
+  scrollbar-width: none;
+  align-items: safe center !important;
+  justify-content: safe center !important;
+  overscroll-behavior: contain;
+}
+
+.modal-overlay::-webkit-scrollbar,
+.modal-backdrop::-webkit-scrollbar,
+.modal-bg::-webkit-scrollbar,
+.modal-overlay-base::-webkit-scrollbar,
+.confirm-overlay::-webkit-scrollbar,
+[role="dialog"][aria-modal="true"]::-webkit-scrollbar {
+  display: none;
+}

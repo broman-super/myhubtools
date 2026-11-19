@@ -105,7 +105,9 @@
   .preview-title { font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:7px; }
   .preview-title .ico { display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:var(--accent-lt);border-radius:var(--radius-sm);flex-shrink:0; }
   .preview-title .ico svg { width:13px;height:13px;stroke:var(--accent);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round; }
-  .preview-frame-wrap { display:flex; justify-content:center; transform-origin:top center; }
+  /* Pratinjau struk lebarnya tetap 378px (tata letak struk tidak boleh diubah);
+     di layar sempit biarkan panel ini yang digeser, bukan halaman. */
+  .preview-frame-wrap { display:flex; justify-content:center; transform-origin:top center; overflow-x:auto; width:100%; min-width:0; }
   .preview-frame { width:378px; min-height:420px; border:none; border-radius:var(--radius-sm); background:#fff; box-shadow:var(--shadow-sm); flex-shrink:0; }
   @media (max-width:900px){ .main{ grid-template-columns:1fr; } .preview-pane{ position:static; top:auto; } }
   @media (max-width:680px){ .main{ padding:20px 14px 100px; gap:16px; } }
