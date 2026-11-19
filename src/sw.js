@@ -1,5 +1,5 @@
 // src/sw.js - Service Worker for REYNAHUB offline caching
-const CACHE_NAME = 'reynahub-v21';
+const CACHE_NAME = 'reynahub-v22';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

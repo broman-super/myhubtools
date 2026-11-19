@@ -272,9 +272,11 @@
     showFrame();
     setToolOpen(true);
 
-    // Highlight nav grup pemilik kartu (grup tidak lagi diturunkan dari prefix hash)
-    activeGroup = owner ? owner.getAttribute('data-group') : 'all';
-    setActiveNav(activeGroup);
+    // Highlight nav grup pemilik kartu (grup tidak lagi diturunkan dari prefix hash).
+    // activeGroup = filter beranda, jangan ditimpa di sini: kalau ditimpa, kembali ke
+    // Beranda hanya menampilkan grup tool terakhir — dan di mode shell tombol grup
+    // disembunyikan, jadi pengguna tak punya cara mengembalikannya ke semua modul.
+    setActiveNav(owner ? owner.getAttribute('data-group') : activeGroup);
   }
 
   function showFrame() {
