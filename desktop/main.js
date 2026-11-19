@@ -266,7 +266,7 @@ function openPalette() {
     return;
   }
   palette = new BrowserWindow({
-    width: 640,
+    width: 780,
     height: 460,
     show: false,
     frame: false,

@@ -67,7 +67,11 @@
       cursor: default;
     }
     .item[aria-selected="true"] { background: var(--sel); }
-    .item .title { font-weight: 600; }
+    .item .title {
+      flex: none;
+      font-weight: 600;
+      white-space: nowrap;
+    }
     .item .group {
       margin-left: auto;
       flex: none;
@@ -77,6 +81,8 @@
       letter-spacing: .04em;
     }
     .item .desc {
+      flex: 1;
+      min-width: 0;
       color: var(--muted);
       font-size: 12px;
       overflow: hidden;
